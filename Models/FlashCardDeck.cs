@@ -1,31 +1,32 @@
+using System;
 using System.Collections.Generic;
 
 namespace ReviFlash.Models;
 
 public class FlashCardDeck
 {
-    public static ulong DeckIDCounter = 0;
-
-    private static ulong GenerateID()
-    {
-        return DeckIDCounter++;
-    }
-
     public ulong ID { get; private set; }
-    public string Name { get; private set; }
+    public string Name { get; set; }
+    public int CardCount { get; set; }
     private readonly List<FlashCard> flashCards = [];
     public IReadOnlyList<FlashCard> FlashCards => flashCards.AsReadOnly();
 
     public FlashCardDeck(string name)
     {
         Name = name;
-        ID = GenerateID();
+        ID = ulong.MaxValue; // Placeholder ID until saved to database
     }
 
-    public FlashCardDeck(string name, ulong id)
+    public FlashCardDeck(string name, ulong id, int cardCount) : this(name)
     {
-        Name = name;
         ID = id;
+        CardCount = cardCount;
+    }
+
+    public void AssignDatabaseID(ulong id)
+    {
+        if (ID == ulong.MaxValue) ID = id;
+        else throw new InvalidOperationException("ID has already been assigned.");
     }
 
     public void AddFlashCard(FlashCard card)

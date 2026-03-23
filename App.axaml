@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="ReviFlash.App"
              xmlns:local="using:ReviFlash"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
@@ -12,4 +11,60 @@
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AppBackground" Color="#0f0f13" />
+                    
+                    <SolidColorBrush x:Key="CardBackground" Color="#801E1E24" /> 
+                    <SolidColorBrush x:Key="CardBorder" Color="#30FFFFFF" />
+                    <SolidColorBrush x:Key="BadgeBackground" Color="#40000000" />
+                    <SolidColorBrush x:Key="StatTileBackground" Color="#20FFFFFF" />
+                    
+                    <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#A0A0A5" />
+                    
+                    <Color x:Key="GradientStart">#4158D0</Color>
+                    <Color x:Key="GradientMiddle">#C850C0</Color>
+                    <Color x:Key="GradientEnd">#FFCC70</Color>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AppBackground" Color="#F6F7FC" />
+                    
+                    <SolidColorBrush x:Key="CardBackground" Color="#CCFFFFFF" /> 
+                    <SolidColorBrush x:Key="CardBorder" Color="#2A2C3A" />
+                    <SolidColorBrush x:Key="BadgeBackground" Color="#110F1A35" />
+                    <SolidColorBrush x:Key="StatTileBackground" Color="#120F1A35" />
+                    
+                    <SolidColorBrush x:Key="TextPrimary" Color="#1A1C2D" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#4E5677" />
+                    
+                    <Color x:Key="GradientStart">#6F8DF7</Color>
+                    <Color x:Key="GradientMiddle">#B08BE9</Color>
+                    <Color x:Key="GradientEnd">#FFC48A</Color>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="{x:Static local:AppThemes.Pride}">
+                    <SolidColorBrush x:Key="AppBackground" Color="#D9EFFF" />
+
+                    <SolidColorBrush x:Key="CardBackground" Color="#F7FFFFFF" />
+                    <SolidColorBrush x:Key="CardBorder" Color="#992AA8FF" />
+                    <SolidColorBrush x:Key="BadgeBackground" Color="#66FF3FAE" />
+                    <SolidColorBrush x:Key="StatTileBackground" Color="#6626C6FF" />
+
+                    <SolidColorBrush x:Key="TextPrimary" Color="#0A1742" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#1E3C82" />
+
+                    <Color x:Key="GradientStart">#00CCFF</Color>
+                    <Color x:Key="GradientMiddle">#FF2FA8</Color>
+                    <Color x:Key="GradientEnd">#2AA8FF</Color>
+                </ResourceDictionary>
+
+                </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

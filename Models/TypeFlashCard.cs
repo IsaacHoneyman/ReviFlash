@@ -6,7 +6,7 @@ public class TypeFlashCard : FlashCard
 {
     public TypeFlashCard(string front, string back) : base(front, back) { }
 
-    public TypeFlashCard(string front, string back, ulong id) : base(front, back, false)
+    public TypeFlashCard(string front, string back, ulong id) : base(front, back)
     {
         ID = id;
     }

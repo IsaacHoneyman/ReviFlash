@@ -1,0 +1,181 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:models="using:ReviFlash.Models"
+    xmlns:math="clr-namespace:AvaloniaMath.Controls;assembly=AvaloniaMath"
+    xmlns:converters="using:ReviFlash.Converters"
+    x:Class="ReviFlash.Views.DeckEditorWindow"
+    x:DataType="vm:DeckEditorViewModel"
+    Title="Deck Editor"
+    Width="1000" Height="700"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource AppBackground}">
+
+    <Window.Resources>
+        <converters:MixedMathSegmentsConverter x:Key="MixedMathSegmentsConverter" />
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto, *" Margin="32">
+
+        <TextBox Grid.Row="0"
+            Text="{Binding DeckName, Mode=TwoWay}"
+            FontSize="32" FontWeight="Bold"
+            Background="Transparent" BorderThickness="0,0,0,2"
+            Foreground="{DynamicResource TextPrimary}"
+            Margin="0,0,0,24" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="380, *">
+
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,24,0">
+                <Border Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20"
+                    VerticalAlignment="Top">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Add New Card" FontSize="20" FontWeight="Bold"
+                            Foreground="{DynamicResource TextPrimary}" />
+
+                        <ComboBox ItemsSource="{Binding AvailableCardTypes}"
+                            SelectedItem="{Binding SelectedCardType}"
+                            HorizontalAlignment="Stretch"
+                            CornerRadius="8" />
+
+                        <TextBlock Text="Front (Question)" FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
+                        <TextBox Text="{Binding NewFront, Mode=TwoWay}" Height="60"
+                            AcceptsReturn="True" TextWrapping="Wrap"
+                            Background="{DynamicResource AppBackground}" />
+
+                        <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1" CornerRadius="8" Padding="12" MinHeight="60">
+                            <ItemsControl ItemsSource="{Binding NewFront, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="converters:MixedMathSegment">
+                                        <Grid>
+                                            <TextBlock Text="{Binding Content}"
+                                                TextWrapping="Wrap"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                IsVisible="{Binding IsText}" />
+                                            <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+
+                        <TextBlock Text="Back (Answer)" FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
+                        <TextBox Text="{Binding NewBack, Mode=TwoWay}" Height="60"
+                            AcceptsReturn="True" TextWrapping="Wrap"
+                            Background="{DynamicResource AppBackground}" />
+
+                        <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1" CornerRadius="8" Padding="12" MinHeight="60">
+                            <ItemsControl ItemsSource="{Binding NewBack, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="converters:MixedMathSegment">
+                                        <Grid>
+                                            <TextBlock Text="{Binding Content}"
+                                                TextWrapping="Wrap"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                IsVisible="{Binding IsText}" />
+                                            <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+                        <Button Click="AddCard_Click" Content="{Binding SaveButtonText}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center" Margin="0,10,0,0"
+                            Background="{DynamicResource GradientStart}" Foreground="White"
+                            FontWeight="Bold" Padding="12" CornerRadius="8" />
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
+                <ItemsControl ItemsSource="{Binding Cards}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:FlashCard">
+                            <Border Background="{DynamicResource CardBackground}"
+                                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                                CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="*, Auto">
+                                    <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12">
+                                        <ItemsControl ItemsSource="{Binding Front, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding Content}"
+                                                            TextWrapping="Wrap"
+                                                            Foreground="{DynamicResource TextPrimary}"
+                                                            IsVisible="{Binding IsText}" />
+                                                        <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <Rectangle Height="1" Fill="{DynamicResource CardBorder}"
+                                            Opacity="0.3" />
+
+                                        <ItemsControl ItemsSource="{Binding Back, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding Content}"
+                                                            TextWrapping="Wrap"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            IsVisible="{Binding IsText}" />
+                                                        <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Grid.Row="1"
+                                        VerticalAlignment="Bottom" Spacing="8" Margin="10,0,0,0">
+                                        <Button Click="EditCard_Click"
+                                            Background="#20FFFFFF" CornerRadius="8"
+                                            Padding="12,8">
+                                            <TextBlock Text="✏️" FontSize="16"
+                                                Foreground="{DynamicResource TextPrimary}" />
+                                        </Button>
+
+                                        <Button Click="DeleteCard_Click"
+                                            Background="#40FF4444" CornerRadius="8"
+                                            Padding="12,8">
+                                            <TextBlock Text="🗑️" FontSize="16" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

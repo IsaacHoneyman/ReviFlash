@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ReviFlash.Views.ConfirmDialogWindow"
+        Title="Confirm Action" 
+        Width="450" Height="200"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent">
+
+    <Border Background="{DynamicResource CardBackground}" 
+            BorderBrush="{DynamicResource CardBorder}" 
+            BorderThickness="1.5" 
+            CornerRadius="20" 
+            Padding="24">
+        
+        <Grid RowDefinitions="*, Auto">
+            <TextBlock x:Name="MessageText" 
+                       Text="Are you sure you want to proceed?" 
+                       FontSize="18" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}" 
+                       TextWrapping="Wrap" 
+                       VerticalAlignment="Center" 
+                       HorizontalAlignment="Center" 
+                       TextAlignment="Center"/>
+            
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
+                <Button Click="Cancel_Click" Content="Cancel" Background="#40FFFFFF" Foreground="{DynamicResource TextPrimary}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+                <Button Click="Confirm_Click" Content="Yes, Delete" Background="#B3FF4444" Foreground="White" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

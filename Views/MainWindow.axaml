@@ -1,23 +1,350 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ReviFlash.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="ReviFlash.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Revi Flash"
-        MinHeight="450" MinWidth="600"
-        WindowState="Normal"
-        WindowStartupLocation="CenterScreen">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:models="using:ReviFlash.Models"
+    xmlns:math="clr-namespace:AvaloniaMath.Controls;assembly=AvaloniaMath"
+    xmlns:converters="using:ReviFlash.Converters"
+    x:Class="ReviFlash.Views.MainWindow"
+    x:DataType="vm:MainWindowViewModel"
+    Icon="/Assets/avalonia-logo.ico"
+    Title="ReviFlash"
+    Width="1000" Height="600"
+    WindowStartupLocation="CenterScreen"
+    WindowState="FullScreen"
+    SystemDecorations="None"
+    KeyDown="Window_KeyDown"
+    Background="{DynamicResource AppBackground}">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <Window.Styles>
+        <Style Selector="Rectangle.animatedGradient">
+            <Style.Animations>
+                <Animation Duration="0:0:20" IterationCount="Infinite">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </Window.Styles>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Resources>
+        <converters:MixedMathSegmentsConverter x:Key="MixedMathSegmentsConverter" />
+    </Window.Resources>
+
+    <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:MainWindowViewModel}">
+
+            <Grid RowDefinitions="100, *">
+
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="32, 24, 32, 0">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16"
+                        VerticalAlignment="Center">
+                        <TextBlock Text="Revi Flash" FontSize="36" FontWeight="Bold"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <Border Background="{DynamicResource BadgeBackground}" CornerRadius="15"
+                            Padding="16,8" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding StreakText}" FontSize="14"
+                                    FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Click="SettingsButton_Click" Background="Transparent"
+                        CornerRadius="20" Width="65" Height="65" Cursor="Hand"
+                        VerticalAlignment="Center">
+                        <TextBlock Text="⚙️" FontSize="32" HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Button>
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*, 320" Margin="32, 16, 32, 32">
+
+                    <Grid Grid.Column="0" RowDefinitions="Auto, *" Margin="0, 0, 32, 0">
+
+                        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0, 0, 0, 24">
+                            <TextBox Grid.Column="0"
+                                Text="{Binding SearchText, Mode=TwoWay}"
+                                Watermark="Search flashcard sets..."
+                                CornerRadius="8" Padding="12, 8" FontSize="16" Margin="0, 0, 16, 0"
+                                Background="{DynamicResource CardBackground}"
+                                Foreground="{DynamicResource TextPrimary}" />
+
+                            <Button Grid.Column="1"
+                                Click="CreateDeck_Click"
+                                Content="+ Create New Set"
+                                CornerRadius="8" Padding="16, 10" FontSize="16" FontWeight="Bold"
+                                Background="{DynamicResource GradientStart}" Foreground="White"
+                                Cursor="Hand" />
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding FilteredDecks}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel HorizontalAlignment="Left" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:FlashCardDeck">
+                                        <Border Width="270" Height="150"
+                                            Background="{DynamicResource CardBackground}"
+                                            BorderBrush="{DynamicResource CardBorder}"
+                                            BorderThickness="1.5" CornerRadius="20"
+                                            Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
+                                            Focusable="True"
+                                            PointerPressed="DeckCard_Click"
+                                            KeyDown="DeckCard_KeyDown">
+
+                                            <Grid RowDefinitions="Auto, *">
+
+                                                <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
+                                                    VerticalAlignment="Top">
+                                                    <Border Grid.Column="0"
+                                                        HorizontalAlignment="Left"
+                                                        VerticalAlignment="Center"
+                                                        Background="{DynamicResource BadgeBackground}"
+                                                        CornerRadius="8" Padding="8,4">
+                                                        <StackPanel Orientation="Horizontal"
+                                                            Spacing="4">
+                                                            <TextBlock Text="{Binding CardCount}"
+                                                                FontSize="12" FontWeight="Bold"
+                                                                Foreground="{DynamicResource TextPrimary}" />
+                                                            <TextBlock Text="Cards" FontSize="10"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="{DynamicResource TextSecondary}" />
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="1"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8">
+                                                        <Button Click="EditDeck_Click"
+                                                            Background="#20FFFFFF" CornerRadius="8"
+                                                            Padding="12,6" Height="30"
+                                                            MinHeight="30"
+                                                            VerticalContentAlignment="Center"
+                                                            Cursor="Hand">
+                                                            <TextBlock Text="✏️" FontSize="12"
+                                                                Foreground="{DynamicResource TextPrimary}" />
+                                                        </Button>
+
+                                                        <Button Click="DeleteDeck_Click"
+                                                            Background="#40FF4444" CornerRadius="8"
+                                                            Padding="12,6" Height="30"
+                                                            MinHeight="30"
+                                                            VerticalContentAlignment="Center"
+                                                            Cursor="Hand"
+                                                            ToolTip.Tip="Delete Deck">
+                                                            <TextBlock Text="🗑️" FontSize="12"
+                                                                Foreground="White" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                                                    <TextBlock Text="{Binding Name}" FontSize="22"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource TextPrimary}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock Text="Click to review" FontSize="14"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Margin="0, 12, 0, 0" />
+                                                </StackPanel>
+
+                                            </Grid>
+
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <Border Grid.Column="1"
+                        Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource CardBorder}"
+                        BorderThickness="1.5"
+                        CornerRadius="20"
+                        Padding="24">
+                        <StackPanel Spacing="16">
+                            <TextBlock Text="Overall Stats" FontSize="20" FontWeight="Bold"
+                                Foreground="{DynamicResource TextPrimary}" />
+
+                            <ComboBox ItemsSource="{Binding TimePeriods}"
+                                SelectedItem="{Binding SelectedTimePeriod}"
+                                CornerRadius="8"
+                                Padding="12, 8" FontSize="14"
+                                Background="{DynamicResource StatTileBackground}"
+                                Foreground="{DynamicResource TextPrimary}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="vm:MainWindowViewModel+TimePeriodOption">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                CornerRadius="10"
+                                Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Total Questions"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding TotalQuestions}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="28" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                CornerRadius="10"
+                                Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Total Correct"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding TotalCorrect}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="28" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                CornerRadius="10"
+                                Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Accuracy Rate"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="28" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                CornerRadius="10"
+                                Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Grade"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding Grade}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="28" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:ReviewViewModel}">
+            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border Width="600" Background="{DynamicResource CardBackground}" CornerRadius="30"
+                    Padding="40">
+                    <StackPanel Spacing="20">
+                        <TextBlock Text="{Binding CurrentNumber, StringFormat='Card {0} of {1}'}"
+                            HorizontalAlignment="Center"
+                            Foreground="{DynamicResource TextSecondary}" />
+
+                        <ItemsControl ItemsSource="{Binding CurrentCard.Front, Converter={StaticResource MixedMathSegmentsConverter}}"
+                            HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="converters:MixedMathSegment">
+                                    <Grid>
+                                        <TextBlock Text="{Binding Content}"
+                                            TextWrapping="Wrap"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            IsVisible="{Binding IsText}" />
+                                        <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Separator Background="{DynamicResource CardBorder}" Opacity="0.3"
+                            Margin="0,20" />
+
+                        <ItemsControl ItemsSource="{Binding CurrentCard.Back, Converter={StaticResource MixedMathSegmentsConverter}}"
+                            IsVisible="{Binding IsAnswerRevealed}" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="converters:MixedMathSegment">
+                                    <Grid>
+                                        <TextBlock Text="{Binding Content}"
+                                            TextWrapping="Wrap"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            IsVisible="{Binding IsText}" />
+                                        <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel Spacing="15" Margin="0,20,0,0">
+                            <Button Content="Show Answer" Click="ShowAnswer_Click"
+                                IsVisible="{Binding !IsAnswerRevealed}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="20"
+                                HorizontalAlignment="Center" IsVisible="{Binding IsAnswerRevealed}">
+                                <Button Content="❌ Incorrect" Click="Incorrect_Click"
+                                    Background="#40FF4444" Padding="20,10" />
+                                <Button Content="✅ Correct" Click="Correct_Click"
+                                    Background="#4044FF44" Padding="20,10" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:SummaryViewModel}">
+            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border Width="450" Background="{DynamicResource CardBackground}" CornerRadius="30"
+                    Padding="40">
+                    <StackPanel Spacing="20" HorizontalAlignment="Center">
+                        <TextBlock Text="Session Complete!" FontSize="24" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="64"
+                            FontWeight="Black" Foreground="{DynamicResource GradientStart}" />
+                        <TextBlock Text="{Binding Grade, StringFormat='Grade: {0}'}" FontSize="20"
+                            Foreground="{DynamicResource TextSecondary}" />
+                        <Button Content="Finish" Click="ReturnToDashboard_Click"
+                            HorizontalAlignment="Stretch" Margin="0,20,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid>
+        <Rectangle Classes="animatedGradient" Width="3000" Height="3000"
+            HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="50%,50%">
+            <Rectangle.RenderTransform>
+                <RotateTransform Angle="0" />
+            </Rectangle.RenderTransform>
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Offset="0.0" Color="{DynamicResource GradientStart}" />
+                    <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
+                    <GradientStop Offset="1.0" Color="{DynamicResource GradientEnd}" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Fill="{DynamicResource AppBackground}" Opacity="0.4" IsHitTestVisible="False" />
+
+        <ContentControl Content="{Binding CurrentPage}" />
+    </Grid>
 
 </Window>

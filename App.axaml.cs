@@ -1,16 +1,19 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using ReviFlash.ViewModels;
 using ReviFlash.Views;
+using ReviFlash.Models;
+using ReviFlash.Data;
 
 namespace ReviFlash;
 
 public partial class App : Application
 {
+    public static AppMetaData CurrentMetaData { get; private set; } = new();
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -18,10 +21,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        DatabaseManager.InitDatabase();
+        CurrentMetaData = Data.MetaDataManager.LoadMetaDataOnStartup();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
-            // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow
             {
