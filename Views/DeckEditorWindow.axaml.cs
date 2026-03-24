@@ -68,4 +68,30 @@ public partial class DeckEditorWindow : Window
             vm.RemoveOptionRow(option);
         }
     }
+
+    private void AddMatchPair_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            vm.AddMatchPairRow();
+        }
+    }
+
+    private void RemoveMatchPair_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+        {
+            throw new InvalidOperationException("Sender is not a Button");
+        }
+
+        if (button.DataContext is not MatchPairEditor pair)
+        {
+            throw new InvalidOperationException("Button's DataContext is not a MatchPairEditor");
+        }
+
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            vm.RemoveMatchPairRow(pair);
+        }
+    }
 }

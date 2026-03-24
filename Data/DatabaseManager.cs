@@ -46,6 +46,19 @@ public static class DatabaseManager
         ";
         cardOptionsCommand.ExecuteNonQuery();
 
+        var matchPairsCommand = connection.CreateCommand();
+        matchPairsCommand.CommandText = @"
+            CREATE TABLE IF NOT EXISTS MatchCardPairs (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                CardID INTEGER NOT NULL,
+                PairIndex INTEGER NOT NULL,
+                LeftText TEXT NOT NULL,
+                RightText TEXT NOT NULL,
+                FOREIGN KEY(CardID) REFERENCES Cards(ID) ON DELETE CASCADE
+            )
+        ";
+        matchPairsCommand.ExecuteNonQuery();
+
         var deckStatsCommand = connection.CreateCommand();
         deckStatsCommand.CommandText = @"
             CREATE TABLE IF NOT EXISTS DeckStats (

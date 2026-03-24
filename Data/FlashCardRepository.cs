@@ -49,6 +49,11 @@ public static class FlashCardRepository
         {
             SaveCardOptions((ulong)newID, multiCard.Options, connection);
         }
+
+        if (card is MatchFlashCard matchCard)
+        {
+            SaveMatchPairs((ulong)newID, matchCard.Options, connection);
+        }
     }
 
     public static List<FlashCardDeck> GetAllDecks()
@@ -100,6 +105,7 @@ public static class FlashCardRepository
                 nameof(TypeFlashCard) => new TypeFlashCard(front, back, id),
                 nameof(FlipFlashCard) => new FlipFlashCard(front, back, id),
                 nameof(MultiFlashCard) => new MultiFlashCard(front, back, GetCardOptions(id, connection), id),
+                nameof(MatchFlashCard) => new MatchFlashCard(front, back, GetMatchPairs(id, connection), id),
                 _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
             };
 
@@ -208,6 +214,16 @@ public static class FlashCardRepository
 
             SaveCardOptions(card.ID, multiCard.Options, connection);
         }
+
+        if (card is MatchFlashCard matchCard)
+        {
+            var deletePairs = connection.CreateCommand();
+            deletePairs.CommandText = "DELETE FROM MatchCardPairs WHERE CardID = $cardId;";
+            deletePairs.Parameters.AddWithValue("$cardId", card.ID);
+            deletePairs.ExecuteNonQuery();
+
+            SaveMatchPairs(card.ID, matchCard.Options, connection);
+        }
     }
 
     public static void DeleteDeck(ulong deckID)
@@ -231,6 +247,11 @@ public static class FlashCardRepository
         deleteOptions.CommandText = "DELETE FROM CardOptions WHERE CardID = $id;";
         deleteOptions.Parameters.AddWithValue("$id", cardID);
         deleteOptions.ExecuteNonQuery();
+
+        var deletePairs = connection.CreateCommand();
+        deletePairs.CommandText = "DELETE FROM MatchCardPairs WHERE CardID = $id;";
+        deletePairs.Parameters.AddWithValue("$id", cardID);
+        deletePairs.ExecuteNonQuery();
 
         var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM Cards WHERE ID = $id;";
@@ -299,5 +320,44 @@ public static class FlashCardRepository
         }
 
         return options;
+    }
+
+    private static void SaveMatchPairs(ulong cardID, List<(string leftText, string rightText)> pairs, Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        for (int i = 0; i < pairs.Count; i++)
+        {
+            var (leftText, rightText) = pairs[i];
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                INSERT INTO MatchCardPairs (CardID, PairIndex, LeftText, RightText)
+                VALUES ($cardId, $index, $leftText, $rightText);
+            ";
+            command.Parameters.AddWithValue("$cardId", cardID);
+            command.Parameters.AddWithValue("$index", i);
+            command.Parameters.AddWithValue("$leftText", leftText);
+            command.Parameters.AddWithValue("$rightText", rightText);
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private static List<(string leftText, string rightText)> GetMatchPairs(ulong cardID, Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        var pairs = new List<(string leftText, string rightText)>();
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT LeftText, RightText
+            FROM MatchCardPairs
+            WHERE CardID = $cardId
+            ORDER BY PairIndex ASC;
+        ";
+        command.Parameters.AddWithValue("$cardId", cardID);
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            pairs.Add((reader.GetString(0), reader.GetString(1)));
+        }
+
+        return pairs;
     }
 }

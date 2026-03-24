@@ -27,6 +27,25 @@ public class ReviewOptionItem : ViewModelBase
     }
 }
 
+public class ReviewMatchRow : ViewModelBase
+{
+    private string? _selectedRightText;
+
+    public string LeftText { get; set; } = "";
+    public string CorrectRightText { get; set; } = "";
+    public List<string> RightChoices { get; set; } = [];
+
+    public string? SelectedRightText
+    {
+        get => _selectedRightText;
+        set
+        {
+            _selectedRightText = value;
+            OnPropertyChanged(nameof(SelectedRightText));
+        }
+    }
+}
+
 public class ReviewViewModel : ViewModelBase
 {
     private readonly List<FlashCard> _sessionCards;
@@ -49,16 +68,21 @@ public class ReviewViewModel : ViewModelBase
     public bool IsTypeCard => CurrentCard is TypeFlashCard;
     public bool IsFlipCard => CurrentCard is FlipFlashCard;
     public bool IsMultiChoiceCard => CurrentCard is MultiFlashCard;
-    public bool ShowBackAnswer => IsAnswerRevealed && !IsMultiChoiceCard;
+    public bool IsMatchCard => CurrentCard is MatchFlashCard;
+    public bool ShowBackAnswer => IsAnswerRevealed && !IsMultiChoiceCard && !IsMatchCard;
     public bool IsAnswerChecked { get; set; } = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
+    public ObservableCollection<ReviewMatchRow> MatchRows { get; } = new();
+    public ObservableCollection<string> MatchRightChoices { get; } = new();
 
     public bool HasSelectedWrongOptions => SelectedWrongOptions.Count > 0;
     public bool HasMissedCorrectOptions => MissedCorrectOptions.Count > 0;
+    public bool HasWrongMatches => WrongMatches.Count > 0;
 
     public ObservableCollection<string> SelectedWrongOptions { get; } = new();
     public ObservableCollection<string> MissedCorrectOptions { get; } = new();
+    public ObservableCollection<string> WrongMatches { get; } = new();
     
     private bool _isAnswerCorrect = false;
     public bool IsAnswerCorrect
@@ -87,6 +111,7 @@ public class ReviewViewModel : ViewModelBase
         this.deckID = deckID;
 
         LoadMultiChoiceOptionsForCurrentCard();
+        LoadMatchRowsForCurrentCard();
 
         // Start a timer to update the display every 100ms
         _displayTimer = new Timer(100);
@@ -183,6 +208,42 @@ public class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasMissedCorrectOptions));
     }
 
+    public void CheckMatchAnswer()
+    {
+        if (CurrentCard is not MatchFlashCard)
+        {
+            return;
+        }
+
+        var selectedPairs = MatchRows
+            .Where(row => !string.IsNullOrWhiteSpace(row.SelectedRightText))
+            .Select(row => (row.LeftText, rightText: row.SelectedRightText!))
+            .ToList();
+
+        IsAnswerCorrect = CurrentCard.VerifyAnswer(selectedPairs);
+        if (IsAnswerCorrect)
+        {
+            CorrectCount++;
+        }
+
+        WrongMatches.Clear();
+        foreach (var row in MatchRows)
+        {
+            if (!string.Equals(row.SelectedRightText, row.CorrectRightText, StringComparison.Ordinal))
+            {
+                var selected = string.IsNullOrWhiteSpace(row.SelectedRightText) ? "(no selection)" : row.SelectedRightText;
+                WrongMatches.Add($"{row.LeftText} -> {selected} (correct: {row.CorrectRightText})");
+            }
+        }
+
+        IsAnswerChecked = true;
+        IsAnswerRevealed = true;
+        OnPropertyChanged(nameof(IsAnswerRevealed));
+        OnPropertyChanged(nameof(IsAnswerChecked));
+        OnPropertyChanged(nameof(ShowBackAnswer));
+        OnPropertyChanged(nameof(HasWrongMatches));
+    }
+
     public void NextCard()
     {
         if (_currentIndex < _sessionCards.Count - 1)
@@ -194,7 +255,9 @@ public class ReviewViewModel : ViewModelBase
             UserTypedAnswer = "";
             SelectedWrongOptions.Clear();
             MissedCorrectOptions.Clear();
+            WrongMatches.Clear();
             LoadMultiChoiceOptionsForCurrentCard();
+            LoadMatchRowsForCurrentCard();
             OnPropertyChanged(nameof(CurrentCard));
             OnPropertyChanged(nameof(IsAnswerRevealed));
             OnPropertyChanged(nameof(IsAnswerChecked));
@@ -205,10 +268,12 @@ public class ReviewViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsTypeCard));
             OnPropertyChanged(nameof(IsFlipCard));
             OnPropertyChanged(nameof(IsMultiChoiceCard));
+            OnPropertyChanged(nameof(IsMatchCard));
             OnPropertyChanged(nameof(ShowBackAnswer));
             OnPropertyChanged(nameof(ShowAnswerButtonVisible));
             OnPropertyChanged(nameof(HasSelectedWrongOptions));
             OnPropertyChanged(nameof(HasMissedCorrectOptions));
+            OnPropertyChanged(nameof(HasWrongMatches));
         }
         else
         {
@@ -246,13 +311,46 @@ public class ReviewViewModel : ViewModelBase
             return;
         }
 
-        foreach (var (optionText, isCorrect) in multiCard.Options)
+        foreach (var (optionText, isCorrect) in multiCard.Options.OrderBy(_ => Guid.NewGuid()))
         {
             MultiChoiceAnswerOptions.Add(new ReviewOptionItem
             {
                 OptionText = optionText,
                 IsCorrect = isCorrect,
                 IsSelected = false,
+            });
+        }
+    }
+
+    private void LoadMatchRowsForCurrentCard()
+    {
+        MatchRows.Clear();
+        MatchRightChoices.Clear();
+
+        if (CurrentCard is not MatchFlashCard matchCard)
+        {
+            return;
+        }
+
+        var randomizedPairs = matchCard.Options.OrderBy(_ => Guid.NewGuid()).ToList();
+        var randomizedRightChoices = randomizedPairs
+            .Select(p => p.rightText)
+            .OrderBy(_ => Guid.NewGuid())
+            .ToList();
+
+        foreach (var choice in randomizedRightChoices)
+        {
+            MatchRightChoices.Add(choice);
+        }
+
+        foreach (var (leftText, rightText) in randomizedPairs)
+        {
+            MatchRows.Add(new ReviewMatchRow
+            {
+                LeftText = leftText,
+                CorrectRightText = rightText,
+                RightChoices = [.. randomizedRightChoices],
+                SelectedRightText = null,
             });
         }
     }

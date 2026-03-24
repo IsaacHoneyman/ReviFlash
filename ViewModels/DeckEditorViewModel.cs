@@ -32,11 +32,38 @@ public class MultiChoiceOptionEditor : ViewModelBase
     }
 }
 
+public class MatchPairEditor : ViewModelBase
+{
+    private string _leftText = "";
+    private string _rightText = "";
+
+    public string LeftText
+    {
+        get => _leftText;
+        set
+        {
+            _leftText = value;
+            OnPropertyChanged(nameof(LeftText));
+        }
+    }
+
+    public string RightText
+    {
+        get => _rightText;
+        set
+        {
+            _rightText = value;
+            OnPropertyChanged(nameof(RightText));
+        }
+    }
+}
+
 public class DeckEditorViewModel : ViewModelBase
 {
     public FlashCardDeck CurrentDeck { get; }
     public ObservableCollection<FlashCard> Cards { get; set; } = new();
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
+    public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();
     private FlashCard? _editingCard;
 
     private string _deckName;
@@ -77,7 +104,8 @@ public class DeckEditorViewModel : ViewModelBase
     {
         "Flip",
         "Type to Answer",
-        "Multi Choice"
+        "Multi Choice",
+        "Match"
     };
 
     private string _selectedCardType = "Flip";
@@ -87,12 +115,30 @@ public class DeckEditorViewModel : ViewModelBase
         set
         {
             _selectedCardType = value;
+
+            if (_selectedCardType == "Match")
+            {
+                if (string.IsNullOrWhiteSpace(NewFront))
+                {
+                    NewFront = "Match The Cards";
+                }
+
+                if (string.IsNullOrWhiteSpace(NewBack))
+                {
+                    NewBack = "Match The Cards";
+                }
+            }
+
             OnPropertyChanged(nameof(SelectedCardType));
             OnPropertyChanged(nameof(IsMultiChoiceCardType));
+            OnPropertyChanged(nameof(IsMatchCardType));
+            OnPropertyChanged(nameof(ShowFrontBackEditor));
         }
     }
 
     public bool IsMultiChoiceCardType => SelectedCardType == "Multi Choice";
+    public bool IsMatchCardType => SelectedCardType == "Match";
+    public bool ShowFrontBackEditor => true;
 
     private string _validationMessage = "";
     public string ValidationMessage
@@ -115,6 +161,8 @@ public class DeckEditorViewModel : ViewModelBase
 
         AddOptionRow();
         AddOptionRow();
+        AddMatchPairRow();
+        AddMatchPairRow();
 
         LoadCards();
     }
@@ -145,13 +193,27 @@ public class DeckEditorViewModel : ViewModelBase
             return;
         }
 
+        var matchPairs = BuildValidatedMatchPairs();
+        if (IsMatchCardType && matchPairs is null)
+        {
+            return;
+        }
+
+        var frontValue = NewFront;
+        var backValue = NewBack;
+
         if (_editingCard is not null)
         {
-            _editingCard.UpdateContent(NewFront, NewBack);
+            _editingCard.UpdateContent(frontValue, backValue);
 
             if (_editingCard is MultiFlashCard existingMulti && optionTuples is not null)
             {
                 existingMulti.Options = optionTuples;
+            }
+
+            if (_editingCard is MatchFlashCard existingMatch && matchPairs is not null)
+            {
+                existingMatch.Options = matchPairs;
             }
 
             FlashCardRepository.UpdateCard(_editingCard);
@@ -172,15 +234,21 @@ public class DeckEditorViewModel : ViewModelBase
 
         if (SelectedCardType == "Type to Answer")
         {
-            newCard = new TypeFlashCard(NewFront, NewBack);
+            newCard = new TypeFlashCard(frontValue, backValue);
         }
         else if (SelectedCardType == "Multi Choice")
         {
-            newCard = new MultiFlashCard(NewFront, NewBack, optionTuples ?? []);
+            newCard = new MultiFlashCard(frontValue, backValue, optionTuples ?? []);
+        }
+        else if (SelectedCardType == "Match")
+        {
+            newCard = new MatchFlashCard(frontValue, backValue, matchPairs ?? []);
         }
         else
         {
-            newCard = new FlipFlashCard(NewFront, NewBack);
+            newCard = SelectedCardType == "Type to Answer"
+                ? new TypeFlashCard(frontValue, backValue)
+                : new FlipFlashCard(frontValue, backValue);
         }
 
         FlashCardRepository.SaveNewCard(newCard, CurrentDeck.ID);
@@ -212,6 +280,19 @@ public class DeckEditorViewModel : ViewModelBase
                 });
             }
         }
+        else if (card is MatchFlashCard matchCard)
+        {
+            SelectedCardType = "Match";
+            MatchPairs.Clear();
+            foreach (var (leftText, rightText) in matchCard.Options)
+            {
+                MatchPairs.Add(new MatchPairEditor
+                {
+                    LeftText = leftText,
+                    RightText = rightText
+                });
+            }
+        }
         else
         {
             SelectedCardType = "Flip";
@@ -224,8 +305,16 @@ public class DeckEditorViewModel : ViewModelBase
     private void ClearEditor()
     {
         _editingCard = null;
-        NewFront = "";
-        NewBack = "";
+        if (IsMatchCardType)
+        {
+            NewFront = "Match The Cards";
+            NewBack = "Match The Cards";
+        }
+        else
+        {
+            NewFront = "";
+            NewBack = "";
+        }
         ValidationMessage = "";
 
         if (IsMultiChoiceCardType)
@@ -233,6 +322,13 @@ public class DeckEditorViewModel : ViewModelBase
             MultiChoiceOptions.Clear();
             AddOptionRow();
             AddOptionRow();
+        }
+
+        if (IsMatchCardType)
+        {
+            MatchPairs.Clear();
+            AddMatchPairRow();
+            AddMatchPairRow();
         }
 
         OnPropertyChanged(nameof(SaveButtonText));
@@ -259,6 +355,30 @@ public class DeckEditorViewModel : ViewModelBase
         }
 
         MultiChoiceOptions.Remove(option);
+        ValidationMessage = "";
+    }
+
+    public void AddMatchPairRow()
+    {
+        if (MatchPairs.Count >= 6)
+        {
+            ValidationMessage = "You can add up to 6 match pairs.";
+            return;
+        }
+
+        MatchPairs.Add(new MatchPairEditor());
+        ValidationMessage = "";
+    }
+
+    public void RemoveMatchPairRow(MatchPairEditor pair)
+    {
+        if (MatchPairs.Count <= 2)
+        {
+            ValidationMessage = "Match cards require at least 2 pairs.";
+            return;
+        }
+
+        MatchPairs.Remove(pair);
         ValidationMessage = "";
     }
 
@@ -304,5 +424,38 @@ public class DeckEditorViewModel : ViewModelBase
         }
 
         return options;
+    }
+
+    private List<(string leftText, string rightText)>? BuildValidatedMatchPairs()
+    {
+        if (!IsMatchCardType)
+        {
+            return null;
+        }
+
+        var pairs = MatchPairs
+            .Select(p => (leftText: p.LeftText.Trim(), rightText: p.RightText.Trim()))
+            .Where(p => !string.IsNullOrWhiteSpace(p.leftText) && !string.IsNullOrWhiteSpace(p.rightText))
+            .ToList();
+
+        if (pairs.Count < 2)
+        {
+            ValidationMessage = "Provide at least 2 complete match pairs.";
+            return null;
+        }
+
+        if (pairs.Select(p => p.leftText).Distinct().Count() != pairs.Count)
+        {
+            ValidationMessage = "Left side values must be unique.";
+            return null;
+        }
+
+        if (pairs.Select(p => p.rightText).Distinct().Count() != pairs.Count)
+        {
+            ValidationMessage = "Right side values must be unique.";
+            return null;
+        }
+
+        return pairs;
     }
 }

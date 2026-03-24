@@ -125,6 +125,39 @@
                                 FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
                         </StackPanel>
 
+                        <StackPanel Spacing="8" IsVisible="{Binding IsMatchCardType}">
+                            <TextBlock Text="Match cards use fixed question text: Match The Cards"
+                                FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+
+                            <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
+                                <TextBlock Grid.Column="0" Text="Match pairs (max 6)" FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}" Margin="4,0,0,0" />
+                                <Button Grid.Column="1" Content="+ Add Pair" Click="AddMatchPair_Click"
+                                    CornerRadius="8" Padding="10,6"
+                                    Background="#7044AAFF" Foreground="{DynamicResource PrimaryButtonForeground}" />
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding MatchPairs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:MatchPairEditor">
+                                        <Grid ColumnDefinitions="*, Auto, *, Auto" Margin="0,2,0,2">
+                                            <TextBox Grid.Column="0" Text="{Binding LeftText, Mode=TwoWay}"
+                                                Watermark="Left text" Background="{DynamicResource AppBackground}" />
+                                            <TextBlock Grid.Column="1" Text="↔" VerticalAlignment="Center" Margin="8,0" />
+                                            <TextBox Grid.Column="2" Text="{Binding RightText, Mode=TwoWay}"
+                                                Watermark="Right text" Background="{DynamicResource AppBackground}" />
+                                            <Button Grid.Column="3" Content="✕" Click="RemoveMatchPair_Click"
+                                                CornerRadius="6" Padding="8,4" Margin="8,0,0,0"
+                                                Background="#60FF4444" Foreground="{DynamicResource IconForeground}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="In review, left and right sides are shuffled and the user matches them."
+                                FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                        </StackPanel>
+
                         <TextBlock Text="{Binding ValidationMessage}" Foreground="#FF6666"
                             TextWrapping="Wrap" FontSize="12" IsVisible="{Binding HasValidationMessage}" />
 
@@ -150,7 +183,7 @@
                                         Foreground="{DynamicResource TextSecondary}"
                                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,8" />
 
-                                    <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12">
+                                    <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12" IsVisible="{Binding !IsMatchCard}">
                                         <ItemsControl ItemsSource="{Binding Front, Converter={StaticResource MixedMathSegmentsConverter}}">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
@@ -191,6 +224,13 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="8" IsVisible="{Binding IsMatchCard}">
+                                        <TextBlock Text="Match The Cards" FontSize="18" FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock Text="This card uses left/right matching pairs." FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}" />
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Grid.Row="1"

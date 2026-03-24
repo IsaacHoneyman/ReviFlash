@@ -520,6 +520,86 @@
                                 </StackPanel>
                             </StackPanel>
 
+                            <!-- Match Card -->
+                            <StackPanel Spacing="10" IsVisible="{Binding IsMatchCard}">
+                                <!-- Input Phase -->
+                                <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                                    <TextBlock Text="Match each left item to the correct right item:" FontSize="14"
+                                        Foreground="{DynamicResource TextSecondary}" />
+
+                                    <ItemsControl ItemsSource="{Binding MatchRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ReviewMatchRow">
+                                                <Border Background="#18000000" BorderBrush="{DynamicResource CardBorder}"
+                                                    BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
+                                                    <Grid ColumnDefinitions="*, Auto, *" VerticalAlignment="Center">
+                                                        <TextBlock Grid.Column="0" Text="{Binding LeftText}" FontSize="16"
+                                                            VerticalAlignment="Center" TextWrapping="Wrap"
+                                                            Foreground="{DynamicResource TextPrimary}" />
+                                                        <TextBlock Grid.Column="1" Text="→" Margin="10,0"
+                                                            VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                                        <ComboBox Grid.Column="2"
+                                                            ItemsSource="{Binding RightChoices}"
+                                                            SelectedItem="{Binding SelectedRightText, Mode=TwoWay}"
+                                                            HorizontalAlignment="Stretch"
+                                                            CornerRadius="8" Padding="8,6" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Button Content="Submit Answer" Click="SubmitAnswer_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                </StackPanel>
+
+                                <!-- Result Phase -->
+                                <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                                    <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        IsVisible="{Binding IsAnswerCorrect}" />
+                                    <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        IsVisible="{Binding !IsAnswerCorrect}" />
+
+                                    <StackPanel>
+                                        <TextBlock Text="Correct matches:" FontSize="14"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                        <ItemsControl ItemsSource="{Binding MatchRows}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ReviewMatchRow">
+                                                    <StackPanel Spacing="0">
+                                                        <TextBlock Text="{Binding LeftText, StringFormat='• {0}'}"
+                                                            FontSize="14" Foreground="#44CC88" Margin="0,2,0,0" />
+                                                        <TextBlock Text="{Binding CorrectRightText, StringFormat='   → {0}'}"
+                                                            FontSize="14" Foreground="#44CC88" Margin="0,0,0,2" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <StackPanel IsVisible="{Binding HasWrongMatches}">
+                                        <TextBlock Text="Incorrect selections:" FontSize="14"
+                                            Foreground="#FF8888" />
+                                        <ItemsControl ItemsSource="{Binding WrongMatches}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding .}" FontSize="14"
+                                                        Foreground="#FF8888" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <Button Content="Next" Click="NextCard_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+
                             <!-- Flip Card: Answer Reveal (Both Flip and Type manual mode) -->
                             <StackPanel Orientation="Horizontal" Spacing="20"
                                 HorizontalAlignment="Center" IsVisible="{Binding IsFlipCard}">

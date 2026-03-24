@@ -188,6 +188,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (vm.IsMatchCard)
+        {
+            vm.CheckMatchAnswer();
+            return;
+        }
+
         vm.CheckTypedAnswer();
     }
     private void NextCard_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.NextCard();
