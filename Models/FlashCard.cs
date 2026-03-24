@@ -33,6 +33,7 @@ public abstract class FlashCard
     {
         nameof(TypeFlashCard) => "Type to Answer",
         nameof(FlipFlashCard) => "Flip",
+        nameof(MultiFlashCard) => "Multi Choice",
         _ => "Unknown"
     };
 }

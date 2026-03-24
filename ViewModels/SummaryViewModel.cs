@@ -15,7 +15,7 @@ public class SummaryViewModel : ViewModelBase
         : TimeTaken.ToString(@"mm\:ss");
     public string SessionMarker => IsPartialSession ? "(Partial)" : "";
 
-    public string Grade => Percentage switch
+    public string Grade => Total == 0 ? "-" : Percentage switch
     {
         >= 90 => "A*",
         >= 80 => "A",

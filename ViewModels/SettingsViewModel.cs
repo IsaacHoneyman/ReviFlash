@@ -41,6 +41,28 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public bool ShowTimer
+    {
+        get => App.CurrentMetaData.ShowTimer;
+        set
+        {
+            App.CurrentMetaData.ShowTimer = value;
+            OnPropertyChanged(nameof(ShowTimer));
+            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+        }
+    }
+
+    public bool ShowProgress
+    {
+        get => App.CurrentMetaData.ShowProgress;
+        set
+        {
+            App.CurrentMetaData.ShowProgress = value;
+            OnPropertyChanged(nameof(ShowProgress));
+            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+        }
+    }
+
     public static void ApplyTheme(string themeName)
     {
         App.CurrentMetaData.Theme = themeName;

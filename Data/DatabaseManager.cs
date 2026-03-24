@@ -33,6 +33,19 @@ public static class DatabaseManager
         ";
         cardCommand.ExecuteNonQuery();
 
+        var cardOptionsCommand = connection.CreateCommand();
+        cardOptionsCommand.CommandText = @"
+            CREATE TABLE IF NOT EXISTS CardOptions (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                CardID INTEGER NOT NULL,
+                OptionIndex INTEGER NOT NULL,
+                OptionText TEXT NOT NULL,
+                IsCorrect INTEGER NOT NULL,
+                FOREIGN KEY(CardID) REFERENCES Cards(ID) ON DELETE CASCADE
+            )
+        ";
+        cardOptionsCommand.ExecuteNonQuery();
+
         var deckStatsCommand = connection.CreateCommand();
         deckStatsCommand.CommandText = @"
             CREATE TABLE IF NOT EXISTS DeckStats (

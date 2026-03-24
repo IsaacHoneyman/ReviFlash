@@ -26,6 +26,7 @@ public static class MetaDataManager
 
         data.LastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
         SettingsViewModel.ApplyTheme(data.Theme);
+        data.Version = MainWindowViewModel.VersionText;
         SaveMetaData(data);
         return data;
     }

@@ -174,7 +174,22 @@ public partial class MainWindow : Window
     }
 
     private void ShowAnswer_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.Reveal();
-    private void SubmitAnswer_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.CheckTypedAnswer();
+    private void SubmitAnswer_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = GetReviewVM();
+        if (vm is null)
+        {
+            return;
+        }
+
+        if (vm.IsMultiChoiceCard)
+        {
+            vm.CheckMultiChoiceAnswer();
+            return;
+        }
+
+        vm.CheckTypedAnswer();
+    }
     private void NextCard_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.NextCard();
     private void Correct_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkCorrect();
     private void Incorrect_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkIncorrect();

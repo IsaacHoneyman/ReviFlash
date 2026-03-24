@@ -3,6 +3,7 @@ using ReviFlash.Models;
 using ReviFlash.Data;
 using System.Linq;
 using System;
+using System.Text.RegularExpressions;
 
 namespace ReviFlash.ViewModels;
 
@@ -34,8 +35,8 @@ public class MainWindowViewModel : ViewModelBase
         set => _streakText = value;
     }
 
-    private string _versionText = "Version A-0.2";
-    public string VersionText
+    private static string _versionText = "Version A-0.2.1";
+    public static string VersionText
     {
         get => _versionText;
         set => _versionText = value;
@@ -51,6 +52,32 @@ public class MainWindowViewModel : ViewModelBase
             _searchText = value;
             FilterDecks();
         }
+    }
+
+    public static int CompareVersionNumber(string versionA, string versionB)
+    {
+        int[] aVersion = ExtractVersionNumber(versionA);
+        int[] bVersion = ExtractVersionNumber(versionB);
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (aVersion[i] > bVersion[i]) return 1;
+            if (aVersion[i] < bVersion[i]) return -1;
+        }
+
+        return 0; 
+    }
+
+    private static int[] ExtractVersionNumber(string version)
+    {
+        Match match = Regex.Match(version, @"(\d+)\.(\d+)\.(\d+)");
+
+        if (!match.Success)
+            return [0, 0, 0];
+
+        return
+        [   int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value),
+            int.Parse(match.Groups[3].Value) ];
     }
 
     private TimePeriodOption _selectedTimePeriod = null!;
@@ -70,7 +97,7 @@ public class MainWindowViewModel : ViewModelBase
                 LoadStats();
             }
         }
-    } 
+    }
 
     private int _totalQuestions = 0;
     public int TotalQuestions
@@ -143,7 +170,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         var meta = App.CurrentMetaData;
         StreakText = $"{meta.LaunchStreak} Day Streak";
-        CurrentPage = this; 
+        CurrentPage = this;
 
         // Initialize time period options
         TimePeriods.Add(new TimePeriodOption("All Time", null!));
@@ -171,7 +198,7 @@ public class MainWindowViewModel : ViewModelBase
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
-        
+
         // Calculate grade using same logic as SummaryViewModel, show "-" if no questions
         if (total == 0)
         {
@@ -228,7 +255,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         var (correct, total, timeTakenSeconds) = FlashCardRepository.GetStats(deckID, timeModifier);
         double percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
-        
+
         string grade;
         if (total == 0)
         {
@@ -246,7 +273,7 @@ public class MainWindowViewModel : ViewModelBase
                 _ => "U"
             };
         }
-        
+
         return (correct, total, timeTakenSeconds, percentage, grade);
     }
 

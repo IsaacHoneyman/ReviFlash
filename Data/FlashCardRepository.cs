@@ -44,6 +44,11 @@ public static class FlashCardRepository
 
         long newID = (long)(command.ExecuteScalar() ?? long.MaxValue);
         card.AssignDatabaseID((ulong)newID);
+
+        if (card is MultiFlashCard multiCard)
+        {
+            SaveCardOptions((ulong)newID, multiCard.Options, connection);
+        }
     }
 
     public static List<FlashCardDeck> GetAllDecks()
@@ -94,6 +99,7 @@ public static class FlashCardRepository
             {
                 nameof(TypeFlashCard) => new TypeFlashCard(front, back, id),
                 nameof(FlipFlashCard) => new FlipFlashCard(front, back, id),
+                nameof(MultiFlashCard) => new MultiFlashCard(front, back, GetCardOptions(id, connection), id),
                 _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
             };
 
@@ -192,6 +198,16 @@ public static class FlashCardRepository
         command.Parameters.AddWithValue("$id", card.ID);
 
         command.ExecuteNonQuery();
+
+        if (card is MultiFlashCard multiCard)
+        {
+            var deleteOptions = connection.CreateCommand();
+            deleteOptions.CommandText = "DELETE FROM CardOptions WHERE CardID = $cardId;";
+            deleteOptions.Parameters.AddWithValue("$cardId", card.ID);
+            deleteOptions.ExecuteNonQuery();
+
+            SaveCardOptions(card.ID, multiCard.Options, connection);
+        }
     }
 
     public static void DeleteDeck(ulong deckID)
@@ -210,6 +226,11 @@ public static class FlashCardRepository
     {
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
+
+        var deleteOptions = connection.CreateCommand();
+        deleteOptions.CommandText = "DELETE FROM CardOptions WHERE CardID = $id;";
+        deleteOptions.Parameters.AddWithValue("$id", cardID);
+        deleteOptions.ExecuteNonQuery();
 
         var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM Cards WHERE ID = $id;";
@@ -237,5 +258,46 @@ public static class FlashCardRepository
         command.CommandText = "DELETE FROM DeckStats WHERE DeckID = $deckId;";
         command.Parameters.AddWithValue("$deckId", deckID);
         command.ExecuteNonQuery();
+    }
+
+    private static void SaveCardOptions(ulong cardID, List<(string optionText, bool isCorrect)> options, Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        for (int i = 0; i < options.Count; i++)
+        {
+            var (optionText, isCorrect) = options[i];
+            var optionCommand = connection.CreateCommand();
+            optionCommand.CommandText = @"
+                INSERT INTO CardOptions (CardID, OptionIndex, OptionText, IsCorrect)
+                VALUES ($cardId, $index, $text, $isCorrect);
+            ";
+            optionCommand.Parameters.AddWithValue("$cardId", cardID);
+            optionCommand.Parameters.AddWithValue("$index", i);
+            optionCommand.Parameters.AddWithValue("$text", optionText);
+            optionCommand.Parameters.AddWithValue("$isCorrect", isCorrect ? 1 : 0);
+            optionCommand.ExecuteNonQuery();
+        }
+    }
+
+    private static List<(string optionText, bool isCorrect)> GetCardOptions(ulong cardID, Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        var options = new List<(string optionText, bool isCorrect)>();
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT OptionText, IsCorrect
+            FROM CardOptions
+            WHERE CardID = $cardId
+            ORDER BY OptionIndex ASC;
+        ";
+        command.Parameters.AddWithValue("$cardId", cardID);
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            string optionText = reader.GetString(0);
+            bool isCorrect = reader.GetInt32(1) == 1;
+            options.Add((optionText, isCorrect));
+        }
+
+        return options;
     }
 }

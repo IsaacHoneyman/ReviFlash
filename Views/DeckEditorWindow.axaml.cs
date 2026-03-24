@@ -42,4 +42,30 @@ public partial class DeckEditorWindow : Window
             vm.BeginEditCard(card);
         }
     }
+
+    private void AddOption_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            vm.AddOptionRow();
+        }
+    }
+
+    private void RemoveOption_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+        {
+            throw new InvalidOperationException("Sender is not a Button");
+        }
+
+        if (button.DataContext is not MultiChoiceOptionEditor option)
+        {
+            throw new InvalidOperationException("Button's DataContext is not a MultiChoiceOptionEditor");
+        }
+
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            vm.RemoveOptionRow(option);
+        }
+    }
 }

@@ -4,7 +4,7 @@
         x:Class="ReviFlash.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
-        Width="420" Height="560"
+        Width="420" Height="720"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         Background="{DynamicResource AppBackground}">
@@ -27,6 +27,32 @@
                   SelectedItem="{Binding SelectedTheme}"
                   HorizontalAlignment="Stretch"
                   CornerRadius="5"/>
+    </StackPanel>
+</Border>
+
+            <Border Background="{DynamicResource CardBackground}" 
+        BorderBrush="{DynamicResource CardBorder}" 
+        BorderThickness="1" 
+        CornerRadius="10" 
+        Padding="16">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Review Settings" 
+                   FontWeight="SemiBold" 
+                   Foreground="{DynamicResource TextPrimary}"/>
+        
+        <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Show Timer During Review" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowTimer}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Show Progress Meter During Review" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowProgress}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
     </StackPanel>
 </Border>
 

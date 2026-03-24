@@ -303,21 +303,41 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vm:ReviewViewModel}">
-            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
-                    Padding="32">
-                    <Grid RowDefinitions="Auto, *">
-                        <Button Grid.Row="0" Click="QuitSession_Click" 
-                            Background="#70FFFFFF" CornerRadius="4" Padding="4" Height="28" Width="28"
-                            VerticalAlignment="Center" HorizontalAlignment="Right" Cursor="Hand"
-                            ToolTip.Tip="Quit and save progress">
-                            <TextBlock Text="✕" FontSize="16" Foreground="{DynamicResource IconForeground}" 
-                                VerticalAlignment="Center" HorizontalAlignment="Center" />
-                        </Button>
+            <Grid RowDefinitions="Auto, *">
+                <!-- Top Bar with Timer, Progress, and Quit Button -->
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto, *" Margin="24, 16, 24, 16" VerticalAlignment="Center">
+                    <!-- Timer -->
+                    <StackPanel Grid.Column="0" IsVisible="{Binding ShouldShowTimer}">
+                        <TextBlock Text="Time" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                        <TextBlock Text="{Binding TimerText}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
+                    
+                    <!-- Progress (Center) -->
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Center" IsVisible="{Binding ShouldShowProgress}">
+                        <TextBlock Text="Progress" FontSize="14" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding ProgressCardCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding ProgressPercentage, StringFormat='{}{0}%'}" FontSize="14" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                        <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="4" CornerRadius="2" Margin="0,4,0,0" Width="100" />
+                    </StackPanel>
+                    
+                    <!-- Quit Button -->
+                    <Button Grid.Column="2" Click="QuitSession_Click" 
+                        Background="#70FFFFFF" CornerRadius="4" Padding="4" Height="28" Width="28"
+                        VerticalAlignment="Top" Margin="0, 0, 0, 0" HorizontalAlignment="Right" Cursor="Hand"
+                        ToolTip.Tip="Quit and save progress">
+                        <TextBlock Text="✕" FontSize="16" Foreground="{DynamicResource IconForeground}" 
+                            VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </Button>
+                </Grid>
 
-                        <StackPanel Grid.Row="1" Spacing="20">
-                        <TextBlock Text="{Binding CurrentNumber, StringFormat='Card {0} of {1}'}"
+                <!-- Review Card -->
+                <Grid Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
+                        Padding="32">
+                        <StackPanel Spacing="20">
+                        <TextBlock Text="{Binding CurrentNumber, StringFormat='Card {0} of {1}'}" 
                             HorizontalAlignment="Center"
+                            FontSize="16"
                             Foreground="{DynamicResource TextSecondary}" />
 
                         <ItemsControl ItemsSource="{Binding CurrentCard.Front, Converter={StaticResource MixedMathSegmentsConverter}}"
@@ -332,6 +352,7 @@
                                     <Grid>
                                         <TextBlock Text="{Binding Content}"
                                             TextWrapping="Wrap"
+                                            FontSize="18"
                                             Foreground="{DynamicResource TextPrimary}"
                                             IsVisible="{Binding IsText}" />
                                         <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
@@ -344,7 +365,7 @@
                             Margin="0,20" />
 
                         <ItemsControl ItemsSource="{Binding CurrentCard.Back, Converter={StaticResource MixedMathSegmentsConverter}}"
-                            IsVisible="{Binding IsAnswerRevealed}" HorizontalAlignment="Center">
+                            IsVisible="{Binding ShowBackAnswer}" HorizontalAlignment="Center">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel />
@@ -355,6 +376,7 @@
                                     <Grid>
                                         <TextBlock Text="{Binding Content}"
                                             TextWrapping="Wrap"
+                                            FontSize="18"
                                             Foreground="{DynamicResource TextSecondary}"
                                             IsVisible="{Binding IsText}" />
                                         <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
@@ -367,6 +389,7 @@
                             <!-- Flip Card: Show Answer Button -->
                             <Button Content="Show Answer" Click="ShowAnswer_Click"
                                 IsVisible="{Binding ShowAnswerButtonVisible}"
+                                FontSize="16"
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
                             
                             <!-- Type Card: Text Input -->
@@ -375,12 +398,13 @@
                                 <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
                                     <TextBox Text="{Binding UserTypedAnswer, Mode=TwoWay}"
                                         Watermark="Type your answer..."
-                                        CornerRadius="8" Padding="12, 10" FontSize="14"
+                                        CornerRadius="8" Padding="12, 10" FontSize="16"
                                         Background="{DynamicResource CardBackground}"
                                         Foreground="{DynamicResource TextPrimary}"
                                         BorderBrush="{DynamicResource CardBorder}"
                                         BorderThickness="1.5" />
                                     <Button Content="Submit Answer" Click="SubmitAnswer_Click"
+                                        FontSize="16"
                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                         Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" />
                                 </StackPanel>
@@ -388,17 +412,17 @@
                                 <!-- Result Phase -->
                                 <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
                                     <!-- Correct/Incorrect Visual -->
-                                    <TextBlock Text="✅ Correct!" FontSize="24" FontWeight="Bold"
+                                    <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
                                         Foreground="#4444FF44" HorizontalAlignment="Center"
                                         IsVisible="{Binding IsAnswerCorrect}" />
-                                    <TextBlock Text="❌ Incorrect" FontSize="24" FontWeight="Bold"
+                                    <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
                                         Foreground="#FF4444" HorizontalAlignment="Center"
                                         IsVisible="{Binding !IsAnswerCorrect}" />
                                     
                                     <!-- Show Correct Answer -->
                                     <StackPanel>
                                         <TextBlock Text="Correct Answer:" 
-                                            Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                            Foreground="{DynamicResource TextSecondary}" FontSize="14" />
                                         <TextBlock Text="{Binding CurrentCard.Back}"
                                             Foreground="{DynamicResource TextPrimary}" FontSize="16"
                                             TextWrapping="Wrap" />
@@ -406,6 +430,92 @@
                                     
                                     <!-- Next Button -->
                                     <Button Content="Next" Click="NextCard_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Multi Choice Card -->
+                            <StackPanel Spacing="10" IsVisible="{Binding IsMultiChoiceCard}">
+                                <!-- Input Phase -->
+                                <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                                    <TextBlock Text="Select all options you think are correct:" FontSize="14"
+                                        Foreground="{DynamicResource TextSecondary}" />
+
+                                    <ItemsControl ItemsSource="{Binding MultiChoiceAnswerOptions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ReviewOptionItem">
+                                                <Border Background="#18000000" BorderBrush="{DynamicResource CardBorder}"
+                                                    BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
+                                                    <Grid ColumnDefinitions="Auto, *">
+                                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                            VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding OptionText}" FontSize="16"
+                                                            VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"
+                                                            TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Button Content="Submit Answer" Click="SubmitAnswer_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                </StackPanel>
+
+                                <!-- Result Phase -->
+                                <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                                    <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        IsVisible="{Binding IsAnswerCorrect}" />
+                                    <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        IsVisible="{Binding !IsAnswerCorrect}" />
+
+                                    <StackPanel>
+                                        <TextBlock Text="Correct options:" FontSize="14"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                        <ItemsControl ItemsSource="{Binding MultiChoiceAnswerOptions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ReviewOptionItem">
+                                                    <TextBlock Text="{Binding OptionText, StringFormat='✓ {0}'}"
+                                                        FontSize="15" Foreground="#44CC88"
+                                                        Margin="0,2,0,0" IsVisible="{Binding IsCorrect}" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <StackPanel IsVisible="{Binding HasSelectedWrongOptions}">
+                                        <TextBlock Text="You selected these incorrectly:" FontSize="14"
+                                            Foreground="#FF8888" />
+                                        <ItemsControl ItemsSource="{Binding SelectedWrongOptions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ., StringFormat='✕ {0}'}"
+                                                        FontSize="14" Foreground="#FF8888" Margin="0,2,0,0" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <StackPanel IsVisible="{Binding HasMissedCorrectOptions}">
+                                        <TextBlock Text="You missed these correct options:" FontSize="14"
+                                            Foreground="#FFCC66" />
+                                        <ItemsControl ItemsSource="{Binding MissedCorrectOptions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ., StringFormat='• {0}'}"
+                                                        FontSize="14" Foreground="#FFCC66" Margin="0,2,0,0" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <Button Content="Next" Click="NextCard_Click"
+                                        FontSize="16"
                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
                                 </StackPanel>
                             </StackPanel>
@@ -413,17 +523,23 @@
                             <!-- Flip Card: Answer Reveal (Both Flip and Type manual mode) -->
                             <StackPanel Orientation="Horizontal" Spacing="20"
                                 HorizontalAlignment="Center" IsVisible="{Binding IsFlipCard}">
-                                <Button Content="❌ Incorrect" Click="Incorrect_Click"
-                                    Background="#90FF4444" Padding="20,10"
+                                <Button Content="✕ Incorrect" Click="Incorrect_Click"
+                                    FontSize="16"
+                                    Background="#60FF4444" Padding="20,10"
+                                    MinWidth="170"
+                                    HorizontalContentAlignment="Center"
                                     IsVisible="{Binding IsAnswerRevealed}" />
-                                <Button Content="✅ Correct" Click="Correct_Click"
-                                    Background="#9044FF44" Padding="20,10"
+                                <Button Content="✓ Correct" Click="Correct_Click"
+                                    FontSize="16"
+                                    Background="#6044FF44" Padding="20,10"
+                                    MinWidth="170"
+                                    HorizontalContentAlignment="Center"
                                     IsVisible="{Binding IsAnswerRevealed}" />
                             </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                    </Grid>
-                </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </DataTemplate>
 
