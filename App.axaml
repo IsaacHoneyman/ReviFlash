@@ -26,6 +26,8 @@
                     
                     <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#A0A0A5" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="IconForeground" Color="#FFFFFF" />
                     
                     <Color x:Key="GradientStart">#4158D0</Color>
                     <Color x:Key="GradientMiddle">#C850C0</Color>
@@ -33,35 +35,39 @@
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppBackground" Color="#F6F7FC" />
+                    <SolidColorBrush x:Key="AppBackground" Color="#FAFAFA" />
                     
-                    <SolidColorBrush x:Key="CardBackground" Color="#CCFFFFFF" /> 
-                    <SolidColorBrush x:Key="CardBorder" Color="#2A2C3A" />
-                    <SolidColorBrush x:Key="BadgeBackground" Color="#110F1A35" />
-                    <SolidColorBrush x:Key="StatTileBackground" Color="#120F1A35" />
+                    <SolidColorBrush x:Key="CardBackground" Color="#FFFFFF" /> 
+                    <SolidColorBrush x:Key="CardBorder" Color="#D0D0D0" />
+                    <SolidColorBrush x:Key="BadgeBackground" Color="#35E8E8E8" />
+                    <SolidColorBrush x:Key="StatTileBackground" Color="#60B0B0B0" />
                     
-                    <SolidColorBrush x:Key="TextPrimary" Color="#1A1C2D" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#4E5677" />
+                    <SolidColorBrush x:Key="TextPrimary" Color="#0A0A0A" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#3A4A5A" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0A0A0A" />
+                    <SolidColorBrush x:Key="IconForeground" Color="#0A0A0A" />
                     
-                    <Color x:Key="GradientStart">#6F8DF7</Color>
-                    <Color x:Key="GradientMiddle">#B08BE9</Color>
-                    <Color x:Key="GradientEnd">#FFC48A</Color>
+                    <Color x:Key="GradientStart">#F5F5F5</Color>
+                    <Color x:Key="GradientMiddle">#EBEBEB</Color>
+                    <Color x:Key="GradientEnd">#E0E0E0</Color>
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="{x:Static local:AppThemes.Pride}">
-                    <SolidColorBrush x:Key="AppBackground" Color="#D9EFFF" />
+                    <SolidColorBrush x:Key="AppBackground" Color="#E7F7FF" />
 
-                    <SolidColorBrush x:Key="CardBackground" Color="#F7FFFFFF" />
-                    <SolidColorBrush x:Key="CardBorder" Color="#992AA8FF" />
-                    <SolidColorBrush x:Key="BadgeBackground" Color="#66FF3FAE" />
-                    <SolidColorBrush x:Key="StatTileBackground" Color="#6626C6FF" />
+                    <SolidColorBrush x:Key="CardBackground" Color="#D9ECFF" />
+                    <SolidColorBrush x:Key="CardBorder" Color="#E240AC" />
+                    <SolidColorBrush x:Key="BadgeBackground" Color="#B8FF4DB8" />
+                    <SolidColorBrush x:Key="StatTileBackground" Color="#8A5CCEFF" />
 
-                    <SolidColorBrush x:Key="TextPrimary" Color="#0A1742" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#1E3C82" />
+                    <SolidColorBrush x:Key="TextPrimary" Color="#0A1E4A" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#194A9C" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0A1E4A" />
+                    <SolidColorBrush x:Key="IconForeground" Color="#0A1E4A" />
 
-                    <Color x:Key="GradientStart">#00CCFF</Color>
-                    <Color x:Key="GradientMiddle">#FF2FA8</Color>
-                    <Color x:Key="GradientEnd">#2AA8FF</Color>
+                    <Color x:Key="GradientStart">#7DDBFF</Color>
+                    <Color x:Key="GradientMiddle">#FF3EAF</Color>
+                    <Color x:Key="GradientEnd">#4FB9FF</Color>
                 </ResourceDictionary>
 
                 </ResourceDictionary.ThemeDictionaries>

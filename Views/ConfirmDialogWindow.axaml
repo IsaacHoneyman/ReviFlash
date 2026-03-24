@@ -10,9 +10,10 @@
         TransparencyLevelHint="Transparent"
         Background="Transparent">
 
-    <Border Background="{DynamicResource CardBackground}" 
+        <Border Background="{DynamicResource AppBackground}" 
+            Opacity="0.96"
             BorderBrush="{DynamicResource CardBorder}" 
-            BorderThickness="1.5" 
+            BorderThickness="2" 
             CornerRadius="20" 
             Padding="24">
         
@@ -28,8 +29,8 @@
                        TextAlignment="Center"/>
             
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
-                <Button Click="Cancel_Click" Content="Cancel" Background="#40FFFFFF" Foreground="{DynamicResource TextPrimary}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
-                <Button Click="Confirm_Click" Content="Yes, Delete" Background="#B3FF4444" Foreground="White" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+                <Button Click="Cancel_Click" Content="Cancel" Background="#70FFFFFF" Foreground="{DynamicResource TextPrimary}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+                <Button Click="Confirm_Click" Content="Yes, Delete" Background="#D0FF4444" Foreground="{DynamicResource IconForeground}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
             </StackPanel>
         </Grid>
     </Border>

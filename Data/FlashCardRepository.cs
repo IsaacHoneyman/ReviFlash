@@ -116,28 +116,30 @@ public static class FlashCardRepository
         command.ExecuteNonQuery();
     }
 
-    public static void UpdateDeckStats(ulong deckID, int correct, int total)
+    public static void UpdateDeckStats(ulong deckID, int correct, int total, int timeTakenSeconds)
     {
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
         var command = connection.CreateCommand();
         command.CommandText = @"
-            INSERT INTO DeckStats (DeckId, CorrectCount, TotalAttempts)
-            VALUES (@deckID, @correct, @total)
+            INSERT INTO DeckStats (DeckId, CorrectCount, TotalAttempts, TimeTakenSeconds)
+            VALUES (@deckID, @correct, @total, @timeTakenSeconds)
             ON CONFLICT(DeckId, DateChecked) DO UPDATE SET
                 CorrectCount = CorrectCount + excluded.CorrectCount,
-                TotalAttempts = TotalAttempts + excluded.TotalAttempts
+                TotalAttempts = TotalAttempts + excluded.TotalAttempts,
+                TimeTakenSeconds = TimeTakenSeconds + excluded.TimeTakenSeconds
         ";
 
         command.Parameters.AddWithValue("@deckID", deckID);
         command.Parameters.AddWithValue("@correct", correct);
         command.Parameters.AddWithValue("@total", total);
+        command.Parameters.AddWithValue("@timeTakenSeconds", timeTakenSeconds);
 
         command.ExecuteNonQuery();
     }
 
-    public static (int correct, int total) GetStats(ulong? deckID = null, string? timeModifier = null)
+    public static (int correct, int total, int timeTakenSeconds) GetStats(ulong? deckID = null, string? timeModifier = null)
     {
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
@@ -146,7 +148,8 @@ public static class FlashCardRepository
         string sql = @"
             SELECT 
                 COALESCE(SUM(CorrectCount), 0) as TotalCorrect, 
-                COALESCE(SUM(TotalAttempts), 0) as TotalTotal 
+                COALESCE(SUM(TotalAttempts), 0) as TotalTotal,
+                COALESCE(SUM(TimeTakenSeconds), 0) as TotalTimeTakenSeconds
             FROM DeckStats 
             WHERE 1=1";
 
@@ -169,10 +172,11 @@ public static class FlashCardRepository
         {
             int correct = reader.GetInt32(0);
             int total = reader.GetInt32(1);
-            return new(correct, total);
+            int timeTakenSeconds = reader.GetInt32(2);
+            return new(correct, total, timeTakenSeconds);
         }
 
-        return (0, 0);
+        return (0, 0, 0);
     }
 
     public static void UpdateCard(FlashCard card)
@@ -211,6 +215,27 @@ public static class FlashCardRepository
         command.CommandText = "DELETE FROM Cards WHERE ID = $id;";
         command.Parameters.AddWithValue("$id", cardID);
 
+        command.ExecuteNonQuery();
+    }
+
+    public static void DeleteAllStats()
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM DeckStats;";
+        command.ExecuteNonQuery();
+    }
+
+    public static void DeleteStatsForDeck(ulong deckID)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM DeckStats WHERE DeckID = $deckId;";
+        command.Parameters.AddWithValue("$deckId", deckID);
         command.ExecuteNonQuery();
     }
 }

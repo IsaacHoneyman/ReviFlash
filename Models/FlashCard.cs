@@ -28,4 +28,11 @@ public abstract class FlashCard
     }
 
     public abstract bool VerifyAnswer(object answer);
+
+    public string CardType => GetType().Name switch
+    {
+        nameof(TypeFlashCard) => "Type to Answer",
+        nameof(FlipFlashCard) => "Flip",
+        _ => "Unknown"
+    };
 }

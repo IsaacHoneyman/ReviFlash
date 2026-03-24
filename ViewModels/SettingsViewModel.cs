@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Styling;
 using ReviFlash.Data;
+using ReviFlash.Models;
 
 namespace ReviFlash.ViewModels;
 
@@ -14,6 +16,20 @@ public class SettingsViewModel : ViewModelBase
         "Light",
         "Pride",
     };
+
+    private ObservableCollection<FlashCardDeck> _availableDecks = new();
+    public ObservableCollection<FlashCardDeck> AvailableDecks
+    {
+        get => _availableDecks;
+        set { _availableDecks = value; OnPropertyChanged(nameof(AvailableDecks)); }
+    }
+
+    private FlashCardDeck? _selectedDeckForStatDeletion = null;
+    public FlashCardDeck? SelectedDeckForStatDeletion
+    {
+        get => _selectedDeckForStatDeletion;
+        set { _selectedDeckForStatDeletion = value; OnPropertyChanged(nameof(SelectedDeckForStatDeletion)); }
+    }
 
     public string SelectedTheme
     {
@@ -47,6 +63,30 @@ public class SettingsViewModel : ViewModelBase
             {
                 Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
             }
+        }
+    }
+
+    public SettingsViewModel()
+    {
+        LoadDecks();
+    }
+
+    private void LoadDecks()
+    {
+        AvailableDecks.Clear();
+        var decks = FlashCardRepository.GetAllDecks();
+        foreach (var deck in decks)
+        {
+            AvailableDecks.Add(deck);
+        }
+    }
+
+    public void DeleteStatsForSelectedDeck()
+    {
+        if (SelectedDeckForStatDeletion != null)
+        {
+            FlashCardRepository.DeleteStatsForDeck(SelectedDeckForStatDeletion.ID);
+            SelectedDeckForStatDeletion = null;
         }
     }
 }

@@ -4,7 +4,7 @@
         x:Class="ReviFlash.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
-        Width="400" Height="500"
+        Width="420" Height="560"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         Background="{DynamicResource AppBackground}">
@@ -29,6 +29,72 @@
                   CornerRadius="5"/>
     </StackPanel>
 </Border>
+
+            <Border Background="#33FF4B6E"
+                    BorderBrush="#D9FF4B6E"
+                    BorderThickness="1.5"
+                    CornerRadius="10"
+                    Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Danger Zone"
+                               FontWeight="SemiBold"
+                               FontSize="16"
+                               Foreground="#D72649"/>
+
+                    <TextBlock Text="Delete all flashcard stats across every deck. This cannot be undone."
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextPrimary}"/>
+
+                    <Button Content="Delete All Flashcard Stats"
+                            Click="DeleteAllStats_Click"
+                            HorizontalAlignment="Stretch"
+                            CornerRadius="8"
+                            Padding="12,10"
+                            FontWeight="Bold"
+                            Background="#D9D72649"
+                            Foreground="{DynamicResource IconForeground}"
+                            Cursor="Hand"/>
+
+                    <TextBlock x:Name="DeleteStatsStatusText"
+                               IsVisible="False"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondary}"/>
+
+                    <Separator Background="{DynamicResource CardBorder}" Opacity="0.3" Margin="0,8"/>
+
+                    <TextBlock Text="Delete Individual Deck Stats"
+                               FontWeight="SemiBold"
+                               Foreground="#D72649"/>
+
+                    <TextBlock Text="Delete stats for a specific flashcard set."
+                               TextWrapping="Wrap"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"/>
+
+                    <ComboBox ItemsSource="{Binding AvailableDecks}"
+                              SelectedItem="{Binding SelectedDeckForStatDeletion}"
+                              HorizontalAlignment="Stretch"
+                              CornerRadius="8"
+                              Padding="12,8">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Button Content="Delete This Deck's Stats"
+                            Click="DeleteDeckStats_Click"
+                            HorizontalAlignment="Stretch"
+                            CornerRadius="8"
+                            Padding="12,10"
+                            FontWeight="Bold"
+                            IsEnabled="{Binding SelectedDeckForStatDeletion, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Background="#D9D72649"
+                            Foreground="{DynamicResource IconForeground}"
+                            Cursor="Hand"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </Grid>
 </Window>

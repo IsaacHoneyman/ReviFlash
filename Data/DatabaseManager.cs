@@ -39,11 +39,12 @@ public static class DatabaseManager
             DeckId INTEGER NOT NULL,
             CorrectCount INTEGER DEFAULT 0,
             TotalAttempts INTEGER DEFAULT 0,
+            TimeTakenSeconds INTEGER DEFAULT 0,
             DateChecked DATE DEFAULT (CURRENT_DATE), 
             PRIMARY KEY (DeckId, DateChecked),
             FOREIGN KEY (DeckId) REFERENCES Decks(Id) ON DELETE CASCADE
         )";
-        deckStatsCommand.ExecuteNonQuery();
+        deckStatsCommand.ExecuteNonQuery(); 
     }
 
     public static SqliteConnection GetConnection()

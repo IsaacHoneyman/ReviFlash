@@ -34,6 +34,14 @@ public class MainWindowViewModel : ViewModelBase
         set => _streakText = value;
     }
 
+    private string _versionText = "Version A-0.2";
+    public string VersionText
+    {
+        get => _versionText;
+        set => _versionText = value;
+    }
+
+
     private string _searchText = "";
     public string SearchText
     {
@@ -53,7 +61,14 @@ public class MainWindowViewModel : ViewModelBase
         {
             _selectedTimePeriod = value;
             OnPropertyChanged(nameof(SelectedTimePeriod));
-            LoadStats();
+            if (IsViewingDeckStats && SelectedDeckForStats != null)
+            {
+                ShowDeckStats(SelectedDeckForStats);
+            }
+            else
+            {
+                LoadStats();
+            }
         }
     } 
 
@@ -83,6 +98,41 @@ public class MainWindowViewModel : ViewModelBase
     {
         get => _grade;
         set { _grade = value; OnPropertyChanged(nameof(Grade)); }
+    }
+
+    private int _totalTimeSeconds = 0;
+    public int TotalTimeSeconds
+    {
+        get => _totalTimeSeconds;
+        set
+        {
+            _totalTimeSeconds = value;
+            OnPropertyChanged(nameof(TotalTimeSeconds));
+            OnPropertyChanged(nameof(TotalTimeFormatted));
+        }
+    }
+
+    public string TotalTimeFormatted
+    {
+        get
+        {
+            var time = TimeSpan.FromSeconds(TotalTimeSeconds);
+            return time.TotalHours >= 1 ? time.ToString(@"hh\:mm\:ss") : time.ToString(@"mm\:ss");
+        }
+    }
+
+    private bool _isViewingDeckStats = false;
+    public bool IsViewingDeckStats
+    {
+        get => _isViewingDeckStats;
+        set { _isViewingDeckStats = value; OnPropertyChanged(nameof(IsViewingDeckStats)); }
+    }
+
+    private FlashCardDeck? _selectedDeckForStats = null;
+    public FlashCardDeck? SelectedDeckForStats
+    {
+        get => _selectedDeckForStats;
+        set { _selectedDeckForStats = value; OnPropertyChanged(nameof(SelectedDeckForStats)); }
     }
 
     public ObservableCollection<TimePeriodOption> TimePeriods { get; set; } = [];
@@ -115,22 +165,89 @@ public class MainWindowViewModel : ViewModelBase
     private void LoadStats()
     {
         var timeModifier = SelectedTimePeriod?.TimeModifier;
-        var (correct, total) = FlashCardRepository.GetStats(null, timeModifier);
+        var (correct, total, timeTakenSeconds) = FlashCardRepository.GetStats(null, timeModifier);
 
         TotalQuestions = total;
         TotalCorrect = correct;
+        TotalTimeSeconds = timeTakenSeconds;
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
         
-        // Calculate grade using same logic as SummaryViewModel
-        Grade = Percentage switch
+        // Calculate grade using same logic as SummaryViewModel, show "-" if no questions
+        if (total == 0)
         {
-            >= 90 => "A*",
-            >= 80 => "A",
-            >= 70 => "B",
-            >= 60 => "C",
-            >= 50 => "D",
-            _ => "U"
-        };
+            Grade = "-";
+        }
+        else
+        {
+            Grade = Percentage switch
+            {
+                >= 90 => "A*",
+                >= 80 => "A",
+                >= 70 => "B",
+                >= 60 => "C",
+                >= 50 => "D",
+                _ => "U"
+            };
+        }
+    }
+
+    public void RefreshStats()
+    {
+        if (IsViewingDeckStats && SelectedDeckForStats != null)
+        {
+            ShowDeckStats(SelectedDeckForStats);
+        }
+        else
+        {
+            LoadStats();
+        }
+    }
+
+    public void ShowDeckStats(FlashCardDeck deck)
+    {
+        SelectedDeckForStats = deck;
+        IsViewingDeckStats = true;
+
+        var timeModifier = SelectedTimePeriod?.TimeModifier;
+        var (correct, total, timeTakenSeconds, percentage, grade) = GetDeckStats(deck.ID, timeModifier);
+        TotalQuestions = total;
+        TotalCorrect = correct;
+        TotalTimeSeconds = timeTakenSeconds;
+        Percentage = percentage;
+        Grade = grade;
+    }
+
+    public void ShowOverallStats()
+    {
+        IsViewingDeckStats = false;
+        SelectedDeckForStats = null;
+        LoadStats();
+    }
+
+    public (int correct, int total, int timeTakenSeconds, double percentage, string grade) GetDeckStats(ulong deckID, string? timeModifier = null)
+    {
+        var (correct, total, timeTakenSeconds) = FlashCardRepository.GetStats(deckID, timeModifier);
+        double percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
+        
+        string grade;
+        if (total == 0)
+        {
+            grade = "-";
+        }
+        else
+        {
+            grade = percentage switch
+            {
+                >= 90 => "A*",
+                >= 80 => "A",
+                >= 70 => "B",
+                >= 60 => "C",
+                >= 50 => "D",
+                _ => "U"
+            };
+        }
+        
+        return (correct, total, timeTakenSeconds, percentage, grade);
     }
 
     public void FilterDecks()

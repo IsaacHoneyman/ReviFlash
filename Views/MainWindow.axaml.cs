@@ -99,6 +99,26 @@ public partial class MainWindow : Window
         }
     }
 
+    public void DeckStats_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        var button = (Button)sender;
+        var selectedDeck = (FlashCardDeck)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck"));
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ShowDeckStats(selectedDeck);
+        }
+    }
+
+    public void CloseDecKStats_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ShowOverallStats();
+        }
+    }
+
     private void DeckCard_Click(object sender, PointerPressedEventArgs e)
     {
         // Ignore pointer events originating from action buttons inside the deck card.
@@ -142,10 +162,10 @@ public partial class MainWindow : Window
 
         var reviewVM = new ReviewViewModel(cards, deck.ID)
         {
-            OnSessionComplete = (score, total, time) =>
+            OnSessionComplete = (score, total, time, isPartial) =>
             {
                 if (DataContext is MainWindowViewModel mainVM)
-                    mainVM.CurrentPage = new SummaryViewModel(score, total, time);
+                    mainVM.CurrentPage = new SummaryViewModel(score, total, time, isPartial);
             }
         };
 
@@ -154,8 +174,20 @@ public partial class MainWindow : Window
     }
 
     private void ShowAnswer_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.Reveal();
+    private void SubmitAnswer_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.CheckTypedAnswer();
+    private void NextCard_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.NextCard();
     private void Correct_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkCorrect();
     private void Incorrect_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkIncorrect();
+    
+    private async void QuitSession_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new ConfirmDialogWindow("Quit this session and save your progress so far?");
+        bool confirmed = await dialog.ShowDialog<bool>(this);
+        if (confirmed)
+        {
+            GetReviewVM()?.QuitSession();
+        }
+    }
 
     private ReviewViewModel? GetReviewVM() => (DataContext as MainWindowViewModel)?.CurrentPage as ReviewViewModel;
 
@@ -166,6 +198,7 @@ public partial class MainWindow : Window
             vm.CurrentPage = vm; // Switches back to the Dashboard template
             vm.LoadDecksFromDatabase();
             vm.FilterDecks();
+            vm.RefreshStats(); // Refresh stats after session completes
         }
     }
 }

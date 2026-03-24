@@ -98,7 +98,7 @@
                         <Button Click="AddCard_Click" Content="{Binding SaveButtonText}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center" Margin="0,10,0,0"
-                            Background="{DynamicResource GradientStart}" Foreground="White"
+                            Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
                             FontWeight="Bold" Padding="12" CornerRadius="8" />
                     </StackPanel>
                 </Border>
@@ -112,6 +112,11 @@
                                 BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
                                 CornerRadius="10" Padding="16" Margin="0,0,0,16">
                                 <Grid ColumnDefinitions="*, Auto" RowDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding CardType}"
+                                        FontSize="11" FontWeight="Bold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,8" />
+
                                     <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12">
                                         <ItemsControl ItemsSource="{Binding Front, Converter={StaticResource MixedMathSegmentsConverter}}">
                                             <ItemsControl.ItemsPanel>
@@ -156,18 +161,19 @@
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Grid.Row="1"
-                                        VerticalAlignment="Bottom" Spacing="8" Margin="10,0,0,0">
+                                        VerticalAlignment="Bottom" HorizontalAlignment="Right" Spacing="8" Margin="10,0,0,0">
                                         <Button Click="EditCard_Click"
-                                            Background="#20FFFFFF" CornerRadius="8"
+                                            Background="#70FFFFFF" CornerRadius="8"
                                             Padding="12,8">
                                             <TextBlock Text="✏️" FontSize="16"
-                                                Foreground="{DynamicResource TextPrimary}" />
+                                                Foreground="{DynamicResource IconForeground}" />
                                         </Button>
 
                                         <Button Click="DeleteCard_Click"
-                                            Background="#40FF4444" CornerRadius="8"
+                                            Background="#90FF4444" CornerRadius="8"
                                             Padding="12,8">
-                                            <TextBlock Text="🗑️" FontSize="16" />
+                                            <TextBlock Text="🗑️" FontSize="16"
+                                                Foreground="{DynamicResource IconForeground}" />
                                         </Button>
                                     </StackPanel>
                                 </Grid>
