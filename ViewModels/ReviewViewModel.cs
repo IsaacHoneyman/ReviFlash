@@ -69,6 +69,17 @@ public class ReviewViewModel : ViewModelBase
     public bool IsFlipCard => CurrentCard is FlipFlashCard;
     public bool IsMultiChoiceCard => CurrentCard is MultiFlashCard;
     public bool IsMatchCard => CurrentCard is MatchFlashCard;
+    public bool IsTrueFalseCard => CurrentCard is TrueFalseFlashCard;
+    public string CurrentTypeCardAnswer => CurrentCard is TypeFlashCard typeCard ? typeCard.Answer : CurrentCard.Back;
+    public string CurrentTrueFalseTrueOptionText => CurrentCard is TrueFalseFlashCard trueFalseCard
+        ? trueFalseCard.TrueLabel
+        : "True";
+    public string CurrentTrueFalseFalseOptionText => CurrentCard is TrueFalseFlashCard trueFalseCard
+        ? trueFalseCard.FalseLabel
+        : "False";
+    public string CurrentTrueFalseCorrectOptionText => CurrentCard is TrueFalseFlashCard trueFalseCard
+        ? (trueFalseCard.CorrectAnswerIsTrue ? trueFalseCard.TrueLabel : trueFalseCard.FalseLabel)
+        : "";
     public bool ShowBackAnswer => IsAnswerRevealed && !IsMultiChoiceCard && !IsMatchCard;
     public bool IsAnswerChecked { get; set; } = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
@@ -244,6 +255,28 @@ public class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasWrongMatches));
     }
 
+    public void CheckTrueFalseAnswer(bool selectedAnswerIsTrue)
+    {
+        if (CurrentCard is not TrueFalseFlashCard trueFalseCard)
+        {
+            return;
+        }
+
+        IsAnswerCorrect = trueFalseCard.VerifyAnswer(selectedAnswerIsTrue);
+        if (IsAnswerCorrect)
+        {
+            CorrectCount++;
+        }
+
+        IsAnswerChecked = true;
+        IsAnswerRevealed = true;
+        OnPropertyChanged(nameof(IsAnswerRevealed));
+        OnPropertyChanged(nameof(IsAnswerChecked));
+        OnPropertyChanged(nameof(IsAnswerCorrect));
+        OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
+        OnPropertyChanged(nameof(ShowBackAnswer));
+    }
+
     public void NextCard()
     {
         if (_currentIndex < _sessionCards.Count - 1)
@@ -269,6 +302,11 @@ public class ReviewViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsFlipCard));
             OnPropertyChanged(nameof(IsMultiChoiceCard));
             OnPropertyChanged(nameof(IsMatchCard));
+            OnPropertyChanged(nameof(IsTrueFalseCard));
+            OnPropertyChanged(nameof(CurrentTypeCardAnswer));
+            OnPropertyChanged(nameof(CurrentTrueFalseTrueOptionText));
+            OnPropertyChanged(nameof(CurrentTrueFalseFalseOptionText));
+            OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
             OnPropertyChanged(nameof(ShowBackAnswer));
             OnPropertyChanged(nameof(ShowAnswerButtonVisible));
             OnPropertyChanged(nameof(HasSelectedWrongOptions));
@@ -354,4 +392,5 @@ public class ReviewViewModel : ViewModelBase
             });
         }
     }
+
 }

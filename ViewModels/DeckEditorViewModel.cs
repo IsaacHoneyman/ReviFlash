@@ -99,13 +99,58 @@ public class DeckEditorViewModel : ViewModelBase
         }
     }
 
+    private string _newTypeAnswer = "";
+    public string NewTypeAnswer
+    {
+        get => _newTypeAnswer;
+        set
+        {
+            _newTypeAnswer = value;
+            OnPropertyChanged(nameof(NewTypeAnswer));
+        }
+    }
+
+    private bool _newTrueFalseAnswerIsTrue = true;
+    public bool NewTrueFalseAnswerIsTrue
+    {
+        get => _newTrueFalseAnswerIsTrue;
+        set
+        {
+            _newTrueFalseAnswerIsTrue = value;
+            OnPropertyChanged(nameof(NewTrueFalseAnswerIsTrue));
+        }
+    }
+
+    private string _newTrueOptionText = "True";
+    public string NewTrueOptionText
+    {
+        get => _newTrueOptionText;
+        set
+        {
+            _newTrueOptionText = value;
+            OnPropertyChanged(nameof(NewTrueOptionText));
+        }
+    }
+
+    private string _newFalseOptionText = "False";
+    public string NewFalseOptionText
+    {
+        get => _newFalseOptionText;
+        set
+        {
+            _newFalseOptionText = value;
+            OnPropertyChanged(nameof(NewFalseOptionText));
+        }
+    }
+
     public string SaveButtonText => _editingCard is null ? "Save Card" : "Update Card";
     public List<string> AvailableCardTypes { get; } = new()
     {
         "Flip",
         "Type to Answer",
         "Multi Choice",
-        "Match"
+        "Match",
+        "True/False"
     };
 
     private string _selectedCardType = "Flip";
@@ -129,15 +174,32 @@ public class DeckEditorViewModel : ViewModelBase
                 }
             }
 
+            if (_selectedCardType == "True/False")
+            {
+                if (string.IsNullOrWhiteSpace(NewTrueOptionText))
+                {
+                    NewTrueOptionText = "True";
+                }
+
+                if (string.IsNullOrWhiteSpace(NewFalseOptionText))
+                {
+                    NewFalseOptionText = "False";
+                }
+            }
+
             OnPropertyChanged(nameof(SelectedCardType));
+            OnPropertyChanged(nameof(IsTypeCardType));
             OnPropertyChanged(nameof(IsMultiChoiceCardType));
             OnPropertyChanged(nameof(IsMatchCardType));
+            OnPropertyChanged(nameof(IsTrueFalseCardType));
             OnPropertyChanged(nameof(ShowFrontBackEditor));
         }
     }
 
+    public bool IsTypeCardType => SelectedCardType == "Type to Answer";
     public bool IsMultiChoiceCardType => SelectedCardType == "Multi Choice";
     public bool IsMatchCardType => SelectedCardType == "Match";
+    public bool IsTrueFalseCardType => SelectedCardType == "True/False";
     public bool ShowFrontBackEditor => true;
 
     private string _validationMessage = "";
@@ -187,6 +249,18 @@ public class DeckEditorViewModel : ViewModelBase
             return;
         }
 
+        if (IsTypeCardType && string.IsNullOrWhiteSpace(NewTypeAnswer))
+        {
+            ValidationMessage = "Type answer cannot be empty.";
+            return;
+        }
+
+        if (_editingCard is TypeFlashCard && string.IsNullOrWhiteSpace(NewTypeAnswer))
+        {
+            ValidationMessage = "Type answer cannot be empty.";
+            return;
+        }
+
         var optionTuples = BuildValidatedMultiChoiceOptions();
         if (IsMultiChoiceCardType && optionTuples is null)
         {
@@ -201,10 +275,23 @@ public class DeckEditorViewModel : ViewModelBase
 
         var frontValue = NewFront;
         var backValue = NewBack;
+        var typeAnswerValue = NewTypeAnswer.Trim();
+        var trueOptionValue = NewTrueOptionText.Trim();
+        var falseOptionValue = NewFalseOptionText.Trim();
+
+        if (IsTrueFalseCardType && !ValidateTrueFalseOptions())
+        {
+            return;
+        }
 
         if (_editingCard is not null)
         {
             _editingCard.UpdateContent(frontValue, backValue);
+
+            if (_editingCard is TypeFlashCard existingType)
+            {
+                existingType.UpdateAnswer(typeAnswerValue);
+            }
 
             if (_editingCard is MultiFlashCard existingMulti && optionTuples is not null)
             {
@@ -214,6 +301,11 @@ public class DeckEditorViewModel : ViewModelBase
             if (_editingCard is MatchFlashCard existingMatch && matchPairs is not null)
             {
                 existingMatch.Options = matchPairs;
+            }
+
+            if (_editingCard is TrueFalseFlashCard existingTrueFalse)
+            {
+                existingTrueFalse.UpdateTrueFalseSettings(NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue);
             }
 
             FlashCardRepository.UpdateCard(_editingCard);
@@ -234,7 +326,7 @@ public class DeckEditorViewModel : ViewModelBase
 
         if (SelectedCardType == "Type to Answer")
         {
-            newCard = new TypeFlashCard(frontValue, backValue);
+            newCard = new TypeFlashCard(frontValue, backValue, typeAnswerValue);
         }
         else if (SelectedCardType == "Multi Choice")
         {
@@ -243,6 +335,10 @@ public class DeckEditorViewModel : ViewModelBase
         else if (SelectedCardType == "Match")
         {
             newCard = new MatchFlashCard(frontValue, backValue, matchPairs ?? []);
+        }
+        else if (SelectedCardType == "True/False")
+        {
+            newCard = new TrueFalseFlashCard(frontValue, backValue, NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue);
         }
         else
         {
@@ -266,10 +362,12 @@ public class DeckEditorViewModel : ViewModelBase
         if (card is TypeFlashCard)
         {
             SelectedCardType = "Type to Answer";
+            NewTypeAnswer = ((TypeFlashCard)card).Answer;
         }
         else if (card is MultiFlashCard multiCard)
         {
             SelectedCardType = "Multi Choice";
+            NewTypeAnswer = "";
             MultiChoiceOptions.Clear();
             foreach (var (optionText, isCorrect) in multiCard.Options)
             {
@@ -283,6 +381,7 @@ public class DeckEditorViewModel : ViewModelBase
         else if (card is MatchFlashCard matchCard)
         {
             SelectedCardType = "Match";
+            NewTypeAnswer = "";
             MatchPairs.Clear();
             foreach (var (leftText, rightText) in matchCard.Options)
             {
@@ -293,9 +392,21 @@ public class DeckEditorViewModel : ViewModelBase
                 });
             }
         }
+        else if (card is TrueFalseFlashCard trueFalseCard)
+        {
+            SelectedCardType = "True/False";
+            NewTypeAnswer = "";
+            NewTrueFalseAnswerIsTrue = trueFalseCard.CorrectAnswerIsTrue;
+            NewTrueOptionText = trueFalseCard.TrueLabel;
+            NewFalseOptionText = trueFalseCard.FalseLabel;
+        }
         else
         {
             SelectedCardType = "Flip";
+            NewTypeAnswer = "";
+            NewTrueFalseAnswerIsTrue = true;
+            NewTrueOptionText = "True";
+            NewFalseOptionText = "False";
         }
 
         ValidationMessage = "";
@@ -315,6 +426,10 @@ public class DeckEditorViewModel : ViewModelBase
             NewFront = "";
             NewBack = "";
         }
+        NewTypeAnswer = "";
+        NewTrueFalseAnswerIsTrue = true;
+        NewTrueOptionText = "True";
+        NewFalseOptionText = "False";
         ValidationMessage = "";
 
         if (IsMultiChoiceCardType)
@@ -457,5 +572,32 @@ public class DeckEditorViewModel : ViewModelBase
         }
 
         return pairs;
+    }
+
+    private bool ValidateTrueFalseOptions()
+    {
+        if (!IsTrueFalseCardType)
+        {
+            return true;
+        }
+
+        var trueText = NewTrueOptionText.Trim();
+        var falseText = NewFalseOptionText.Trim();
+
+        if (string.IsNullOrWhiteSpace(trueText) || string.IsNullOrWhiteSpace(falseText))
+        {
+            ValidationMessage = "True and False labels cannot be empty.";
+            return false;
+        }
+
+        if (string.Equals(trueText, falseText, System.StringComparison.OrdinalIgnoreCase))
+        {
+            ValidationMessage = "True and False labels must be different.";
+            return false;
+        }
+
+        NewTrueOptionText = trueText;
+        NewFalseOptionText = falseText;
+        return true;
     }
 }

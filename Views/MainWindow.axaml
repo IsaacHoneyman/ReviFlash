@@ -427,7 +427,7 @@
                                     <StackPanel>
                                         <TextBlock Text="Correct Answer:" 
                                             Foreground="{DynamicResource TextSecondary}" FontSize="14" />
-                                        <TextBlock Text="{Binding CurrentCard.Back}"
+                                        <TextBlock Text="{Binding CurrentTypeCardAnswer}"
                                             Foreground="{DynamicResource TextPrimary}" FontSize="16"
                                             TextWrapping="Wrap" />
                                     </StackPanel>
@@ -792,6 +792,48 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+                                    </StackPanel>
+
+                                    <Button Content="Next" Click="NextCard_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- True/False Card -->
+                            <StackPanel Spacing="10" IsVisible="{Binding IsTrueFalseCard}">
+                                <!-- Input Phase -->
+                                <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                                    <TextBlock Text="Pick the correct option:" FontSize="14"
+                                        Foreground="{DynamicResource TextSecondary}" />
+
+                                    <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                                        <Button Grid.Column="0" Content="{Binding CurrentTrueFalseTrueOptionText}"
+                                            Click="TrueAnswer_Click" FontSize="16"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Background="#2E9E44" Foreground="#FFFFFF" />
+                                        <Button Grid.Column="1" Content="{Binding CurrentTrueFalseFalseOptionText}"
+                                            Click="FalseAnswer_Click" FontSize="16"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            Background="#CC3D3D" Foreground="#FFFFFF" />
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Result Phase -->
+                                <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                                    <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        IsVisible="{Binding IsAnswerCorrect}" />
+                                    <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        IsVisible="{Binding !IsAnswerCorrect}" />
+
+                                    <StackPanel>
+                                        <TextBlock Text="Correct option:" 
+                                            Foreground="{DynamicResource TextSecondary}" FontSize="14" />
+                                        <TextBlock Text="{Binding CurrentTrueFalseCorrectOptionText}"
+                                            Foreground="{DynamicResource TextPrimary}" FontSize="16"
+                                            TextWrapping="Wrap" />
                                     </StackPanel>
 
                                     <Button Content="Next" Click="NextCard_Click"

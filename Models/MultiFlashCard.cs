@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ReviFlash.Models;
 
 public class MultiFlashCard : FlashCard
 {
     public List<(string optionText, bool isCorrect)> Options { get; set; } = [];
+    public override IReadOnlyList<MultiChoicePreviewOption> MultiChoiceOptionsPreview =>
+        Options.Select(o => new MultiChoicePreviewOption { Text = o.optionText, IsCorrect = o.isCorrect }).ToList();
 
     public MultiFlashCard(string front, string back, List<(string optionText, bool isCorrect)> options) : base(front, back)
     {

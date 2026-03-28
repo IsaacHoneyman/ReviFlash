@@ -35,7 +35,7 @@ public class MainWindowViewModel : ViewModelBase
         set => _streakText = value;
     }
 
-    private static string _versionText = "Version A-0.3.1";
+    private static string _versionText = "Version A-0.4.0";
     public static string VersionText
     {
         get => _versionText;

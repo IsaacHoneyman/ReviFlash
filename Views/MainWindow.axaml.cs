@@ -194,7 +194,31 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (vm.IsTrueFalseCard)
+        {
+            return;
+        }
+
         vm.CheckTypedAnswer();
+    }
+
+    private void TrueAnswer_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = GetReviewVM();
+        if (vm?.IsTrueFalseCard == true)
+        {
+            vm.CheckTrueFalseAnswer(true);
+        }
+    }
+
+    private void FalseAnswer_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = GetReviewVM();
+        if (vm?.IsTrueFalseCard == true)
+        {
+            vm.CheckTrueFalseAnswer(false);
+            return;
+        }
     }
     private void NextCard_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.NextCard();
     private void Correct_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkCorrect();

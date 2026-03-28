@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ReviFlash.Models;
 
@@ -35,8 +36,14 @@ public abstract class FlashCard
         nameof(FlipFlashCard) => "Flip",
         nameof(MultiFlashCard) => "Multi Choice",
         nameof(MatchFlashCard) => "Match",
+        nameof(TrueFalseFlashCard) => "True / False",
         _ => "Unknown"
     };
 
+    public bool IsMultiChoiceCard => this is MultiFlashCard;
     public bool IsMatchCard => this is MatchFlashCard;
+    public bool IsTrueFalseCard => this is TrueFalseFlashCard;
+
+    public virtual IReadOnlyList<MultiChoicePreviewOption> MultiChoiceOptionsPreview => [];
+    public virtual IReadOnlyList<MatchPreviewPair> MatchPairsPreview => [];
 }

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using ReviFlash.Models;
 
 namespace ReviFlash.Data;
 
 public static class FlashCardRepository
 {
+    private sealed record TrueFalseAnswerPayload(bool CorrectAnswerIsTrue, string TrueLabel, string FalseLabel);
+
     public static void SaveNewDeck(FlashCardDeck deck)
     {
         using var connection = DatabaseManager.GetConnection();
@@ -30,8 +33,8 @@ public static class FlashCardRepository
 
         var command = connection.CreateCommand();
         command.CommandText = @"
-            INSERT INTO Cards (DeckID, CardType, Front, Back) 
-            VALUES ($deckId, $cardType, $front, $back);
+            INSERT INTO Cards (DeckID, CardType, Front, Back, Answer) 
+            VALUES ($deckId, $cardType, $front, $back, $answer);
             SELECT last_insert_rowid();
         ";
 
@@ -41,6 +44,7 @@ public static class FlashCardRepository
         command.Parameters.AddWithValue("$cardType", cardType);
         command.Parameters.AddWithValue("$front", card.Front);
         command.Parameters.AddWithValue("$back", card.Back);
+        command.Parameters.AddWithValue("$answer", BuildAnswerPayload(card));
 
         long newID = (long)(command.ExecuteScalar() ?? long.MaxValue);
         card.AssignDatabaseID((ulong)newID);
@@ -88,7 +92,7 @@ public static class FlashCardRepository
         connection.Open();
 
         var command = connection.CreateCommand();
-        command.CommandText = "SELECT ID, CardType, Front, Back FROM Cards WHERE DeckID = $deckId;";
+        command.CommandText = "SELECT ID, CardType, Front, Back, Answer FROM Cards WHERE DeckID = $deckId;";
         command.Parameters.AddWithValue("$deckId", deckID);
 
         using var reader = command.ExecuteReader();
@@ -98,14 +102,16 @@ public static class FlashCardRepository
             string cardType = reader.GetString(1);
             string front = reader.GetString(2);
             string back = reader.GetString(3);
+            string? answer = reader.IsDBNull(4) ? null : reader.GetString(4);
 
             // Polymorphic Instantiation based on the database flag
             FlashCard card = cardType switch
             {
-                nameof(TypeFlashCard) => new TypeFlashCard(front, back, id),
+                nameof(TypeFlashCard) => new TypeFlashCard(front, back, answer, id),
                 nameof(FlipFlashCard) => new FlipFlashCard(front, back, id),
                 nameof(MultiFlashCard) => new MultiFlashCard(front, back, GetCardOptions(id, connection), id),
                 nameof(MatchFlashCard) => new MatchFlashCard(front, back, GetMatchPairs(id, connection), id),
+                nameof(TrueFalseFlashCard) => BuildTrueFalseCard(front, back, answer, id),
                 _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
             };
 
@@ -197,10 +203,11 @@ public static class FlashCardRepository
         connection.Open();
 
         var command = connection.CreateCommand();
-        command.CommandText = "UPDATE Cards SET Front = $front, Back = $back WHERE ID = $id;";
+        command.CommandText = "UPDATE Cards SET Front = $front, Back = $back, Answer = $answer WHERE ID = $id;";
 
         command.Parameters.AddWithValue("$front", card.Front);
         command.Parameters.AddWithValue("$back", card.Back);
+        command.Parameters.AddWithValue("$answer", BuildAnswerPayload(card));
         command.Parameters.AddWithValue("$id", card.ID);
 
         command.ExecuteNonQuery();
@@ -359,5 +366,58 @@ public static class FlashCardRepository
         }
 
         return pairs;
+    }
+
+    private static object BuildAnswerPayload(FlashCard card)
+    {
+        return card switch
+        {
+            TypeFlashCard typeCard => typeCard.Answer,
+            TrueFalseFlashCard trueFalseCard => JsonSerializer.Serialize(
+                new TrueFalseAnswerPayload(trueFalseCard.CorrectAnswerIsTrue, trueFalseCard.TrueLabel, trueFalseCard.FalseLabel)),
+            _ => DBNull.Value,
+        };
+    }
+
+    private static TrueFalseFlashCard BuildTrueFalseCard(string front, string back, string? answerPayload, ulong id)
+    {
+        var (correctAnswerIsTrue, trueLabel, falseLabel) = ParseTrueFalsePayload(answerPayload);
+        return new TrueFalseFlashCard(front, back, correctAnswerIsTrue, trueLabel, falseLabel, id);
+    }
+
+    private static (bool correctAnswerIsTrue, string trueLabel, string falseLabel) ParseTrueFalsePayload(string? payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return (true, "True", "False");
+        }
+
+        if (bool.TryParse(payload, out var boolAnswer))
+        {
+            return (boolAnswer, "True", "False");
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<TrueFalseAnswerPayload>(payload);
+            if (parsed is null)
+            {
+                return (true, "True", "False");
+            }
+
+            var trueLabel = string.IsNullOrWhiteSpace(parsed.TrueLabel) ? "True" : parsed.TrueLabel.Trim();
+            var falseLabel = string.IsNullOrWhiteSpace(parsed.FalseLabel) ? "False" : parsed.FalseLabel.Trim();
+
+            if (string.Equals(trueLabel, falseLabel, StringComparison.OrdinalIgnoreCase))
+            {
+                return (parsed.CorrectAnswerIsTrue, "True", "False");
+            }
+
+            return (parsed.CorrectAnswerIsTrue, trueLabel, falseLabel);
+        }
+        catch (JsonException)
+        {
+            return (true, "True", "False");
+        }
     }
 }

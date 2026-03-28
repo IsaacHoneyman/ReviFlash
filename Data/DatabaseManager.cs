@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Data.Sqlite;
 
 namespace ReviFlash.Data;
@@ -28,10 +29,13 @@ public static class DatabaseManager
                 CardType TEXT NOT NULL, 
                 Front TEXT NOT NULL,
                 Back TEXT NOT NULL,
+                Answer TEXT,
                 FOREIGN KEY(DeckID) REFERENCES Decks(ID) ON DELETE CASCADE
             )
         ";
         cardCommand.ExecuteNonQuery();
+
+        EnsureCardsAnswerColumn(connection);
 
         var cardOptionsCommand = connection.CreateCommand();
         cardOptionsCommand.CommandText = @"
@@ -76,5 +80,31 @@ public static class DatabaseManager
     public static SqliteConnection GetConnection()
     {
         return new SqliteConnection(connectionString);
+    }
+
+    private static void EnsureCardsAnswerColumn(SqliteConnection connection)
+    {
+        var pragmaCommand = connection.CreateCommand();
+        pragmaCommand.CommandText = "PRAGMA table_info(Cards);";
+
+        var hasAnswerColumn = false;
+        using (var reader = pragmaCommand.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), "Answer", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasAnswerColumn = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasAnswerColumn)
+        {
+            var alterCommand = connection.CreateCommand();
+            alterCommand.CommandText = "ALTER TABLE Cards ADD COLUMN Answer TEXT;";
+            alterCommand.ExecuteNonQuery();
+        }
     }
 }
