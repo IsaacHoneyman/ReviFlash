@@ -8,7 +8,10 @@ namespace ReviFlash.Data;
 
 public static class MetaDataManager
 {
-    private const string filePath = "metadata.json";
+    private static string GetFilePath()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "metadata.json");
+    }
 
     public static AppMetaData LoadMetaDataOnStartup()
     {
@@ -33,7 +36,7 @@ public static class MetaDataManager
 
     static AppMetaData LoadMetaData()
     {
-        if (!File.Exists(filePath))
+        if (!File.Exists(GetFilePath()))
         {
             var defaultMetaData = new AppMetaData();
             return defaultMetaData;
@@ -41,7 +44,7 @@ public static class MetaDataManager
 
         try
         {
-            string json = File.ReadAllText(filePath);
+            string json = File.ReadAllText(GetFilePath());
             return JsonSerializer.Deserialize<AppMetaData>(json) ?? new AppMetaData();
         }
         catch (Exception)
@@ -54,7 +57,7 @@ public static class MetaDataManager
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         string json = JsonSerializer.Serialize(data, options);
-        File.WriteAllText(filePath, json);
+        File.WriteAllText(GetFilePath(), json);
     }
 
 }

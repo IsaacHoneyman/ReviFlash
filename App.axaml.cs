@@ -14,6 +14,11 @@ public partial class App : Application
 {
     public static AppMetaData CurrentMetaData { get; private set; } = new();
 
+    public static void SetCurrentMetaData(AppMetaData metaData)
+    {
+        CurrentMetaData = metaData;
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);

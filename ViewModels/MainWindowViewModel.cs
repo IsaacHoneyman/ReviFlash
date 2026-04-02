@@ -32,10 +32,10 @@ public class MainWindowViewModel : ViewModelBase
     public string StreakText
     {
         get => _streakText;
-        set => _streakText = value;
+        set { _streakText = value; OnPropertyChanged(nameof(StreakText)); }
     }
 
-    private static string _versionText = "Version A-0.4.0";
+    private static string _versionText = "Version A-0.4.1";
     public static string VersionText
     {
         get => _versionText;
@@ -309,6 +309,14 @@ public class MainWindowViewModel : ViewModelBase
         {
             Decks.Add(deck);
         }
+    }
+
+    public void RefreshAfterBackupRestore()
+    {
+        StreakText = $"{App.CurrentMetaData.LaunchStreak} Day Streak";
+        LoadDecksFromDatabase();
+        FilterDecks();
+        RefreshStats();
     }
 
     public void CreateNewDeck()

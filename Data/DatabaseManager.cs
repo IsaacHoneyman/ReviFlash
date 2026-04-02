@@ -1,15 +1,18 @@
 using System;
+using System.IO;
 using Microsoft.Data.Sqlite;
 
 namespace ReviFlash.Data;
 
 public static class DatabaseManager
 {
-    private const string connectionString = "Data Source=reviflash.db";
-
+    private static string GetDatabasePath()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reviflash.db");
+    }
     public static void InitDatabase()
     {
-        using var connection = new SqliteConnection(connectionString);
+        using var connection = new SqliteConnection($"Data Source={GetDatabasePath()}");
         connection.Open();
 
         var deckCommand = connection.CreateCommand();
@@ -74,12 +77,12 @@ public static class DatabaseManager
             PRIMARY KEY (DeckId, DateChecked),
             FOREIGN KEY (DeckId) REFERENCES Decks(Id) ON DELETE CASCADE
         )";
-        deckStatsCommand.ExecuteNonQuery(); 
+        deckStatsCommand.ExecuteNonQuery();
     }
 
     public static SqliteConnection GetConnection()
     {
-        return new SqliteConnection(connectionString);
+        return new SqliteConnection($"Data Source={GetDatabasePath()}");
     }
 
     private static void EnsureCardsAnswerColumn(SqliteConnection connection)

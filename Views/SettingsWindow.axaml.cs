@@ -1,5 +1,7 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using ReviFlash.Data;
 using ReviFlash.ViewModels;
 
@@ -10,6 +12,81 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+    }
+
+    private async void CreateBackup_Click(object? sender, RoutedEventArgs e)
+    {
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Choose a folder for the backup",
+            AllowMultiple = false,
+        });
+
+        if (folders.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            BackupManager.TryCreateBackup(folders[0].Path.LocalPath);
+            SetBackupStatus("Backup created successfully.");
+        }
+        catch (Exception ex)
+        {
+            SetBackupStatus($"Backup failed: {ex.Message}");
+        }
+    }
+
+    private async void RestoreBackup_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose a backup file",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Backup Files") { Patterns = ["*.zip"] }
+            ]
+        });
+
+        if (files.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            BackupManager.TryRestoreFromBackup(files[0].Path.LocalPath);
+
+            if (DataContext is SettingsViewModel vm)
+            {
+                vm.RefreshFromMetadata();
+            }
+
+            if (Owner is MainWindow { DataContext: MainWindowViewModel mainVm })
+            {
+                mainVm.RefreshAfterBackupRestore();
+            }
+
+            SetBackupStatus("Backup restored successfully.");
+        }
+        catch (Exception ex)
+        {
+            SetBackupStatus($"Restore failed: {ex.Message}");
+        }
+    }
+
+    private void SetBackupStatus(string message)
+    {
+        var statusText = this.FindControl<TextBlock>("BackupStatusText");
+        if (statusText == null)
+        {
+            return;
+        }
+
+        statusText.Text = message;
+        statusText.IsVisible = true;
     }
 
     private async void DeleteAllStats_Click(object? sender, RoutedEventArgs e)

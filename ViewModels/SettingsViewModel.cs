@@ -103,6 +103,14 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public void RefreshFromMetadata()
+    {
+        OnPropertyChanged(nameof(SelectedTheme));
+        OnPropertyChanged(nameof(ShowTimer));
+        OnPropertyChanged(nameof(ShowProgress));
+        LoadDecks();
+    }
+
     public void DeleteStatsForSelectedDeck()
     {
         if (SelectedDeckForStatDeletion != null)

@@ -9,7 +9,9 @@
         CanResize="False"
         Background="{DynamicResource AppBackground}">
 
-    <Grid Margin="24">
+    <ScrollViewer Margin="24"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="16">
             <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
             
@@ -55,6 +57,51 @@
         </Grid>
     </StackPanel>
 </Border>
+
+        <Border Background="{DynamicResource CardBackground}"
+            BorderBrush="{DynamicResource CardBorder}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="16">
+        <StackPanel Spacing="10">
+            <TextBlock Text="Backup"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimary}"/>
+
+            <TextBlock Text="Create a backup zip or restore the app from an existing backup file."
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextSecondary}"/>
+
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+            <Button Grid.Column="0"
+                Content="Create Backup"
+                Click="CreateBackup_Click"
+                HorizontalAlignment="Stretch"
+                CornerRadius="8"
+                Padding="12,10"
+                FontWeight="Bold"
+                Background="{DynamicResource AccentBrush}"
+                Foreground="{DynamicResource IconForeground}"
+                Cursor="Hand"/>
+
+            <Button Grid.Column="1"
+                Content="Restore Backup"
+                Click="RestoreBackup_Click"
+                HorizontalAlignment="Stretch"
+                CornerRadius="8"
+                Padding="12,10"
+                FontWeight="Bold"
+                Background="{DynamicResource CardBorder}"
+                Foreground="{DynamicResource TextPrimary}"
+                Cursor="Hand"/>
+            </Grid>
+
+            <TextBlock x:Name="BackupStatusText"
+                   IsVisible="False"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource TextSecondary}"/>
+        </StackPanel>
+        </Border>
 
             <Border Background="#33FF4B6E"
                     BorderBrush="#D9FF4B6E"
@@ -122,5 +169,5 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-    </Grid>
+    </ScrollViewer>
 </Window>
