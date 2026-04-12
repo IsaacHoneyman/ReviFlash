@@ -27,6 +27,8 @@ public static class MetaDataManager
             data.LaunchStreak = 1;
         }
 
+        data.BestLaunchStreak = Math.Max(data.BestLaunchStreak, data.LaunchStreak);
+
         data.LastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
         SettingsViewModel.ApplyTheme(data.Theme);
         data.Version = MainWindowViewModel.VersionText;

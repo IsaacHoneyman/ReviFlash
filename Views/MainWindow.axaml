@@ -299,6 +299,18 @@
                                         FontSize="24" FontWeight="Bold" />
                                 </StackPanel>
                             </Border>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                IsVisible="{Binding !IsViewingDeckStats}"
+                                CornerRadius="10"
+                                Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Best Ever Streak"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding BestEverStreakText}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="24" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 
@@ -335,9 +347,10 @@
                 </Grid>
 
                 <!-- Review Card -->
-                <Grid Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Grid Grid.Row="1" Margin="0,0,0,16">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Center">
                     <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
-                        Padding="32">
+                        Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <StackPanel Spacing="20">
                         <TextBlock Text="{Binding CurrentNumber, StringFormat='Card {0} of {1}'}" 
                             HorizontalAlignment="Center"
@@ -651,6 +664,7 @@
                                                             ItemsSource="{Binding RightChoices}"
                                                             SelectedItem="{Binding SelectedRightText, Mode=TwoWay}"
                                                             HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Stretch"
                                                             CornerRadius="8" Padding="8,6">
                                                             <ComboBox.ItemTemplate>
                                                                 <DataTemplate x:DataType="sys:String">
@@ -665,6 +679,8 @@
                                                                             <DataTemplate x:DataType="converters:MixedMathSegment">
                                                                                 <StackPanel Margin="0,0,1,0" Orientation="Horizontal" VerticalAlignment="Center">
                                                                                     <TextBlock Text="{Binding Content}" FontSize="14"
+                                                                                        TextWrapping="Wrap"
+                                                                                        TextTrimming="None"
                                                                                         VerticalAlignment="Center"
                                                                                         Foreground="{DynamicResource TextPrimary}"
                                                                                         IsVisible="{Binding IsText}" />
@@ -861,6 +877,7 @@
                         </StackPanel>
                         </StackPanel>
                     </Border>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </DataTemplate>

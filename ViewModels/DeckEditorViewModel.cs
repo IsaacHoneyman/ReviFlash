@@ -451,9 +451,9 @@ public class DeckEditorViewModel : ViewModelBase
 
     public void AddOptionRow()
     {
-        if (MultiChoiceOptions.Count >= 6)
+        if (MultiChoiceOptions.Count >= 8)
         {
-            ValidationMessage = "You can add up to 6 options.";
+            ValidationMessage = "You can add up to 8 options.";
             return;
         }
 
@@ -475,9 +475,9 @@ public class DeckEditorViewModel : ViewModelBase
 
     public void AddMatchPairRow()
     {
-        if (MatchPairs.Count >= 6)
+        if (MatchPairs.Count >= 8)
         {
-            ValidationMessage = "You can add up to 6 match pairs.";
+            ValidationMessage = "You can add up to 8 match pairs.";
             return;
         }
 

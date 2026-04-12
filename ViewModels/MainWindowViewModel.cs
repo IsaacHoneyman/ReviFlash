@@ -35,6 +35,13 @@ public class MainWindowViewModel : ViewModelBase
         set { _streakText = value; OnPropertyChanged(nameof(StreakText)); }
     }
 
+    private string _bestEverStreakText = "0 Day Streak";
+    public string BestEverStreakText
+    {
+        get => _bestEverStreakText;
+        set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
+    }
+
     private static string _versionText = "Version A-0.4.1";
     public static string VersionText
     {
@@ -170,6 +177,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         var meta = App.CurrentMetaData;
         StreakText = $"{meta.LaunchStreak} Day Streak";
+        BestEverStreakText = $"{meta.BestLaunchStreak} Days";
         CurrentPage = this;
 
         // Initialize time period options
@@ -314,6 +322,7 @@ public class MainWindowViewModel : ViewModelBase
     public void RefreshAfterBackupRestore()
     {
         StreakText = $"{App.CurrentMetaData.LaunchStreak} Day Streak";
+        BestEverStreakText = $"{App.CurrentMetaData.BestLaunchStreak} Days";
         LoadDecksFromDatabase();
         FilterDecks();
         RefreshStats();

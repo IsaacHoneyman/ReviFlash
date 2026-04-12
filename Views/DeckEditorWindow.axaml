@@ -174,7 +174,7 @@
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsMultiChoiceCardType}">
                             <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
-                                <TextBlock Grid.Column="0" Text="Options (max 6)" FontSize="12"
+                                <TextBlock Grid.Column="0" Text="Options (max 8)" FontSize="12"
                                     Foreground="{DynamicResource TextSecondary}" Margin="4,0,0,0" />
                                 <Button Grid.Column="1" Content="+ Add Option" Click="AddOption_Click"
                                     CornerRadius="8" Padding="10,6"
@@ -207,7 +207,7 @@
                                 FontSize="12" Foreground="{DynamicResource TextSecondary}" />
 
                             <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
-                                <TextBlock Grid.Column="0" Text="Match pairs (max 6)" FontSize="12"
+                                <TextBlock Grid.Column="0" Text="Match pairs (max 8)" FontSize="12"
                                     Foreground="{DynamicResource TextSecondary}" Margin="4,0,0,0" />
                                 <Button Grid.Column="1" Content="+ Add Pair" Click="AddMatchPair_Click"
                                     CornerRadius="8" Padding="10,6"
