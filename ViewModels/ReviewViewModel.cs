@@ -49,10 +49,14 @@ public class ReviewMatchRow : ViewModelBase
 public class ReviewViewModel : ViewModelBase
 {
     private readonly List<FlashCard> _sessionCards;
+    private readonly Dictionary<ulong, ulong>? _cardDeckMap;
+    private readonly Dictionary<ulong, int> _attemptsByDeck = [];
+    private readonly Dictionary<ulong, int> _correctByDeck = [];
     private int _currentIndex = 0;
     private Stopwatch _timer = new();
     private Timer? _displayTimer;
     private readonly ulong deckID = ulong.MaxValue;
+    private bool _currentCardHasBeenScored;
 
     public FlashCard CurrentCard => _sessionCards[_currentIndex];
     public int TotalCards => _sessionCards.Count;
@@ -115,11 +119,12 @@ public class ReviewViewModel : ViewModelBase
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
 
-    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID)
+    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, Dictionary<ulong, ulong>? cardDeckMap = null)
     {
         _sessionCards = [.. cards.OrderBy(_ => Guid.NewGuid()).ToList()]; // Shuffle cards
         _timer.Start();
         this.deckID = deckID;
+        _cardDeckMap = cardDeckMap;
 
         LoadMultiChoiceOptionsForCurrentCard();
         LoadMatchRowsForCurrentCard();
@@ -156,19 +161,20 @@ public class ReviewViewModel : ViewModelBase
 
     public void MarkCorrect()
     {
-        CorrectCount++;
+        RecordCurrentCardResult(true);
         NextCard();
     }
 
-    public void MarkIncorrect() => NextCard();
+    public void MarkIncorrect()
+    {
+        RecordCurrentCardResult(false);
+        NextCard();
+    }
 
     public void CheckTypedAnswer()
     {
         IsAnswerCorrect = CurrentCard.VerifyAnswer(UserTypedAnswer);
-        if (IsAnswerCorrect)
-        {
-            CorrectCount++;
-        }
+        RecordCurrentCardResult(IsAnswerCorrect);
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
         OnPropertyChanged(nameof(IsAnswerRevealed));
@@ -189,10 +195,7 @@ public class ReviewViewModel : ViewModelBase
             .ToList();
 
         IsAnswerCorrect = CurrentCard.VerifyAnswer(selectedAnswers);
-        if (IsAnswerCorrect)
-        {
-            CorrectCount++;
-        }
+        RecordCurrentCardResult(IsAnswerCorrect);
 
         SelectedWrongOptions.Clear();
         MissedCorrectOptions.Clear();
@@ -232,10 +235,7 @@ public class ReviewViewModel : ViewModelBase
             .ToList();
 
         IsAnswerCorrect = CurrentCard.VerifyAnswer(selectedPairs);
-        if (IsAnswerCorrect)
-        {
-            CorrectCount++;
-        }
+        RecordCurrentCardResult(IsAnswerCorrect);
 
         WrongMatches.Clear();
         foreach (var row in MatchRows)
@@ -263,10 +263,7 @@ public class ReviewViewModel : ViewModelBase
         }
 
         IsAnswerCorrect = trueFalseCard.VerifyAnswer(selectedAnswerIsTrue);
-        if (IsAnswerCorrect)
-        {
-            CorrectCount++;
-        }
+        RecordCurrentCardResult(IsAnswerCorrect);
 
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
@@ -286,6 +283,7 @@ public class ReviewViewModel : ViewModelBase
             IsAnswerChecked = false;
             IsAnswerCorrect = false;
             UserTypedAnswer = "";
+            _currentCardHasBeenScored = false;
             SelectedWrongOptions.Clear();
             MissedCorrectOptions.Clear();
             WrongMatches.Clear();
@@ -332,12 +330,64 @@ public class ReviewViewModel : ViewModelBase
         _timer.Stop();
         _displayTimer?.Stop();
         _displayTimer?.Dispose();
+
         int elapsedSeconds = (int)Math.Round(_timer.Elapsed.TotalSeconds);
-        // When quitting early, count only the cards actually answered (_currentIndex cards have been answered)
-        // When completing normally, count all cards
-        int questionsAttempted = isPartial ? _currentIndex : TotalCards;
-        FlashCardRepository.UpdateDeckStats(deckID, CorrectCount, questionsAttempted, elapsedSeconds);
+        var totalAttempts = _attemptsByDeck.Values.Sum();
+        int questionsAttempted = totalAttempts;
+
+        if (totalAttempts > 0)
+        {
+            var deckResults = _attemptsByDeck
+                .Where(kvp => kvp.Value > 0)
+                .OrderBy(kvp => kvp.Key)
+                .ToList();
+
+            int distributedSeconds = 0;
+            for (int i = 0; i < deckResults.Count; i++)
+            {
+                var (targetDeckId, attempts) = deckResults[i];
+                int correct = _correctByDeck.GetValueOrDefault(targetDeckId);
+
+                int deckSeconds = i == deckResults.Count - 1
+                    ? elapsedSeconds - distributedSeconds
+                    : (int)((long)elapsedSeconds * attempts / totalAttempts);
+
+                distributedSeconds += deckSeconds;
+                FlashCardRepository.UpdateDeckStats(targetDeckId, correct, attempts, deckSeconds);
+            }
+        }
+
         OnSessionComplete?.Invoke(CorrectCount, questionsAttempted, _timer.Elapsed, isPartial);
+    }
+
+    private void RecordCurrentCardResult(bool isCorrect)
+    {
+        if (_currentCardHasBeenScored)
+        {
+            return;
+        }
+
+        _currentCardHasBeenScored = true;
+        ulong targetDeckId = GetCurrentCardDeckId();
+
+        _attemptsByDeck[targetDeckId] = _attemptsByDeck.GetValueOrDefault(targetDeckId) + 1;
+        if (isCorrect)
+        {
+            CorrectCount++;
+            _correctByDeck[targetDeckId] = _correctByDeck.GetValueOrDefault(targetDeckId) + 1;
+        }
+    }
+
+    private ulong GetCurrentCardDeckId()
+    {
+        if (_cardDeckMap is not null
+            && CurrentCard.ID != ulong.MaxValue
+            && _cardDeckMap.TryGetValue(CurrentCard.ID, out var mappedDeckId))
+        {
+            return mappedDeckId;
+        }
+
+        return deckID;
     }
 
     private void LoadMultiChoiceOptionsForCurrentCard()

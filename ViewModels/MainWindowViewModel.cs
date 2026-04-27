@@ -4,6 +4,7 @@ using ReviFlash.Data;
 using System.Linq;
 using System;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace ReviFlash.ViewModels;
 
@@ -42,7 +43,7 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
-    private static string _versionText = "Version A-0.4.1";
+    private static string _versionText = "Version A-0.5.0";
     public static string VersionText
     {
         get => _versionText;
@@ -60,6 +61,29 @@ public class MainWindowViewModel : ViewModelBase
             FilterDecks();
         }
     }
+
+    private bool _isMultiSelectMode;
+    public bool IsMultiSelectMode
+    {
+        get => _isMultiSelectMode;
+        set
+        {
+            _isMultiSelectMode = value;
+            OnPropertyChanged(nameof(IsMultiSelectMode));
+            OnPropertyChanged(nameof(CanShowDeckManagementActions));
+            OnPropertyChanged(nameof(MultiSelectPrimaryButtonText));
+        }
+    }
+
+    private readonly HashSet<ulong> _selectedDeckIds = [];
+    public bool HasSelectedDecks => _selectedDeckIds.Count > 0;
+    public int SelectedDeckCount => _selectedDeckIds.Count;
+    public bool CanShowDeckManagementActions => !IsMultiSelectMode;
+    public string MultiSelectPrimaryButtonText => !IsMultiSelectMode
+        ? "Select Multiple"
+        : HasSelectedDecks
+            ? $"Play Selected ({SelectedDeckCount})"
+            : "Cancel";
 
     public static int CompareVersionNumber(string versionA, string versionB)
     {
@@ -291,15 +315,69 @@ public class MainWindowViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(SearchText))
         {
-            foreach (var deck in Decks) FilteredDecks.Add(deck);
+            foreach (var deck in Decks)
+            {
+                deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
+                FilteredDecks.Add(deck);
+            }
         }
         else
         {
             var lowerSearch = SearchText.ToLower();
             var results = Decks.Where(d => d.Name.ToLower().Contains(lowerSearch));
 
-            foreach (var deck in results) FilteredDecks.Add(deck);
+            foreach (var deck in results)
+            {
+                deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
+                FilteredDecks.Add(deck);
+            }
         }
+    }
+
+    public void EnterMultiSelectMode()
+    {
+        IsMultiSelectMode = true;
+        NotifyMultiSelectChanged();
+    }
+
+    public void CancelMultiSelectMode()
+    {
+        IsMultiSelectMode = false;
+        _selectedDeckIds.Clear();
+        foreach (var deck in Decks)
+        {
+            deck.IsSelectedForMultiReview = false;
+        }
+
+        NotifyMultiSelectChanged();
+        FilterDecks();
+    }
+
+    public void ToggleDeckSelection(FlashCardDeck deck)
+    {
+        if (_selectedDeckIds.Contains(deck.ID))
+        {
+            _selectedDeckIds.Remove(deck.ID);
+            deck.IsSelectedForMultiReview = false;
+        }
+        else
+        {
+            _selectedDeckIds.Add(deck.ID);
+            deck.IsSelectedForMultiReview = true;
+        }
+
+        NotifyMultiSelectChanged();
+        FilterDecks();
+    }
+
+    public List<FlashCardDeck> GetSelectedDecks() =>
+        Decks.Where(d => _selectedDeckIds.Contains(d.ID)).ToList();
+
+    private void NotifyMultiSelectChanged()
+    {
+        OnPropertyChanged(nameof(HasSelectedDecks));
+        OnPropertyChanged(nameof(SelectedDeckCount));
+        OnPropertyChanged(nameof(MultiSelectPrimaryButtonText));
     }
 
     public void DeleteDeck(FlashCardDeck deckToDelete)

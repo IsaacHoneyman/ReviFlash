@@ -6,6 +6,8 @@ using Avalonia.VisualTree;
 using ReviFlash.Data;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ReviFlash.Views;
 
@@ -130,6 +132,12 @@ public partial class MainWindow : Window
         var border = (Border)sender;
         if (border.DataContext is FlashCardDeck deck)
         {
+            if (DataContext is MainWindowViewModel vm && vm.IsMultiSelectMode)
+            {
+                vm.ToggleDeckSelection(deck);
+                return;
+            }
+
             StartReviewSession(deck);
         }
     }
@@ -150,9 +158,38 @@ public partial class MainWindow : Window
         var border = (Border)sender;
         if (border.DataContext is FlashCardDeck deck)
         {
+            if (DataContext is MainWindowViewModel vm && vm.IsMultiSelectMode)
+            {
+                vm.ToggleDeckSelection(deck);
+                e.Handled = true;
+                return;
+            }
+
             StartReviewSession(deck);
             e.Handled = true;
         }
+    }
+
+    private void MultiSelectDecks_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
+
+        if (!vm.IsMultiSelectMode)
+        {
+            vm.EnterMultiSelectMode();
+            return;
+        }
+
+        if (!vm.HasSelectedDecks)
+        {
+            vm.CancelMultiSelectMode();
+            return;
+        }
+
+        StartReviewSession(vm.GetSelectedDecks());
     }
 
     private void StartReviewSession(FlashCardDeck deck)
@@ -171,6 +208,45 @@ public partial class MainWindow : Window
 
         if (DataContext is MainWindowViewModel vm)
             vm.CurrentPage = reviewVM;
+    }
+
+    private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks)
+    {
+        var allCards = new List<FlashCard>();
+        var cardDeckMap = new Dictionary<ulong, ulong>();
+
+        foreach (var deck in decks)
+        {
+            var deckCards = FlashCardRepository.GetCardsForDeck(deck.ID);
+            foreach (var card in deckCards)
+            {
+                allCards.Add(card);
+                if (card.ID != ulong.MaxValue)
+                {
+                    cardDeckMap[card.ID] = deck.ID;
+                }
+            }
+        }
+
+        if (allCards.Count == 0)
+        {
+            return;
+        }
+
+        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap)
+        {
+            OnSessionComplete = (score, total, time, isPartial) =>
+            {
+                if (DataContext is MainWindowViewModel mainVM)
+                    mainVM.CurrentPage = new SummaryViewModel(score, total, time, isPartial);
+            }
+        };
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.CancelMultiSelectMode();
+            vm.CurrentPage = reviewVM;
+        }
     }
 
     private void ShowAnswer_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.Reveal();
@@ -241,6 +317,7 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm)
         {
             vm.CurrentPage = vm; // Switches back to the Dashboard template
+            vm.CancelMultiSelectMode();
             vm.LoadDecksFromDatabase();
             vm.FilterDecks();
             vm.RefreshStats(); // Refresh stats after session completes

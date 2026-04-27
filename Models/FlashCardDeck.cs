@@ -8,6 +8,7 @@ public class FlashCardDeck
     public ulong ID { get; private set; }
     public string Name { get; set; }
     public int CardCount { get; set; }
+    public bool IsSelectedForMultiReview { get; set; }
     private readonly List<FlashCard> flashCards = [];
     public IReadOnlyList<FlashCard> FlashCards => flashCards.AsReadOnly();
 
