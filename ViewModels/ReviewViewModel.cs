@@ -80,7 +80,7 @@ public class ReviewViewModel : ViewModelBase
     public string CurrentTrueFalseCorrectOptionText => CurrentCard is TrueFalseFlashCard trueFalseCard
         ? (trueFalseCard.CorrectAnswerIsTrue ? trueFalseCard.TrueLabel : trueFalseCard.FalseLabel)
         : "";
-    public bool ShowBackAnswer => IsAnswerRevealed && !IsMultiChoiceCard;
+    public bool ShowBackAnswer => IsAnswerRevealed;
     public bool IsAnswerChecked { get; set; } = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
