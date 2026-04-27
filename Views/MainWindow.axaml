@@ -93,7 +93,7 @@
 
                 <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 24">
 
-                    <Grid Grid.Column="0" RowDefinitions="Auto, *" Margin="0, 0, 24, 0">
+                    <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" Margin="0, 0, 24, 0">
 
                         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0, 0, 0, 18">
                             <TextBox Grid.Column="0"
@@ -105,7 +105,7 @@
 
                             <Button Grid.Column="1"
                                 Click="MultiSelectDecks_Click"
-                                Content="{Binding MultiSelectPrimaryButtonText}"
+                                Content="{Binding ReviewSelectionButtonText}"
                                 CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
                                 Background="{DynamicResource BadgeBackground}" Foreground="{DynamicResource TextPrimary}"
                                 Cursor="Hand" Margin="0,0,12,0" />
@@ -205,7 +205,7 @@
                                                         Foreground="{DynamicResource TextSecondary}"
                                                         IsVisible="{Binding !IsSelectedForMultiReview}"
                                                         Margin="0, 12, 0, 0" />
-                                                    <TextBlock Text="Selected for multi review" FontSize="14"
+                                                    <TextBlock Text="Selected" FontSize="14"
                                                         Foreground="{DynamicResource GradientStart}"
                                                         IsVisible="{Binding IsSelectedForMultiReview}"
                                                         Margin="0, 12, 0, 0" />
@@ -218,6 +218,21 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left"
+                            Margin="0,16,0,0" Spacing="12">
+                            <Button Click="ImportFlashCards_Click"
+                                Content="Import"
+                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
+                                Background="{DynamicResource BadgeBackground}" Foreground="{DynamicResource TextPrimary}"
+                                Cursor="Hand" />
+
+                            <Button Click="ExportFlashCards_Click"
+                                Content="{Binding ExportSelectionButtonText}"
+                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
+                                Background="{DynamicResource BadgeBackground}" Foreground="{DynamicResource TextPrimary}"
+                                Cursor="Hand" />
+                        </StackPanel>
                     </Grid>
 
                     <Border Grid.Column="1"

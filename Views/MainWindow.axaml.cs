@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using ReviFlash.Data;
 using ReviFlash.Models;
@@ -132,7 +133,7 @@ public partial class MainWindow : Window
         var border = (Border)sender;
         if (border.DataContext is FlashCardDeck deck)
         {
-            if (DataContext is MainWindowViewModel vm && vm.IsMultiSelectMode)
+            if (DataContext is MainWindowViewModel vm && vm.IsSelectionModeActive)
             {
                 vm.ToggleDeckSelection(deck);
                 return;
@@ -158,7 +159,7 @@ public partial class MainWindow : Window
         var border = (Border)sender;
         if (border.DataContext is FlashCardDeck deck)
         {
-            if (DataContext is MainWindowViewModel vm && vm.IsMultiSelectMode)
+            if (DataContext is MainWindowViewModel vm && vm.IsSelectionModeActive)
             {
                 vm.ToggleDeckSelection(deck);
                 e.Handled = true;
@@ -177,19 +178,101 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (!vm.IsMultiSelectMode)
+        if (!vm.IsReviewSelectionMode)
         {
-            vm.EnterMultiSelectMode();
+            vm.BeginReviewSelection();
             return;
         }
 
         if (!vm.HasSelectedDecks)
         {
-            vm.CancelMultiSelectMode();
+            vm.CancelSelectionMode();
             return;
         }
 
         StartReviewSession(vm.GetSelectedDecks());
+    }
+
+    private async void ExportFlashCards_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
+
+        if (!vm.IsExportSelectionMode)
+        {
+            vm.BeginExportSelection();
+            return;
+        }
+
+        if (!vm.HasSelectedDecks)
+        {
+            vm.CancelSelectionMode();
+            return;
+        }
+
+        var saveFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export selected flashcard sets",
+            SuggestedFileName = $"ReviFlashSets_{DateTime.Now:yyyyMMdd_HHmmss}.zip",
+            DefaultExtension = "zip",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("ReviFlash Export") { Patterns = ["*.zip"] }
+            ]
+        });
+
+        if (saveFile is null)
+        {
+            return;
+        }
+
+        try
+        {
+            BackupManager.TryCreateDeckExport(saveFile.Path.LocalPath, vm.GetSelectedDecks().Select(deck => deck.ID).ToList());
+            vm.CancelSelectionMode();
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"Export failed: {ex.Message}");
+        }
+    }
+
+    private async void ImportFlashCards_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
+
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Import flashcard sets",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("ReviFlash Export") { Patterns = ["*.zip"] }
+            ]
+        });
+
+        if (files.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            BackupManager.TryImportDeckExport(files[0].Path.LocalPath);
+            vm.CancelSelectionMode();
+            vm.LoadDecksFromDatabase();
+            vm.FilterDecks();
+            vm.RefreshStats();
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"Import failed: {ex.Message}");
+        }
     }
 
     private void StartReviewSession(FlashCardDeck deck)
@@ -244,7 +327,7 @@ public partial class MainWindow : Window
 
         if (DataContext is MainWindowViewModel vm)
         {
-            vm.CancelMultiSelectMode();
+            vm.CancelSelectionMode();
             vm.CurrentPage = reviewVM;
         }
     }
@@ -317,7 +400,7 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm)
         {
             vm.CurrentPage = vm; // Switches back to the Dashboard template
-            vm.CancelMultiSelectMode();
+            vm.CancelSelectionMode();
             vm.LoadDecksFromDatabase();
             vm.FilterDecks();
             vm.RefreshStats(); // Refresh stats after session completes

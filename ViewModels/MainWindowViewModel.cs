@@ -10,6 +10,13 @@ namespace ReviFlash.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
+    public enum DeckSelectionMode
+    {
+        None,
+        Review,
+        Export,
+    }
+
     public class TimePeriodOption
     {
         public string Label { get; set; }
@@ -43,7 +50,7 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
-    private static string _versionText = "Version A-0.5.0";
+    private static string _versionText = "Version A-0.5.1";
     public static string VersionText
     {
         get => _versionText;
@@ -62,27 +69,39 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private bool _isMultiSelectMode;
-    public bool IsMultiSelectMode
+    private DeckSelectionMode _selectionMode = DeckSelectionMode.None;
+    public DeckSelectionMode SelectionMode
     {
-        get => _isMultiSelectMode;
+        get => _selectionMode;
         set
         {
-            _isMultiSelectMode = value;
-            OnPropertyChanged(nameof(IsMultiSelectMode));
+            _selectionMode = value;
+            OnPropertyChanged(nameof(SelectionMode));
+            OnPropertyChanged(nameof(IsSelectionModeActive));
+            OnPropertyChanged(nameof(IsReviewSelectionMode));
+            OnPropertyChanged(nameof(IsExportSelectionMode));
             OnPropertyChanged(nameof(CanShowDeckManagementActions));
-            OnPropertyChanged(nameof(MultiSelectPrimaryButtonText));
+            OnPropertyChanged(nameof(ReviewSelectionButtonText));
+            OnPropertyChanged(nameof(ExportSelectionButtonText));
         }
     }
 
     private readonly HashSet<ulong> _selectedDeckIds = [];
     public bool HasSelectedDecks => _selectedDeckIds.Count > 0;
     public int SelectedDeckCount => _selectedDeckIds.Count;
-    public bool CanShowDeckManagementActions => !IsMultiSelectMode;
-    public string MultiSelectPrimaryButtonText => !IsMultiSelectMode
+    public bool IsSelectionModeActive => SelectionMode != DeckSelectionMode.None;
+    public bool IsReviewSelectionMode => SelectionMode == DeckSelectionMode.Review;
+    public bool IsExportSelectionMode => SelectionMode == DeckSelectionMode.Export;
+    public bool CanShowDeckManagementActions => !IsSelectionModeActive;
+    public string ReviewSelectionButtonText => !IsReviewSelectionMode
         ? "Select Multiple"
         : HasSelectedDecks
             ? $"Play Selected ({SelectedDeckCount})"
+            : "Cancel";
+    public string ExportSelectionButtonText => !IsExportSelectionMode
+        ? "Export"
+        : HasSelectedDecks
+            ? $"Export Selected ({SelectedDeckCount})"
             : "Cancel";
 
     public static int CompareVersionNumber(string versionA, string versionB)
@@ -334,22 +353,26 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public void EnterMultiSelectMode()
+    public void BeginReviewSelection()
     {
-        IsMultiSelectMode = true;
-        NotifyMultiSelectChanged();
+        BeginSelectionMode(DeckSelectionMode.Review);
     }
 
-    public void CancelMultiSelectMode()
+    public void BeginExportSelection()
     {
-        IsMultiSelectMode = false;
+        BeginSelectionMode(DeckSelectionMode.Export);
+    }
+
+    public void CancelSelectionMode()
+    {
+        SelectionMode = DeckSelectionMode.None;
         _selectedDeckIds.Clear();
         foreach (var deck in Decks)
         {
             deck.IsSelectedForMultiReview = false;
         }
 
-        NotifyMultiSelectChanged();
+        NotifySelectionChanged();
         FilterDecks();
     }
 
@@ -366,24 +389,41 @@ public class MainWindowViewModel : ViewModelBase
             deck.IsSelectedForMultiReview = true;
         }
 
-        NotifyMultiSelectChanged();
+        NotifySelectionChanged();
         FilterDecks();
     }
 
     public List<FlashCardDeck> GetSelectedDecks() =>
         Decks.Where(d => _selectedDeckIds.Contains(d.ID)).ToList();
 
-    private void NotifyMultiSelectChanged()
+    private void BeginSelectionMode(DeckSelectionMode mode)
+    {
+        SelectionMode = mode;
+        _selectedDeckIds.Clear();
+
+        foreach (var deck in Decks)
+        {
+            deck.IsSelectedForMultiReview = false;
+        }
+
+        NotifySelectionChanged();
+        FilterDecks();
+    }
+
+    private void NotifySelectionChanged()
     {
         OnPropertyChanged(nameof(HasSelectedDecks));
         OnPropertyChanged(nameof(SelectedDeckCount));
-        OnPropertyChanged(nameof(MultiSelectPrimaryButtonText));
+        OnPropertyChanged(nameof(ReviewSelectionButtonText));
+        OnPropertyChanged(nameof(ExportSelectionButtonText));
     }
 
     public void DeleteDeck(FlashCardDeck deckToDelete)
     {
         FlashCardRepository.DeleteDeck(deckToDelete.ID);
         Decks.Remove(deckToDelete);
+        _selectedDeckIds.Remove(deckToDelete.ID);
+        NotifySelectionChanged();
         FilterDecks();
     }
 
@@ -401,6 +441,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         StreakText = $"{App.CurrentMetaData.LaunchStreak} Day Streak";
         BestEverStreakText = $"{App.CurrentMetaData.BestLaunchStreak} Days";
+        CancelSelectionMode();
         LoadDecksFromDatabase();
         FilterDecks();
         RefreshStats();
