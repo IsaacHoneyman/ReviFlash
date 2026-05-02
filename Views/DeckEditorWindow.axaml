@@ -425,6 +425,13 @@
 
                                     <StackPanel Grid.Column="1" Grid.Row="1"
                                         VerticalAlignment="Bottom" HorizontalAlignment="Right" Spacing="8" Margin="10,0,0,0">
+                                        <Button Click="CopyCard_Click"
+                                            Background="#7044AAFF" CornerRadius="8"
+                                            Padding="12,8">
+                                            <TextBlock Text="📋" FontSize="16"
+                                                Foreground="{DynamicResource IconForeground}" />
+                                        </Button>
+
                                         <Button Click="EditCard_Click"
                                             Background="#70FFFFFF" CornerRadius="8"
                                             Padding="12,8">

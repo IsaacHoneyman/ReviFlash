@@ -66,6 +66,21 @@ public class DeckEditorViewModel : ViewModelBase
     public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();
     private FlashCard? _editingCard;
 
+    private record EditorSnapshot(
+        string SelectedCardType,
+        string NewFront,
+        string NewBack,
+        string NewTypeAnswer,
+        bool NewTrueFalseAnswerIsTrue,
+        string NewTrueOptionText,
+        string NewFalseOptionText,
+        List<(string optionText, bool isCorrect)> MultiOptions,
+        List<(string leftText, string rightText)> MatchPairs,
+        string ValidationMessage
+    );
+
+    private EditorSnapshot? _lastSnapshot = null;
+
     private string _deckName;
     public string DeckName
     {
@@ -286,36 +301,74 @@ public class DeckEditorViewModel : ViewModelBase
 
         if (_editingCard is not null)
         {
-            _editingCard.UpdateContent(frontValue, backValue);
-
-            if (_editingCard is TypeFlashCard existingType)
+            // If the selected card type matches the existing card's concrete type,
+            // update the existing instance in-place. Otherwise, construct a new
+            // instance of the target type (preserving the DB ID) and persist that.
+            string targetTypeName = SelectedCardType switch
             {
-                existingType.UpdateAnswer(typeAnswerValue);
+                "Type to Answer" => nameof(TypeFlashCard),
+                "Multi Choice" => nameof(MultiFlashCard),
+                "Match" => nameof(MatchFlashCard),
+                "True/False" => nameof(TrueFalseFlashCard),
+                _ => nameof(FlipFlashCard)
+            };
+
+            if (_editingCard.GetType().Name == targetTypeName)
+            {
+                _editingCard.UpdateContent(frontValue, backValue);
+
+                if (_editingCard is TypeFlashCard existingType)
+                {
+                    existingType.UpdateAnswer(typeAnswerValue);
+                }
+
+                if (_editingCard is MultiFlashCard existingMulti && optionTuples is not null)
+                {
+                    existingMulti.Options = optionTuples;
+                }
+
+                if (_editingCard is MatchFlashCard existingMatch && matchPairs is not null)
+                {
+                    existingMatch.Options = matchPairs;
+                }
+
+                if (_editingCard is TrueFalseFlashCard existingTrueFalse)
+                {
+                    existingTrueFalse.UpdateTrueFalseSettings(NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue);
+                }
+
+                FlashCardRepository.UpdateCard(_editingCard);
+
+                // Force item refresh in the bound collection.
+                var index = Cards.IndexOf(_editingCard);
+                if (index >= 0)
+                {
+                    Cards.RemoveAt(index);
+                    Cards.Insert(index, _editingCard);
+                }
+
+                ClearEditor();
+                return;
             }
 
-            if (_editingCard is MultiFlashCard existingMulti && optionTuples is not null)
+            // Create a new instance of the selected type, preserving the ID
+            FlashCard updatedCard = targetTypeName switch
             {
-                existingMulti.Options = optionTuples;
-            }
+                nameof(TypeFlashCard) => new TypeFlashCard(frontValue, backValue, typeAnswerValue, _editingCard.ID),
+                nameof(MultiFlashCard) => new MultiFlashCard(frontValue, backValue, optionTuples ?? [], _editingCard.ID),
+                nameof(MatchFlashCard) => new MatchFlashCard(frontValue, backValue, matchPairs ?? [], _editingCard.ID),
+                nameof(TrueFalseFlashCard) => new TrueFalseFlashCard(frontValue, backValue, NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue, _editingCard.ID),
+                _ => new FlipFlashCard(frontValue, backValue, _editingCard.ID)
+            };
 
-            if (_editingCard is MatchFlashCard existingMatch && matchPairs is not null)
+            FlashCardRepository.UpdateCard(updatedCard);
+
+            // Replace item in the bound collection.
+            var oldIndex = Cards.IndexOf(_editingCard);
+            if (oldIndex >= 0)
             {
-                existingMatch.Options = matchPairs;
-            }
-
-            if (_editingCard is TrueFalseFlashCard existingTrueFalse)
-            {
-                existingTrueFalse.UpdateTrueFalseSettings(NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue);
-            }
-
-            FlashCardRepository.UpdateCard(_editingCard);
-
-            // Force item refresh in the bound collection.
-            var index = Cards.IndexOf(_editingCard);
-            if (index >= 0)
-            {
-                Cards.RemoveAt(index);
-                Cards.Insert(index, _editingCard);
+                Cards.RemoveAt(oldIndex);
+                Cards.Insert(oldIndex, updatedCard);
             }
 
             ClearEditor();
@@ -411,6 +464,10 @@ public class DeckEditorViewModel : ViewModelBase
 
         ValidationMessage = "";
         OnPropertyChanged(nameof(SaveButtonText));
+        
+        // Snapshot editor contents after loading a card for editing so that
+        // subsequent EditorIsBlank checks compare against this state.
+        TakeEditorSnapshot();
     }
 
     private void ClearEditor()
@@ -447,6 +504,9 @@ public class DeckEditorViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(SaveButtonText));
+        
+        // Snapshot the cleared/default editor state as the baseline.
+        TakeEditorSnapshot();
     }
 
     public void AddOptionRow()
@@ -506,6 +566,144 @@ public class DeckEditorViewModel : ViewModelBase
 
         FlashCardRepository.DeleteCard(card.ID);
         Cards.Remove(card);
+    }
+
+    // Return true when the editor is in the same state as the last snapshot
+    // (i.e. no unsaved changes since the last load/save/clear). If there is no
+    // snapshot yet, fall back to the original "blank" checks used for new cards.
+    public bool EditorIsBlank()
+    {
+        if (_lastSnapshot is not null)
+        {
+            var snap = _lastSnapshot;
+
+            // Compare simple fields
+            if (snap.SelectedCardType != SelectedCardType) return false;
+            if (snap.NewFront != NewFront) return false;
+            if (snap.NewBack != NewBack) return false;
+            if (snap.NewTypeAnswer != NewTypeAnswer) return false;
+            if (snap.NewTrueFalseAnswerIsTrue != NewTrueFalseAnswerIsTrue) return false;
+            if (snap.NewTrueOptionText != NewTrueOptionText) return false;
+            if (snap.NewFalseOptionText != NewFalseOptionText) return false;
+            if (snap.ValidationMessage != ValidationMessage) return false;
+
+            // Compare multi options
+            var editorMulti = MultiChoiceOptions
+                .Where(o => !string.IsNullOrWhiteSpace(o.OptionText))
+                .Select(o => (optionText: o.OptionText.Trim(), isCorrect: o.IsCorrect))
+                .ToList();
+
+            if (snap.MultiOptions.Count != editorMulti.Count) return false;
+            for (int i = 0; i < snap.MultiOptions.Count; i++)
+            {
+                if (snap.MultiOptions[i].optionText != editorMulti[i].optionText || snap.MultiOptions[i].isCorrect != editorMulti[i].isCorrect)
+                    return false;
+            }
+
+            // Compare match pairs
+            var editorMatch = MatchPairs
+                .Where(p => !(string.IsNullOrWhiteSpace(p.LeftText) && string.IsNullOrWhiteSpace(p.RightText)))
+                .Select(p => (leftText: p.LeftText.Trim(), rightText: p.RightText.Trim()))
+                .ToList();
+
+            if (snap.MatchPairs.Count != editorMatch.Count) return false;
+            for (int i = 0; i < snap.MatchPairs.Count; i++)
+            {
+                if (snap.MatchPairs[i].leftText != editorMatch[i].leftText || snap.MatchPairs[i].rightText != editorMatch[i].rightText)
+                    return false;
+            }
+
+            return true;
+        }
+
+        // No snapshot — fall back to original blank heuristics
+        var frontEmpty = string.IsNullOrWhiteSpace(NewFront) || (IsMatchCardType && NewFront == "Match The Cards");
+        var backEmpty = string.IsNullOrWhiteSpace(NewBack) || (IsMatchCardType && NewBack == "Match The Cards");
+        var typeAnswerEmpty = string.IsNullOrWhiteSpace(NewTypeAnswer);
+        var multiEmpty = MultiChoiceOptions.All(o => string.IsNullOrWhiteSpace(o.OptionText));
+        var matchEmpty = MatchPairs.All(p => string.IsNullOrWhiteSpace(p.LeftText) && string.IsNullOrWhiteSpace(p.RightText));
+        var trueFalseDefault = NewTrueFalseAnswerIsTrue == true && NewTrueOptionText == "True" && NewFalseOptionText == "False";
+
+        return frontEmpty && backEmpty && typeAnswerEmpty && multiEmpty && matchEmpty && trueFalseDefault && string.IsNullOrWhiteSpace(ValidationMessage);
+    }
+
+    private void TakeEditorSnapshot()
+    {
+        var multi = MultiChoiceOptions
+            .Where(o => !string.IsNullOrWhiteSpace(o.OptionText))
+            .Select(o => (o.OptionText.Trim(), o.IsCorrect))
+            .ToList();
+
+        var match = MatchPairs
+            .Where(p => !(string.IsNullOrWhiteSpace(p.LeftText) && string.IsNullOrWhiteSpace(p.RightText)))
+            .Select(p => (p.LeftText.Trim(), p.RightText.Trim()))
+            .ToList();
+
+        _lastSnapshot = new EditorSnapshot(
+            SelectedCardType,
+            NewFront,
+            NewBack,
+            NewTypeAnswer,
+            NewTrueFalseAnswerIsTrue,
+            NewTrueOptionText,
+            NewFalseOptionText,
+            multi,
+            match,
+            ValidationMessage
+        );
+    }
+
+    // Copy a card's content into the editor fields without starting an edit operation.
+    public void CopyCardToEditor(FlashCard card)
+    {
+        // Do not set _editingCard — copying should prepare a new card based on this content.
+        NewFront = card.Front;
+        NewBack = card.Back;
+
+        if (card is TypeFlashCard typeCard)
+        {
+            SelectedCardType = "Type to Answer";
+            NewTypeAnswer = typeCard.Answer;
+        }
+        else if (card is MultiFlashCard multiCard)
+        {
+            SelectedCardType = "Multi Choice";
+            MultiChoiceOptions.Clear();
+            foreach (var (optionText, isCorrect) in multiCard.Options)
+            {
+                MultiChoiceOptions.Add(new MultiChoiceOptionEditor { OptionText = optionText, IsCorrect = isCorrect });
+            }
+        }
+        else if (card is MatchFlashCard matchCard)
+        {
+            SelectedCardType = "Match";
+            MatchPairs.Clear();
+            foreach (var (leftText, rightText) in matchCard.Options)
+            {
+                MatchPairs.Add(new MatchPairEditor { LeftText = leftText, RightText = rightText });
+            }
+        }
+        else if (card is TrueFalseFlashCard trueFalseCard)
+        {
+            SelectedCardType = "True/False";
+            NewTrueFalseAnswerIsTrue = trueFalseCard.CorrectAnswerIsTrue;
+            NewTrueOptionText = trueFalseCard.TrueLabel;
+            NewFalseOptionText = trueFalseCard.FalseLabel;
+        }
+        else
+        {
+            SelectedCardType = "Flip";
+            NewTypeAnswer = "";
+            NewTrueFalseAnswerIsTrue = true;
+            NewTrueOptionText = "True";
+            NewFalseOptionText = "False";
+        }
+
+        ValidationMessage = "";
+        OnPropertyChanged(nameof(SaveButtonText));
+        
+        // Snapshot after copying so we don't prompt when copying then editing the same card
+        TakeEditorSnapshot();
     }
 
     private List<(string optionText, bool isCorrect)>? BuildValidatedMultiChoiceOptions()

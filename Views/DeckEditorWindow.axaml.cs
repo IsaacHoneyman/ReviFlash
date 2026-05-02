@@ -32,14 +32,40 @@ public partial class DeckEditorWindow : Window
         }
     }
 
-    private void EditCard_Click(object sender, RoutedEventArgs e)
+    private async void EditCard_Click(object sender, RoutedEventArgs e)
     {
         var button = (Button)sender;
         var card = (FlashCard)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCard"));
 
         if (DataContext is DeckEditorViewModel vm)
         {
+            // If editor has content (i.e. differs from the last loaded/copied state), confirm overwrite
+            if (!vm.EditorIsBlank())
+            {
+                var dialog = new ConfirmDialogWindow("Current editor contains unsaved content. Overwrite and edit this card?");
+                bool confirmed = await dialog.ShowDialog<bool>(this);
+                if (!confirmed) return;
+            }
+
             vm.BeginEditCard(card);
+        }
+    }
+
+    private async void CopyCard_Click(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        var card = (FlashCard)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCard"));
+
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            if (!vm.EditorIsBlank())
+            {
+                var dialog = new ConfirmDialogWindow("Current editor contains unsaved content. Overwrite with copied card?");
+                bool confirmed = await dialog.ShowDialog<bool>(this);
+                if (!confirmed) return;
+            }
+
+            vm.CopyCardToEditor(card);
         }
     }
 

@@ -203,7 +203,10 @@ public static class FlashCardRepository
         connection.Open();
 
         var command = connection.CreateCommand();
-        command.CommandText = "UPDATE Cards SET Front = $front, Back = $back, Answer = $answer WHERE ID = $id;";
+        // Ensure the CardType column is updated when changing card subclasses
+        command.CommandText = "UPDATE Cards SET CardType = $cardType, Front = $front, Back = $back, Answer = $answer WHERE ID = $id;";
+
+        command.Parameters.AddWithValue("$cardType", card.GetType().Name);
 
         command.Parameters.AddWithValue("$front", card.Front);
         command.Parameters.AddWithValue("$back", card.Back);
@@ -211,24 +214,25 @@ public static class FlashCardRepository
         command.Parameters.AddWithValue("$id", card.ID);
 
         command.ExecuteNonQuery();
+        // Always clear any existing option/pair rows for this card —
+        // this ensures switching between card types removes stale data.
+        var clearOptions = connection.CreateCommand();
+        clearOptions.CommandText = "DELETE FROM CardOptions WHERE CardID = $cardId;";
+        clearOptions.Parameters.AddWithValue("$cardId", card.ID);
+        clearOptions.ExecuteNonQuery();
+
+        var clearPairs = connection.CreateCommand();
+        clearPairs.CommandText = "DELETE FROM MatchCardPairs WHERE CardID = $cardId;";
+        clearPairs.Parameters.AddWithValue("$cardId", card.ID);
+        clearPairs.ExecuteNonQuery();
 
         if (card is MultiFlashCard multiCard)
         {
-            var deleteOptions = connection.CreateCommand();
-            deleteOptions.CommandText = "DELETE FROM CardOptions WHERE CardID = $cardId;";
-            deleteOptions.Parameters.AddWithValue("$cardId", card.ID);
-            deleteOptions.ExecuteNonQuery();
-
             SaveCardOptions(card.ID, multiCard.Options, connection);
         }
 
         if (card is MatchFlashCard matchCard)
         {
-            var deletePairs = connection.CreateCommand();
-            deletePairs.CommandText = "DELETE FROM MatchCardPairs WHERE CardID = $cardId;";
-            deletePairs.Parameters.AddWithValue("$cardId", card.ID);
-            deletePairs.ExecuteNonQuery();
-
             SaveMatchPairs(card.ID, matchCard.Options, connection);
         }
     }
