@@ -50,7 +50,7 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
-    private static string _versionText = "Version A-0.5.1";
+    private static string _versionText = "Version A-0.5.2";
     public static string VersionText
     {
         get => _versionText;
