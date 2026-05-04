@@ -65,6 +65,7 @@ public class DeckEditorViewModel : ViewModelBase
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
     public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();
     private FlashCard? _editingCard;
+    private ulong? _editingCardId;
 
     private record EditorSnapshot(
         string SelectedCardType,
@@ -158,7 +159,7 @@ public class DeckEditorViewModel : ViewModelBase
         }
     }
 
-    public string SaveButtonText => _editingCard is null ? "Save Card" : "Update Card";
+    public string SaveButtonText => _editingCardId.HasValue ? "Update Card" : "Save Card";
     public List<string> AvailableCardTypes { get; } = new()
     {
         "Flip",
@@ -299,7 +300,9 @@ public class DeckEditorViewModel : ViewModelBase
             return;
         }
 
-        if (_editingCard is not null)
+        var editingCard = GetEditingCard();
+
+        if (editingCard is not null)
         {
             // If the selected card type matches the existing card's concrete type,
             // update the existing instance in-place. Otherwise, construct a new
@@ -313,38 +316,38 @@ public class DeckEditorViewModel : ViewModelBase
                 _ => nameof(FlipFlashCard)
             };
 
-            if (_editingCard.GetType().Name == targetTypeName)
+            if (editingCard.GetType().Name == targetTypeName)
             {
-                _editingCard.UpdateContent(frontValue, backValue);
+                editingCard.UpdateContent(frontValue, backValue);
 
-                if (_editingCard is TypeFlashCard existingType)
+                if (editingCard is TypeFlashCard existingType)
                 {
                     existingType.UpdateAnswer(typeAnswerValue);
                 }
 
-                if (_editingCard is MultiFlashCard existingMulti && optionTuples is not null)
+                if (editingCard is MultiFlashCard existingMulti && optionTuples is not null)
                 {
                     existingMulti.Options = optionTuples;
                 }
 
-                if (_editingCard is MatchFlashCard existingMatch && matchPairs is not null)
+                if (editingCard is MatchFlashCard existingMatch && matchPairs is not null)
                 {
                     existingMatch.Options = matchPairs;
                 }
 
-                if (_editingCard is TrueFalseFlashCard existingTrueFalse)
+                if (editingCard is TrueFalseFlashCard existingTrueFalse)
                 {
                     existingTrueFalse.UpdateTrueFalseSettings(NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue);
                 }
 
-                FlashCardRepository.UpdateCard(_editingCard);
+                FlashCardRepository.UpdateCard(editingCard);
 
                 // Force item refresh in the bound collection.
-                var index = Cards.IndexOf(_editingCard);
+                var index = Cards.IndexOf(editingCard);
                 if (index >= 0)
                 {
                     Cards.RemoveAt(index);
-                    Cards.Insert(index, _editingCard);
+                    Cards.Insert(index, editingCard);
                 }
 
                 ClearEditor();
@@ -354,17 +357,17 @@ public class DeckEditorViewModel : ViewModelBase
             // Create a new instance of the selected type, preserving the ID
             FlashCard updatedCard = targetTypeName switch
             {
-                nameof(TypeFlashCard) => new TypeFlashCard(frontValue, backValue, typeAnswerValue, _editingCard.ID),
-                nameof(MultiFlashCard) => new MultiFlashCard(frontValue, backValue, optionTuples ?? [], _editingCard.ID),
-                nameof(MatchFlashCard) => new MatchFlashCard(frontValue, backValue, matchPairs ?? [], _editingCard.ID),
-                nameof(TrueFalseFlashCard) => new TrueFalseFlashCard(frontValue, backValue, NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue, _editingCard.ID),
-                _ => new FlipFlashCard(frontValue, backValue, _editingCard.ID)
+                nameof(TypeFlashCard) => new TypeFlashCard(frontValue, backValue, typeAnswerValue, editingCard.ID),
+                nameof(MultiFlashCard) => new MultiFlashCard(frontValue, backValue, optionTuples ?? [], editingCard.ID),
+                nameof(MatchFlashCard) => new MatchFlashCard(frontValue, backValue, matchPairs ?? [], editingCard.ID),
+                nameof(TrueFalseFlashCard) => new TrueFalseFlashCard(frontValue, backValue, NewTrueFalseAnswerIsTrue, trueOptionValue, falseOptionValue, editingCard.ID),
+                _ => new FlipFlashCard(frontValue, backValue, editingCard.ID)
             };
 
             FlashCardRepository.UpdateCard(updatedCard);
 
             // Replace item in the bound collection.
-            var oldIndex = Cards.IndexOf(_editingCard);
+            var oldIndex = Cards.IndexOf(editingCard);
             if (oldIndex >= 0)
             {
                 Cards.RemoveAt(oldIndex);
@@ -409,6 +412,7 @@ public class DeckEditorViewModel : ViewModelBase
     public void BeginEditCard(FlashCard card)
     {
         _editingCard = card;
+        _editingCardId = card.ID;
         NewFront = card.Front;
         NewBack = card.Back;
 
@@ -473,6 +477,7 @@ public class DeckEditorViewModel : ViewModelBase
     private void ClearEditor()
     {
         _editingCard = null;
+        _editingCardId = null;
         if (IsMatchCardType)
         {
             NewFront = "Match The Cards";
@@ -559,7 +564,7 @@ public class DeckEditorViewModel : ViewModelBase
 
     public void DeleteCard(FlashCard card)
     {
-        if (_editingCard == card)
+        if (_editingCardId.HasValue && _editingCardId.Value == card.ID)
         {
             ClearEditor();
         }
@@ -656,7 +661,10 @@ public class DeckEditorViewModel : ViewModelBase
     // Copy a card's content into the editor fields without starting an edit operation.
     public void CopyCardToEditor(FlashCard card)
     {
-        // Do not set _editingCard — copying should prepare a new card based on this content.
+        // Copying prepares a new card draft, so clear any active edit target.
+        _editingCard = null;
+        _editingCardId = null;
+
         NewFront = card.Front;
         NewBack = card.Back;
 
@@ -704,6 +712,23 @@ public class DeckEditorViewModel : ViewModelBase
         
         // Snapshot after copying so we don't prompt when copying then editing the same card
         TakeEditorSnapshot();
+    }
+
+    private FlashCard? GetEditingCard()
+    {
+        if (!_editingCardId.HasValue)
+        {
+            _editingCard = null;
+            return null;
+        }
+
+        if (_editingCard is not null && _editingCard.ID == _editingCardId.Value)
+        {
+            return _editingCard;
+        }
+
+        _editingCard = Cards.FirstOrDefault(card => card.ID == _editingCardId.Value);
+        return _editingCard;
     }
 
     private List<(string optionText, bool isCorrect)>? BuildValidatedMultiChoiceOptions()
