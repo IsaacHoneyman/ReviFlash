@@ -217,6 +217,7 @@ public class DeckEditorViewModel : ViewModelBase
     public bool IsMatchCardType => SelectedCardType == "Match";
     public bool IsTrueFalseCardType => SelectedCardType == "True/False";
     public bool ShowFrontBackEditor => true;
+    public bool ShowAdditionalFieldLatexPreviews => App.CurrentMetaData.ShowAdditionalFieldLatexPreviews;
 
     private string _validationMessage = "";
     public string ValidationMessage

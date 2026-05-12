@@ -63,6 +63,17 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public bool ShowAdditionalFieldLatexPreviews
+    {
+        get => App.CurrentMetaData.ShowAdditionalFieldLatexPreviews;
+        set
+        {
+            App.CurrentMetaData.ShowAdditionalFieldLatexPreviews = value;
+            OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
+            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+        }
+    }
+
     public static void ApplyTheme(string themeName)
     {
         App.CurrentMetaData.Theme = themeName;

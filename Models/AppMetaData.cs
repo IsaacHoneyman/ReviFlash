@@ -15,6 +15,7 @@ public class AppMetaData
     public string Version { get; set; }
     public bool ShowTimer { get; set; } = true;
     public bool ShowProgress { get; set; } = true;
+    public bool ShowAdditionalFieldLatexPreviews { get; set; } = true;
 
     public AppMetaData()
     {

@@ -80,6 +80,29 @@
                             <TextBox Text="{Binding NewTypeAnswer, Mode=TwoWay}" Height="40"
                                 Watermark="What the user must type"
                                 Background="{DynamicResource AppBackground}" />
+
+                            <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="40"
+                                IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
+                                <ItemsControl ItemsSource="{Binding NewTypeAnswer, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Content}"
+                                                    TextWrapping="Wrap"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    IsVisible="{Binding IsText}" />
+                                                <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
                         </StackPanel>
 
                         <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
@@ -117,7 +140,8 @@
                             </Grid>
 
                             <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="46">
+                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="46"
+                                IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
                                 <ItemsControl ItemsSource="{Binding NewTrueOptionText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -147,7 +171,8 @@
                             </Grid>
 
                             <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="46">
+                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="46"
+                                IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
                                 <ItemsControl ItemsSource="{Binding NewFalseOptionText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -184,16 +209,41 @@
                             <ItemsControl ItemsSource="{Binding MultiChoiceOptions}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:MultiChoiceOptionEditor">
-                                        <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,2,0,2">
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsCorrect, Mode=TwoWay}"
-                                                VerticalAlignment="Center" Margin="0,0,8,0" />
-                                            <TextBox Grid.Column="1" Text="{Binding OptionText, Mode=TwoWay}"
-                                                Watermark="Option text"
-                                                Background="{DynamicResource AppBackground}" />
-                                            <Button Grid.Column="2" Content="✕" Click="RemoveOption_Click"
-                                                CornerRadius="6" Padding="8,4" Margin="8,0,0,0"
-                                                Background="#60FF4444" Foreground="{DynamicResource IconForeground}" />
-                                        </Grid>
+                                        <StackPanel Spacing="4" Margin="0,4,0,4">
+                                            <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,2">
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsCorrect, Mode=TwoWay}"
+                                                    VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                <TextBox Grid.Column="1" Text="{Binding OptionText, Mode=TwoWay}"
+                                                    Watermark="Option text"
+                                                    Background="{DynamicResource AppBackground}" />
+                                                <Button Grid.Column="2" Content="✕" Click="RemoveOption_Click"
+                                                    CornerRadius="6" Padding="8,4" Margin="8,0,0,0"
+                                                    Background="#60FF4444" Foreground="{DynamicResource IconForeground}" />
+                                            </Grid>
+
+                                            <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                                                BorderThickness="1" CornerRadius="6" Padding="8" MinHeight="32"
+                                                IsVisible="{Binding $parent[Window].DataContext.ShowAdditionalFieldLatexPreviews}">
+                                                <ItemsControl ItemsSource="{Binding OptionText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                            <Grid>
+                                                                <TextBlock Text="{Binding Content}"
+                                                                    TextWrapping="Wrap"
+                                                                    Foreground="{DynamicResource TextPrimary}"
+                                                                    IsVisible="{Binding IsText}" />
+                                                                <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Border>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -217,16 +267,67 @@
                             <ItemsControl ItemsSource="{Binding MatchPairs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:MatchPairEditor">
-                                        <Grid ColumnDefinitions="*, Auto, *, Auto" Margin="0,2,0,2">
-                                            <TextBox Grid.Column="0" Text="{Binding LeftText, Mode=TwoWay}"
-                                                Watermark="Left text" Background="{DynamicResource AppBackground}" />
-                                            <TextBlock Grid.Column="1" Text="↔" VerticalAlignment="Center" Margin="8,0" />
-                                            <TextBox Grid.Column="2" Text="{Binding RightText, Mode=TwoWay}"
-                                                Watermark="Right text" Background="{DynamicResource AppBackground}" />
-                                            <Button Grid.Column="3" Content="✕" Click="RemoveMatchPair_Click"
-                                                CornerRadius="6" Padding="8,4" Margin="8,0,0,0"
-                                                Background="#60FF4444" Foreground="{DynamicResource IconForeground}" />
-                                        </Grid>
+                                        <StackPanel Spacing="4" Margin="0,4,0,4">
+                                            <Grid ColumnDefinitions="*, Auto, *, Auto" Margin="0,0,0,2">
+                                                <TextBox Grid.Column="0" Text="{Binding LeftText, Mode=TwoWay}"
+                                                    Watermark="Left text" Background="{DynamicResource AppBackground}" />
+                                                <TextBlock Grid.Column="1" Text="↔" VerticalAlignment="Center" Margin="8,0" />
+                                                <TextBox Grid.Column="2" Text="{Binding RightText, Mode=TwoWay}"
+                                                    Watermark="Right text" Background="{DynamicResource AppBackground}" />
+                                                <Button Grid.Column="3" Content="✕" Click="RemoveMatchPair_Click"
+                                                    CornerRadius="6" Padding="8,4" Margin="8,0,0,0"
+                                                    Background="#60FF4444" Foreground="{DynamicResource IconForeground}" />
+                                            </Grid>
+
+                                            <Grid ColumnDefinitions="*, Auto, *" ColumnSpacing="8" IsVisible="{Binding $parent[Window].DataContext.ShowAdditionalFieldLatexPreviews}">
+                                                <Border Grid.Column="0" Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                                                    BorderThickness="1" CornerRadius="6" Padding="8" MinHeight="32">
+                                                    <ItemsControl ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                <Grid>
+                                                                    <TextBlock Text="{Binding Content}"
+                                                                        TextWrapping="Wrap"
+                                                                        Foreground="{DynamicResource TextPrimary}"
+                                                                        IsVisible="{Binding IsText}" />
+                                                                    <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Border>
+
+                                                <TextBlock Grid.Column="1" Text="→" VerticalAlignment="Center" Margin="0,0,0,0"
+                                                    Foreground="{DynamicResource TextSecondary}" />
+
+                                                <Border Grid.Column="2" Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                                                    BorderThickness="1" CornerRadius="6" Padding="8" MinHeight="32">
+                                                    <ItemsControl ItemsSource="{Binding RightText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                <Grid>
+                                                                    <TextBlock Text="{Binding Content}"
+                                                                        TextWrapping="Wrap"
+                                                                        Foreground="{DynamicResource TextPrimary}"
+                                                                        IsVisible="{Binding IsText}" />
+                                                                    <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Border>
+                                            </Grid>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
