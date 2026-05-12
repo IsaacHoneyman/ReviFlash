@@ -74,6 +74,18 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public bool ShowBackgroundSwirl
+    {
+        get => App.CurrentMetaData.ShowBackgroundSwirl;
+        set
+        {
+            App.CurrentMetaData.ShowBackgroundSwirl = value;
+            OnPropertyChanged(nameof(ShowBackgroundSwirl));
+            App.SetCurrentMetaData(App.CurrentMetaData);
+            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+        }
+    }
+
     public static void ApplyTheme(string themeName)
     {
         App.CurrentMetaData.Theme = themeName;
@@ -119,6 +131,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedTheme));
         OnPropertyChanged(nameof(ShowTimer));
         OnPropertyChanged(nameof(ShowProgress));
+        OnPropertyChanged(nameof(ShowBackgroundSwirl));
         LoadDecks();
     }
 

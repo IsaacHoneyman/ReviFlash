@@ -35,21 +35,21 @@
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppBackground" Color="#FAFAFA" />
+                    <SolidColorBrush x:Key="AppBackground" Color="#F2F4F8" />
                     
-                    <SolidColorBrush x:Key="CardBackground" Color="#FFFFFF" /> 
-                    <SolidColorBrush x:Key="CardBorder" Color="#D0D0D0" />
-                    <SolidColorBrush x:Key="BadgeBackground" Color="#35E8E8E8" />
-                    <SolidColorBrush x:Key="StatTileBackground" Color="#60B0B0B0" />
+                    <SolidColorBrush x:Key="CardBackground" Color="#FCFDFF" /> 
+                    <SolidColorBrush x:Key="CardBorder" Color="#B8C1CD" />
+                    <SolidColorBrush x:Key="BadgeBackground" Color="#46DEE6F2" />
+                    <SolidColorBrush x:Key="StatTileBackground" Color="#72C4CCD8" />
                     
-                    <SolidColorBrush x:Key="TextPrimary" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#3A4A5A" />
-                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="IconForeground" Color="#0A0A0A" />
+                    <SolidColorBrush x:Key="TextPrimary" Color="#121A24" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#2E4054" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#121A24" />
+                    <SolidColorBrush x:Key="IconForeground" Color="#121A24" />
                     
-                    <Color x:Key="GradientStart">#F5F5F5</Color>
-                    <Color x:Key="GradientMiddle">#EBEBEB</Color>
-                    <Color x:Key="GradientEnd">#E0E0E0</Color>
+                    <Color x:Key="GradientStart">#EAF3FF</Color>
+                    <Color x:Key="GradientMiddle">#DDEBFF</Color>
+                    <Color x:Key="GradientEnd">#CBDEFF</Color>
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="{x:Static local:AppThemes.Pride}">

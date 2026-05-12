@@ -32,6 +32,25 @@
     </StackPanel>
 </Border>
 
+            <Border Background="{DynamicResource CardBackground}"
+        BorderBrush="{DynamicResource CardBorder}"
+        BorderThickness="1"
+        CornerRadius="10"
+        Padding="16">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Appearance"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimary}"/>
+
+        <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Background Swirl" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center"/>
+        </Grid>
+    </StackPanel>
+</Border>
+
             <Border Background="{DynamicResource CardBackground}" 
         BorderBrush="{DynamicResource CardBorder}" 
         BorderThickness="1" 

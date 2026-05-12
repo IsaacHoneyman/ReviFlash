@@ -961,35 +961,37 @@
     </Window.DataTemplates>
 
     <Grid>
-        <Rectangle Classes="animatedGradient" Width="2800" Height="2800"
-            HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="50%,50%">
-            <Rectangle.RenderTransform>
-                <RotateTransform Angle="0" />
-            </Rectangle.RenderTransform>
-            <Rectangle.Fill>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                    <GradientStop Offset="0.0" Color="{DynamicResource GradientStart}" />
-                    <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
-                    <GradientStop Offset="1.0" Color="{DynamicResource GradientEnd}" />
-                </LinearGradientBrush>
-            </Rectangle.Fill>
-        </Rectangle>
+        <Grid>
+            <Rectangle Classes.animatedGradient="{Binding ShowBackgroundSwirl}" Width="2800" Height="2800"
+                HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="50%,50%">
+                <Rectangle.RenderTransform>
+                    <RotateTransform Angle="0" />
+                </Rectangle.RenderTransform>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0.0" Color="{DynamicResource GradientStart}" />
+                        <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource GradientEnd}" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
 
-        <Rectangle Classes="animatedGradientReverse" Width="2400" Height="2400"
-            HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.62" RenderTransformOrigin="50%,50%">
-            <Rectangle.RenderTransform>
-                <RotateTransform Angle="360" />
-            </Rectangle.RenderTransform>
-            <Rectangle.Fill>
-                <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0.0" Color="{DynamicResource GradientEnd}" />
-                    <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
-                    <GradientStop Offset="1.0" Color="{DynamicResource GradientStart}" />
-                </LinearGradientBrush>
-            </Rectangle.Fill>
-        </Rectangle>
+            <Rectangle Classes.animatedGradientReverse="{Binding ShowBackgroundSwirl}" Width="2400" Height="2400"
+                HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.66" RenderTransformOrigin="50%,50%">
+                <Rectangle.RenderTransform>
+                    <RotateTransform Angle="360" />
+                </Rectangle.RenderTransform>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="{DynamicResource GradientEnd}" />
+                        <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource GradientStart}" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
 
-        <Rectangle Fill="{DynamicResource AppBackground}" Opacity="0.28" IsHitTestVisible="False" />
+            <Rectangle Fill="{DynamicResource AppBackground}" Opacity="0.22" IsHitTestVisible="False" />
+        </Grid>
 
         <ContentControl Content="{Binding CurrentPage}" />
     </Grid>

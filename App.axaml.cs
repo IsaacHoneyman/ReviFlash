@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
+using System;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using ReviFlash.ViewModels;
@@ -13,10 +14,12 @@ namespace ReviFlash;
 public partial class App : Application
 {
     public static AppMetaData CurrentMetaData { get; private set; } = new();
+    public static event Action<AppMetaData>? CurrentMetaDataChanged;
 
     public static void SetCurrentMetaData(AppMetaData metaData)
     {
         CurrentMetaData = metaData;
+        CurrentMetaDataChanged?.Invoke(metaData);
     }
 
     public override void Initialize()
@@ -27,7 +30,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         DatabaseManager.InitDatabase();
-        CurrentMetaData = Data.MetaDataManager.LoadMetaDataOnStartup();
+        SetCurrentMetaData(Data.MetaDataManager.LoadMetaDataOnStartup());
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

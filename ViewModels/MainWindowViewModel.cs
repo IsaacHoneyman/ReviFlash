@@ -104,6 +104,8 @@ public class MainWindowViewModel : ViewModelBase
             ? $"Export Selected ({SelectedDeckCount})"
             : "Cancel";
 
+    public bool ShowBackgroundSwirl => App.CurrentMetaData.ShowBackgroundSwirl;
+
     public static int CompareVersionNumber(string versionA, string versionB)
     {
         int[] aVersion = ExtractVersionNumber(versionA);
@@ -218,6 +220,8 @@ public class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
+        App.CurrentMetaDataChanged += _ => OnPropertyChanged(nameof(ShowBackgroundSwirl));
+
         var meta = App.CurrentMetaData;
         StreakText = $"{meta.LaunchStreak} Day Streak";
         BestEverStreakText = $"{meta.BestLaunchStreak} Days";
