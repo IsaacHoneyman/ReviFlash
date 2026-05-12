@@ -661,7 +661,7 @@
                                             <DataTemplate x:DataType="vm:ReviewMatchRow">
                                                 <Border Background="#18000000" BorderBrush="{DynamicResource CardBorder}"
                                                     BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
-                                                    <Grid ColumnDefinitions="*, Auto, *" VerticalAlignment="Center">
+                                                    <Grid ColumnDefinitions="2*, Auto, *" VerticalAlignment="Center">
                                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                                             <ItemsControl ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                                                 <ItemsControl.ItemsPanel>
@@ -671,16 +671,21 @@
                                                                 </ItemsControl.ItemsPanel>
                                                                 <ItemsControl.ItemTemplate>
                                                                     <DataTemplate x:DataType="converters:MixedMathSegment">
-                                                                        <StackPanel Margin="0,0,2,0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding Content}" FontSize="16"
-                                                                                VerticalAlignment="Center" TextWrapping="Wrap"
-                                                                                Foreground="{DynamicResource TextPrimary}"
-                                                                                IsVisible="{Binding IsText}" />
-                                                                            <math:FormulaBlock Formula="{Binding Content}" FontSize="16"
-                                                                                VerticalAlignment="Center"
-                                                                                IsVisible="{Binding IsMath}"
-                                                                                Foreground="{DynamicResource TextPrimary}" />
-                                                                        </StackPanel>
+                                                                            <Grid Margin="0,0,2,0" VerticalAlignment="Center">
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="*" />
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="16"
+                                                                                    VerticalAlignment="Center" TextWrapping="Wrap"
+                                                                                    MaxWidth="520"
+                                                                                    Foreground="{DynamicResource TextPrimary}"
+                                                                                    IsVisible="{Binding IsText}" />
+                                                                                <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="16"
+                                                                                    VerticalAlignment="Center"
+                                                                                    IsVisible="{Binding IsMath}"
+                                                                                    Foreground="{DynamicResource TextPrimary}" />
+                                                                            </Grid>
                                                                     </DataTemplate>
                                                                 </ItemsControl.ItemTemplate>
                                                             </ItemsControl>
@@ -750,9 +755,13 @@
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:ReviewMatchRow">
                                                     <StackPanel Spacing="0">
-                                                        <StackPanel Spacing="4" Orientation="Horizontal" Margin="0,2,0,0">
-                                                            <TextBlock Text="•" FontSize="14" Foreground="#44CC88" VerticalAlignment="Top" />
-                                                            <ItemsControl ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        <Grid Margin="0,2,0,0" VerticalAlignment="Top">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="•" FontSize="14" Foreground="#44CC88" VerticalAlignment="Top" />
+                                                            <ItemsControl Grid.Column="1" ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                                                 <ItemsControl.ItemsPanel>
                                                                     <ItemsPanelTemplate>
                                                                         <WrapPanel />
@@ -760,23 +769,31 @@
                                                                 </ItemsControl.ItemsPanel>
                                                                 <ItemsControl.ItemTemplate>
                                                                     <DataTemplate x:DataType="converters:MixedMathSegment">
-                                                                        <StackPanel Margin="0,0,1,0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                        <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="*" />
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                                 VerticalAlignment="Center"
                                                                                 Foreground="#44CC88"
                                                                                 IsVisible="{Binding IsText}" />
-                                                                            <math:FormulaBlock Formula="{Binding Content}" FontSize="14"
+                                                                            <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                                 VerticalAlignment="Center"
                                                                                 Foreground="#44CC88"
                                                                                 IsVisible="{Binding IsMath}" />
-                                                                        </StackPanel>
+                                                                        </Grid>
                                                                     </DataTemplate>
                                                                 </ItemsControl.ItemTemplate>
                                                             </ItemsControl>
-                                                        </StackPanel>
-                                                        <StackPanel Spacing="4" Orientation="Horizontal" Margin="0,0,0,2">
-                                                            <TextBlock Text="→" FontSize="14" Foreground="#44CC88" Margin="0,0,0,0" VerticalAlignment="Top" />
-                                                            <ItemsControl ItemsSource="{Binding CorrectRightText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        </Grid>
+                                                        <Grid Margin="0,0,0,2" VerticalAlignment="Top">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="→" FontSize="14" Foreground="#44CC88" Margin="0,0,0,0" VerticalAlignment="Top" />
+                                                            <ItemsControl Grid.Column="1" ItemsSource="{Binding CorrectRightText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                                                 <ItemsControl.ItemsPanel>
                                                                     <ItemsPanelTemplate>
                                                                         <WrapPanel />
@@ -784,20 +801,24 @@
                                                                 </ItemsControl.ItemsPanel>
                                                                 <ItemsControl.ItemTemplate>
                                                                     <DataTemplate x:DataType="converters:MixedMathSegment">
-                                                                        <StackPanel Margin="0,0,1,0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                        <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="*" />
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                                 VerticalAlignment="Center"
                                                                                 Foreground="#44CC88"
                                                                                 IsVisible="{Binding IsText}" />
-                                                                            <math:FormulaBlock Formula="{Binding Content}" FontSize="14"
+                                                                            <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                                 VerticalAlignment="Center"
                                                                                 Foreground="#44CC88"
                                                                                 IsVisible="{Binding IsMath}" />
-                                                                        </StackPanel>
+                                                                        </Grid>
                                                                     </DataTemplate>
                                                                 </ItemsControl.ItemTemplate>
                                                             </ItemsControl>
-                                                        </StackPanel>
+                                                        </Grid>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
@@ -819,16 +840,20 @@
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate x:DataType="converters:MixedMathSegment">
-                                                                <StackPanel Margin="0,0,1,0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                    <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                         VerticalAlignment="Center"
                                                                         Foreground="#FF8888"
                                                                         IsVisible="{Binding IsText}" />
-                                                                    <math:FormulaBlock Formula="{Binding Content}" FontSize="14"
+                                                                    <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                         VerticalAlignment="Center"
                                                                         Foreground="#FF8888"
                                                                         IsVisible="{Binding IsMath}" />
-                                                                </StackPanel>
+                                                                </Grid>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>

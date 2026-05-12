@@ -472,7 +472,7 @@
                                             <ItemsControl ItemsSource="{Binding MatchPairsPreview}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate x:DataType="models:MatchPreviewPair">
-                                                        <Grid ColumnDefinitions="*, Auto, *" Margin="0,0,0,8">
+                                                        <Grid ColumnDefinitions="2*, Auto, *" Margin="0,0,0,8">
                                                             <ItemsControl Grid.Column="0"
                                                                 ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                                                 <ItemsControl.ItemsPanel>
@@ -485,6 +485,7 @@
                                                                         <Grid Margin="0,0,1,0">
                                                                             <TextBlock Text="{Binding Content}"
                                                                                 TextWrapping="Wrap"
+                                                                                MaxWidth="520"
                                                                                 Foreground="{DynamicResource TextPrimary}"
                                                                                 IsVisible="{Binding IsText}" />
                                                                             <math:FormulaBlock Formula="{Binding Content}"
