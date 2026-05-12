@@ -17,6 +17,21 @@
     Background="{DynamicResource AppBackground}">
 
     <Window.Styles>
+        <Style Selector="ToggleButton.dashboardToggle">
+            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="ToggleButton.dashboardToggle:checked">
+            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        </Style>
+
         <Style Selector="Rectangle.animatedGradient">
             <Style.Animations>
                 <Animation Duration="0:0:14" IterationCount="Infinite">
@@ -61,6 +76,168 @@
     </Window.Resources>
 
     <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type models:StudyGroup}">
+            <Border Width="250" Height="138"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource GradientStart}"
+                BorderThickness="1.5" CornerRadius="20"
+                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
+                Focusable="True"
+                PointerPressed="GroupCard_Click"
+                KeyDown="GroupCard_KeyDown">
+
+                <Grid RowDefinitions="Auto, *">
+
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
+                        VerticalAlignment="Top">
+                        <Border Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource GradientStart}"
+                            CornerRadius="8" Padding="8,4">
+                            <StackPanel Orientation="Horizontal"
+                                Spacing="4">
+                                <TextBlock Text="{Binding DeckCount}"
+                                    FontSize="12" FontWeight="Bold"
+                                    Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                <TextBlock Text="Decks" FontSize="10"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource PrimaryButtonForeground}" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button Click="EditGroup_Click"
+                                Background="#70FFFFFF" CornerRadius="8"
+                                Padding="12,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand">
+                                <TextBlock Text="✏️" FontSize="12"
+                                    Foreground="{DynamicResource IconForeground}" />
+                            </Button>
+
+                            <Button Click="DeleteGroup_Click"
+                                Background="#90FF4444" CornerRadius="8"
+                                Padding="12,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Delete Group">
+                                <TextBlock Text="🗑️" FontSize="12"
+                                    Foreground="{DynamicResource IconForeground}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                        <TextBlock Text="{Binding Name}" FontSize="22"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            TextWrapping="Wrap" />
+                        <TextBlock Text="Click to review group" FontSize="14"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Margin="0, 12, 0, 0" />
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type models:FlashCardDeck}">
+            <Border Width="250" Height="138"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1.5" CornerRadius="20"
+                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
+                Focusable="True"
+                PointerPressed="DeckCard_Click"
+                KeyDown="DeckCard_KeyDown">
+
+                <Grid RowDefinitions="Auto, *">
+
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
+                        VerticalAlignment="Top">
+                        <Border Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource BadgeBackground}"
+                            CornerRadius="8" Padding="8,4">
+                            <StackPanel Orientation="Horizontal"
+                                Spacing="4">
+                                <TextBlock Text="{Binding CardCount}"
+                                    FontSize="12" FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="Cards" FontSize="10"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button Click="EditDeck_Click"
+                                Background="#70FFFFFF" CornerRadius="8"
+                                Padding="12,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand">
+                                <TextBlock Text="✏️" FontSize="12"
+                                    Foreground="{DynamicResource IconForeground}" />
+                            </Button>
+
+                            <Button Click="DeckStats_Click"
+                                Background="#7044AAFF" CornerRadius="8"
+                                Padding="12,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="View Deck Stats">
+                                <TextBlock Text="📊" FontSize="12"
+                                    Foreground="{DynamicResource IconForeground}" />
+                            </Button>
+
+                            <Button Click="DeleteDeck_Click"
+                                Background="#90FF4444" CornerRadius="8"
+                                Padding="12,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Delete Deck">
+                                <TextBlock Text="🗑️" FontSize="12"
+                                    Foreground="{DynamicResource IconForeground}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                        <TextBlock Text="{Binding Name}" FontSize="22"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            TextWrapping="Wrap" />
+                        <TextBlock Text="Click to review" FontSize="14"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding !IsSelectedForMultiReview}"
+                            Margin="0, 12, 0, 0" />
+                        <TextBlock Text="Selected" FontSize="14"
+                            Foreground="{DynamicResource GradientStart}"
+                            IsVisible="{Binding IsSelectedForMultiReview}"
+                            Margin="0, 12, 0, 0" />
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:MainWindowViewModel}">
 
             <Grid RowDefinitions="86, *">
@@ -95,7 +272,7 @@
 
                     <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" Margin="0, 0, 24, 0">
 
-                        <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0, 0, 0, 18">
+                        <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto" Margin="0, 0, 0, 18">
                             <TextBox Grid.Column="0"
                                 Text="{Binding SearchText, Mode=TwoWay}"
                                 Watermark="Search flashcard sets..."
@@ -107,10 +284,17 @@
                                 Click="MultiSelectDecks_Click"
                                 Content="{Binding ReviewSelectionButtonText}"
                                 CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource BadgeBackground}" Foreground="{DynamicResource TextPrimary}"
+                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
                                 Cursor="Hand" Margin="0,0,12,0" />
 
                             <Button Grid.Column="2"
+                                Click="CreateGroup_Click"
+                                Content="+ Create New Group"
+                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
+                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
+                                Cursor="Hand" Margin="0,0,12,0" />
+
+                            <Button Grid.Column="3"
                                 Click="CreateDeck_Click"
                                 Content="+ Create New Set"
                                 CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="Bold"
@@ -118,121 +302,51 @@
                                 Cursor="Hand" />
                         </Grid>
 
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding FilteredDecks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel HorizontalAlignment="Left" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
+                        <Grid Grid.Row="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0">
+                                <ItemsControl ItemsSource="{Binding DashboardItems}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel HorizontalAlignment="Left" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
 
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:FlashCardDeck">
-                                        <Border Width="250" Height="138"
-                                            Background="{DynamicResource CardBackground}"
-                                            BorderBrush="{DynamicResource CardBorder}"
-                                            BorderThickness="1.5" CornerRadius="20"
-                                            Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
-                                            Focusable="True"
-                                            PointerPressed="DeckCard_Click"
-                                            KeyDown="DeckCard_KeyDown">
+                            <Border VerticalAlignment="Bottom"
+                                HorizontalAlignment="Left"
+                                Background="#B61D2128"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="14"
+                                Padding="10"
+                                Margin="0,0,0,0">
+                                <StackPanel Orientation="Horizontal"
+                                    Spacing="12"
+                                    VerticalAlignment="Center">
+                                    <ToggleButton Content="Show Groups"
+                                        IsChecked="{Binding ShowGroups, Mode=TwoWay}"
+                                        Classes="dashboardToggle" />
 
-                                            <Grid RowDefinitions="Auto, *">
+                                    <ToggleButton Content="Show Sets"
+                                        IsChecked="{Binding ShowSets, Mode=TwoWay}"
+                                        Classes="dashboardToggle" />
 
-                                                <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
-                                                    VerticalAlignment="Top">
-                                                    <Border Grid.Column="0"
-                                                        HorizontalAlignment="Left"
-                                                        VerticalAlignment="Center"
-                                                        Background="{DynamicResource BadgeBackground}"
-                                                        CornerRadius="8" Padding="8,4">
-                                                        <StackPanel Orientation="Horizontal"
-                                                            Spacing="4">
-                                                            <TextBlock Text="{Binding CardCount}"
-                                                                FontSize="12" FontWeight="Bold"
-                                                                Foreground="{DynamicResource TextPrimary}" />
-                                                            <TextBlock Text="Cards" FontSize="10"
-                                                                VerticalAlignment="Center"
-                                                                Foreground="{DynamicResource TextSecondary}" />
-                                                        </StackPanel>
-                                                    </Border>
+                                    <Button Click="ExportFlashCards_Click"
+                                        Content="{Binding ExportSelectionButtonText}"
+                                        CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        Cursor="Hand" />
 
-                                                    <StackPanel Grid.Column="1"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Center"
-                                                        Orientation="Horizontal"
-                                                        Spacing="8">
-                                                        <Button Click="EditDeck_Click"
-                                                            Background="#70FFFFFF" CornerRadius="8"
-                                                            Padding="12,6" Height="30"
-                                                            MinHeight="30"
-                                                            VerticalContentAlignment="Center"
-                                                            Cursor="Hand">
-                                                            <TextBlock Text="✏️" FontSize="12"
-                                                                Foreground="{DynamicResource IconForeground}" />
-                                                        </Button>
+                                    <Button Click="ImportFlashCards_Click"
+                                        Content="Import"
+                                        CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        Cursor="Hand" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
 
-                                                        <Button Click="DeckStats_Click"
-                                                            Background="#7044AAFF" CornerRadius="8"
-                                                            Padding="12,6" Height="30"
-                                                            MinHeight="30"
-                                                            VerticalContentAlignment="Center"
-                                                            Cursor="Hand"
-                                                            ToolTip.Tip="View Deck Stats">
-                                                            <TextBlock Text="📊" FontSize="12"
-                                                                Foreground="{DynamicResource IconForeground}" />
-                                                        </Button>
-
-                                                        <Button Click="DeleteDeck_Click"
-                                                            Background="#90FF4444" CornerRadius="8"
-                                                            Padding="12,6" Height="30"
-                                                            MinHeight="30"
-                                                            VerticalContentAlignment="Center"
-                                                            Cursor="Hand"
-                                                            ToolTip.Tip="Delete Deck">
-                                                            <TextBlock Text="🗑️" FontSize="12"
-                                                                Foreground="{DynamicResource IconForeground}" />
-                                                        </Button>
-                                                    </StackPanel>
-                                                </Grid>
-
-                                                <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
-                                                    <TextBlock Text="{Binding Name}" FontSize="22"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="{DynamicResource TextPrimary}"
-                                                        TextWrapping="Wrap" />
-                                                    <TextBlock Text="Click to review" FontSize="14"
-                                                        Foreground="{DynamicResource TextSecondary}"
-                                                        IsVisible="{Binding !IsSelectedForMultiReview}"
-                                                        Margin="0, 12, 0, 0" />
-                                                    <TextBlock Text="Selected" FontSize="14"
-                                                        Foreground="{DynamicResource GradientStart}"
-                                                        IsVisible="{Binding IsSelectedForMultiReview}"
-                                                        Margin="0, 12, 0, 0" />
-                                                </StackPanel>
-
-                                            </Grid>
-
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left"
-                            Margin="0,16,0,0" Spacing="12">
-                            <Button Click="ImportFlashCards_Click"
-                                Content="Import"
-                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource BadgeBackground}" Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
-
-                            <Button Click="ExportFlashCards_Click"
-                                Content="{Binding ExportSelectionButtonText}"
-                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource BadgeBackground}" Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
-                        </StackPanel>
                     </Grid>
 
                     <Border Grid.Column="1"

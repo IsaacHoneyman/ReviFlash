@@ -1,0 +1,154 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:models="using:ReviFlash.Models"
+    x:Class="ReviFlash.Views.StudyGroupEditorWindow"
+    x:DataType="vm:StudyGroupEditorViewModel"
+    Title="{Binding WindowTitle}"
+    Width="1100" Height="720"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource AppBackground}">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="32">
+
+        <TextBox Grid.Row="0"
+            Text="{Binding GroupName, Mode=TwoWay}"
+            Watermark="Group name"
+            FontSize="32" FontWeight="Bold"
+            Background="Transparent"
+            BorderThickness="0,0,0,2"
+            Foreground="{DynamicResource TextPrimary}"
+            Margin="0,0,0,24" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1.5"
+                CornerRadius="20"
+                Padding="20">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Available Decks" FontSize="20" FontWeight="Bold"
+                            Foreground="{DynamicResource TextPrimary}" />
+
+                        <TextBox Text="{Binding DeckSearchText, Mode=TwoWay}"
+                            Watermark="Search decks to add..."
+                            CornerRadius="8"
+                            Padding="10,7"
+                            FontSize="14"
+                            Background="{DynamicResource AppBackground}"
+                            Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding FilteredAvailableDecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:FlashCardDeck">
+                                    <Border Background="#14000000"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="14"
+                                        Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="{Binding Name}" FontSize="18"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource TextSecondary}" />
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1"
+                                                Content="Add"
+                                                Click="AddDeck_Click"
+                                                Background="{DynamicResource GradientStart}"
+                                                Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                CornerRadius="8"
+                                                Padding="14,8"
+                                                FontWeight="SemiBold"
+                                                Cursor="Hand" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1.5"
+                CornerRadius="20"
+                Padding="20">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <TextBlock Text="Group Membership" FontSize="20" FontWeight="Bold"
+                        Foreground="{DynamicResource TextPrimary}" />
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding SelectedDecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:FlashCardDeck">
+                                    <Border Background="#14000000"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="14"
+                                        Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="{Binding Name}" FontSize="18"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource TextSecondary}" />
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1"
+                                                Content="Remove"
+                                                Click="RemoveDeck_Click"
+                                                Background="#90FF4444"
+                                                Foreground="{DynamicResource IconForeground}"
+                                                CornerRadius="8"
+                                                Padding="14,8"
+                                                FontWeight="SemiBold"
+                                                Cursor="Hand" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+            Margin="0,24,0,0" Spacing="12">
+            <Button Content="Cancel"
+                Click="Cancel_Click"
+                Background="#70FFFFFF"
+                Foreground="{DynamicResource TextPrimary}"
+                CornerRadius="8"
+                Padding="20,10"
+                FontWeight="SemiBold"
+                Cursor="Hand" />
+
+            <Button Content="Save Group"
+                Click="Save_Click"
+                IsEnabled="{Binding CanSave}"
+                Background="{DynamicResource GradientStart}"
+                Foreground="{DynamicResource PrimaryButtonForeground}"
+                CornerRadius="8"
+                Padding="20,10"
+                FontWeight="Bold"
+                Cursor="Hand" />
+        </StackPanel>
+    </Grid>
+</Window>

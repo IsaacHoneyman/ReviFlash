@@ -134,8 +134,8 @@
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#111827" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#374151" />
-                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#111827" />
-                    <SolidColorBrush x:Key="IconForeground" Color="#111827" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="IconForeground" Color="#FFFFFF" />
 
                     <Color x:Key="GradientStart">#111827</Color>
                     <Color x:Key="GradientMiddle">#374151</Color>

@@ -50,7 +50,7 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
-    private static string _versionText = "Version A-0.6.0";
+    private static string _versionText = "Version B-0.7.0";
     public static string VersionText
     {
         get => _versionText;
@@ -103,6 +103,30 @@ public class MainWindowViewModel : ViewModelBase
         : HasSelectedDecks
             ? $"Export Selected ({SelectedDeckCount})"
             : "Cancel";
+
+    private bool _showGroups = true;
+    public bool ShowGroups
+    {
+        get => _showGroups;
+        set
+        {
+            _showGroups = value;
+            OnPropertyChanged(nameof(ShowGroups));
+            RefreshDashboardItems();
+        }
+    }
+
+    private bool _showSets = true;
+    public bool ShowSets
+    {
+        get => _showSets;
+        set
+        {
+            _showSets = value;
+            OnPropertyChanged(nameof(ShowSets));
+            RefreshDashboardItems();
+        }
+    }
 
     public bool ShowBackgroundSwirl => App.CurrentMetaData.ShowBackgroundSwirl;
 
@@ -216,6 +240,8 @@ public class MainWindowViewModel : ViewModelBase
 
     public ObservableCollection<TimePeriodOption> TimePeriods { get; set; } = [];
     public ObservableCollection<FlashCardDeck> Decks { get; set; } = [];
+    public ObservableCollection<StudyGroup> StudyGroups { get; set; } = [];
+    public ObservableCollection<object> DashboardItems { get; set; } = [];
     public ObservableCollection<FlashCardDeck> FilteredDecks { get; set; } = [];
 
     public MainWindowViewModel()
@@ -242,6 +268,7 @@ public class MainWindowViewModel : ViewModelBase
 
         LoadDecksFromDatabase();
         FilterDecks();
+        RefreshDashboardItems();
     }
 
     private void LoadStats()
@@ -355,6 +382,8 @@ public class MainWindowViewModel : ViewModelBase
                 FilteredDecks.Add(deck);
             }
         }
+
+        RefreshDashboardItems();
     }
 
     public void BeginReviewSelection()
@@ -428,6 +457,7 @@ public class MainWindowViewModel : ViewModelBase
         Decks.Remove(deckToDelete);
         _selectedDeckIds.Remove(deckToDelete.ID);
         NotifySelectionChanged();
+        LoadStudyGroupsFromDatabase();
         FilterDecks();
     }
 
@@ -439,6 +469,27 @@ public class MainWindowViewModel : ViewModelBase
         {
             Decks.Add(deck);
         }
+
+        LoadStudyGroupsFromDatabase();
+    }
+
+    public void LoadStudyGroupsFromDatabase()
+    {
+        var savedGroups = FlashCardRepository.GetAllStudyGroups();
+        StudyGroups.Clear();
+        foreach (var group in savedGroups)
+        {
+            StudyGroups.Add(group);
+        }
+
+        RefreshDashboardItems();
+    }
+
+    public void DeleteStudyGroup(StudyGroup groupToDelete)
+    {
+        FlashCardRepository.DeleteStudyGroup(groupToDelete.ID);
+        StudyGroups.Remove(groupToDelete);
+        RefreshDashboardItems();
     }
 
     public void RefreshAfterBackupRestore()
@@ -458,6 +509,27 @@ public class MainWindowViewModel : ViewModelBase
 
         LoadDecksFromDatabase();
         FilterDecks();
+    }
+
+    private void RefreshDashboardItems()
+    {
+        DashboardItems.Clear();
+
+        if (ShowGroups)
+        {
+            foreach (var group in StudyGroups)
+            {
+                DashboardItems.Add(group);
+            }
+        }
+
+        if (ShowSets)
+        {
+            foreach (var deck in FilteredDecks)
+            {
+                DashboardItems.Add(deck);
+            }
+        }
     }
 
     public void EditDeck(FlashCardDeck deckToEdit)

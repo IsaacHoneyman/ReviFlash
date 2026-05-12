@@ -71,6 +71,7 @@ Models/
  FlipFlashCard.cs
  MatchFlashCard.cs
  MultiFlashCard.cs
+ StudyGroup.cs
  TrueFalseFlashCard.cs
  TypeFlashCard.cs
 obj/Debug/net10.0/
@@ -83,6 +84,7 @@ ViewModels/
  MainWindowViewModel.cs
  ReviewViewModel.cs
  SettingsViewModel.cs
+ StudyGroupEditorViewModel.cs
  SummaryViewModel.cs
  ViewModelBase.cs
 Views/
@@ -90,6 +92,7 @@ Views/
  DeckEditorWindow.axaml.cs
  MainWindow.axaml.cs
  SettingsWindow.axaml.cs
+ StudyGroupEditorWindow.axaml.cs
 
 [metadataReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
@@ -329,3 +332,4 @@ Views/
  DeckEditorWindow.axaml
  MainWindow.axaml
  SettingsWindow.axaml
+ StudyGroupEditorWindow.axaml

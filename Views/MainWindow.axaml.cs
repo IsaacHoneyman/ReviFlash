@@ -70,6 +70,21 @@ public partial class MainWindow : Window
         }
     }
 
+    public async void CreateGroup_Click(object sender, RoutedEventArgs e)
+    {
+        var editor = new StudyGroupEditorWindow
+        {
+            DataContext = new StudyGroupEditorViewModel()
+        };
+
+        await editor.ShowDialog(this);
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.LoadStudyGroupsFromDatabase();
+        }
+    }
+
     public async void EditDeck_Click(object sender, RoutedEventArgs e)
     {
         var button = (Button)sender;
@@ -111,6 +126,38 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm)
         {
             vm.ShowDeckStats(selectedDeck);
+        }
+    }
+
+    public async void EditGroup_Click(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        var selectedGroup = (StudyGroup)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a StudyGroup"));
+
+        var editor = new StudyGroupEditorWindow
+        {
+            DataContext = new StudyGroupEditorViewModel(selectedGroup)
+        };
+
+        await editor.ShowDialog(this);
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.LoadStudyGroupsFromDatabase();
+        }
+    }
+
+    public async void DeleteGroup_Click(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        var selectedGroup = (StudyGroup)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a StudyGroup"));
+        var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete group '{selectedGroup.Name}'?");
+
+        bool confirmed = await dialog.ShowDialog<bool>(this);
+
+        if (confirmed && DataContext is MainWindowViewModel vm)
+        {
+            vm.DeleteStudyGroup(selectedGroup);
         }
     }
 
@@ -167,6 +214,50 @@ public partial class MainWindow : Window
             }
 
             StartReviewSession(deck);
+            e.Handled = true;
+        }
+    }
+
+    private void GroupCard_Click(object sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
+        {
+            return;
+        }
+
+        if (DataContext is MainWindowViewModel vm && vm.IsSelectionModeActive)
+        {
+            return;
+        }
+
+        var border = (Border)sender;
+        if (border.DataContext is StudyGroup group)
+        {
+            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID));
+        }
+    }
+
+    private void GroupCard_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Space))
+        {
+            return;
+        }
+
+        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
+        {
+            return;
+        }
+
+        if (DataContext is MainWindowViewModel vm && vm.IsSelectionModeActive)
+        {
+            return;
+        }
+
+        var border = (Border)sender;
+        if (border.DataContext is StudyGroup group)
+        {
+            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID));
             e.Handled = true;
         }
     }

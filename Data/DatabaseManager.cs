@@ -6,14 +6,30 @@ namespace ReviFlash.Data;
 
 public static class DatabaseManager
 {
+    private static string GetConnectionString()
+    {
+        var builder = new SqliteConnectionStringBuilder
+        {
+            DataSource = GetDatabasePath(),
+            ForeignKeys = true
+        };
+
+        return builder.ToString();
+    }
+
     private static string GetDatabasePath()
     {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reviflash.db");
     }
+
     public static void InitDatabase()
     {
-        using var connection = new SqliteConnection($"Data Source={GetDatabasePath()}");
+        using var connection = new SqliteConnection(GetConnectionString());
         connection.Open();
+
+        var foreignKeysCommand = connection.CreateCommand();
+        foreignKeysCommand.CommandText = "PRAGMA foreign_keys = ON;";
+        foreignKeysCommand.ExecuteNonQuery();
 
         var deckCommand = connection.CreateCommand();
         deckCommand.CommandText = @"
@@ -23,6 +39,27 @@ public static class DatabaseManager
             )
         ";
         deckCommand.ExecuteNonQuery();
+
+        var studyGroupCommand = connection.CreateCommand();
+        studyGroupCommand.CommandText = @"
+            CREATE TABLE IF NOT EXISTS StudyGroups (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL
+            )
+        ";
+        studyGroupCommand.ExecuteNonQuery();
+
+        var studyGroupDeckCommand = connection.CreateCommand();
+        studyGroupDeckCommand.CommandText = @"
+            CREATE TABLE IF NOT EXISTS StudyGroupDecks (
+                StudyGroupID INTEGER NOT NULL,
+                DeckID INTEGER NOT NULL,
+                PRIMARY KEY (StudyGroupID, DeckID),
+                FOREIGN KEY (StudyGroupID) REFERENCES StudyGroups(ID) ON DELETE CASCADE,
+                FOREIGN KEY (DeckID) REFERENCES Decks(ID) ON DELETE CASCADE
+            )
+        ";
+        studyGroupDeckCommand.ExecuteNonQuery();
 
         var cardCommand = connection.CreateCommand();
         cardCommand.CommandText = @"
@@ -82,7 +119,7 @@ public static class DatabaseManager
 
     public static SqliteConnection GetConnection()
     {
-        return new SqliteConnection($"Data Source={GetDatabasePath()}");
+        return new SqliteConnection(GetConnectionString());
     }
 
     private static void EnsureCardsAnswerColumn(SqliteConnection connection)

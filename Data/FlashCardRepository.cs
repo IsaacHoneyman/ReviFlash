@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using ReviFlash.Models;
 
@@ -83,6 +84,217 @@ public static class FlashCardRepository
             decks.Add(new FlashCardDeck(name, id, cardCount));
         }
         return decks;
+    }
+
+    public static void SaveNewStudyGroup(StudyGroup group)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            INSERT INTO StudyGroups (Name) VALUES ($name);
+            SELECT last_insert_rowid();
+        ";
+
+        command.Parameters.AddWithValue("$name", group.Name);
+
+        long newID = (long)(command.ExecuteScalar() ?? long.MaxValue);
+        group.AssignDatabaseID((ulong)newID);
+    }
+
+    public static List<StudyGroup> GetAllStudyGroups()
+    {
+        var groups = new List<StudyGroup>();
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT g.ID, g.Name,
+                   COUNT(DISTINCT gd.DeckID) AS DeckCount,
+                   COALESCE(SUM(COALESCE(dc.CardCount, 0)), 0) AS CardCount
+            FROM StudyGroups g
+            LEFT JOIN StudyGroupDecks gd ON g.ID = gd.StudyGroupID
+            LEFT JOIN (
+                SELECT DeckID, COUNT(*) AS CardCount
+                FROM Cards
+                GROUP BY DeckID
+            ) dc ON gd.DeckID = dc.DeckID
+            GROUP BY g.ID, g.Name
+            ORDER BY g.Name COLLATE NOCASE;
+        ";
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            ulong id = (ulong)reader.GetInt64(0);
+            string name = reader.GetString(1);
+            int deckCount = reader.GetInt32(2);
+            int cardCount = reader.GetInt32(3);
+
+            groups.Add(new StudyGroup(name, id, deckCount, cardCount));
+        }
+
+        return groups;
+    }
+
+    public static void UpdateStudyGroup(StudyGroup group)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "UPDATE StudyGroups SET Name = $name WHERE ID = $id;";
+
+        command.Parameters.AddWithValue("$name", group.Name);
+        command.Parameters.AddWithValue("$id", group.ID);
+
+        command.ExecuteNonQuery();
+    }
+
+    public static void DeleteStudyGroup(ulong groupID)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM StudyGroups WHERE ID = $id;";
+        command.Parameters.AddWithValue("$id", groupID);
+
+        command.ExecuteNonQuery();
+    }
+
+    public static void AddDeckToStudyGroup(ulong groupID, ulong deckID)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            INSERT OR IGNORE INTO StudyGroupDecks (StudyGroupID, DeckID)
+            VALUES ($groupId, $deckId);
+        ";
+
+        command.Parameters.AddWithValue("$groupId", groupID);
+        command.Parameters.AddWithValue("$deckId", deckID);
+
+        command.ExecuteNonQuery();
+    }
+
+    public static void RemoveDeckFromStudyGroup(ulong groupID, ulong deckID)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            DELETE FROM StudyGroupDecks
+            WHERE StudyGroupID = $groupId AND DeckID = $deckId;
+        ";
+
+        command.Parameters.AddWithValue("$groupId", groupID);
+        command.Parameters.AddWithValue("$deckId", deckID);
+
+        command.ExecuteNonQuery();
+    }
+
+    public static void SetStudyGroupDecks(ulong groupID, IEnumerable<ulong> deckIDs)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        using var transaction = connection.BeginTransaction();
+
+        var clearCommand = connection.CreateCommand();
+        clearCommand.Transaction = transaction;
+        clearCommand.CommandText = "DELETE FROM StudyGroupDecks WHERE StudyGroupID = $groupId;";
+        clearCommand.Parameters.AddWithValue("$groupId", groupID);
+        clearCommand.ExecuteNonQuery();
+
+        foreach (var deckID in deckIDs.Distinct())
+        {
+            var insertCommand = connection.CreateCommand();
+            insertCommand.Transaction = transaction;
+            insertCommand.CommandText = @"
+                INSERT OR IGNORE INTO StudyGroupDecks (StudyGroupID, DeckID)
+                VALUES ($groupId, $deckId);
+            ";
+            insertCommand.Parameters.AddWithValue("$groupId", groupID);
+            insertCommand.Parameters.AddWithValue("$deckId", deckID);
+            insertCommand.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
+    public static List<FlashCardDeck> GetDecksForStudyGroup(ulong groupID)
+    {
+        var decks = new List<FlashCardDeck>();
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT d.ID, d.Name, COUNT(c.ID) AS CardCount
+            FROM Decks d
+            INNER JOIN StudyGroupDecks gd ON d.ID = gd.DeckID
+            LEFT JOIN Cards c ON d.ID = c.DeckID
+            WHERE gd.StudyGroupID = $groupId
+            GROUP BY d.ID, d.Name
+            ORDER BY d.Name COLLATE NOCASE;
+        ";
+        command.Parameters.AddWithValue("$groupId", groupID);
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            ulong id = (ulong)reader.GetInt64(0);
+            string name = reader.GetString(1);
+            int cardCount = reader.GetInt32(2);
+
+            decks.Add(new FlashCardDeck(name, id, cardCount));
+        }
+
+        return decks;
+    }
+
+    public static List<StudyGroup> GetStudyGroupsForDeck(ulong deckID)
+    {
+        var groups = new List<StudyGroup>();
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT g.ID, g.Name,
+                   COUNT(DISTINCT gd.DeckID) AS DeckCount,
+                   COALESCE(SUM(COALESCE(dc.CardCount, 0)), 0) AS CardCount
+            FROM StudyGroups g
+            INNER JOIN StudyGroupDecks gd ON g.ID = gd.StudyGroupID
+            LEFT JOIN (
+                SELECT DeckID, COUNT(*) AS CardCount
+                FROM Cards
+                GROUP BY DeckID
+            ) dc ON gd.DeckID = dc.DeckID
+            WHERE gd.DeckID = $deckId
+            GROUP BY g.ID, g.Name
+            ORDER BY g.Name COLLATE NOCASE;
+        ";
+        command.Parameters.AddWithValue("$deckId", deckID);
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            ulong id = (ulong)reader.GetInt64(0);
+            string name = reader.GetString(1);
+            int deckCount = reader.GetInt32(2);
+            int cardCount = reader.GetInt32(3);
+
+            groups.Add(new StudyGroup(name, id, deckCount, cardCount));
+        }
+
+        return groups;
     }
 
     public static List<FlashCard> GetCardsForDeck(ulong deckID)
