@@ -6,7 +6,7 @@ namespace ReviFlash.Models;
 
 public class AppMetaData
 {
-    public string Theme { get; set;} = "Dark";
+    public string Theme { get; set;} = "Default";
 
     public DateOnly FirstLaunchDate { get; set;} = DateOnly.FromDateTime(DateTime.Now);
     public DateOnly LastLaunchDate { get; set;} = DateOnly.FromDateTime(DateTime.Now);

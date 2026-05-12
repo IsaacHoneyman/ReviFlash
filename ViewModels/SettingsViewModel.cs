@@ -12,8 +12,16 @@ public class SettingsViewModel : ViewModelBase
     // 1. The list of themes that the ComboBox will display
     public List<string> AvailableThemes { get; } = new()
     {
-        "Dark",
+        "Default",
         "Light",
+        "Midnight",
+        "Focus",
+        "Forest",
+        "Water",
+        "Desert",
+        "Amethyst",
+        "Rose",
+        "Plains",
         "Pride",
     };
 
@@ -33,7 +41,7 @@ public class SettingsViewModel : ViewModelBase
 
     public string SelectedTheme
     {
-        get => App.CurrentMetaData.Theme;
+        get => App.CurrentMetaData.Theme == "Dark" ? "Default" : App.CurrentMetaData.Theme;
         set
         {
             ApplyTheme(value);
@@ -88,17 +96,49 @@ public class SettingsViewModel : ViewModelBase
 
     public static void ApplyTheme(string themeName)
     {
-        App.CurrentMetaData.Theme = themeName;
+        App.CurrentMetaData.Theme = themeName == "Default" ? "Default" : themeName;
 
         if (Application.Current != null)
         {
-            if (themeName == "Dark")
+            if (themeName == "Default" || themeName == "Dark")
             {
                 Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
             }
             else if (themeName == "Light")
             {
                 Application.Current.RequestedThemeVariant = ThemeVariant.Light;
+            }
+            else if (themeName == "Midnight")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Midnight;
+            }
+            else if (themeName == "Forest")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Forest;
+            }
+            else if (themeName == "Desert")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Desert;
+            }
+            else if (themeName == "Focus")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Focus;
+            }
+            else if (themeName == "Amethyst")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Amethyst;
+            }
+            else if (themeName == "Rose")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Rose;
+            }
+            else if (themeName == "Plains")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Plains;
+            }
+            else if (themeName == "Water")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Water;
             }
             else if (themeName == "Pride")
             {

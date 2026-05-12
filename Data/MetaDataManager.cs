@@ -16,6 +16,11 @@ public static class MetaDataManager
     public static AppMetaData LoadMetaDataOnStartup()
     {
         AppMetaData data = LoadMetaData();
+        if (data.Theme == "Dark")
+        {
+            data.Theme = "Default";
+        }
+
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
         
         if (today == data.LastLaunchDate.AddDays(1))
