@@ -20,6 +20,10 @@ public static class MetaDataManager
         {
             data.Theme = "Default";
         }
+        else if (data.Theme == "Pastel")
+        {
+            data.Theme = "Plains";
+        }
 
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
         

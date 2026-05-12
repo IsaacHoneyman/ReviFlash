@@ -17,8 +17,11 @@ public class SettingsViewModel : ViewModelBase
         "Midnight",
         "Focus",
         "Forest",
-        "Water",
         "Desert",
+        "Sepia",
+        "Contrast",
+        "Sun",
+        "Water",
         "Amethyst",
         "Rose",
         "Plains",
@@ -96,6 +99,11 @@ public class SettingsViewModel : ViewModelBase
 
     public static void ApplyTheme(string themeName)
     {
+        if (themeName == "Pastel")
+        {
+            themeName = "Plains";
+        }
+
         App.CurrentMetaData.Theme = themeName == "Default" ? "Default" : themeName;
 
         if (Application.Current != null)
@@ -119,6 +127,18 @@ public class SettingsViewModel : ViewModelBase
             else if (themeName == "Desert")
             {
                 Application.Current.RequestedThemeVariant = AppThemes.Desert;
+            }
+            else if (themeName == "Sepia")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Sepia;
+            }
+            else if (themeName == "Contrast")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Contrast;
+            }
+            else if (themeName == "Sun")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Sun;
             }
             else if (themeName == "Focus")
             {
