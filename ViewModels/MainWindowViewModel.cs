@@ -244,6 +244,34 @@ public class MainWindowViewModel : ViewModelBase
     public ObservableCollection<object> DashboardItems { get; set; } = [];
     public ObservableCollection<FlashCardDeck> FilteredDecks { get; set; } = [];
 
+    public class SortOption
+    {
+        public string Label { get; set; } = "";
+        public string Key { get; set; } = ""; // internal key used for switching
+
+        public SortOption(string label, string key)
+        {
+            Label = label;
+            Key = key;
+        }
+
+        public override string ToString() => Label;
+    }
+
+    public ObservableCollection<SortOption> SortOptions { get; } = new();
+
+    private SortOption? _selectedSortOption = null;
+    public SortOption? SelectedSortOption
+    {
+        get => _selectedSortOption;
+        set
+        {
+            _selectedSortOption = value;
+            OnPropertyChanged(nameof(SelectedSortOption));
+            FilterDecks();
+        }
+    }
+
     public MainWindowViewModel()
     {
         App.CurrentMetaDataChanged += _ => OnPropertyChanged(nameof(ShowBackgroundSwirl));
@@ -265,6 +293,16 @@ public class MainWindowViewModel : ViewModelBase
 
         // Set "All Time" as default
         SelectedTimePeriod = TimePeriods[0];
+
+        // Sorting options (default alphabetical A-Z)
+        SortOptions.Add(new SortOption("Name A-Z", "name_asc"));
+        SortOptions.Add(new SortOption("Name Z-A", "name_desc"));
+        SortOptions.Add(new SortOption("Cards (high → low)", "cards_desc"));
+        SortOptions.Add(new SortOption("Cards (low → high)", "cards_asc"));
+        SortOptions.Add(new SortOption("Study time (high → low)", "studytime_desc"));
+        SortOptions.Add(new SortOption("Study time (low → high)", "studytime_asc"));
+
+        SelectedSortOption = SortOptions[0];
 
         LoadDecksFromDatabase();
         FilterDecks();
@@ -363,24 +401,50 @@ public class MainWindowViewModel : ViewModelBase
     {
         FilteredDecks.Clear();
 
+        List<FlashCardDeck> resultsList;
+
         if (string.IsNullOrWhiteSpace(SearchText))
         {
-            foreach (var deck in Decks)
-            {
-                deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
-                FilteredDecks.Add(deck);
-            }
+            resultsList = Decks.ToList();
         }
         else
         {
             var lowerSearch = SearchText.ToLower();
-            var results = Decks.Where(d => d.Name.ToLower().Contains(lowerSearch));
+            resultsList = Decks.Where(d => d.Name.ToLower().Contains(lowerSearch)).ToList();
+        }
 
-            foreach (var deck in results)
+        // Apply selected sort
+        if (SelectedSortOption != null)
+        {
+            switch (SelectedSortOption.Key)
             {
-                deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
-                FilteredDecks.Add(deck);
+                case "name_asc":
+                    resultsList = resultsList.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
+                    break;
+                case "name_desc":
+                    resultsList = resultsList.OrderByDescending(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
+                    break;
+                case "cards_asc":
+                    resultsList = resultsList.OrderBy(d => d.CardCount).ToList();
+                    break;
+                case "cards_desc":
+                    resultsList = resultsList.OrderByDescending(d => d.CardCount).ToList();
+                    break;
+                case "studytime_asc":
+                    resultsList = resultsList.OrderBy(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds).ToList();
+                    break;
+                case "studytime_desc":
+                    resultsList = resultsList.OrderByDescending(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds).ToList();
+                    break;
+                default:
+                    break;
             }
+        }
+
+        foreach (var deck in resultsList)
+        {
+            deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
+            FilteredDecks.Add(deck);
         }
 
         RefreshDashboardItems();

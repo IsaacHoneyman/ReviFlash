@@ -68,6 +68,20 @@
         </Style>
     </Window.Styles>
 
+        <Window.Styles>
+            <Style Selector="Button.dashboardAction">
+                <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="14,8" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+        </Window.Styles>
+
     <Window.Resources>
         <converters:MixedMathSegmentsConverter x:Key="MixedMathSegmentsConverter" />
         <converters:IsMathDelimitedConverter x:Key="IsMathDelimitedConverter" />
@@ -280,26 +294,23 @@
                                 Background="{DynamicResource CardBackground}"
                                 Foreground="{DynamicResource TextPrimary}" />
 
-                            <Button Grid.Column="1"
-                                Click="MultiSelectDecks_Click"
-                                Content="{Binding ReviewSelectionButtonText}"
-                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                                Cursor="Hand" Margin="0,0,12,0" />
+                            <ComboBox Grid.Column="1"
+                                ItemsSource="{Binding SortOptions}"
+                                SelectedItem="{Binding SelectedSortOption}"
+                                CornerRadius="8" Width="220" Margin="0,0,12,0"
+                                Background="{DynamicResource CardBackground}" />
 
                             <Button Grid.Column="2"
                                 Click="CreateGroup_Click"
                                 Content="+ Create New Group"
                                 CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                                Cursor="Hand" Margin="0,0,12,0" />
+                                Cursor="Hand" Margin="0,0,12,0" Classes="dashboardAction" />
 
                             <Button Grid.Column="3"
                                 Click="CreateDeck_Click"
                                 Content="+ Create New Set"
                                 CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="Bold"
-                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                                Cursor="Hand" />
+                                Cursor="Hand" Classes="dashboardAction" />
                         </Grid>
 
                         <Grid Grid.Row="1">
@@ -315,7 +326,7 @@
 
                             <Border VerticalAlignment="Bottom"
                                 HorizontalAlignment="Left"
-                                Background="#B61D2128"
+                                Background="{DynamicResource CardBackground}"
                                 BorderBrush="{DynamicResource CardBorder}"
                                 BorderThickness="1"
                                 CornerRadius="14"
@@ -332,17 +343,21 @@
                                         IsChecked="{Binding ShowSets, Mode=TwoWay}"
                                         Classes="dashboardToggle" />
 
+
+                                    <Button Grid.Column="0" Click="MultiSelectDecks_Click"
+                                        Content="{Binding ReviewSelectionButtonText}"
+                                        CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
+                                        Cursor="Hand" Classes="dashboardAction" />
+
                                     <Button Click="ExportFlashCards_Click"
                                         Content="{Binding ExportSelectionButtonText}"
                                         CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                        Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                                        Cursor="Hand" />
+                                        Cursor="Hand" Classes="dashboardAction" />
 
                                     <Button Click="ImportFlashCards_Click"
                                         Content="Import"
                                         CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                        Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                                        Cursor="Hand" />
+                                        Cursor="Hand" Classes="dashboardAction" />
                                 </StackPanel>
                             </Border>
                         </Grid>
