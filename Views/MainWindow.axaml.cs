@@ -129,6 +129,18 @@ public partial class MainWindow : Window
         }
     }
 
+    public void GroupStats_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        var button = (Button)sender;
+        var selectedGroup = (StudyGroup)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a StudyGroup"));
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ShowGroupStats(selectedGroup);
+        }
+    }
+
     public async void EditGroup_Click(object sender, RoutedEventArgs e)
     {
         var button = (Button)sender;

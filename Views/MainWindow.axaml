@@ -68,20 +68,6 @@
         </Style>
     </Window.Styles>
 
-        <Window.Styles>
-            <Style Selector="Button.dashboardAction">
-                <Setter Property="Background" Value="{DynamicResource CardBackground}" />
-                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-                <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="Padding" Value="14,8" />
-                <Setter Property="FontSize" Value="14" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Cursor" Value="Hand" />
-                <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
-                <Setter Property="BorderThickness" Value="1" />
-            </Style>
-        </Window.Styles>
-
     <Window.Resources>
         <converters:MixedMathSegmentsConverter x:Key="MixedMathSegmentsConverter" />
         <converters:IsMathDelimitedConverter x:Key="IsMathDelimitedConverter" />
@@ -132,6 +118,17 @@
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand">
                                 <TextBlock Text="✏️" FontSize="12"
+                                    Foreground="{DynamicResource IconForeground}" />
+                            </Button>
+
+                            <Button Click="GroupStats_Click"
+                                Background="#7044AAFF" CornerRadius="8"
+                                Padding="12,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="View Group Stats">
+                                <TextBlock Text="📊" FontSize="12"
                                     Foreground="{DynamicResource IconForeground}" />
                             </Button>
 
@@ -303,14 +300,18 @@
                             <Button Grid.Column="2"
                                 Click="CreateGroup_Click"
                                 Content="+ Create New Group"
-                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                Cursor="Hand" Margin="0,0,12,0" Classes="dashboardAction" />
+                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                Background="{DynamicResource StatTileBackground}"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Cursor="Hand" Margin="0,0,12,0" />
 
                             <Button Grid.Column="3"
                                 Click="CreateDeck_Click"
                                 Content="+ Create New Set"
-                                CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="Bold"
-                                Cursor="Hand" Classes="dashboardAction" />
+                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="Bold"
+                                Background="{DynamicResource StatTileBackground}"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Cursor="Hand" />
                         </Grid>
 
                         <Grid Grid.Row="1">
@@ -346,18 +347,24 @@
 
                                     <Button Grid.Column="0" Click="MultiSelectDecks_Click"
                                         Content="{Binding ReviewSelectionButtonText}"
-                                        CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                        Cursor="Hand" Classes="dashboardAction" />
+                                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource StatTileBackground}"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Cursor="Hand" />
 
                                     <Button Click="ExportFlashCards_Click"
                                         Content="{Binding ExportSelectionButtonText}"
-                                        CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                        Cursor="Hand" Classes="dashboardAction" />
+                                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource StatTileBackground}"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Cursor="Hand" />
 
                                     <Button Click="ImportFlashCards_Click"
                                         Content="Import"
-                                        CornerRadius="8" Padding="14, 8" FontSize="14" FontWeight="SemiBold"
-                                        Cursor="Hand" Classes="dashboardAction" />
+                                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource StatTileBackground}"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Cursor="Hand" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -374,14 +381,17 @@
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBlock Grid.Column="0" Text="Overall Stats" FontSize="18" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}"
-                                    IsVisible="{Binding !IsViewingDeckStats}" />
+                                    IsVisible="{Binding !IsViewingAnyStats}" />
                                 <TextBlock Grid.Column="0" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}"
                                     IsVisible="{Binding IsViewingDeckStats}" />
+                                <TextBlock Grid.Column="0" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    IsVisible="{Binding IsViewingGroupStats}" />
                                 
                                 <Button Grid.Column="1" Click="CloseDecKStats_Click" 
                                     Background="#70FFFFFF" CornerRadius="4" Padding="4" Height="28" Width="28"
-                                    IsVisible="{Binding IsViewingDeckStats}" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                    IsVisible="{Binding IsViewingAnyStats}" VerticalAlignment="Center" HorizontalAlignment="Right"
                                     Cursor="Hand">
                                     <TextBlock Text="✕" FontSize="16" Foreground="{DynamicResource IconForeground}" 
                                         VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -457,7 +467,7 @@
                             </Border>
 
                             <Border Background="{DynamicResource StatTileBackground}"
-                                IsVisible="{Binding !IsViewingDeckStats}"
+                                IsVisible="{Binding !IsViewingAnyStats}"
                                 CornerRadius="10"
                                 Padding="16">
                                 <StackPanel>

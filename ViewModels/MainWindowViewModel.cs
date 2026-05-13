@@ -50,7 +50,7 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
-    private static string _versionText = "Version B-0.7.0";
+    private static string _versionText = "Version B-0.7.1";
     public static string VersionText
     {
         get => _versionText;
@@ -228,7 +228,12 @@ public class MainWindowViewModel : ViewModelBase
     public bool IsViewingDeckStats
     {
         get => _isViewingDeckStats;
-        set { _isViewingDeckStats = value; OnPropertyChanged(nameof(IsViewingDeckStats)); }
+        set 
+        { 
+            _isViewingDeckStats = value; 
+            OnPropertyChanged(nameof(IsViewingDeckStats));
+            OnPropertyChanged(nameof(IsViewingAnyStats));
+        }
     }
 
     private FlashCardDeck? _selectedDeckForStats = null;
@@ -237,6 +242,27 @@ public class MainWindowViewModel : ViewModelBase
         get => _selectedDeckForStats;
         set { _selectedDeckForStats = value; OnPropertyChanged(nameof(SelectedDeckForStats)); }
     }
+
+    private bool _isViewingGroupStats = false;
+    public bool IsViewingGroupStats
+    {
+        get => _isViewingGroupStats;
+        set 
+        { 
+            _isViewingGroupStats = value; 
+            OnPropertyChanged(nameof(IsViewingGroupStats));
+            OnPropertyChanged(nameof(IsViewingAnyStats));
+        }
+    }
+
+    private StudyGroup? _selectedGroupForStats = null;
+    public StudyGroup? SelectedGroupForStats
+    {
+        get => _selectedGroupForStats;
+        set { _selectedGroupForStats = value; OnPropertyChanged(nameof(SelectedGroupForStats)); }
+    }
+
+    public bool IsViewingAnyStats => IsViewingDeckStats || IsViewingGroupStats;
 
     public ObservableCollection<TimePeriodOption> TimePeriods { get; set; } = [];
     public ObservableCollection<FlashCardDeck> Decks { get; set; } = [];
@@ -344,6 +370,10 @@ public class MainWindowViewModel : ViewModelBase
         {
             ShowDeckStats(SelectedDeckForStats);
         }
+        else if (IsViewingGroupStats && SelectedGroupForStats != null)
+        {
+            ShowGroupStats(SelectedGroupForStats);
+        }
         else
         {
             LoadStats();
@@ -354,6 +384,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         SelectedDeckForStats = deck;
         IsViewingDeckStats = true;
+        IsViewingGroupStats = false;
 
         var timeModifier = SelectedTimePeriod?.TimeModifier;
         var (correct, total, timeTakenSeconds, percentage, grade) = GetDeckStats(deck.ID, timeModifier);
@@ -364,10 +395,62 @@ public class MainWindowViewModel : ViewModelBase
         Grade = grade;
     }
 
+    public void ShowGroupStats(StudyGroup group)
+    {
+        SelectedGroupForStats = group;
+        IsViewingGroupStats = true;
+        IsViewingDeckStats = false;
+
+        var timeModifier = SelectedTimePeriod?.TimeModifier;
+        
+        // Get all decks in the group and sum their stats
+        var decksInGroup = FlashCardRepository.GetDecksForStudyGroup(group.ID);
+        
+        int totalCorrect = 0;
+        int totalQuestions = 0;
+        int totalSeconds = 0;
+
+        foreach (var deck in decksInGroup)
+        {
+            var (correct, total, timeTakenSeconds) = FlashCardRepository.GetStats(deck.ID, timeModifier);
+            totalCorrect += correct;
+            totalQuestions += total;
+            totalSeconds += timeTakenSeconds;
+        }
+
+        double percentage = totalQuestions > 0 ? Math.Round((double)totalCorrect / totalQuestions * 100, 1) : 0;
+        
+        string grade;
+        if (totalQuestions == 0)
+        {
+            grade = "-";
+        }
+        else
+        {
+            grade = percentage switch
+            {
+                >= 90 => "A*",
+                >= 80 => "A",
+                >= 70 => "B",
+                >= 60 => "C",
+                >= 50 => "D",
+                _ => "U"
+            };
+        }
+
+        TotalQuestions = totalQuestions;
+        TotalCorrect = totalCorrect;
+        TotalTimeSeconds = totalSeconds;
+        Percentage = percentage;
+        Grade = grade;
+    }
+
     public void ShowOverallStats()
     {
         IsViewingDeckStats = false;
+        IsViewingGroupStats = false;
         SelectedDeckForStats = null;
+        SelectedGroupForStats = null;
         LoadStats();
     }
 
