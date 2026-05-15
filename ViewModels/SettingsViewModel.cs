@@ -19,13 +19,15 @@ public class SettingsViewModel : ViewModelBase
         "Forest",
         "Desert",
         "Sepia",
-        "Contrast",
         "Sun",
         "Water",
         "Amethyst",
         "Rose",
         "Plains",
         "Pride",
+        "Slate",
+        "Ember",
+        "Crimson",
     };
 
     private ObservableCollection<FlashCardDeck> _availableDecks = new();
@@ -132,13 +134,21 @@ public class SettingsViewModel : ViewModelBase
             {
                 Application.Current.RequestedThemeVariant = AppThemes.Sepia;
             }
-            else if (themeName == "Contrast")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Contrast;
-            }
             else if (themeName == "Sun")
             {
                 Application.Current.RequestedThemeVariant = AppThemes.Sun;
+            }
+            else if (themeName == "Slate")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Slate;
+            }
+            else if (themeName == "Ember")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Ember;
+            }
+            else if (themeName == "Crimson")
+            {
+                Application.Current.RequestedThemeVariant = AppThemes.Crimson;
             }
             else if (themeName == "Focus")
             {

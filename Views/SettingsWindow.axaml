@@ -15,22 +15,7 @@
         <StackPanel Spacing="16">
             <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
             
-            <Border Background="{DynamicResource CardBackground}" 
-        BorderBrush="{DynamicResource CardBorder}" 
-        BorderThickness="1" 
-        CornerRadius="10" 
-        Padding="16">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Application Theme" 
-                   FontWeight="SemiBold" 
-                   Foreground="{DynamicResource TextPrimary}"/>
-        
-        <ComboBox ItemsSource="{Binding AvailableThemes}"
-                  SelectedItem="{Binding SelectedTheme}"
-                  HorizontalAlignment="Stretch"
-                  CornerRadius="5"/>
-    </StackPanel>
-</Border>
+            <!-- Application Theme moved into Appearance section -->
 
             <Border Background="{DynamicResource CardBackground}"
         BorderBrush="{DynamicResource CardBorder}"
@@ -38,11 +23,19 @@
         CornerRadius="10"
         Padding="16">
     <StackPanel Spacing="8">
-        <TextBlock Text="Appearance"
+        <TextBlock Text="Apperance"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource TextPrimary}"/>
 
         <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Application Theme" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableThemes}"
+                      SelectedItem="{Binding SelectedTheme}"
+                      HorizontalAlignment="Right" Width="180" CornerRadius="5"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
             <TextBlock Grid.Column="0" Text="Background Swirl" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextPrimary}"/>
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
@@ -57,7 +50,7 @@
         CornerRadius="10" 
         Padding="16">
     <StackPanel Spacing="8">
-        <TextBlock Text="Review Settings" 
+        <TextBlock Text="Review" 
                    FontWeight="SemiBold" 
                    Foreground="{DynamicResource TextPrimary}"/>
         
@@ -83,7 +76,7 @@
         CornerRadius="10" 
         Padding="16">
     <StackPanel Spacing="8">
-        <TextBlock Text="Editor Settings" 
+        <TextBlock Text="Editor" 
                    FontWeight="SemiBold" 
                    Foreground="{DynamicResource TextPrimary}"/>
         
