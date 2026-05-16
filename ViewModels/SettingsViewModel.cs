@@ -13,21 +13,21 @@ public class SettingsViewModel : ViewModelBase
     public List<string> AvailableThemes { get; } = new()
     {
         "Default",
-        "Light",
         "Midnight",
-        "Focus",
         "Forest",
-        "Desert",
-        "Sepia",
-        "Sun",
-        "Water",
+        "Focus",
         "Amethyst",
-        "Rose",
-        "Plains",
-        "Pride",
         "Slate",
         "Ember",
         "Crimson",
+        "Light",
+        "Desert",
+        "Sepia",
+        "Sun",
+        "Rose",
+        "Plains",
+        "Water",
+        "Pride",
     };
 
     private ObservableCollection<FlashCardDeck> _availableDecks = new();

@@ -78,6 +78,9 @@ obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  ReviFlash.AssemblyInfo.cs
 Program.cs
+Utilities/
+ GradeCalculator.cs
+ GradingConstants.cs
 ViewLocator.cs
 ViewModels/
  DeckEditorViewModel.cs
@@ -264,16 +267,13 @@ Views/
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
 <NUGET>/
- avalonia.controls.colorpicker/11.3.12/lib/net8.0/Avalonia.Controls.ColorPicker.dll
  avalonia.desktop/11.3.12/lib/net8.0/Avalonia.Desktop.dll
- avalonia.diagnostics/11.3.12/lib/net8.0/Avalonia.Diagnostics.dll
  avalonia.fonts.inter/11.3.12/lib/net8.0/Avalonia.Fonts.Inter.dll
  avalonia.freedesktop/11.3.12/lib/net8.0/Avalonia.FreeDesktop.dll
  avalonia.native/11.3.12/lib/net8.0/Avalonia.Native.dll
  avalonia.remote.protocol/11.3.12/lib/net8.0/Avalonia.Remote.Protocol.dll
  avalonia.skia/11.3.12/lib/net8.0/Avalonia.Skia.dll
  avalonia.themes.fluent/11.3.12/lib/net8.0/Avalonia.Themes.Fluent.dll
- avalonia.themes.simple/11.3.12/lib/net8.0/Avalonia.Themes.Simple.dll
  avalonia.win32/11.3.12/lib/net8.0/
   Avalonia.Win32.Automation.dll
   Avalonia.Win32.dll
