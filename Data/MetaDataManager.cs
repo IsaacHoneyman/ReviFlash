@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Diagnostics;
 using System.Text.Json;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
@@ -11,7 +10,7 @@ public static class MetaDataManager
 {
     private static string GetFilePath()
     {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "metadata.json");
+        return AppStoragePaths.MetadataPath;
     }
 
     public static AppMetaData LoadMetaDataOnStartup()
@@ -24,6 +23,11 @@ public static class MetaDataManager
         else if (data.Theme == "Pastel")
         {
             data.Theme = "Plains";
+        }
+
+        if (string.IsNullOrWhiteSpace(data.DatabasePath))
+        {
+            data.DatabasePath = AppStoragePaths.DatabasePath;
         }
 
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
@@ -40,7 +44,7 @@ public static class MetaDataManager
         data.BestLaunchStreak = Math.Max(data.BestLaunchStreak, data.LaunchStreak);
 
         data.LastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
-        SettingsViewModel.ApplyTheme(data.Theme);
+        SettingsViewModel.ApplyTheme(data, data.Theme);
         data.Version = MainWindowViewModel.VersionText;
         SaveMetaData(data);
         return data;
@@ -61,8 +65,7 @@ public static class MetaDataManager
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to load metadata: {ex.Message}");
-            Console.Error.WriteLine($"Failed to load metadata: {ex.Message}");
+            AppLogger.Error("Failed to load metadata", ex);
             return new AppMetaData();
         }
     }

@@ -1,14 +1,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Styling;
 using ReviFlash.Data;
 using ReviFlash.Models;
+using System.IO;
 
 namespace ReviFlash.ViewModels;
 
 public class SettingsViewModel : ViewModelBase
 {
+    private readonly AppMetaData _settings;
+
     // 1. The list of themes that the ComboBox will display
     public List<string> AvailableThemes { get; } = new()
     {
@@ -44,69 +48,115 @@ public class SettingsViewModel : ViewModelBase
         set { _selectedDeckForStatDeletion = value; OnPropertyChanged(nameof(SelectedDeckForStatDeletion)); }
     }
 
-    public string SelectedTheme
+    public string DatabasePath
     {
-        get => App.CurrentMetaData.Theme == "Dark" ? "Default" : App.CurrentMetaData.Theme;
+        get => _settings.DatabasePath;
         set
         {
-            ApplyTheme(value);
-            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+            _settings.DatabasePath = string.IsNullOrWhiteSpace(value)
+                ? AppStoragePaths.DatabasePath
+                : Path.GetFullPath(value);
+            DatabaseManager.ConfigureDatabasePath(_settings.DatabasePath);
+            OnPropertyChanged(nameof(DatabasePath));
+            MetaDataManager.SaveMetaData(_settings);
+        }
+    }
+
+    public string SelectedTheme
+    {
+        get => _settings.Theme == "Dark" ? "Default" : _settings.Theme;
+        set
+        {
+            ApplyTheme(_settings, value);
+            MetaDataManager.SaveMetaData(_settings);
         }
     }
 
     public bool ShowTimer
     {
-        get => App.CurrentMetaData.ShowTimer;
+        get => _settings.ShowTimer;
         set
         {
-            App.CurrentMetaData.ShowTimer = value;
+            _settings.ShowTimer = value;
             OnPropertyChanged(nameof(ShowTimer));
-            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+            MetaDataManager.SaveMetaData(_settings);
         }
     }
 
     public bool ShowProgress
     {
-        get => App.CurrentMetaData.ShowProgress;
+        get => _settings.ShowProgress;
         set
         {
-            App.CurrentMetaData.ShowProgress = value;
+            _settings.ShowProgress = value;
             OnPropertyChanged(nameof(ShowProgress));
-            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+            MetaDataManager.SaveMetaData(_settings);
         }
     }
 
     public bool ShowAdditionalFieldLatexPreviews
     {
-        get => App.CurrentMetaData.ShowAdditionalFieldLatexPreviews;
+        get => _settings.ShowAdditionalFieldLatexPreviews;
         set
         {
-            App.CurrentMetaData.ShowAdditionalFieldLatexPreviews = value;
+            _settings.ShowAdditionalFieldLatexPreviews = value;
             OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
-            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+            MetaDataManager.SaveMetaData(_settings);
         }
     }
 
     public bool ShowBackgroundSwirl
     {
-        get => App.CurrentMetaData.ShowBackgroundSwirl;
+        get => _settings.ShowBackgroundSwirl;
         set
         {
-            App.CurrentMetaData.ShowBackgroundSwirl = value;
+            _settings.ShowBackgroundSwirl = value;
             OnPropertyChanged(nameof(ShowBackgroundSwirl));
-            App.SetCurrentMetaData(App.CurrentMetaData);
-            MetaDataManager.SaveMetaData(App.CurrentMetaData);
+            MetaDataManager.SaveMetaData(_settings);
         }
     }
 
-    public static void ApplyTheme(string themeName)
+    public SettingsViewModel(AppMetaData settings)
+    {
+        _settings = settings;
+        _settings.PropertyChanged += Settings_PropertyChanged;
+        DatabaseManager.ConfigureDatabasePath(_settings.DatabasePath);
+        LoadDecks();
+    }
+
+    private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(AppMetaData.Theme):
+                OnPropertyChanged(nameof(SelectedTheme));
+                break;
+            case nameof(AppMetaData.ShowTimer):
+                OnPropertyChanged(nameof(ShowTimer));
+                break;
+            case nameof(AppMetaData.ShowProgress):
+                OnPropertyChanged(nameof(ShowProgress));
+                break;
+            case nameof(AppMetaData.ShowAdditionalFieldLatexPreviews):
+                OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
+                break;
+            case nameof(AppMetaData.ShowBackgroundSwirl):
+                OnPropertyChanged(nameof(ShowBackgroundSwirl));
+                break;
+            case nameof(AppMetaData.DatabasePath):
+                OnPropertyChanged(nameof(DatabasePath));
+                break;
+        }
+    }
+
+    public static void ApplyTheme(AppMetaData settings, string themeName)
     {
         if (themeName == "Pastel")
         {
             themeName = "Plains";
         }
 
-        App.CurrentMetaData.Theme = themeName == "Default" ? "Default" : themeName;
+        settings.Theme = themeName == "Default" ? "Default" : themeName;
 
         if (Application.Current != null)
         {
@@ -181,11 +231,6 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    public SettingsViewModel()
-    {
-        LoadDecks();
-    }
-
     private void LoadDecks()
     {
         AvailableDecks.Clear();
@@ -202,6 +247,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowTimer));
         OnPropertyChanged(nameof(ShowProgress));
         OnPropertyChanged(nameof(ShowBackgroundSwirl));
+        OnPropertyChanged(nameof(DatabasePath));
         LoadDecks();
     }
 

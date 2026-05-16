@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using ReviFlash.Models;
 using ReviFlash.Data;
 using ReviFlash.Utilities;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -61,6 +62,7 @@ public class MatchPairEditor : ViewModelBase
 
 public class DeckEditorViewModel : ViewModelBase
 {
+    private readonly AppMetaData _settings;
     public FlashCardDeck CurrentDeck { get; }
     public ObservableCollection<FlashCard> Cards { get; set; } = new();
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
@@ -198,7 +200,7 @@ public class DeckEditorViewModel : ViewModelBase
     public bool IsMatchCardType => SelectedCardType == GradingConstants.CARD_TYPE_MATCH;
     public bool IsTrueFalseCardType => SelectedCardType == GradingConstants.CARD_TYPE_TRUE_FALSE;
     public bool ShowFrontBackEditor => true;
-    public bool ShowAdditionalFieldLatexPreviews => App.CurrentMetaData.ShowAdditionalFieldLatexPreviews;
+    public bool ShowAdditionalFieldLatexPreviews => _settings.ShowAdditionalFieldLatexPreviews;
 
     private void InitializeCardTypeDefaults()
     {
@@ -255,8 +257,10 @@ public class DeckEditorViewModel : ViewModelBase
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
-    public DeckEditorViewModel(FlashCardDeck deck)
+    public DeckEditorViewModel(FlashCardDeck deck, AppMetaData settings)
     {
+        _settings = settings;
+        _settings.PropertyChanged += Settings_PropertyChanged;
         CurrentDeck = deck;
         _deckName = deck.Name;
 
@@ -266,6 +270,14 @@ public class DeckEditorViewModel : ViewModelBase
         AddMatchPairRow();
 
         LoadCards();
+    }
+
+    private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AppMetaData.ShowAdditionalFieldLatexPreviews))
+        {
+            OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
+        }
     }
 
     private void LoadCards()

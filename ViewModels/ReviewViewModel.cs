@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Timers;
+using System.ComponentModel;
 using ReviFlash.Data;
 using ReviFlash.Models;
 
@@ -49,6 +50,7 @@ public class ReviewMatchRow : ViewModelBase
 public class ReviewViewModel : ViewModelBase
     , IDisposable
 {
+    private readonly AppMetaData _settings;
     private readonly List<FlashCard> _sessionCards;
     private readonly Dictionary<ulong, ulong>? _cardDeckMap;
     private readonly Dictionary<ulong, int> _attemptsByDeck = [];
@@ -115,15 +117,17 @@ public class ReviewViewModel : ViewModelBase
         set { _timerText = value; OnPropertyChanged(nameof(TimerText)); }
     }
 
-    public bool ShouldShowTimer => App.CurrentMetaData.ShowTimer;
-    public bool ShouldShowProgress => App.CurrentMetaData.ShowProgress;
+    public bool ShouldShowTimer => _settings.ShowTimer;
+    public bool ShouldShowProgress => _settings.ShowProgress;
 
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
 
-    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, Dictionary<ulong, ulong>? cardDeckMap = null)
+    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, AppMetaData settings, Dictionary<ulong, ulong>? cardDeckMap = null)
     {
         ArgumentNullException.ThrowIfNull(cards);
+        _settings = settings;
+        _settings.PropertyChanged += Settings_PropertyChanged;
 
         _sessionCards = [.. cards.OrderBy(_ => Guid.NewGuid()).ToList()]; // Shuffle cards
         if (_sessionCards.Count == 0)
@@ -152,6 +156,19 @@ public class ReviewViewModel : ViewModelBase
 
         // Initialize timer text
         UpdateTimerText();
+    }
+
+    private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(AppMetaData.ShowTimer):
+                OnPropertyChanged(nameof(ShouldShowTimer));
+                break;
+            case nameof(AppMetaData.ShowProgress):
+                OnPropertyChanged(nameof(ShouldShowProgress));
+                break;
+        }
     }
 
     private void UpdateTimerText()

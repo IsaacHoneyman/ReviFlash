@@ -12,6 +12,8 @@ namespace ReviFlash.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
+    private readonly AppMetaData _settings;
+
     public enum DeckSelectionMode
     {
         None,
@@ -141,7 +143,7 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public bool ShowBackgroundSwirl => App.CurrentMetaData.ShowBackgroundSwirl;
+    public bool ShowBackgroundSwirl => _settings.ShowBackgroundSwirl;
 
     public static int CompareVersionNumber(string versionA, string versionB)
     {
@@ -311,13 +313,11 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(AppMetaData settings)
     {
-        App.CurrentMetaDataChanged += _ => OnPropertyChanged(nameof(ShowBackgroundSwirl));
-
-        var meta = App.CurrentMetaData;
-        StreakText = $"{meta.LaunchStreak} Day Streak";
-        BestEverStreakText = $"{meta.BestLaunchStreak} Days";
+        _settings = settings;
+        _settings.PropertyChanged += Settings_PropertyChanged;
+        RefreshStreakTexts();
         CurrentPage = this;
 
         // Initialize time period options
@@ -346,6 +346,28 @@ public class MainWindowViewModel : ViewModelBase
         LoadDecksFromDatabase();
         FilterDecks();
         RefreshDashboardItems();
+    }
+
+    public AppMetaData Settings => _settings;
+
+    private void Settings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(AppMetaData.ShowBackgroundSwirl):
+                OnPropertyChanged(nameof(ShowBackgroundSwirl));
+                break;
+            case nameof(AppMetaData.LaunchStreak):
+            case nameof(AppMetaData.BestLaunchStreak):
+                RefreshStreakTexts();
+                break;
+        }
+    }
+
+    private void RefreshStreakTexts()
+    {
+        StreakText = $"{_settings.LaunchStreak} Day Streak";
+        BestEverStreakText = $"{_settings.BestLaunchStreak} Days";
     }
 
     private void LoadStats()
@@ -604,8 +626,7 @@ public class MainWindowViewModel : ViewModelBase
 
     public void RefreshAfterBackupRestore()
     {
-        StreakText = $"{App.CurrentMetaData.LaunchStreak} Day Streak";
-        BestEverStreakText = $"{App.CurrentMetaData.BestLaunchStreak} Days";
+        RefreshStreakTexts();
         CancelSelectionMode();
         LoadDecksFromDatabase();
         FilterDecks();
@@ -644,6 +665,6 @@ public class MainWindowViewModel : ViewModelBase
 
     public void EditDeck(FlashCardDeck deckToEdit)
     {
-        System.Console.WriteLine($"Opening editor for: {deckToEdit.Name}");
+        AppLogger.Info($"Opening editor for: {deckToEdit.Name}");
     }
 }

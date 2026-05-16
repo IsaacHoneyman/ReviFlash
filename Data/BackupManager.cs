@@ -46,13 +46,12 @@ public static class BackupManager
 
         Directory.CreateDirectory(destinationFolder);
 
-        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string metadataPath = Path.Combine(baseDirectory, "metadata.json");
-        string databasePath = Path.Combine(baseDirectory, "reviflash.db");
+        string metadataPath = AppStoragePaths.MetadataPath;
+        string databasePath = DatabaseManager.DatabasePath;
 
         if (!File.Exists(metadataPath) || !File.Exists(databasePath))
         {
-            throw new FileNotFoundException("Cannot create a backup because metadata.json or reviflash.db is missing.");
+            throw new FileNotFoundException($"Cannot create a backup because {AppStoragePaths.MetadataFileName} or {AppStoragePaths.DatabaseFileName} is missing.");
         }
 
         string zipFilePath = Path.Combine(destinationFolder, $"ReviFlashBackup_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
@@ -67,7 +66,7 @@ public static class BackupManager
     {
         if (!File.Exists(sourceFilePath))
         {
-            Console.Error.WriteLine($"Skipping missing backup file: {sourceFilePath}");
+                AppLogger.Error($"Skipping missing backup file: {sourceFilePath}");
             return false;
         }
 
@@ -91,25 +90,28 @@ public static class BackupManager
         using var zip = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
         using var archive = new ZipArchive(zip, ZipArchiveMode.Read);
 
-        if (archive.GetEntry("metadata.json") == null ||
-            archive.GetEntry("reviflash.db") == null)
+        if (archive.GetEntry(AppStoragePaths.MetadataFileName) == null ||
+            archive.GetEntry(AppStoragePaths.DatabaseFileName) == null)
         {
-            throw new InvalidDataException("The selected file is not a valid ReviFlash backup. It must contain 'metadata.json' and 'reviflash.db'.");
+            throw new InvalidDataException($"The selected file is not a valid ReviFlash backup. It must contain '{AppStoragePaths.MetadataFileName}' and '{AppStoragePaths.DatabaseFileName}'.");
         }
 
-        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string metadataPath = Path.Combine(baseDirectory, "metadata.json");
-        string databasePath = Path.Combine(baseDirectory, "reviflash.db");
+        string metadataPath = AppStoragePaths.MetadataPath;
+        string databasePath = DatabaseManager.DatabasePath;
         string stagingDirectory = Path.Combine(Path.GetTempPath(), $"ReviFlashRestore_{Guid.NewGuid():N}");
         Directory.CreateDirectory(stagingDirectory);
 
         try
         {
-            string stagedMetadata = ExtractEntryToPath(archive, "metadata.json", stagingDirectory);
-            string stagedDatabase = ExtractEntryToPath(archive, "reviflash.db", stagingDirectory);
+            string stagedMetadata = ExtractEntryToPath(archive, AppStoragePaths.MetadataFileName, stagingDirectory);
+            string stagedDatabase = ExtractEntryToPath(archive, AppStoragePaths.DatabaseFileName, stagingDirectory);
 
-            BackupExistingFile(metadataPath, stagingDirectory, "metadata.json.bak");
-            BackupExistingFile(databasePath, stagingDirectory, "reviflash.db.bak");
+            var restoredMetadata = ReadMetadataFromPath(stagedMetadata);
+            DatabaseManager.ConfigureDatabasePath(restoredMetadata.DatabasePath);
+            databasePath = DatabaseManager.DatabasePath;
+
+            BackupExistingFile(metadataPath, stagingDirectory, $"{AppStoragePaths.MetadataFileName}.bak");
+            BackupExistingFile(databasePath, stagingDirectory, $"{AppStoragePaths.DatabaseFileName}.bak");
 
             SqliteConnection.ClearAllPools();
 
@@ -117,10 +119,10 @@ public static class BackupManager
             File.Copy(stagedDatabase, databasePath, overwrite: true);
 
             DatabaseManager.InitDatabase();
-            ApplyRestoredMetadata(metadataPath);
+            ApplyRestoredMetadata(restoredMetadata);
             RefreshOpenViewsAfterRestore();
 
-            Console.WriteLine("Restore completed successfully!");
+            AppLogger.Info("Restore completed successfully!");
         }
         catch (Exception ex)
         {
@@ -257,8 +259,8 @@ public static class BackupManager
     {
         try
         {
-            string metadataBackupPath = Path.Combine(stagingDirectory, "metadata.json.bak");
-            string databaseBackupPath = Path.Combine(stagingDirectory, "reviflash.db.bak");
+            string metadataBackupPath = Path.Combine(stagingDirectory, $"{AppStoragePaths.MetadataFileName}.bak");
+            string databaseBackupPath = Path.Combine(stagingDirectory, $"{AppStoragePaths.DatabaseFileName}.bak");
 
             if (File.Exists(metadataBackupPath))
             {
@@ -277,28 +279,18 @@ public static class BackupManager
         }
     }
 
-    private static void ApplyRestoredMetadata(string metadataPath)
+    private static AppMetaData ReadMetadataFromPath(string metadataPath)
     {
-        if (!File.Exists(metadataPath))
-        {
-            return;
-        }
+        string json = File.ReadAllText(metadataPath);
+        return System.Text.Json.JsonSerializer.Deserialize<AppMetaData>(json)
+            ?? new AppMetaData();
+    }
 
-        try
-        {
-            string json = File.ReadAllText(metadataPath);
-            var metadata = System.Text.Json.JsonSerializer.Deserialize<AppMetaData>(json);
-            if (metadata is null)
-            {
-                return;
-            }
-
-            ReviFlash.App.SetCurrentMetaData(metadata);
-            SettingsViewModel.ApplyTheme(metadata.Theme);
-        }
-        catch
-        {
-        }
+    private static void ApplyRestoredMetadata(AppMetaData metadata)
+    {
+        ReviFlash.App.SetCurrentMetaData(metadata);
+        DatabaseManager.ConfigureDatabasePath(metadata.DatabasePath);
+        SettingsViewModel.ApplyTheme(metadata, metadata.Theme);
     }
 
     private static void RefreshOpenViewsAfterRestore()

@@ -21,11 +21,12 @@ public partial class MainWindow : Window
 
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
+        var settings = GetSettings();
         // 1. Create the new window
         var settingsWindow = new SettingsWindow
         {
             // 2. Give it the dedicated ViewModel
-            DataContext = new SettingsViewModel()
+            DataContext = new SettingsViewModel(settings)
         };
 
         // 3. Show it as a modal dialog. 
@@ -54,12 +55,13 @@ public partial class MainWindow : Window
 
     public async void CreateDeck_Click(object sender, RoutedEventArgs e)
     {
+        var settings = GetSettings();
         var newDeck = new FlashCardDeck("New Flashcard Set");
         ReviFlash.Data.FlashCardRepository.SaveNewDeck(newDeck);
 
         var editor = new DeckEditorWindow
         {
-            DataContext = new DeckEditorViewModel(newDeck)
+            DataContext = new DeckEditorViewModel(newDeck, settings)
         };
         await editor.ShowDialog(this);
 
@@ -87,12 +89,13 @@ public partial class MainWindow : Window
 
     public async void EditDeck_Click(object sender, RoutedEventArgs e)
     {
+        var settings = GetSettings();
         var button = (Button)sender;
         var selectedDeck = (FlashCardDeck)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck"));
 
         var editor = new DeckEditorWindow
         {
-            DataContext = new DeckEditorViewModel(selectedDeck)
+            DataContext = new DeckEditorViewModel(selectedDeck, settings)
         };
         await editor.ShowDialog(this);
 
@@ -338,7 +341,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            System.Console.WriteLine($"Export failed: {ex.Message}");
+            AppLogger.Error("Export failed", ex);
         }
     }
 
@@ -374,16 +377,17 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            System.Console.WriteLine($"Import failed: {ex.Message}");
+            AppLogger.Error("Import failed", ex);
         }
     }
 
     private void StartReviewSession(FlashCardDeck deck)
     {
+        var settings = GetSettings();
         var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
         if (cards.Count == 0) return;
 
-        var reviewVM = new ReviewViewModel(cards, deck.ID)
+        var reviewVM = new ReviewViewModel(cards, deck.ID, settings)
         {
             OnSessionComplete = (score, total, time, isPartial) =>
             {
@@ -398,6 +402,7 @@ public partial class MainWindow : Window
 
     private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks)
     {
+        var settings = GetSettings();
         var allCards = new List<FlashCard>();
         var cardDeckMap = new Dictionary<ulong, ulong>();
 
@@ -419,7 +424,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap)
+        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, settings, cardDeckMap)
         {
             OnSessionComplete = (score, total, time, isPartial) =>
             {
@@ -497,6 +502,8 @@ public partial class MainWindow : Window
     }
 
     private ReviewViewModel? GetReviewVM() => (DataContext as MainWindowViewModel)?.CurrentPage as ReviewViewModel;
+
+    private AppMetaData GetSettings() => (DataContext as MainWindowViewModel)?.Settings ?? new AppMetaData();
 
     private void ReturnToDashboard_Click(object sender, RoutedEventArgs e)
     {

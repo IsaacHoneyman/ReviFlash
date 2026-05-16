@@ -6,6 +6,17 @@ namespace ReviFlash.Data;
 
 public static class DatabaseManager
 {
+    private static string _databasePath = AppStoragePaths.DatabasePath;
+
+    public static string DatabasePath => _databasePath;
+
+    public static void ConfigureDatabasePath(string databasePath)
+    {
+        _databasePath = string.IsNullOrWhiteSpace(databasePath)
+            ? AppStoragePaths.DatabasePath
+            : Path.GetFullPath(databasePath);
+    }
+
     private static string GetConnectionString()
     {
         var builder = new SqliteConnectionStringBuilder
@@ -19,7 +30,7 @@ public static class DatabaseManager
 
     private static string GetDatabasePath()
     {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reviflash.db");
+        return _databasePath;
     }
 
     public static void InitDatabase()
