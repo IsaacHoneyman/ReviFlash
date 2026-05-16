@@ -10,6 +10,14 @@ public static class FlashCardRepository
 {
     private sealed record TrueFalseAnswerPayload(bool CorrectAnswerIsTrue, string TrueLabel, string FalseLabel);
 
+    private static void ValidateDeckId(ulong deckID)
+    {
+        if (deckID == 0 || deckID == ulong.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(deckID), "Deck ID must be a valid persisted deck identifier.");
+        }
+    }
+
     public static void SaveNewDeck(FlashCardDeck deck)
     {
         using var connection = DatabaseManager.GetConnection();
@@ -29,6 +37,8 @@ public static class FlashCardRepository
 
     public static void SaveNewCard(FlashCard card, ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
@@ -167,6 +177,8 @@ public static class FlashCardRepository
 
     public static void AddDeckToStudyGroup(ulong groupID, ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
@@ -184,6 +196,8 @@ public static class FlashCardRepository
 
     public static void RemoveDeckFromStudyGroup(ulong groupID, ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
@@ -261,6 +275,8 @@ public static class FlashCardRepository
 
     public static List<StudyGroup> GetStudyGroupsForDeck(ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         var groups = new List<StudyGroup>();
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
@@ -299,6 +315,8 @@ public static class FlashCardRepository
 
     public static List<FlashCard> GetCardsForDeck(ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         var cards = new List<FlashCard>();
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
@@ -348,6 +366,8 @@ public static class FlashCardRepository
 
     public static void UpdateDeckStats(ulong deckID, int correct, int total, int timeTakenSeconds)
     {
+        ValidateDeckId(deckID);
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
@@ -451,6 +471,8 @@ public static class FlashCardRepository
 
     public static void DeleteDeck(ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
@@ -495,6 +517,8 @@ public static class FlashCardRepository
 
     public static void DeleteStatsForDeck(ulong deckID)
     {
+        ValidateDeckId(deckID);
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 

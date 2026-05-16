@@ -47,6 +47,7 @@ public class ReviewMatchRow : ViewModelBase
 }
 
 public class ReviewViewModel : ViewModelBase
+    , IDisposable
 {
     private readonly List<FlashCard> _sessionCards;
     private readonly Dictionary<ulong, ulong>? _cardDeckMap;
@@ -57,6 +58,7 @@ public class ReviewViewModel : ViewModelBase
     private Timer? _displayTimer;
     private readonly ulong deckID = ulong.MaxValue;
     private bool _currentCardHasBeenScored;
+    private bool _disposed;
 
     public FlashCard CurrentCard => _sessionCards[_currentIndex];
     public int TotalCards => _sessionCards.Count;
@@ -121,7 +123,14 @@ public class ReviewViewModel : ViewModelBase
 
     public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, Dictionary<ulong, ulong>? cardDeckMap = null)
     {
+        ArgumentNullException.ThrowIfNull(cards);
+
         _sessionCards = [.. cards.OrderBy(_ => Guid.NewGuid()).ToList()]; // Shuffle cards
+        if (_sessionCards.Count == 0)
+        {
+            throw new ArgumentException("Cannot start a review session with no cards.", nameof(cards));
+        }
+
         _timer.Start();
         this.deckID = deckID;
         _cardDeckMap = cardDeckMap;
@@ -320,16 +329,14 @@ public class ReviewViewModel : ViewModelBase
     public void QuitSession()
     {
         _timer.Stop();
-        _displayTimer?.Stop();
-        _displayTimer?.Dispose();
+        Dispose();
         CompleteSession(isPartial: true);
     }
 
     private void CompleteSession(bool isPartial = false)
     {
         _timer.Stop();
-        _displayTimer?.Stop();
-        _displayTimer?.Dispose();
+        Dispose();
 
         int elapsedSeconds = (int)Math.Round(_timer.Elapsed.TotalSeconds);
         var totalAttempts = _attemptsByDeck.Values.Sum();
@@ -358,6 +365,19 @@ public class ReviewViewModel : ViewModelBase
         }
 
         OnSessionComplete?.Invoke(CorrectCount, questionsAttempted, _timer.Elapsed, isPartial);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _displayTimer?.Stop();
+        _displayTimer?.Dispose();
+        _displayTimer = null;
     }
 
     private void RecordCurrentCardResult(bool isCorrect)

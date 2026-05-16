@@ -22,12 +22,13 @@ public static class GradingConstants
     public const string GRADE_U = "U";
     public const string GRADE_UNGRADED = "-";
 
-    // Card type names
+    // Card type labels used by the editor UI
     public const string CARD_TYPE_FLIP = "Flip";
-    public const string CARD_TYPE_TYPE = "Type";
-    public const string CARD_TYPE_MULTI_CHOICE = "Multi-Choice";
+    public const string CARD_TYPE_TYPE = "Type to Answer";
+    public const string CARD_TYPE_MULTI_CHOICE = "Multi Choice";
     public const string CARD_TYPE_MATCH = "Match";
     public const string CARD_TYPE_TRUE_FALSE = "True/False";
+    public const string CARD_TYPE_MATCH_PLACEHOLDER = "Match The Cards";
 
     // True/False labels (default)
     public const string TRUE_LABEL = "True";

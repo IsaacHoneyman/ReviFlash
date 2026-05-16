@@ -46,19 +46,29 @@ public static class BackupManager
 
         Directory.CreateDirectory(destinationFolder);
 
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        string metadataPath = Path.Combine(baseDirectory, "metadata.json");
+        string databasePath = Path.Combine(baseDirectory, "reviflash.db");
+
+        if (!File.Exists(metadataPath) || !File.Exists(databasePath))
+        {
+            throw new FileNotFoundException("Cannot create a backup because metadata.json or reviflash.db is missing.");
+        }
+
         string zipFilePath = Path.Combine(destinationFolder, $"ReviFlashBackup_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
         using var zip = new FileStream(zipFilePath, FileMode.Create);
         using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
 
-        AddFileToArchiveSafely(archive, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "metadata.json"));
-        AddFileToArchiveSafely(archive, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reviflash.db"));
+        AddFileToArchiveSafely(archive, metadataPath);
+        AddFileToArchiveSafely(archive, databasePath);
     }
 
-    private static void AddFileToArchiveSafely(ZipArchive archive, string sourceFilePath)
+    private static bool AddFileToArchiveSafely(ZipArchive archive, string sourceFilePath)
     {
         if (!File.Exists(sourceFilePath))
         {
-            return;
+            Console.Error.WriteLine($"Skipping missing backup file: {sourceFilePath}");
+            return false;
         }
 
         string fileName = Path.GetFileName(sourceFilePath);
@@ -68,6 +78,7 @@ public static class BackupManager
         using var entryStream = entry.Open();
 
         fileStream.CopyTo(entryStream);
+        return true;
     }
 
     public static void TryRestoreFromBackup(string zipFilePath)

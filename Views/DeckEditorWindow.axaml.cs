@@ -20,8 +20,10 @@ public partial class DeckEditorWindow : Window
 
     private async void DeleteCard_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var card = (FlashCard)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCard"));
+        if (sender is not Button button || button.DataContext is not FlashCard card)
+        {
+            return;
+        }
 
         var dialog = new ConfirmDialogWindow("Are you sure you want to delete this flashcard?");
         bool confirmed = await dialog.ShowDialog<bool>(this);
@@ -34,8 +36,10 @@ public partial class DeckEditorWindow : Window
 
     private async void EditCard_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var card = (FlashCard)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCard"));
+        if (sender is not Button button || button.DataContext is not FlashCard card)
+        {
+            return;
+        }
 
         if (DataContext is DeckEditorViewModel vm)
         {
@@ -53,8 +57,10 @@ public partial class DeckEditorWindow : Window
 
     private async void CopyCard_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var card = (FlashCard)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCard"));
+        if (sender is not Button button || button.DataContext is not FlashCard card)
+        {
+            return;
+        }
 
         if (DataContext is DeckEditorViewModel vm)
         {
@@ -79,14 +85,9 @@ public partial class DeckEditorWindow : Window
 
     private void RemoveOption_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button button)
+        if (sender is not Button button || button.DataContext is not MultiChoiceOptionEditor option)
         {
-            throw new InvalidOperationException("Sender is not a Button");
-        }
-
-        if (button.DataContext is not MultiChoiceOptionEditor option)
-        {
-            throw new InvalidOperationException("Button's DataContext is not a MultiChoiceOptionEditor");
+            return;
         }
 
         if (DataContext is DeckEditorViewModel vm)
@@ -105,14 +106,9 @@ public partial class DeckEditorWindow : Window
 
     private void RemoveMatchPair_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button button)
+        if (sender is not Button button || button.DataContext is not MatchPairEditor pair)
         {
-            throw new InvalidOperationException("Sender is not a Button");
-        }
-
-        if (button.DataContext is not MatchPairEditor pair)
-        {
-            throw new InvalidOperationException("Button's DataContext is not a MatchPairEditor");
+            return;
         }
 
         if (DataContext is DeckEditorViewModel vm)

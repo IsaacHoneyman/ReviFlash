@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Diagnostics;
 using System.Text.Json;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
@@ -58,8 +59,10 @@ public static class MetaDataManager
             string json = File.ReadAllText(GetFilePath());
             return JsonSerializer.Deserialize<AppMetaData>(json) ?? new AppMetaData();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Debug.WriteLine($"Failed to load metadata: {ex.Message}");
+            Console.Error.WriteLine($"Failed to load metadata: {ex.Message}");
             return new AppMetaData();
         }
     }

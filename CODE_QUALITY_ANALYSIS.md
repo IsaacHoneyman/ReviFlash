@@ -531,12 +531,22 @@ foreach (var item in wrongList) WrongMatches.Add(item);
 | MEDIUM   | 18    | Hardcoded strings, duplicate logic, long methods, error handling, tight coupling |
 | LOW      | 8     | Naming, logging, configuration, performance micro-optimizations |
 
+## COMPLETED REFACTOR WORK
+
+- Theme ordering in [ViewModels/SettingsViewModel.cs](ViewModels/SettingsViewModel.cs) now follows default, dark themes, then light themes.
+- Shared grading logic now lives in [Utilities/GradeCalculator.cs](Utilities/GradeCalculator.cs) and [Utilities/GradingConstants.cs](Utilities/GradingConstants.cs).
+- The Phase 1 runtime-risk items are addressed in [Views/DeckEditorWindow.axaml.cs](Views/DeckEditorWindow.axaml.cs) and [ViewModels/ReviewViewModel.cs](ViewModels/ReviewViewModel.cs).
+- Review sessions now validate empty card lists and dispose their timer cleanly.
+- [ViewModels/DeckEditorViewModel.cs](ViewModels/DeckEditorViewModel.cs) now shares card-loading logic and splits the save flow into smaller helpers.
+- Deck editor type switching now restores the expected blank defaults for match and multi-choice cards.
+- Metadata loading now logs parse/read failures instead of swallowing them.
+- Backup creation now fails fast if required files are missing instead of silently producing a partial archive.
+- Repository methods that operate on deck IDs now reject invalid sentinel/zero IDs early.
+- The app version string now comes from the assembly instead of a hardcoded literal.
+- Deck editor snapshot naming and reset flow are now explicit and consistent.
+
 ## RECOMMENDED FIX ORDER
 
-1. **Phase 1 (HIGH):** Fix null safety issues in Views and ReviewViewModel (Issues 1-3)
-2. **Phase 2 (MEDIUM):** Extract constants and utilities (Issues 4-5, 12, 27)
-3. **Phase 3 (MEDIUM):** Refactor long methods and duplicate logic (Issues 6-7, 19-20)
-4. **Phase 4 (MEDIUM):** Improve error handling (Issues 8-9, 23)
-5. **Phase 5 (MEDIUM):** Reduce coupling with App static (Issue 11)
-6. **Phase 6 (LOW):** Code cleanup, naming, configuration (remaining issues)
+1. **Next:** Finish the remaining [DeckEditorViewModel.cs](ViewModels/DeckEditorViewModel.cs) cleanup around editor state/type handling (residual Issues 6, 7, 19).
+2. **Then:** Reduce coupling with `App.CurrentMetaData` and clean up remaining low-priority issues (Issues 11, 27, 28, 29).
 

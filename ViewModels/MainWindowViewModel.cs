@@ -3,8 +3,10 @@ using ReviFlash.Models;
 using ReviFlash.Data;
 using System.Linq;
 using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
@@ -50,11 +52,22 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
-    private static string _versionText = "Version B-0.7.1";
-    public static string VersionText
+    public static string VersionText => $"Version B-{GetAssemblyVersionText()}";
+
+    private static string GetAssemblyVersionText()
     {
-        get => _versionText;
-        set => _versionText = value;
+        var assembly = typeof(MainWindowViewModel).Assembly;
+        var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+        if (!string.IsNullOrWhiteSpace(informationalVersion))
+        {
+            return informationalVersion.Split('+')[0];
+        }
+
+        var version = assembly.GetName().Version;
+        return version is null
+            ? "Unknown"
+            : $"{version.Major}.{version.Minor}.{version.Build}";
     }
 
 
@@ -344,24 +357,7 @@ public class MainWindowViewModel : ViewModelBase
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
-
-        // Calculate grade using same logic as SummaryViewModel, show "-" if no questions
-        if (total == 0)
-        {
-            Grade = "-";
-        }
-        else
-        {
-            Grade = Percentage switch
-            {
-                >= 90 => "A*",
-                >= 80 => "A",
-                >= 70 => "B",
-                >= 60 => "C",
-                >= 50 => "D",
-                _ => "U"
-            };
-        }
+        Grade = GradeCalculator.CalculateGradeWithDefault(correct, total);
     }
 
     public void RefreshStats()
@@ -419,24 +415,7 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         double percentage = totalQuestions > 0 ? Math.Round((double)totalCorrect / totalQuestions * 100, 1) : 0;
-        
-        string grade;
-        if (totalQuestions == 0)
-        {
-            grade = "-";
-        }
-        else
-        {
-            grade = percentage switch
-            {
-                >= 90 => "A*",
-                >= 80 => "A",
-                >= 70 => "B",
-                >= 60 => "C",
-                >= 50 => "D",
-                _ => "U"
-            };
-        }
+        string grade = GradeCalculator.CalculateGradeWithDefault(totalCorrect, totalQuestions);
 
         TotalQuestions = totalQuestions;
         TotalCorrect = totalCorrect;
@@ -459,23 +438,7 @@ public class MainWindowViewModel : ViewModelBase
         var (correct, total, timeTakenSeconds) = FlashCardRepository.GetStats(deckID, timeModifier);
         double percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
 
-        string grade;
-        if (total == 0)
-        {
-            grade = "-";
-        }
-        else
-        {
-            grade = percentage switch
-            {
-                >= 90 => "A*",
-                >= 80 => "A",
-                >= 70 => "B",
-                >= 60 => "C",
-                >= 50 => "D",
-                _ => "U"
-            };
-        }
+        string grade = GradeCalculator.CalculateGradeWithDefault(correct, total);
 
         return (correct, total, timeTakenSeconds, percentage, grade);
     }

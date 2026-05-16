@@ -74,6 +74,28 @@
                             AcceptsReturn="True" TextWrapping="Wrap"
                             Background="{DynamicResource AppBackground}" />
 
+                        <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1" CornerRadius="8" Padding="12" MinHeight="60">
+                            <ItemsControl ItemsSource="{Binding NewBack, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="converters:MixedMathSegment">
+                                        <Grid>
+                                            <TextBlock Text="{Binding Content}"
+                                                TextWrapping="Wrap"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                IsVisible="{Binding IsText}" />
+                                            <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
                         <StackPanel Spacing="6" IsVisible="{Binding IsTypeCardType}">
                             <TextBlock Text="Typed Answer (Accepted Input)" FontSize="12"
                                 Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
@@ -104,28 +126,6 @@
                                 </ItemsControl>
                             </Border>
                         </StackPanel>
-
-                        <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                            BorderThickness="1" CornerRadius="8" Padding="12" MinHeight="60">
-                            <ItemsControl ItemsSource="{Binding NewBack, Converter={StaticResource MixedMathSegmentsConverter}}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="converters:MixedMathSegment">
-                                        <Grid>
-                                            <TextBlock Text="{Binding Content}"
-                                                TextWrapping="Wrap"
-                                                Foreground="{DynamicResource TextPrimary}"
-                                                IsVisible="{Binding IsText}" />
-                                            <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Border>
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsTrueFalseCardType}">
                             <TextBlock Text="True/False labels" FontSize="12"
