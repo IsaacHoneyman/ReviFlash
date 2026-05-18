@@ -5,6 +5,7 @@ using ReviFlash.Utilities;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 namespace ReviFlash.ViewModels;
 
@@ -259,6 +260,7 @@ public class DeckEditorViewModel : ViewModelBase
 
     public DeckEditorViewModel(FlashCardDeck deck, AppMetaData settings)
     {
+        var constructionStopwatch = Stopwatch.StartNew();
         _settings = settings;
         _settings.PropertyChanged += Settings_PropertyChanged;
         CurrentDeck = deck;
@@ -270,6 +272,7 @@ public class DeckEditorViewModel : ViewModelBase
         AddMatchPairRow();
 
         LoadCards();
+        AppLogger.Info($"Deck editor view model initialized for deck '{CurrentDeck.Name}' ({CurrentDeck.ID}) in {constructionStopwatch.ElapsedMilliseconds} ms.");
     }
 
     private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -282,12 +285,11 @@ public class DeckEditorViewModel : ViewModelBase
 
     private void LoadCards()
     {
-        Cards.Clear();
+        var loadStopwatch = Stopwatch.StartNew();
         var savedCards = FlashCardRepository.GetCardsForDeck(CurrentDeck.ID);
-        foreach (var card in savedCards)
-        {
-            Cards.Add(card);
-        }
+        Cards = new ObservableCollection<FlashCard>(savedCards);
+        OnPropertyChanged(nameof(Cards));
+        AppLogger.Info($"Loaded {Cards.Count} cards into deck editor for '{CurrentDeck.Name}' ({CurrentDeck.ID}) in {loadStopwatch.ElapsedMilliseconds} ms.");
     }
 
     public void AddNewCard()

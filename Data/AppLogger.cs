@@ -9,6 +9,7 @@ public static class AppLogger
     {
         Trace.WriteLine(message);
         Debug.WriteLine(message);
+        Console.WriteLine(message);
     }
 
     public static void Error(string message)

@@ -41,14 +41,6 @@
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
         </Grid>
-
-        <StackPanel Spacing="6" Margin="0,6,0,0">
-            <TextBlock Text="Database Path" FontSize="12"
-                       Foreground="{DynamicResource TextSecondary}" Margin="4,0,0,0"/>
-            <TextBox Text="{Binding DatabasePath, Mode=TwoWay}"
-                     Watermark="Full path to reviflash.db"
-                     Background="{DynamicResource AppBackground}"/>
-        </StackPanel>
     </StackPanel>
 </Border>
 
@@ -119,8 +111,8 @@
                 CornerRadius="8"
                 Padding="12,10"
                 FontWeight="Bold"
-                Background="{DynamicResource AccentBrush}"
-                Foreground="{DynamicResource IconForeground}"
+                Background="{DynamicResource CardBorder}"
+                Foreground="{DynamicResource TextPrimary}"
                 Cursor="Hand"/>
 
             <Button Grid.Column="1"

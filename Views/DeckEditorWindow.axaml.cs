@@ -2,15 +2,28 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ReviFlash.ViewModels;
 using ReviFlash.Models;
+using ReviFlash.Data;
 using System;
+using System.Diagnostics;
 
 namespace ReviFlash.Views;
 
 public partial class DeckEditorWindow : Window
 {
+    private readonly Stopwatch _loadStopwatch = Stopwatch.StartNew();
+
     public DeckEditorWindow()
     {
         InitializeComponent();
+        Loaded += DeckEditorWindow_Loaded;
+    }
+
+    private void DeckEditorWindow_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            AppLogger.Info($"Deck editor window loaded for deck '{vm.CurrentDeck.Name}' ({vm.CurrentDeck.ID}) in {_loadStopwatch.ElapsedMilliseconds} ms.");
+        }
     }
 
     private void AddCard_Click(object sender, RoutedEventArgs e)

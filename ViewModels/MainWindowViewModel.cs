@@ -648,7 +648,15 @@ public class MainWindowViewModel : ViewModelBase
 
         if (ShowGroups)
         {
-            foreach (var group in StudyGroups)
+            IEnumerable<StudyGroup> groupsToAdd = StudyGroups;
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var lowerSearch = SearchText.ToLower();
+                groupsToAdd = groupsToAdd.Where(g => g.Name.ToLower().Contains(lowerSearch));
+            }
+
+            foreach (var group in groupsToAdd)
             {
                 DashboardItems.Add(group);
             }

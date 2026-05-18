@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using System.Text.Json;
 using ReviFlash.Models;
 
@@ -317,9 +318,18 @@ public static class FlashCardRepository
     {
         ValidateDeckId(deckID);
 
+        var loadStopwatch = Stopwatch.StartNew();
         var cards = new List<FlashCard>();
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
+
+        int flipCount = 0;
+        int typeCount = 0;
+        int multiCount = 0;
+        int matchCount = 0;
+        int trueFalseCount = 0;
+        int multiOptionLoadTimeMs = 0;
+        int matchPairLoadTimeMs = 0;
 
         var command = connection.CreateCommand();
         command.CommandText = "SELECT ID, CardType, Front, Back, Answer FROM Cards WHERE DeckID = $deckId;";
@@ -337,16 +347,18 @@ public static class FlashCardRepository
             // Polymorphic Instantiation based on the database flag
             FlashCard card = cardType switch
             {
-                nameof(TypeFlashCard) => new TypeFlashCard(front, back, answer, id),
-                nameof(FlipFlashCard) => new FlipFlashCard(front, back, id),
-                nameof(MultiFlashCard) => new MultiFlashCard(front, back, GetCardOptions(id, connection), id),
-                nameof(MatchFlashCard) => new MatchFlashCard(front, back, GetMatchPairs(id, connection), id),
-                nameof(TrueFalseFlashCard) => BuildTrueFalseCard(front, back, answer, id),
+                nameof(TypeFlashCard) => CreateTypeCard(front, back, answer, id, ref typeCount),
+                nameof(FlipFlashCard) => CreateFlipCard(front, back, id, ref flipCount),
+                nameof(MultiFlashCard) => CreateMultiCard(front, back, id, connection, ref multiCount, ref multiOptionLoadTimeMs),
+                nameof(MatchFlashCard) => CreateMatchCard(front, back, id, connection, ref matchCount, ref matchPairLoadTimeMs),
+                nameof(TrueFalseFlashCard) => CreateTrueFalseCard(front, back, answer, id, ref trueFalseCount),
                 _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
             };
 
             cards.Add(card);
         }
+
+        AppLogger.Info($"Loaded {cards.Count} cards for deck {deckID} in {loadStopwatch.ElapsedMilliseconds} ms (flip={flipCount}, type={typeCount}, multi={multiCount}, match={matchCount}, truefalse={trueFalseCount}, multiOptions={multiOptionLoadTimeMs} ms, matchPairs={matchPairLoadTimeMs} ms).");
         return cards;
     }
 
@@ -567,6 +579,42 @@ public static class FlashCardRepository
         }
 
         return options;
+    }
+
+    private static FlashCard CreateFlipCard(string front, string back, ulong id, ref int flipCount)
+    {
+        flipCount++;
+        return new FlipFlashCard(front, back, id);
+    }
+
+    private static FlashCard CreateTypeCard(string front, string back, string? answer, ulong id, ref int typeCount)
+    {
+        typeCount++;
+        return new TypeFlashCard(front, back, answer, id);
+    }
+
+    private static FlashCard CreateTrueFalseCard(string front, string back, string? answer, ulong id, ref int trueFalseCount)
+    {
+        trueFalseCount++;
+        return BuildTrueFalseCard(front, back, answer, id);
+    }
+
+    private static FlashCard CreateMultiCard(string front, string back, ulong id, Microsoft.Data.Sqlite.SqliteConnection connection, ref int multiCount, ref int multiOptionLoadTimeMs)
+    {
+        multiCount++;
+        var stopwatch = Stopwatch.StartNew();
+        var options = GetCardOptions(id, connection);
+        multiOptionLoadTimeMs += (int)stopwatch.ElapsedMilliseconds;
+        return new MultiFlashCard(front, back, options, id);
+    }
+
+    private static FlashCard CreateMatchCard(string front, string back, ulong id, Microsoft.Data.Sqlite.SqliteConnection connection, ref int matchCount, ref int matchPairLoadTimeMs)
+    {
+        matchCount++;
+        var stopwatch = Stopwatch.StartNew();
+        var pairs = GetMatchPairs(id, connection);
+        matchPairLoadTimeMs += (int)stopwatch.ElapsedMilliseconds;
+        return new MatchFlashCard(front, back, pairs, id);
     }
 
     private static void SaveMatchPairs(ulong cardID, List<(string leftText, string rightText)> pairs, Microsoft.Data.Sqlite.SqliteConnection connection)
