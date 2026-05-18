@@ -656,6 +656,22 @@ public class MainWindowViewModel : ViewModelBase
                 groupsToAdd = groupsToAdd.Where(g => g.Name.ToLower().Contains(lowerSearch));
             }
 
+            if (SelectedSortOption != null)
+            {
+                var timeModifier = SelectedTimePeriod?.TimeModifier;
+
+                groupsToAdd = SelectedSortOption.Key switch
+                {
+                    "name_asc" => groupsToAdd.OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase),
+                    "name_desc" => groupsToAdd.OrderByDescending(g => g.Name, StringComparer.OrdinalIgnoreCase),
+                    "cards_asc" => groupsToAdd.OrderBy(g => g.CardCount),
+                    "cards_desc" => groupsToAdd.OrderByDescending(g => g.CardCount),
+                    "studytime_asc" => groupsToAdd.OrderBy(g => GetGroupStudyTimeSeconds(g, timeModifier)),
+                    "studytime_desc" => groupsToAdd.OrderByDescending(g => GetGroupStudyTimeSeconds(g, timeModifier)),
+                    _ => groupsToAdd
+                };
+            }
+
             foreach (var group in groupsToAdd)
             {
                 DashboardItems.Add(group);
@@ -669,6 +685,19 @@ public class MainWindowViewModel : ViewModelBase
                 DashboardItems.Add(deck);
             }
         }
+    }
+
+    private static int GetGroupStudyTimeSeconds(StudyGroup group, string? timeModifier)
+    {
+        var decksInGroup = FlashCardRepository.GetDecksForStudyGroup(group.ID);
+        int totalSeconds = 0;
+
+        foreach (var deck in decksInGroup)
+        {
+            totalSeconds += FlashCardRepository.GetStats(deck.ID, timeModifier).timeTakenSeconds;
+        }
+
+        return totalSeconds;
     }
 
     public void EditDeck(FlashCardDeck deckToEdit)
