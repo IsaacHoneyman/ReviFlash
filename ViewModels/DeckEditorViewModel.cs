@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using ReviFlash.Models;
 using ReviFlash.Data;
@@ -5,7 +6,9 @@ using ReviFlash.Utilities;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Threading;
+using Avalonia.Threading;
 
 namespace ReviFlash.ViewModels;
 
@@ -66,6 +69,8 @@ public class DeckEditorViewModel : ViewModelBase
     private readonly AppMetaData _settings;
     public FlashCardDeck CurrentDeck { get; }
     public ObservableCollection<FlashCard> Cards { get; set; } = new();
+    private bool _isCardsLoading;
+    private CancellationTokenSource? _cardLoadCts;
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
     public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();
     private FlashCard? _editingCard;
@@ -203,6 +208,16 @@ public class DeckEditorViewModel : ViewModelBase
     public bool ShowFrontBackEditor => true;
     public bool ShowAdditionalFieldLatexPreviews => _settings.ShowAdditionalFieldLatexPreviews;
 
+    public bool IsCardsLoading
+    {
+        get => _isCardsLoading;
+        private set
+        {
+            _isCardsLoading = value;
+            OnPropertyChanged(nameof(IsCardsLoading));
+        }
+    }
+
     private void InitializeCardTypeDefaults()
     {
         if (SelectedCardType == GradingConstants.CARD_TYPE_MATCH)
@@ -260,7 +275,6 @@ public class DeckEditorViewModel : ViewModelBase
 
     public DeckEditorViewModel(FlashCardDeck deck, AppMetaData settings)
     {
-        var constructionStopwatch = Stopwatch.StartNew();
         _settings = settings;
         _settings.PropertyChanged += Settings_PropertyChanged;
         CurrentDeck = deck;
@@ -270,9 +284,6 @@ public class DeckEditorViewModel : ViewModelBase
         AddOptionRow();
         AddMatchPairRow();
         AddMatchPairRow();
-
-        LoadCards();
-        AppLogger.Info($"Deck editor view model initialized for deck '{CurrentDeck.Name}' ({CurrentDeck.ID}) in {constructionStopwatch.ElapsedMilliseconds} ms.");
     }
 
     private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -285,11 +296,77 @@ public class DeckEditorViewModel : ViewModelBase
 
     private void LoadCards()
     {
-        var loadStopwatch = Stopwatch.StartNew();
         var savedCards = FlashCardRepository.GetCardsForDeck(CurrentDeck.ID);
         Cards = new ObservableCollection<FlashCard>(savedCards);
         OnPropertyChanged(nameof(Cards));
-        AppLogger.Info($"Loaded {Cards.Count} cards into deck editor for '{CurrentDeck.Name}' ({CurrentDeck.ID}) in {loadStopwatch.ElapsedMilliseconds} ms.");
+    }
+
+    public async Task LoadCardsIncrementallyAsync(int batchSize = 8)
+    {
+        if (IsCardsLoading && _cardLoadCts is not null)
+        {
+            return;
+        }
+
+        IsCardsLoading = true;
+        var cts = new CancellationTokenSource();
+        var previous = Interlocked.Exchange(ref _cardLoadCts, cts);
+        previous?.Cancel();
+        previous?.Dispose();
+        var token = cts.Token;
+
+        try
+        {
+            var savedCards = await Task.Run(() => FlashCardRepository.GetCardsForDeck(CurrentDeck.ID));
+
+            await Dispatcher.UIThread.InvokeAsync(Cards.Clear, DispatcherPriority.Background);
+
+            for (int i = 0; i < savedCards.Count; i += batchSize)
+            {
+                token.ThrowIfCancellationRequested();
+                var batch = savedCards.Skip(i).Take(batchSize).ToList();
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    foreach (var card in batch)
+                    {
+                        Cards.Add(card);
+                    }
+                }, DispatcherPriority.Background);
+
+                await Task.Delay(8, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            AppLogger.Info($"Cancelled card load for deck '{CurrentDeck.Name}' ({CurrentDeck.ID}).");
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error($"Failed to load cards for deck '{CurrentDeck.Name}' ({CurrentDeck.ID})", ex);
+        }
+        finally
+        {
+            IsCardsLoading = false;
+            if (ReferenceEquals(_cardLoadCts, cts))
+            {
+                _cardLoadCts = null;
+                cts.Dispose();
+            }
+        }
+    }
+
+    public void PrepareForCardLoad()
+    {
+        IsCardsLoading = true;
+        Cards.Clear();
+    }
+
+    public void CancelCardLoad()
+    {
+        _cardLoadCts?.Cancel();
+        _cardLoadCts?.Dispose();
+        _cardLoadCts = null;
+        IsCardsLoading = false;
     }
 
     public void AddNewCard()

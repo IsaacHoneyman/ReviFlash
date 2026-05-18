@@ -349,7 +349,13 @@
             </ScrollViewer>
 
             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
-                <ItemsControl ItemsSource="{Binding Cards}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Loading cards..."
+                        FontSize="12" FontWeight="Bold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        IsVisible="{Binding IsCardsLoading}" />
+
+                    <ItemsControl ItemsSource="{Binding Cards}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:FlashCard">
                             <Border Background="{DynamicResource CardBackground}"
@@ -552,7 +558,8 @@
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    </ItemsControl>
+                </StackPanel>
             </ScrollViewer>
         </Grid>
     </Grid>

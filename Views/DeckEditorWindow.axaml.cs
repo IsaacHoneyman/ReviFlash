@@ -1,29 +1,56 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using ReviFlash.ViewModels;
 using ReviFlash.Models;
 using ReviFlash.Data;
 using System;
-using System.Diagnostics;
 
 namespace ReviFlash.Views;
 
 public partial class DeckEditorWindow : Window
 {
-    private readonly Stopwatch _loadStopwatch = Stopwatch.StartNew();
+    private bool _cardLoadScheduled;
 
     public DeckEditorWindow()
     {
         InitializeComponent();
-        Loaded += DeckEditorWindow_Loaded;
+        Opened += DeckEditorWindow_Opened;
+        Closed += DeckEditorWindow_Closed;
     }
 
-    private void DeckEditorWindow_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void DeckEditorWindow_Opened(object? sender, EventArgs e)
     {
         if (DataContext is DeckEditorViewModel vm)
         {
-            AppLogger.Info($"Deck editor window loaded for deck '{vm.CurrentDeck.Name}' ({vm.CurrentDeck.ID}) in {_loadStopwatch.ElapsedMilliseconds} ms.");
+            vm.PrepareForCardLoad();
+            ScheduleCardLoad(vm);
         }
+    }
+
+    private void ScheduleCardLoad(DeckEditorViewModel vm)
+    {
+        if (_cardLoadScheduled)
+        {
+            return;
+        }
+
+        _cardLoadScheduled = true;
+        DispatcherTimer.RunOnce(() =>
+        {
+            _cardLoadScheduled = false;
+            _ = vm.LoadCardsIncrementallyAsync();
+        }, TimeSpan.FromMilliseconds(50));
+    }
+
+    private void DeckEditorWindow_Closed(object? sender, EventArgs e)
+    {
+        if (DataContext is DeckEditorViewModel vm)
+        {
+            vm.CancelCardLoad();
+        }
+
+        _cardLoadScheduled = false;
     }
 
     private void AddCard_Click(object sender, RoutedEventArgs e)
