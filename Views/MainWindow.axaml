@@ -77,7 +77,7 @@
 
     <Window.DataTemplates>
         <DataTemplate DataType="{x:Type models:StudyGroup}">
-            <Border Width="250" Height="138"
+            <Border Width="286" Height="145"
                 Background="{DynamicResource CardBackground}"
                 BorderBrush="{DynamicResource GradientStart}"
                 BorderThickness="1.5" CornerRadius="20"
@@ -94,13 +94,14 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Background="{DynamicResource GradientStart}"
-                            CornerRadius="8" Padding="8,4">
+                            CornerRadius="8" Padding="9,5"
+                            Height="28" MinHeight="28">
                             <StackPanel Orientation="Horizontal"
                                 Spacing="4">
                                 <TextBlock Text="{Binding DeckCount}"
-                                    FontSize="12" FontWeight="Bold"
+                                    FontSize="13" FontWeight="Bold"
                                     Foreground="{DynamicResource PrimaryButtonForeground}" />
-                                <TextBlock Text="Decks" FontSize="10"
+                                <TextBlock Text="Decks" FontSize="11"
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource PrimaryButtonForeground}" />
                             </StackPanel>
@@ -145,14 +146,19 @@
                         </StackPanel>
                     </Grid>
 
-                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
-                        <TextBlock Text="{Binding Name}" FontSize="22"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            TextWrapping="Wrap" />
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                        <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
+                            <TextBlock Text="{Binding Name}" FontSize="22"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextWrapping="Wrap"
+                                TextTrimming="CharacterEllipsis"
+                                MaxLines="2"
+                                VerticalAlignment="Center" />
+                        </Border>
                         <TextBlock Text="Click to review group" FontSize="14"
                             Foreground="{DynamicResource TextSecondary}"
-                            Margin="0, 12, 0, 0" />
+                            Margin="0, 6, 0, 0" />
                     </StackPanel>
 
                 </Grid>
@@ -161,7 +167,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type models:FlashCardDeck}">
-            <Border Width="250" Height="138"
+            <Border Width="286" Height="145"
                 Background="{DynamicResource CardBackground}"
                 BorderBrush="{DynamicResource CardBorder}"
                 BorderThickness="1.5" CornerRadius="20"
@@ -178,13 +184,14 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Background="{DynamicResource BadgeBackground}"
-                            CornerRadius="8" Padding="8,4">
+                            CornerRadius="8" Padding="9,5"
+                            Height="28" MinHeight="28">
                             <StackPanel Orientation="Horizontal"
                                 Spacing="4">
                                 <TextBlock Text="{Binding CardCount}"
-                                    FontSize="12" FontWeight="Bold"
+                                    FontSize="13" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}" />
-                                <TextBlock Text="Cards" FontSize="10"
+                                <TextBlock Text="Cards" FontSize="11"
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource TextSecondary}" />
                             </StackPanel>
@@ -229,19 +236,24 @@
                         </StackPanel>
                     </Grid>
 
-                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
-                        <TextBlock Text="{Binding Name}" FontSize="22"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            TextWrapping="Wrap" />
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                        <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
+                            <TextBlock Text="{Binding Name}" FontSize="22"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextWrapping="Wrap"
+                                TextTrimming="CharacterEllipsis"
+                                MaxLines="2"
+                                VerticalAlignment="Center" />
+                        </Border>
                         <TextBlock Text="Click to review" FontSize="14"
                             Foreground="{DynamicResource TextSecondary}"
                             IsVisible="{Binding !IsSelectedForMultiReview}"
-                            Margin="0, 12, 0, 0" />
+                            Margin="0, 6, 0, 0" />
                         <TextBlock Text="Selected" FontSize="14"
                             Foreground="{DynamicResource GradientStart}"
                             IsVisible="{Binding IsSelectedForMultiReview}"
-                            Margin="0, 12, 0, 0" />
+                            Margin="0, 6, 0, 0" />
                     </StackPanel>
 
                 </Grid>
@@ -315,7 +327,9 @@
                         </Grid>
 
                         <Grid Grid.Row="1">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                Margin="0,0,-16,0"
+                                Padding="0,0,16,0">
                                 <ItemsControl ItemsSource="{Binding DashboardItems}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -514,7 +528,11 @@
 
                 <!-- Review Card -->
                 <Grid Grid.Row="1" Margin="0,0,0,16">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Center">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalAlignment="Center"
+                        Margin="0,0,-16,0"
+                        Padding="0,0,16,0">
                     <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
                         Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <StackPanel Spacing="20">

@@ -9,7 +9,8 @@
         CanResize="False"
         Background="{DynamicResource AppBackground}">
 
-    <ScrollViewer Margin="24"
+    <ScrollViewer Margin="24,24,8,24"
+                  Padding="0,0,16,0"
                   VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="16">
