@@ -855,6 +855,40 @@
                                                             HorizontalAlignment="Stretch"
                                                             HorizontalContentAlignment="Stretch"
                                                             CornerRadius="8" Padding="8,6">
+                                                            <ComboBox.SelectionBoxItemTemplate>
+                                                                <DataTemplate x:DataType="sys:String">
+                                                                    <Grid ClipToBounds="True">
+                                                                        <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                                            VerticalAlignment="Center" Margin="2">
+                                                                            <ItemsControl.ItemsPanel>
+                                                                                <ItemsPanelTemplate>
+                                                                                    <StackPanel Orientation="Horizontal" />
+                                                                                </ItemsPanelTemplate>
+                                                                            </ItemsControl.ItemsPanel>
+                                                                            <ItemsControl.ItemTemplate>
+                                                                                <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                                    <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                                        <Grid.ColumnDefinitions>
+                                                                                            <ColumnDefinition Width="*" />
+                                                                                            <ColumnDefinition Width="Auto" />
+                                                                                        </Grid.ColumnDefinitions>
+                                                                                        <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14"
+                                                                                            TextWrapping="NoWrap"
+                                                                                            TextTrimming="CharacterEllipsis"
+                                                                                            VerticalAlignment="Center"
+                                                                                            Foreground="{DynamicResource TextPrimary}"
+                                                                                            IsVisible="{Binding IsText}" />
+                                                                                        <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                                            VerticalAlignment="Center"
+                                                                                            IsVisible="{Binding IsMath}"
+                                                                                            Foreground="{DynamicResource TextPrimary}" />
+                                                                                    </Grid>
+                                                                                </DataTemplate>
+                                                                            </ItemsControl.ItemTemplate>
+                                                                        </ItemsControl>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ComboBox.SelectionBoxItemTemplate>
                                                             <ComboBox.ItemTemplate>
                                                                 <DataTemplate x:DataType="sys:String">
                                                                     <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
@@ -866,18 +900,23 @@
                                                                         </ItemsControl.ItemsPanel>
                                                                         <ItemsControl.ItemTemplate>
                                                                             <DataTemplate x:DataType="converters:MixedMathSegment">
-                                                                                <StackPanel Margin="0,0,1,0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                                    <TextBlock Text="{Binding Content}" FontSize="14"
+                                                                                <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition Width="*" />
+                                                                                        <ColumnDefinition Width="Auto" />
+                                                                                    </Grid.ColumnDefinitions>
+                                                                                    <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14"
                                                                                         TextWrapping="Wrap"
                                                                                         TextTrimming="None"
+                                                                                        MaxWidth="520"
                                                                                         VerticalAlignment="Center"
                                                                                         Foreground="{DynamicResource TextPrimary}"
                                                                                         IsVisible="{Binding IsText}" />
-                                                                                    <math:FormulaBlock Formula="{Binding Content}" FontSize="14"
+                                                                                    <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                                         VerticalAlignment="Center"
                                                                                         IsVisible="{Binding IsMath}"
                                                                                         Foreground="{DynamicResource TextPrimary}" />
-                                                                                </StackPanel>
+                                                                                </Grid>
                                                                             </DataTemplate>
                                                                         </ItemsControl.ItemTemplate>
                                                                     </ItemsControl>
