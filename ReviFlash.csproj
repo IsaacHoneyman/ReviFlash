@@ -5,11 +5,14 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <EnableDefaultAvaloniaXamlItems>false</EnableDefaultAvaloniaXamlItems>
     <Version>0.7.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Models\" />
+    <AvaloniaXaml Remove="**/*.axaml" />
+    <AvaloniaXaml Include="**/*.axaml" Exclude="**/bin/**;**/obj/**" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
