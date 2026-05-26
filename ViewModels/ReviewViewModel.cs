@@ -89,7 +89,22 @@ public class ReviewViewModel : ViewModelBase
         ? (trueFalseCard.CorrectAnswerIsTrue ? trueFalseCard.TrueLabel : trueFalseCard.FalseLabel)
         : "";
     public bool ShowBackAnswer => IsAnswerRevealed;
-    public bool IsAnswerChecked { get; set; } = false;
+    private bool _isAnswerChecked = false;
+    public bool IsAnswerChecked
+    {
+        get => _isAnswerChecked;
+        set
+        {
+            if (_isAnswerChecked == value)
+            {
+                return;
+            }
+
+            _isAnswerChecked = value;
+            OnPropertyChanged(nameof(IsAnswerChecked));
+            OnPropertyChanged(nameof(CanRetryLater));
+        }
+    }
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
     public ObservableCollection<ReviewMatchRow> MatchRows { get; } = new();
@@ -119,6 +134,8 @@ public class ReviewViewModel : ViewModelBase
 
     public bool ShouldShowTimer => _settings.ShowTimer;
     public bool ShouldShowProgress => _settings.ShowProgress;
+    public bool ShouldShowSkipRedoButtons => _settings.ShowSkipRedoButtons;
+    public bool CanRetryLater => _settings.ShowSkipRedoButtons && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
 
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
@@ -168,6 +185,10 @@ public class ReviewViewModel : ViewModelBase
             case nameof(AppMetaData.ShowProgress):
                 OnPropertyChanged(nameof(ShouldShowProgress));
                 break;
+            case nameof(AppMetaData.ShowSkipRedoButtons):
+                OnPropertyChanged(nameof(ShouldShowSkipRedoButtons));
+                OnPropertyChanged(nameof(CanRetryLater));
+                break;
         }
     }
 
@@ -183,6 +204,7 @@ public class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsAnswerRevealed));
         OnPropertyChanged(nameof(ShowAnswerButtonVisible));
         OnPropertyChanged(nameof(ShowBackAnswer));
+        OnPropertyChanged(nameof(CanRetryLater));
     }
 
     public void MarkCorrect()
@@ -305,42 +327,39 @@ public class ReviewViewModel : ViewModelBase
         if (_currentIndex < _sessionCards.Count - 1)
         {
             _currentIndex++;
-            IsAnswerRevealed = false;
-            IsAnswerChecked = false;
-            IsAnswerCorrect = false;
-            UserTypedAnswer = "";
-            _currentCardHasBeenScored = false;
-            SelectedWrongOptions.Clear();
-            MissedCorrectOptions.Clear();
-            WrongMatches.Clear();
-            LoadMultiChoiceOptionsForCurrentCard();
-            LoadMatchRowsForCurrentCard();
-            OnPropertyChanged(nameof(CurrentCard));
-            OnPropertyChanged(nameof(IsAnswerRevealed));
-            OnPropertyChanged(nameof(IsAnswerChecked));
-            OnPropertyChanged(nameof(UserTypedAnswer));
-            OnPropertyChanged(nameof(CurrentNumber));
-            OnPropertyChanged(nameof(ProgressPercentage));
-            OnPropertyChanged(nameof(ProgressCardCount));
-            OnPropertyChanged(nameof(IsTypeCard));
-            OnPropertyChanged(nameof(IsFlipCard));
-            OnPropertyChanged(nameof(IsMultiChoiceCard));
-            OnPropertyChanged(nameof(IsMatchCard));
-            OnPropertyChanged(nameof(IsTrueFalseCard));
-            OnPropertyChanged(nameof(CurrentTypeCardAnswer));
-            OnPropertyChanged(nameof(CurrentTrueFalseTrueOptionText));
-            OnPropertyChanged(nameof(CurrentTrueFalseFalseOptionText));
-            OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
-            OnPropertyChanged(nameof(ShowBackAnswer));
-            OnPropertyChanged(nameof(ShowAnswerButtonVisible));
-            OnPropertyChanged(nameof(HasSelectedWrongOptions));
-            OnPropertyChanged(nameof(HasMissedCorrectOptions));
-            OnPropertyChanged(nameof(HasWrongMatches));
+            ResetForCurrentCard();
         }
         else
         {
             CompleteSession();
         }
+    }
+
+    public void SkipCard()
+    {
+        if (!_settings.ShowSkipRedoButtons || _sessionCards.Count <= 1)
+        {
+            return;
+        }
+
+        MoveCurrentCardToEnd();
+        ResetForCurrentCard();
+    }
+
+    public void RetryLater()
+    {
+        if (!_settings.ShowSkipRedoButtons || _sessionCards.Count <= 1)
+        {
+            return;
+        }
+
+        if (!IsAnswerChecked && !(IsFlipCard && IsAnswerRevealed))
+        {
+            return;
+        }
+
+        MoveCurrentCardToEnd();
+        ResetForCurrentCard();
     }
 
     public void QuitSession()
@@ -478,6 +497,52 @@ public class ReviewViewModel : ViewModelBase
                 SelectedRightText = null,
             });
         }
+    }
+
+    private void MoveCurrentCardToEnd()
+    {
+        var current = _sessionCards[_currentIndex];
+        _sessionCards.RemoveAt(_currentIndex);
+        _sessionCards.Add(current);
+
+        if (_currentIndex >= _sessionCards.Count)
+        {
+            _currentIndex = _sessionCards.Count - 1;
+        }
+    }
+
+    private void ResetForCurrentCard()
+    {
+        IsAnswerRevealed = false;
+        IsAnswerChecked = false;
+        IsAnswerCorrect = false;
+        UserTypedAnswer = "";
+        _currentCardHasBeenScored = false;
+        SelectedWrongOptions.Clear();
+        MissedCorrectOptions.Clear();
+        WrongMatches.Clear();
+        LoadMultiChoiceOptionsForCurrentCard();
+        LoadMatchRowsForCurrentCard();
+        OnPropertyChanged(nameof(CurrentCard));
+        OnPropertyChanged(nameof(IsAnswerRevealed));
+        OnPropertyChanged(nameof(UserTypedAnswer));
+        OnPropertyChanged(nameof(CurrentNumber));
+        OnPropertyChanged(nameof(ProgressPercentage));
+        OnPropertyChanged(nameof(ProgressCardCount));
+        OnPropertyChanged(nameof(IsTypeCard));
+        OnPropertyChanged(nameof(IsFlipCard));
+        OnPropertyChanged(nameof(IsMultiChoiceCard));
+        OnPropertyChanged(nameof(IsMatchCard));
+        OnPropertyChanged(nameof(IsTrueFalseCard));
+        OnPropertyChanged(nameof(CurrentTypeCardAnswer));
+        OnPropertyChanged(nameof(CurrentTrueFalseTrueOptionText));
+        OnPropertyChanged(nameof(CurrentTrueFalseFalseOptionText));
+        OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
+        OnPropertyChanged(nameof(ShowBackAnswer));
+        OnPropertyChanged(nameof(ShowAnswerButtonVisible));
+        OnPropertyChanged(nameof(HasSelectedWrongOptions));
+        OnPropertyChanged(nameof(HasMissedCorrectOptions));
+        OnPropertyChanged(nameof(HasWrongMatches));
     }
 
 }

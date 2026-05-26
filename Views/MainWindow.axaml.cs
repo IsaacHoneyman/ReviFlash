@@ -488,6 +488,8 @@ public partial class MainWindow : Window
         }
     }
     private void NextCard_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.NextCard();
+    private void SkipCard_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.SkipCard();
+    private void RetryLater_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.RetryLater();
     private void Correct_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkCorrect();
     private void Incorrect_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkIncorrect();
     

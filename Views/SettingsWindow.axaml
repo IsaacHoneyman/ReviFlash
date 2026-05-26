@@ -68,6 +68,13 @@
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowProgress}"
                       HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
+
+        <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Show Skip and Retry Later Buttons" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipRedoButtons}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
     </StackPanel>
 </Border>
 

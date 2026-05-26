@@ -94,6 +94,17 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    public bool ShowSkipRedoButtons
+    {
+        get => _settings.ShowSkipRedoButtons;
+        set
+        {
+            _settings.ShowSkipRedoButtons = value;
+            OnPropertyChanged(nameof(ShowSkipRedoButtons));
+            MetaDataManager.SaveMetaData(_settings);
+        }
+    }
+
     public bool ShowAdditionalFieldLatexPreviews
     {
         get => _settings.ShowAdditionalFieldLatexPreviews;
@@ -136,6 +147,9 @@ public class SettingsViewModel : ViewModelBase
                 break;
             case nameof(AppMetaData.ShowProgress):
                 OnPropertyChanged(nameof(ShowProgress));
+                break;
+            case nameof(AppMetaData.ShowSkipRedoButtons):
+                OnPropertyChanged(nameof(ShowSkipRedoButtons));
                 break;
             case nameof(AppMetaData.ShowAdditionalFieldLatexPreviews):
                 OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
@@ -246,6 +260,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedTheme));
         OnPropertyChanged(nameof(ShowTimer));
         OnPropertyChanged(nameof(ShowProgress));
+        OnPropertyChanged(nameof(ShowSkipRedoButtons));
         OnPropertyChanged(nameof(ShowBackgroundSwirl));
         OnPropertyChanged(nameof(DatabasePath));
         LoadDecks();

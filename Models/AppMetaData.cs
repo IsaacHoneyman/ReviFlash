@@ -17,6 +17,7 @@ public class AppMetaData : INotifyPropertyChanged
     private string _version = MainWindowViewModel.VersionText;
     private bool _showTimer = true;
     private bool _showProgress = true;
+    private bool _showSkipRedoButtons = true;
     private bool _showAdditionalFieldLatexPreviews = true;
     private bool _showBackgroundSwirl = true;
     private string _databasePath = AppStoragePaths.DatabasePath;
@@ -69,6 +70,12 @@ public class AppMetaData : INotifyPropertyChanged
         set => SetField(ref _showProgress, value);
     }
 
+    public bool ShowSkipRedoButtons
+    {
+        get => _showSkipRedoButtons;
+        set => SetField(ref _showSkipRedoButtons, value);
+    }
+
     public bool ShowAdditionalFieldLatexPreviews
     {
         get => _showAdditionalFieldLatexPreviews;
@@ -116,6 +123,7 @@ public class AppMetaData : INotifyPropertyChanged
         Version = other.Version;
         ShowTimer = other.ShowTimer;
         ShowProgress = other.ShowProgress;
+        ShowSkipRedoButtons = other.ShowSkipRedoButtons;
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;
         DatabasePath = other.DatabasePath;

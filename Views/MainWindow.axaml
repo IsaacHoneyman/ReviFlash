@@ -7,7 +7,7 @@
     xmlns:converters="using:ReviFlash.Converters"
     x:Class="ReviFlash.Views.MainWindow"
     x:DataType="vm:MainWindowViewModel"
-    Icon="/Assets/avalonia-logo.ico"
+    Icon="/Assets/ReviFlashLogo.ico"
     Title="ReviFlash"
     Width="1000" Height="600"
     WindowStartupLocation="CenterScreen"
@@ -518,10 +518,14 @@
                     
                     <!-- Quit Button -->
                     <Button Grid.Column="2" Click="QuitSession_Click" 
-                        Background="#70FFFFFF" CornerRadius="4" Padding="4" Height="28" Width="28"
+                        Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource CardBorder}"
+                        BorderThickness="1"
+                        CornerRadius="10" Padding="16,10"
                         VerticalAlignment="Top" Margin="0, 0, 0, 0" HorizontalAlignment="Right" Cursor="Hand"
+                        Opacity="0.85"
                         ToolTip.Tip="Quit and save progress">
-                        <TextBlock Text="✕" FontSize="16" Foreground="{DynamicResource IconForeground}" 
+                        <TextBlock Text="Quit" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
                             VerticalAlignment="Center" HorizontalAlignment="Center" />
                     </Button>
                 </Grid>
@@ -591,7 +595,9 @@
                             <Button Content="Show Answer" Click="ShowAnswer_Click"
                                 IsVisible="{Binding ShowAnswerButtonVisible}"
                                 FontSize="16"
-                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}" />
                             
                             <!-- Type Card: Text Input -->
                             <StackPanel Spacing="10" IsVisible="{Binding IsTypeCard}">
@@ -632,7 +638,15 @@
                                     <!-- Next Button -->
                                     <Button Content="Next" Click="NextCard_Click"
                                         FontSize="16"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    <Button Content="Retry Later" Click="RetryLater_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        IsVisible="{Binding CanRetryLater}" />
                                 </StackPanel>
                             </StackPanel>
 
@@ -802,7 +816,15 @@
 
                                     <Button Content="Next" Click="NextCard_Click"
                                         FontSize="16"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    <Button Content="Retry Later" Click="RetryLater_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        IsVisible="{Binding CanRetryLater}" />
                                 </StackPanel>
                             </StackPanel>
 
@@ -1060,7 +1082,15 @@
 
                                     <Button Content="Next" Click="NextCard_Click"
                                         FontSize="16"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    <Button Content="Retry Later" Click="RetryLater_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        IsVisible="{Binding CanRetryLater}" />
                                 </StackPanel>
                             </StackPanel>
 
@@ -1102,30 +1132,50 @@
 
                                     <Button Content="Next" Click="NextCard_Click"
                                         FontSize="16"
-                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    <Button Content="Retry Later" Click="RetryLater_Click"
+                                        FontSize="16"
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        IsVisible="{Binding CanRetryLater}" />
                                 </StackPanel>
                             </StackPanel>
 
                             <!-- Flip Card: Answer Reveal (Both Flip and Type manual mode) -->
                             <StackPanel Orientation="Horizontal" Spacing="20"
                                 HorizontalAlignment="Center" IsVisible="{Binding IsFlipCard}">
-                                <Button Content="✕ Incorrect" Click="Incorrect_Click"
-                                    FontSize="16"
-                                    Background="#60FF4444" Padding="20,10"
-                                    MinWidth="170"
-                                    HorizontalContentAlignment="Center"
-                                    IsVisible="{Binding IsAnswerRevealed}" />
-                                <Button Content="✓ Correct" Click="Correct_Click"
-                                    FontSize="16"
-                                    Background="#6044FF44" Padding="20,10"
-                                    MinWidth="170"
-                                    HorizontalContentAlignment="Center"
-                                    IsVisible="{Binding IsAnswerRevealed}" />
+                                    <Button Content="✕ Incorrect" Click="Incorrect_Click"
+                                        FontSize="16"
+                                        Background="#60FF4444" Padding="20,10"
+                                        Width="180" Height="46"
+                                        HorizontalContentAlignment="Center"
+                                        IsVisible="{Binding IsAnswerRevealed}" />
+                                    <Button Content="✓ Correct" Click="Correct_Click"
+                                        FontSize="16"
+                                        Background="#6044FF44" Padding="20,10"
+                                        Width="180" Height="46"
+                                        HorizontalContentAlignment="Center"
+                                        IsVisible="{Binding IsAnswerRevealed}" />
                             </StackPanel>
                         </StackPanel>
                         </StackPanel>
                     </Border>
                     </ScrollViewer>
+
+                    <Button Content="Skip" Click="SkipCard_Click"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Margin="0,0,24,8"
+                        FontSize="14" Padding="16,10"
+                        Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource CardBorder}"
+                        BorderThickness="1"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Opacity="0.85"
+                        IsVisible="{Binding ShouldShowSkipRedoButtons}"
+                        CornerRadius="10" />
                 </Grid>
             </Grid>
         </DataTemplate>
