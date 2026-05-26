@@ -291,7 +291,7 @@
                     </Button>
                 </Grid>
 
-                <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 24">
+                    <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 0">
 
                     <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" Margin="0, 0, 24, 0">
 
@@ -346,7 +346,7 @@
                                 BorderThickness="1"
                                 CornerRadius="14"
                                 Padding="10"
-                                Margin="0,0,0,0">
+                                Margin="0,0,0,24">
                                 <StackPanel Orientation="Horizontal"
                                     Spacing="12"
                                     VerticalAlignment="Center">
@@ -531,7 +531,7 @@
                 </Grid>
 
                 <!-- Review Card -->
-                <Grid Grid.Row="1" Margin="0,0,0,16">
+                <Grid Grid.Row="1" Margin="0">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                         HorizontalScrollBarVisibility="Disabled"
                         VerticalAlignment="Center"
@@ -1167,7 +1167,7 @@
 
                     <Button Content="Skip" Click="SkipCard_Click"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                        Margin="0,0,24,8"
+                        Margin="0,0,24,16"
                         FontSize="14" Padding="16,10"
                         Background="{DynamicResource CardBackground}"
                         BorderBrush="{DynamicResource CardBorder}"
