@@ -126,6 +126,17 @@ public static class DatabaseManager
             FOREIGN KEY (DeckId) REFERENCES Decks(Id) ON DELETE CASCADE
         )";
         deckStatsCommand.ExecuteNonQuery();
+
+        var answerStreaksCommand = connection.CreateCommand();
+        answerStreaksCommand.CommandText = @"
+            CREATE TABLE IF NOT EXISTS AnswerStreaks (
+                TargetType TEXT NOT NULL,
+                TargetId INTEGER NOT NULL,
+                BestStreak INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (TargetType, TargetId)
+            )
+        ";
+        answerStreaksCommand.ExecuteNonQuery();
     }
 
     public static SqliteConnection GetConnection()

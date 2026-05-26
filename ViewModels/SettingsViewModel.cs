@@ -104,6 +104,17 @@ public class SettingsViewModel : ViewModelBase
             MetaDataManager.SaveMetaData(_settings);
         }
     }
+    
+    public bool ShowAnswerStreakInReview
+    {
+        get => _settings.ShowAnswerStreakInReview;
+        set
+        {
+            _settings.ShowAnswerStreakInReview = value;
+            OnPropertyChanged(nameof(ShowAnswerStreakInReview));
+            MetaDataManager.SaveMetaData(_settings);
+        }
+    }
 
     public bool ShowAdditionalFieldLatexPreviews
     {
@@ -150,6 +161,9 @@ public class SettingsViewModel : ViewModelBase
                 break;
             case nameof(AppMetaData.ShowSkipRedoButtons):
                 OnPropertyChanged(nameof(ShowSkipRedoButtons));
+                break;
+            case nameof(AppMetaData.ShowAnswerStreakInReview):
+                OnPropertyChanged(nameof(ShowAnswerStreakInReview));
                 break;
             case nameof(AppMetaData.ShowAdditionalFieldLatexPreviews):
                 OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
@@ -261,6 +275,7 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowTimer));
         OnPropertyChanged(nameof(ShowProgress));
         OnPropertyChanged(nameof(ShowSkipRedoButtons));
+        OnPropertyChanged(nameof(ShowAnswerStreakInReview));
         OnPropertyChanged(nameof(ShowBackgroundSwirl));
         OnPropertyChanged(nameof(DatabasePath));
         LoadDecks();

@@ -53,6 +53,7 @@ public class ReviewViewModel : ViewModelBase
     private readonly AppMetaData _settings;
     private readonly List<FlashCard> _sessionCards;
     private readonly Dictionary<ulong, ulong>? _cardDeckMap;
+    private readonly ulong? _reviewGroupId;
     private readonly Dictionary<ulong, int> _attemptsByDeck = [];
     private readonly Dictionary<ulong, int> _correctByDeck = [];
     private int _currentIndex = 0;
@@ -69,6 +70,8 @@ public class ReviewViewModel : ViewModelBase
 
     // Scoring
     public int CorrectCount { get; private set; } = 0;
+    public int CurrentAnswerStreak { get; private set; } = 0;
+    public int BestAnswerStreak { get; private set; } = 0;
     public bool IsAnswerRevealed { get; set; } = false;
     public string UserTypedAnswer { get; set; } = "";
     public Action<int, int, TimeSpan, bool> OnSessionComplete = delegate { };
@@ -136,11 +139,14 @@ public class ReviewViewModel : ViewModelBase
     public bool ShouldShowProgress => _settings.ShowProgress;
     public bool ShouldShowSkipRedoButtons => _settings.ShowSkipRedoButtons;
     public bool CanRetryLater => _settings.ShowSkipRedoButtons && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
+    public bool ShouldShowAnswerStreak => _settings.ShowAnswerStreakInReview;
+    public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
+    public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";
 
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
 
-    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, AppMetaData settings, Dictionary<ulong, ulong>? cardDeckMap = null)
+    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, AppMetaData settings, Dictionary<ulong, ulong>? cardDeckMap = null, ulong? reviewGroupId = null)
     {
         ArgumentNullException.ThrowIfNull(cards);
         _settings = settings;
@@ -155,6 +161,9 @@ public class ReviewViewModel : ViewModelBase
         _timer.Start();
         this.deckID = deckID;
         _cardDeckMap = cardDeckMap;
+        _reviewGroupId = reviewGroupId;
+
+        RefreshBestAnswerStreak();
 
         LoadMultiChoiceOptionsForCurrentCard();
         LoadMatchRowsForCurrentCard();
@@ -188,6 +197,9 @@ public class ReviewViewModel : ViewModelBase
             case nameof(AppMetaData.ShowSkipRedoButtons):
                 OnPropertyChanged(nameof(ShouldShowSkipRedoButtons));
                 OnPropertyChanged(nameof(CanRetryLater));
+                break;
+            case nameof(AppMetaData.ShowAnswerStreakInReview):
+                OnPropertyChanged(nameof(ShouldShowAnswerStreak));
                 break;
         }
     }
@@ -424,6 +436,7 @@ public class ReviewViewModel : ViewModelBase
         }
 
         _currentCardHasBeenScored = true;
+        UpdateAnswerStreak(isCorrect);
         ulong targetDeckId = GetCurrentCardDeckId();
 
         _attemptsByDeck[targetDeckId] = _attemptsByDeck.GetValueOrDefault(targetDeckId) + 1;
@@ -432,6 +445,39 @@ public class ReviewViewModel : ViewModelBase
             CorrectCount++;
             _correctByDeck[targetDeckId] = _correctByDeck.GetValueOrDefault(targetDeckId) + 1;
         }
+    }
+
+    private void UpdateAnswerStreak(bool isCorrect)
+    {
+        CurrentAnswerStreak = isCorrect ? CurrentAnswerStreak + 1 : 0;
+        OnPropertyChanged(nameof(CurrentAnswerStreak));
+        OnPropertyChanged(nameof(CurrentAnswerStreakText));
+
+        var (targetType, targetId) = GetBestStreakTarget();
+        if (CurrentAnswerStreak > BestAnswerStreak)
+        {
+            BestAnswerStreak = CurrentAnswerStreak;
+            FlashCardRepository.UpdateBestAnswerStreak(targetType, targetId, BestAnswerStreak);
+            OnPropertyChanged(nameof(BestAnswerStreakText));
+        }
+    }
+
+    private void RefreshBestAnswerStreak()
+    {
+        var (targetType, targetId) = GetBestStreakTarget();
+        BestAnswerStreak = FlashCardRepository.GetBestAnswerStreak(targetType, targetId);
+        OnPropertyChanged(nameof(BestAnswerStreak));
+        OnPropertyChanged(nameof(BestAnswerStreakText));
+    }
+
+    private (string targetType, ulong targetId) GetBestStreakTarget()
+    {
+        if (_reviewGroupId.HasValue)
+        {
+            return ("Group", _reviewGroupId.Value);
+        }
+
+        return ("Deck", GetCurrentCardDeckId());
     }
 
     private ulong GetCurrentCardDeckId()
@@ -523,6 +569,7 @@ public class ReviewViewModel : ViewModelBase
         WrongMatches.Clear();
         LoadMultiChoiceOptionsForCurrentCard();
         LoadMatchRowsForCurrentCard();
+        RefreshBestAnswerStreak();
         OnPropertyChanged(nameof(CurrentCard));
         OnPropertyChanged(nameof(IsAnswerRevealed));
         OnPropertyChanged(nameof(UserTypedAnswer));

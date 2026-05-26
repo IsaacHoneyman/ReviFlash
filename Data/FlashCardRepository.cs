@@ -430,6 +430,69 @@ public static class FlashCardRepository
         return (0, 0, 0);
     }
 
+    public static int GetBestAnswerStreak(string targetType, ulong targetId)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT BestStreak
+            FROM AnswerStreaks
+            WHERE TargetType = $type AND TargetId = $id;
+        ";
+        command.Parameters.AddWithValue("$type", targetType);
+        command.Parameters.AddWithValue("$id", targetId);
+
+        var result = command.ExecuteScalar();
+        return result is null ? 0 : Convert.ToInt32(result);
+    }
+
+    public static void UpdateBestAnswerStreak(string targetType, ulong targetId, int bestStreak)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var insertCommand = connection.CreateCommand();
+        insertCommand.CommandText = @"
+            INSERT OR IGNORE INTO AnswerStreaks (TargetType, TargetId, BestStreak)
+            VALUES ($type, $id, $best);
+        ";
+        insertCommand.Parameters.AddWithValue("$type", targetType);
+        insertCommand.Parameters.AddWithValue("$id", targetId);
+        insertCommand.Parameters.AddWithValue("$best", bestStreak);
+        insertCommand.ExecuteNonQuery();
+
+        var updateCommand = connection.CreateCommand();
+        updateCommand.CommandText = @"
+            UPDATE AnswerStreaks
+            SET BestStreak = CASE WHEN $best > BestStreak THEN $best ELSE BestStreak END
+            WHERE TargetType = $type AND TargetId = $id;
+        ";
+        updateCommand.Parameters.AddWithValue("$type", targetType);
+        updateCommand.Parameters.AddWithValue("$id", targetId);
+        updateCommand.Parameters.AddWithValue("$best", bestStreak);
+        updateCommand.ExecuteNonQuery();
+    }
+
+    public static int GetCardCount(ulong? deckID = null)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        var sql = "SELECT COUNT(*) FROM Cards";
+        if (deckID.HasValue)
+        {
+            sql += " WHERE DeckID = $deckId";
+            command.Parameters.AddWithValue("$deckId", deckID.Value);
+        }
+
+        command.CommandText = sql;
+        var result = command.ExecuteScalar();
+        return result is null ? 0 : Convert.ToInt32(result);
+    }
+
     public static void UpdateCard(FlashCard card)
     {
         using var connection = DatabaseManager.GetConnection();

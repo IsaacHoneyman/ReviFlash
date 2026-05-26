@@ -75,6 +75,13 @@
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipRedoButtons}"
                       HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
+
+        <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Show Answer Streak During Review" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowAnswerStreakInReview}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
     </StackPanel>
 </Border>
 

@@ -392,7 +392,7 @@
                         CornerRadius="20"
                         Padding="20">
                         <StackPanel Spacing="12">
-                            <Grid ColumnDefinitions="*, Auto">
+                            <Grid ColumnDefinitions="*">
                                 <TextBlock Grid.Column="0" Text="Overall Stats" FontSize="18" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}"
                                     IsVisible="{Binding !IsViewingAnyStats}" />
@@ -402,28 +402,36 @@
                                 <TextBlock Grid.Column="0" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}"
                                     IsVisible="{Binding IsViewingGroupStats}" />
-                                
-                                <Button Grid.Column="1" Click="CloseDecKStats_Click" 
-                                    Background="#70FFFFFF" CornerRadius="4" Padding="4" Height="28" Width="28"
-                                    IsVisible="{Binding IsViewingAnyStats}" VerticalAlignment="Center" HorizontalAlignment="Right"
-                                    Cursor="Hand">
-                                    <TextBlock Text="✕" FontSize="16" Foreground="{DynamicResource IconForeground}" 
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                <ComboBox Grid.Column="0" ItemsSource="{Binding TimePeriods}"
+                                    SelectedItem="{Binding SelectedTimePeriod}"
+                                    CornerRadius="8"
+                                    Height="40"
+                                    Padding="12, 8" FontSize="14"
+                                    Background="{DynamicResource StatTileBackground}"
+                                    Foreground="{DynamicResource TextPrimary}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="vm:MainWindowViewModel+TimePeriodOption">
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+
+                                <Button Grid.Column="1" Click="CloseDecKStats_Click"
+                                    Background="{DynamicResource CardBackground}"
+                                    BorderBrush="{DynamicResource CardBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="10" Padding="16,10"
+                                    Height="40"
+                                    IsVisible="{Binding IsViewingAnyStats}" VerticalAlignment="Center"
+                                    Cursor="Hand" Opacity="0.85">
+                                    <TextBlock Text="Exit" FontSize="12" FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
                                         VerticalAlignment="Center" HorizontalAlignment="Center" />
                                 </Button>
                             </Grid>
-
-                            <ComboBox ItemsSource="{Binding TimePeriods}"
-                                SelectedItem="{Binding SelectedTimePeriod}"
-                                CornerRadius="8"
-                                Padding="12, 8" FontSize="14"
-                                Background="{DynamicResource StatTileBackground}"
-                                Foreground="{DynamicResource TextPrimary}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate DataType="vm:MainWindowViewModel+TimePeriodOption">
-                                        <TextBlock Text="{Binding Label}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
 
                             <Border Background="{DynamicResource StatTileBackground}"
                                 CornerRadius="10"
@@ -481,9 +489,32 @@
                             </Border>
 
                             <Border Background="{DynamicResource StatTileBackground}"
-                                IsVisible="{Binding !IsViewingAnyStats}"
                                 CornerRadius="10"
                                 Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Time per Card"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding AverageTimePerCardText}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="24" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                CornerRadius="10"
+                                Padding="16"
+                                IsVisible="{Binding IsViewingAnyStats}">
+                                <StackPanel>
+                                    <TextBlock Text="Best Answer Streak"
+                                        Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                                    <TextBlock Text="{Binding BestAnswerStreakText}" Foreground="{DynamicResource TextPrimary}"
+                                        FontSize="24" FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource StatTileBackground}"
+                                CornerRadius="10"
+                                Padding="16"
+                                IsVisible="{Binding !IsViewingAnyStats}">
                                 <StackPanel>
                                     <TextBlock Text="Best Ever Streak"
                                         Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -503,9 +534,16 @@
                 <!-- Top Bar with Timer, Progress, and Quit Button -->
                 <Grid Grid.Row="0" ColumnDefinitions="*, Auto, *" Margin="24, 16, 24, 16" VerticalAlignment="Center">
                     <!-- Timer -->
-                    <StackPanel Grid.Column="0" IsVisible="{Binding ShouldShowTimer}">
-                        <TextBlock Text="Time" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
-                        <TextBlock Text="{Binding TimerText}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <StackPanel IsVisible="{Binding ShouldShowTimer}">
+                            <TextBlock Text="Time" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TimerText}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding ShouldShowAnswerStreak}">
+                            <TextBlock Text="Streak" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding CurrentAnswerStreakText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="{Binding BestAnswerStreakText}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
                     </StackPanel>
                     
                     <!-- Progress (Center) -->

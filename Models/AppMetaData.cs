@@ -14,10 +14,12 @@ public class AppMetaData : INotifyPropertyChanged
     private DateOnly _lastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
     private int _launchStreak = 1;
     private int _bestLaunchStreak = 1;
+    private int _bestAnswerStreak = 0;
     private string _version = MainWindowViewModel.VersionText;
     private bool _showTimer = true;
     private bool _showProgress = true;
     private bool _showSkipRedoButtons = true;
+    private bool _showAnswerStreakInReview = true;
     private bool _showAdditionalFieldLatexPreviews = true;
     private bool _showBackgroundSwirl = true;
     private string _databasePath = AppStoragePaths.DatabasePath;
@@ -52,6 +54,12 @@ public class AppMetaData : INotifyPropertyChanged
         set => SetField(ref _bestLaunchStreak, value);
     }
 
+    public int BestAnswerStreak
+    {
+        get => _bestAnswerStreak;
+        set => SetField(ref _bestAnswerStreak, value);
+    }
+
     public string Version
     {
         get => _version;
@@ -74,6 +82,12 @@ public class AppMetaData : INotifyPropertyChanged
     {
         get => _showSkipRedoButtons;
         set => SetField(ref _showSkipRedoButtons, value);
+    }
+
+    public bool ShowAnswerStreakInReview
+    {
+        get => _showAnswerStreakInReview;
+        set => SetField(ref _showAnswerStreakInReview, value);
     }
 
     public bool ShowAdditionalFieldLatexPreviews
@@ -120,10 +134,12 @@ public class AppMetaData : INotifyPropertyChanged
         LastLaunchDate = other.LastLaunchDate;
         LaunchStreak = other.LaunchStreak;
         BestLaunchStreak = other.BestLaunchStreak;
+        BestAnswerStreak = other.BestAnswerStreak;
         Version = other.Version;
         ShowTimer = other.ShowTimer;
         ShowProgress = other.ShowProgress;
         ShowSkipRedoButtons = other.ShowSkipRedoButtons;
+        ShowAnswerStreakInReview = other.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;
         DatabasePath = other.DatabasePath;

@@ -248,7 +248,7 @@ public partial class MainWindow : Window
         var border = (Border)sender;
         if (border.DataContext is StudyGroup group)
         {
-            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID));
+            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID), group.ID);
         }
     }
 
@@ -272,7 +272,7 @@ public partial class MainWindow : Window
         var border = (Border)sender;
         if (border.DataContext is StudyGroup group)
         {
-            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID));
+            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID), group.ID);
             e.Handled = true;
         }
     }
@@ -400,7 +400,7 @@ public partial class MainWindow : Window
             vm.CurrentPage = reviewVM;
     }
 
-    private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks)
+    private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks, ulong? groupId = null)
     {
         var settings = GetSettings();
         var allCards = new List<FlashCard>();
@@ -424,7 +424,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, settings, cardDeckMap)
+        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, settings, cardDeckMap, groupId)
         {
             OnSessionComplete = (score, total, time, isPartial) =>
             {

@@ -54,6 +54,13 @@ public class MainWindowViewModel : ViewModelBase
         set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
     }
 
+    private string _bestAnswerStreakText = "0";
+    public string BestAnswerStreakText
+    {
+        get => _bestAnswerStreakText;
+        set { _bestAnswerStreakText = value; OnPropertyChanged(nameof(BestAnswerStreakText)); }
+    }
+
     public static string VersionText => $"Version B-{GetAssemblyVersionText()}";
 
     private static string GetAssemblyVersionText()
@@ -194,7 +201,23 @@ public class MainWindowViewModel : ViewModelBase
     public int TotalQuestions
     {
         get => _totalQuestions;
-        set { _totalQuestions = value; OnPropertyChanged(nameof(TotalQuestions)); }
+        set
+        {
+            _totalQuestions = value;
+            OnPropertyChanged(nameof(TotalQuestions));
+        }
+    }
+
+    private int _totalCardCount = 0;
+    public int TotalCardCount
+    {
+        get => _totalCardCount;
+        set
+        {
+            _totalCardCount = value;
+            OnPropertyChanged(nameof(TotalCardCount));
+            OnPropertyChanged(nameof(AverageTimePerCardText));
+        }
     }
 
     private int _totalCorrect = 0;
@@ -227,6 +250,7 @@ public class MainWindowViewModel : ViewModelBase
             _totalTimeSeconds = value;
             OnPropertyChanged(nameof(TotalTimeSeconds));
             OnPropertyChanged(nameof(TotalTimeFormatted));
+            OnPropertyChanged(nameof(AverageTimePerCardText));
         }
     }
 
@@ -236,6 +260,27 @@ public class MainWindowViewModel : ViewModelBase
         {
             var time = TimeSpan.FromSeconds(TotalTimeSeconds);
             return time.TotalHours >= 1 ? time.ToString(@"hh\:mm\:ss") : time.ToString(@"mm\:ss");
+        }
+    }
+
+    public string AverageTimePerCardText
+    {
+        get
+        {
+            if (TotalCardCount <= 0)
+            {
+                return "0:00";
+            }
+
+            var avgSeconds = (int)Math.Round((double)TotalTimeSeconds / TotalCardCount);
+            var time = TimeSpan.FromSeconds(avgSeconds);
+
+            if (time.TotalHours >= 1)
+            {
+                return time.ToString(@"h\:mm\:ss");
+            }
+
+            return time.ToString(@"m\:ss");
         }
     }
 
@@ -318,6 +363,7 @@ public class MainWindowViewModel : ViewModelBase
         _settings = settings;
         _settings.PropertyChanged += Settings_PropertyChanged;
         RefreshStreakTexts();
+        RefreshAnswerStreakText();
         CurrentPage = this;
 
         // Initialize time period options
@@ -361,6 +407,9 @@ public class MainWindowViewModel : ViewModelBase
             case nameof(AppMetaData.BestLaunchStreak):
                 RefreshStreakTexts();
                 break;
+            case nameof(AppMetaData.BestAnswerStreak):
+                RefreshAnswerStreakText();
+                break;
         }
     }
 
@@ -368,6 +417,11 @@ public class MainWindowViewModel : ViewModelBase
     {
         StreakText = $"{_settings.LaunchStreak} Day Streak";
         BestEverStreakText = $"{_settings.BestLaunchStreak} Days";
+    }
+
+    private void RefreshAnswerStreakText()
+    {
+        BestAnswerStreakText = _settings.BestAnswerStreak.ToString();
     }
 
     private void LoadStats()
@@ -378,6 +432,8 @@ public class MainWindowViewModel : ViewModelBase
         TotalQuestions = total;
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
+        TotalCardCount = FlashCardRepository.GetCardCount();
+        BestAnswerStreakText = "0";
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
         Grade = GradeCalculator.CalculateGradeWithDefault(correct, total);
     }
@@ -409,6 +465,8 @@ public class MainWindowViewModel : ViewModelBase
         TotalQuestions = total;
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
+        TotalCardCount = deck.CardCount;
+        BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Deck", deck.ID).ToString();
         Percentage = percentage;
         Grade = grade;
     }
@@ -427,6 +485,7 @@ public class MainWindowViewModel : ViewModelBase
         int totalCorrect = 0;
         int totalQuestions = 0;
         int totalSeconds = 0;
+        int totalCards = 0;
 
         foreach (var deck in decksInGroup)
         {
@@ -434,6 +493,7 @@ public class MainWindowViewModel : ViewModelBase
             totalCorrect += correct;
             totalQuestions += total;
             totalSeconds += timeTakenSeconds;
+            totalCards += deck.CardCount;
         }
 
         double percentage = totalQuestions > 0 ? Math.Round((double)totalCorrect / totalQuestions * 100, 1) : 0;
@@ -442,6 +502,8 @@ public class MainWindowViewModel : ViewModelBase
         TotalQuestions = totalQuestions;
         TotalCorrect = totalCorrect;
         TotalTimeSeconds = totalSeconds;
+        TotalCardCount = totalCards;
+        BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Group", group.ID).ToString();
         Percentage = percentage;
         Grade = grade;
     }
