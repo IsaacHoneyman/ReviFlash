@@ -57,7 +57,3 @@ Replace `<RID>` with the runtime identifier for your target platform (e.g. `linu
 
 - This project is a personal/local-first app; user data is stored locally in an SQLite database.
 - Some parts of the codebase were initially scaffolded with AI assistance — contributions to improve design and tests are appreciated.
-
-## License
-
-See the repository license file for terms (if present).
