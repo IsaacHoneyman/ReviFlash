@@ -27,9 +27,11 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        bool includeStats = this.FindControl<CheckBox>("IncludeStatsInBackupCheckBox")?.IsChecked == true;
+
         try
         {
-            BackupManager.TryCreateBackup(folders[0].Path.LocalPath);
+            BackupManager.TryCreateBackup(folders[0].Path.LocalPath, includeStats);
             SetBackupStatus("Backup created successfully.");
         }
         catch (Exception ex)

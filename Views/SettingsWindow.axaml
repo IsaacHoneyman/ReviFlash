@@ -118,6 +118,18 @@
                    TextWrapping="Wrap"
                    Foreground="{DynamicResource TextSecondary}"/>
 
+            <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Grid.Column="0"
+                           Text="Include flashcard stats in backup"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimary}"/>
+                <CheckBox x:Name="IncludeStatsInBackupCheckBox"
+                          Grid.Column="1"
+                          IsChecked="True"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"/>
+            </Grid>
+
             <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
             <Button Grid.Column="0"
                 Content="Create Backup"

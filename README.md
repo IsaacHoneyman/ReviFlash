@@ -1,59 +1,63 @@
 # Revi Flash
 
-Revi Flash is a custom-built Anki alternative focused on clean study workflows, fast deck editing, and rich math/LaTeX support.
+Revi Flash is a local-first, math-friendly flashcard app (a desktop Anki alternative) built with C# and Avalonia.
 
-## What It Is
+## Overview
 
-Revi Flash is a desktop flashcard app built with C# and Avalonia. It is designed for students and self-learners who want more control over study cards without relying on cloud-first tools.
-
-*Note* - This project was heavily written using AI due to time constraints, and this may be reflected in code quality :D, will hopefully rewrite at later date.
+Designed for students and self-learners who want a fast, private, and extensible study tool with strong LaTeX/math support and flexible card types.
 
 ## Key Features
 
-- Multiple card types:
-  - Flip cards
-  - Type-to-answer cards
-  - Multi-choice cards
-  - Match-pair cards
-  - True/False cards with customizable labels
-- LaTeX support across card content:
-  - Front and back text supports inline LaTeX segments
-  - Card previews render math while editing
-  - Review mode renders math content in prompts and answers
-- Deck management:
-  - Create, edit, delete, and search decks
-  - Per-card editing with validation
-- Review sessions:
-  - Shuffled review order
-  - Built-in correctness tracking
-  - Session timer and progress indicators (configurable)
-- Stats tracking:
-  - Aggregate performance data
-  - Per-deck and overall stats by time period
-- Local-first storage:
-  - SQLite-backed persistence
+- Multiple card types (flip, type-to-answer, multi-choice, match-pair, true/false)
+- Inline and block LaTeX rendering in previews and review mode
+- Deck creation, editing, searching, and per-card validation
+- Shuffled review sessions, progress tracking, and basic statistics
+- Local SQLite-backed storage (no cloud by default)
 
 ## Tech Stack
 
 - C# / .NET 10
 - Avalonia UI
-- SQLite (via Microsoft.Data.Sqlite)
+- SQLite (Microsoft.Data.Sqlite)
 - AvaloniaMath for formula rendering
 
-## Run The App
+## Prerequisites
 
-From the project root:
+- .NET 10 SDK installed: https://dotnet.microsoft.com/
+- A supported OS (Windows, macOS, Linux)
+
+## Build & Run
+
+From the project root directory, restore and build the solution:
 
 ```bash
-dotnet run
+dotnet restore
+dotnet build
 ```
 
-To build:
+Run the app (from the project root):
 
 ```bash
-dotnet build "Revi Flash.sln"
+dotnet run --project "ReviFlash.csproj"
 ```
 
-## Project Goal
+To create a release build / publish (example for current OS):
 
-Revi Flash aims to be a practical, customizable, and math-friendly study tool: a custom-built Anki alternative with a modern desktop experience.
+```bash
+dotnet publish -c Release -r <RID> --self-contained false
+```
+
+Replace `<RID>` with the runtime identifier for your target platform (e.g. `linux-x64`, `win-x64`). See https://docs.microsoft.com/dotnet/core/rid-catalog for details.
+
+## Contributing
+
+- Bug reports, feature requests, and pull requests are welcome. Keep changes small and focused.
+
+## Notes
+
+- This project is a personal/local-first app; user data is stored locally in an SQLite database.
+- Some parts of the codebase were initially scaffolded with AI assistance — contributions to improve design and tests are appreciated.
+
+## License
+
+See the repository license file for terms (if present).

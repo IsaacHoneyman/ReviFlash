@@ -37,7 +37,7 @@ public static class BackupManager
 
     private sealed record DeckStatEntry(int CorrectCount, int TotalAttempts, int TimeTakenSeconds, string DateChecked);
 
-    public static void TryCreateBackup(string destinationFolder)
+    public static void TryCreateBackup(string destinationFolder, bool includeStats = true)
     {
         if (!Path.IsPathRooted(destinationFolder))
         {
@@ -54,15 +54,45 @@ public static class BackupManager
             throw new FileNotFoundException($"Cannot create a backup because {AppStoragePaths.MetadataFileName} or {AppStoragePaths.DatabaseFileName} is missing.");
         }
 
-        string zipFilePath = Path.Combine(destinationFolder, $"ReviFlashBackup_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
-        using var zip = new FileStream(zipFilePath, FileMode.Create);
-        using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
+        string? tempDatabasePath = null;
+        string databaseBackupPath = databasePath;
 
-        AddFileToArchiveSafely(archive, metadataPath);
-        AddFileToArchiveSafely(archive, databasePath);
+        try
+        {
+            if (!includeStats)
+            {
+                tempDatabasePath = Path.Combine(Path.GetTempPath(), $"ReviFlashBackup_{Guid.NewGuid():N}.db");
+                File.Copy(databasePath, tempDatabasePath, overwrite: true);
+                RemoveStatsFromDatabase(tempDatabasePath);
+                databaseBackupPath = tempDatabasePath;
+            }
+
+            string zipFilePath = Path.Combine(destinationFolder, $"ReviFlashBackup_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
+            using var zip = new FileStream(zipFilePath, FileMode.Create);
+            using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
+
+            AddFileToArchiveSafely(archive, metadataPath, AppStoragePaths.MetadataFileName);
+            AddFileToArchiveSafely(archive, databaseBackupPath, AppStoragePaths.DatabaseFileName);
+        }
+        finally
+        {
+            if (tempDatabasePath is not null)
+            {
+                try
+                {
+                    if (File.Exists(tempDatabasePath))
+                    {
+                        File.Delete(tempDatabasePath);
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
     }
 
-    private static bool AddFileToArchiveSafely(ZipArchive archive, string sourceFilePath)
+    private static bool AddFileToArchiveSafely(ZipArchive archive, string sourceFilePath, string entryName)
     {
         if (!File.Exists(sourceFilePath))
         {
@@ -70,14 +100,23 @@ public static class BackupManager
             return false;
         }
 
-        string fileName = Path.GetFileName(sourceFilePath);
-        var entry = archive.CreateEntry(fileName);
+        var entry = archive.CreateEntry(entryName);
 
         using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var entryStream = entry.Open();
 
         fileStream.CopyTo(entryStream);
         return true;
+    }
+
+    private static void RemoveStatsFromDatabase(string databasePath)
+    {
+        using var connection = new SqliteConnection($"Data Source={databasePath}");
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "DROP TABLE IF EXISTS DeckStats;";
+        command.ExecuteNonQuery();
     }
 
     public static void TryRestoreFromBackup(string zipFilePath)
