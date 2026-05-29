@@ -146,11 +146,23 @@ public static class BackupManager
             string stagedDatabase = ExtractEntryToPath(archive, AppStoragePaths.DatabaseFileName, stagingDirectory);
 
             var restoredMetadata = ReadMetadataFromPath(stagedMetadata);
-            DatabaseManager.ConfigureDatabasePath(restoredMetadata.DatabasePath);
+            // DatabaseManager.ConfigureDatabasePath(restoredMetadata.DatabasePath); Don't use old one
             databasePath = DatabaseManager.DatabasePath;
 
             BackupExistingFile(metadataPath, stagingDirectory, $"{AppStoragePaths.MetadataFileName}.bak");
             BackupExistingFile(databasePath, stagingDirectory, $"{AppStoragePaths.DatabaseFileName}.bak");
+
+            // Ensure target directories exist before copying files
+            string? metadataDir = Path.GetDirectoryName(metadataPath);
+            string? databaseDir = Path.GetDirectoryName(databasePath);
+            if (!string.IsNullOrWhiteSpace(metadataDir))
+            {
+                Directory.CreateDirectory(metadataDir);
+            }
+            if (!string.IsNullOrWhiteSpace(databaseDir))
+            {
+                Directory.CreateDirectory(databaseDir);
+            }
 
             SqliteConnection.ClearAllPools();
 
@@ -327,8 +339,10 @@ public static class BackupManager
 
     private static void ApplyRestoredMetadata(AppMetaData metadata)
     {
+        // Don't restore DatabasePath from backup as it may contain old machine-specific path
+        // Reset it to current application's path for cross-machine compatibility
+        metadata.DatabasePath = AppStoragePaths.DatabasePath;
         ReviFlash.App.SetCurrentMetaData(metadata);
-        DatabaseManager.ConfigureDatabasePath(metadata.DatabasePath);
         SettingsViewModel.ApplyTheme(metadata, metadata.Theme);
     }
 
