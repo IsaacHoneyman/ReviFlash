@@ -379,6 +379,19 @@
                                         Background="{DynamicResource StatTileBackground}"
                                         Foreground="{DynamicResource TextPrimary}"
                                         Cursor="Hand" />
+                                    <Button Click="OpenOnlineImport_Click"
+                                        Content="Online Import"
+                                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource StatTileBackground}"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Cursor="Hand" />
+
+                                    <Button Click="OpenOnlineExport_Click"
+                                        Content="Online Export"
+                                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                        Background="{DynamicResource StatTileBackground}"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Cursor="Hand" />
                                 </StackPanel>
                             </Border>
                         </Grid>

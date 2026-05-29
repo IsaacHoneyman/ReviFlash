@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ReviFlash.ViewModels"
+        x:Class="ReviFlash.Views.OnlineImportWindow"
+        x:DataType="vm:OnlineImportViewModel"
+        Title="Online Import"
+        Width="600" Height="400"
+        WindowStartupLocation="CenterOwner">
+
+  <Border Background="{DynamicResource AppBackground}" Padding="16">
+    <TextBlock Text="Online Import (coming soon)" Foreground="{DynamicResource TextPrimary}" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" />
+  </Border>
+
+</Window>

@@ -381,6 +381,18 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void OpenOnlineImport_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new OnlineImportWindow();
+        await window.ShowDialog(this);
+    }
+
+    private async void OpenOnlineExport_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new OnlineExportWindow();
+        await window.ShowDialog(this);
+    }
+
     private void StartReviewSession(FlashCardDeck deck)
     {
         var settings = GetSettings();
