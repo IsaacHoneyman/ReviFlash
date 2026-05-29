@@ -56,28 +56,35 @@
                    Foreground="{DynamicResource TextPrimary}"/>
         
         <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Timer During Review" VerticalAlignment="Center"
+            <TextBlock Grid.Column="0" Text="Show Timer" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextPrimary}"/>
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowTimer}"
                       HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
         <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Progress Meter During Review" VerticalAlignment="Center"
+            <TextBlock Grid.Column="0" Text="Show Progress Meter" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextPrimary}"/>
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowProgress}"
                       HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
         <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Skip and Retry Later Buttons" VerticalAlignment="Center"
+            <TextBlock Grid.Column="0" Text="Show Skip Button" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipRedoButtons}"
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipButton}"
                       HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
         <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Answer Streak During Review" VerticalAlignment="Center"
+            <TextBlock Grid.Column="0" Text="Show Retry Later Button" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ShowRetryLaterButton}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*, Auto">
+            <TextBlock Grid.Column="0" Text="Show Answer Streak" VerticalAlignment="Center"
                        Foreground="{DynamicResource TextPrimary}"/>
             <CheckBox Grid.Column="1" IsChecked="{Binding ShowAnswerStreakInReview}"
                       HorizontalAlignment="Right" VerticalAlignment="Center" />
@@ -161,8 +168,8 @@
         </StackPanel>
         </Border>
 
-            <Border Background="#33FF4B6E"
-                    BorderBrush="#D9FF4B6E"
+            <Border Background="{DynamicResource SurfaceOverlayBackground}"
+                    BorderBrush="{DynamicResource DangerForeground}"
                     BorderThickness="1.5"
                     CornerRadius="10"
                     Padding="16">
@@ -170,7 +177,7 @@
                     <TextBlock Text="Danger Zone"
                                FontWeight="SemiBold"
                                FontSize="16"
-                               Foreground="#D72649"/>
+                               Foreground="{DynamicResource DangerForeground}"/>
 
                     <TextBlock Text="Delete all flashcard stats across every deck. This cannot be undone."
                                TextWrapping="Wrap"
@@ -182,7 +189,7 @@
                             CornerRadius="8"
                             Padding="12,10"
                             FontWeight="Bold"
-                            Background="#D9D72649"
+                            Background="{DynamicResource DangerBackground}"
                             Foreground="{DynamicResource IconForeground}"
                             Cursor="Hand"/>
 
@@ -195,7 +202,7 @@
 
                     <TextBlock Text="Delete Individual Deck Stats"
                                FontWeight="SemiBold"
-                               Foreground="#D72649"/>
+                               Foreground="{DynamicResource DangerForeground}"/>
 
                     <TextBlock Text="Delete stats for a specific flashcard set."
                                TextWrapping="Wrap"
@@ -221,7 +228,7 @@
                             Padding="12,10"
                             FontWeight="Bold"
                             IsEnabled="{Binding SelectedDeckForStatDeletion, Converter={x:Static ObjectConverters.IsNotNull}}"
-                            Background="#D9D72649"
+                            Background="{DynamicResource DangerBackground}"
                             Foreground="{DynamicResource IconForeground}"
                             Cursor="Hand"/>
                 </StackPanel>

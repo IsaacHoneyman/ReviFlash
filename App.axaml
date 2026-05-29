@@ -14,6 +14,7 @@
 
     <Application.Resources>
         <ResourceDictionary>
+            <SolidColorBrush x:Key="SurfaceActionForeground" Color="#FFFFFF" />
             <ResourceDictionary.ThemeDictionaries>
                 
                 <ResourceDictionary x:Key="Dark">
@@ -38,14 +39,15 @@
                     <SolidColorBrush x:Key="AppBackground" Color="#F2F4F8" />
                     
                     <SolidColorBrush x:Key="CardBackground" Color="#FCFDFF" /> 
-                    <SolidColorBrush x:Key="CardBorder" Color="#B8C1CD" />
+                    <SolidColorBrush x:Key="CardBorder" Color="#9AA7B8" />
                     <SolidColorBrush x:Key="BadgeBackground" Color="#46DEE6F2" />
                     <SolidColorBrush x:Key="StatTileBackground" Color="#72C4CCD8" />
                     
-                    <SolidColorBrush x:Key="TextPrimary" Color="#121A24" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#2E4054" />
-                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#121A24" />
-                    <SolidColorBrush x:Key="IconForeground" Color="#121A24" />
+                    <SolidColorBrush x:Key="TextPrimary" Color="#0D1620" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#203244" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0D1620" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
+                    <SolidColorBrush x:Key="IconForeground" Color="#0D1620" />
                     
                     <Color x:Key="GradientStart">#EAF3FF</Color>
                     <Color x:Key="GradientMiddle">#DDEBFF</Color>
@@ -63,6 +65,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#F2F7FF" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#A8BAD8" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#F2F7FF" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#F2F7FF" />
 
                     <Color x:Key="GradientStart">#203A74</Color>
@@ -81,6 +84,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#F0FFF5" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#A7D1B8" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#F0FFF5" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#F0FFF5" />
 
                     <Color x:Key="GradientStart">#2C6E49</Color>
@@ -97,8 +101,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#DEC29A" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#4B3215" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#6F552E" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#5A3D1A" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#4B3215" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#4B3215" />
 
                     <Color x:Key="GradientStart">#E7B66A</Color>
@@ -115,8 +120,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#D6C5A9" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#3D2A18" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#5F4733" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#53361F" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#3D2A18" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#3D2A18" />
 
                     <Color x:Key="GradientStart">#C8A57A</Color>
@@ -135,8 +141,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#EDD19B" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#4A2B00" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#6F4A00" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#5F3F00" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#4A2B00" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#4A2B00" />
 
                     <Color x:Key="GradientStart">#F4C865</Color>
@@ -155,6 +162,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#E8F0F3" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#9FBEC7" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#E8F0F3" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#9FBEC7" />
 
                     <Color x:Key="GradientStart">#10323A</Color>
@@ -173,6 +181,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#FFF6F3" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#E3B8A1" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF6F3" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#FFD1B2" />
 
                     <Color x:Key="GradientStart">#3E1F1B</Color>
@@ -191,6 +200,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#FFF6F7" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#E6B3B6" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF6F7" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#FFD1D4" />
 
                     <Color x:Key="GradientStart">#3B0D12</Color>
@@ -209,6 +219,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#F5F7FA" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#B5BCC6" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#F5F7FA" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#F5F7FA" />
 
                     <Color x:Key="GradientStart">#5B6675</Color>
@@ -227,6 +238,7 @@
                     <SolidColorBrush x:Key="TextPrimary" Color="#F7F3FF" />
                     <SolidColorBrush x:Key="TextSecondary" Color="#C8BEE8" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#F7F3FF" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#F7F3FF" />
 
                     <Color x:Key="GradientStart">#5A3E9B</Color>
@@ -243,8 +255,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#EFC9D6" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#3F2030" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#6A3D54" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#563148" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#3F2030" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#3F2030" />
 
                     <Color x:Key="GradientStart">#F6AFC6</Color>
@@ -261,8 +274,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#D0E6C7" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#1F3421" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#37523B" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#2C442F" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#1F3421" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#1F3421" />
 
                     <Color x:Key="GradientStart">#B3D698</Color>
@@ -279,8 +293,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#C1E8F2" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#0F2A3D" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#2A546B" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#1F4861" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0F2A3D" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#0F2A3D" />
 
                     <Color x:Key="GradientStart">#87CEEF</Color>
@@ -297,8 +312,9 @@
                     <SolidColorBrush x:Key="StatTileBackground" Color="#8A5CCEFF" />
 
                     <SolidColorBrush x:Key="TextPrimary" Color="#0A1E4A" />
-                    <SolidColorBrush x:Key="TextSecondary" Color="#194A9C" />
+                    <SolidColorBrush x:Key="TextSecondary" Color="#123A8A" />
                     <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0A1E4A" />
+                    <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
                     <SolidColorBrush x:Key="IconForeground" Color="#0A1E4A" />
 
                     <Color x:Key="GradientStart">#7DDBFF</Color>

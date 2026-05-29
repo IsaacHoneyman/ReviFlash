@@ -137,8 +137,9 @@ public class ReviewViewModel : ViewModelBase
 
     public bool ShouldShowTimer => _settings.ShowTimer;
     public bool ShouldShowProgress => _settings.ShowProgress;
-    public bool ShouldShowSkipRedoButtons => _settings.ShowSkipRedoButtons;
-    public bool CanRetryLater => _settings.ShowSkipRedoButtons && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
+    public bool ShouldShowSkipButton => _settings.ShowSkipButton;
+    public bool ShouldShowRetryLaterButton => _settings.ShowRetryLaterButton;
+    public bool CanRetryLater => _settings.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
     public bool ShouldShowAnswerStreak => _settings.ShowAnswerStreakInReview;
     public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
     public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";
@@ -194,8 +195,11 @@ public class ReviewViewModel : ViewModelBase
             case nameof(AppMetaData.ShowProgress):
                 OnPropertyChanged(nameof(ShouldShowProgress));
                 break;
-            case nameof(AppMetaData.ShowSkipRedoButtons):
-                OnPropertyChanged(nameof(ShouldShowSkipRedoButtons));
+            case nameof(AppMetaData.ShowSkipButton):
+                OnPropertyChanged(nameof(ShouldShowSkipButton));
+                break;
+            case nameof(AppMetaData.ShowRetryLaterButton):
+                OnPropertyChanged(nameof(ShouldShowRetryLaterButton));
                 OnPropertyChanged(nameof(CanRetryLater));
                 break;
             case nameof(AppMetaData.ShowAnswerStreakInReview):
@@ -349,7 +353,7 @@ public class ReviewViewModel : ViewModelBase
 
     public void SkipCard()
     {
-        if (!_settings.ShowSkipRedoButtons || _sessionCards.Count <= 1)
+        if (!_settings.ShowSkipButton || _sessionCards.Count <= 1)
         {
             return;
         }
@@ -360,7 +364,7 @@ public class ReviewViewModel : ViewModelBase
 
     public void RetryLater()
     {
-        if (!_settings.ShowSkipRedoButtons || _sessionCards.Count <= 1)
+        if (!_settings.ShowRetryLaterButton || _sessionCards.Count <= 1)
         {
             return;
         }

@@ -18,7 +18,8 @@ public class AppMetaData : INotifyPropertyChanged
     private string _version = MainWindowViewModel.VersionText;
     private bool _showTimer = true;
     private bool _showProgress = true;
-    private bool _showSkipRedoButtons = true;
+    private bool _showSkipButton = true;
+    private bool _showRetryLaterButton = true;
     private bool _showAnswerStreakInReview = true;
     private bool _showAdditionalFieldLatexPreviews = true;
     private bool _showBackgroundSwirl = true;
@@ -78,10 +79,16 @@ public class AppMetaData : INotifyPropertyChanged
         set => SetField(ref _showProgress, value);
     }
 
-    public bool ShowSkipRedoButtons
+    public bool ShowSkipButton
     {
-        get => _showSkipRedoButtons;
-        set => SetField(ref _showSkipRedoButtons, value);
+        get => _showSkipButton;
+        set => SetField(ref _showSkipButton, value);
+    }
+
+    public bool ShowRetryLaterButton
+    {
+        get => _showRetryLaterButton;
+        set => SetField(ref _showRetryLaterButton, value);
     }
 
     public bool ShowAnswerStreakInReview
@@ -138,7 +145,8 @@ public class AppMetaData : INotifyPropertyChanged
         Version = other.Version;
         ShowTimer = other.ShowTimer;
         ShowProgress = other.ShowProgress;
-        ShowSkipRedoButtons = other.ShowSkipRedoButtons;
+        ShowSkipButton = other.ShowSkipButton;
+        ShowRetryLaterButton = other.ShowRetryLaterButton;
         ShowAnswerStreakInReview = other.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;

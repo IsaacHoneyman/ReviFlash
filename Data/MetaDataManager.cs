@@ -61,7 +61,25 @@ public static class MetaDataManager
         try
         {
             string json = File.ReadAllText(GetFilePath());
-            return JsonSerializer.Deserialize<AppMetaData>(json) ?? new AppMetaData();
+            bool legacySkipRedoButtonsDisabled = false;
+
+            using (var document = JsonDocument.Parse(json))
+            {
+                if (document.RootElement.TryGetProperty("ShowSkipRedoButtons", out var legacySkipProperty)
+                    && legacySkipProperty.ValueKind == JsonValueKind.False)
+                {
+                    legacySkipRedoButtonsDisabled = true;
+                }
+            }
+
+            var data = JsonSerializer.Deserialize<AppMetaData>(json) ?? new AppMetaData();
+            if (legacySkipRedoButtonsDisabled)
+            {
+                data.ShowSkipButton = false;
+                data.ShowRetryLaterButton = false;
+            }
+
+            return data;
         }
         catch (Exception ex)
         {

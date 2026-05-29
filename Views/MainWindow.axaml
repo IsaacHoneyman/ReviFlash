@@ -119,7 +119,7 @@
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand">
                                 <TextBlock Text="✏️" FontSize="12"
-                                    Foreground="{DynamicResource IconForeground}" />
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Button>
 
                             <Button Click="GroupStats_Click"
@@ -130,7 +130,7 @@
                                 Cursor="Hand"
                                 ToolTip.Tip="View Group Stats">
                                 <TextBlock Text="📊" FontSize="12"
-                                    Foreground="{DynamicResource IconForeground}" />
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Button>
 
                             <Button Click="DeleteGroup_Click"
@@ -141,7 +141,7 @@
                                 Cursor="Hand"
                                 ToolTip.Tip="Delete Group">
                                 <TextBlock Text="🗑️" FontSize="12"
-                                    Foreground="{DynamicResource IconForeground}" />
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -209,7 +209,7 @@
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand">
                                 <TextBlock Text="✏️" FontSize="12"
-                                    Foreground="{DynamicResource IconForeground}" />
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Button>
 
                             <Button Click="DeckStats_Click"
@@ -220,7 +220,7 @@
                                 Cursor="Hand"
                                 ToolTip.Tip="View Deck Stats">
                                 <TextBlock Text="📊" FontSize="12"
-                                    Foreground="{DynamicResource IconForeground}" />
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Button>
 
                             <Button Click="DeleteDeck_Click"
@@ -231,7 +231,7 @@
                                 Cursor="Hand"
                                 ToolTip.Tip="Delete Deck">
                                 <TextBlock Text="🗑️" FontSize="12"
-                                    Foreground="{DynamicResource IconForeground}" />
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -658,10 +658,10 @@
                                 <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
                                     <!-- Correct/Incorrect Visual -->
                                     <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
-                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding IsAnswerCorrect}" />
                                     <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
-                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding !IsAnswerCorrect}" />
                                     
                                     <!-- Show Correct Answer -->
@@ -698,7 +698,7 @@
                                     <ItemsControl ItemsSource="{Binding MultiChoiceAnswerOptions}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:ReviewOptionItem">
-                                                <Border Background="#18000000" BorderBrush="{DynamicResource CardBorder}"
+                                                <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"
                                                     BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
                                                     <Grid ColumnDefinitions="Auto, *">
                                                         <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
@@ -745,10 +745,10 @@
                                 <!-- Result Phase -->
                                 <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
                                     <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
-                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding IsAnswerCorrect}" />
                                     <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
-                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding !IsAnswerCorrect}" />
 
                                     <StackPanel>
@@ -758,7 +758,7 @@
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:ReviewOptionItem">
                                                     <StackPanel Spacing="6" Margin="0,2,0,0" IsVisible="{Binding IsCorrect}" Orientation="Horizontal">
-                                                        <TextBlock Text="✓" FontSize="15" Foreground="#44CC88" VerticalAlignment="Top" />
+                                                        <TextBlock Text="✓" FontSize="15" Foreground="{DynamicResource SuccessForeground}" VerticalAlignment="Top" />
                                                         <ItemsControl ItemsSource="{Binding OptionText, Converter={StaticResource MixedMathSegmentsConverter}}"
                                                             HorizontalAlignment="Stretch">
                                                             <ItemsControl.ItemsPanel>
@@ -776,11 +776,11 @@
                                                                         <TextBlock Text="{Binding Content}" FontSize="15" TextWrapping="Wrap"
                                                                             MaxWidth="520"
                                                                             VerticalAlignment="Center"
-                                                                            Foreground="#44CC88"
+                                                                            Foreground="{DynamicResource SuccessForeground}"
                                                                             IsVisible="{Binding IsText}" />
                                                                         <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="15"
                                                                             VerticalAlignment="Center"
-                                                                            Foreground="#44CC88"
+                                                                            Foreground="{DynamicResource SuccessForeground}"
                                                                             IsVisible="{Binding IsMath}" />
                                                                     </Grid>
                                                                 </DataTemplate>
@@ -794,12 +794,12 @@
 
                                     <StackPanel IsVisible="{Binding HasSelectedWrongOptions}">
                                         <TextBlock Text="You selected these incorrectly:" FontSize="14"
-                                            Foreground="#FF8888" />
+                                            Foreground="{DynamicResource DangerForeground}" />
                                         <ItemsControl ItemsSource="{Binding SelectedWrongOptions}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="sys:String">
                                                     <StackPanel Spacing="6" Margin="0,2,0,0" Orientation="Horizontal">
-                                                        <TextBlock Text="✕" FontSize="14" Foreground="#FF8888" VerticalAlignment="Top" />
+                                                        <TextBlock Text="✕" FontSize="14" Foreground="{DynamicResource DangerForeground}" VerticalAlignment="Top" />
                                                         <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
                                                             HorizontalAlignment="Stretch">
                                                             <ItemsControl.ItemsPanel>
@@ -817,11 +817,11 @@
                                                                         <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                             MaxWidth="520"
                                                                             VerticalAlignment="Center"
-                                                                            Foreground="#FF8888"
+                                                                            Foreground="{DynamicResource DangerForeground}"
                                                                             IsVisible="{Binding IsText}" />
                                                                         <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                             VerticalAlignment="Center"
-                                                                            Foreground="#FF8888"
+                                                                            Foreground="{DynamicResource DangerForeground}"
                                                                             IsVisible="{Binding IsMath}" />
                                                                     </Grid>
                                                                 </DataTemplate>
@@ -835,12 +835,12 @@
 
                                     <StackPanel IsVisible="{Binding HasMissedCorrectOptions}">
                                         <TextBlock Text="You missed these correct options:" FontSize="14"
-                                            Foreground="#FFCC66" />
+                                            Foreground="{DynamicResource WarningForeground}" />
                                         <ItemsControl ItemsSource="{Binding MissedCorrectOptions}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="sys:String">
                                                     <StackPanel Spacing="6" Margin="0,2,0,0" Orientation="Horizontal">
-                                                        <TextBlock Text="•" FontSize="14" Foreground="#FFCC66" VerticalAlignment="Top" />
+                                                        <TextBlock Text="•" FontSize="14" Foreground="{DynamicResource WarningForeground}" VerticalAlignment="Top" />
                                                         <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
                                                             HorizontalAlignment="Stretch">
                                                             <ItemsControl.ItemsPanel>
@@ -858,11 +858,11 @@
                                                                         <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                             MaxWidth="520"
                                                                             VerticalAlignment="Center"
-                                                                            Foreground="#FFCC66"
+                                                                            Foreground="{DynamicResource WarningForeground}"
                                                                             IsVisible="{Binding IsText}" />
                                                                         <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                             VerticalAlignment="Center"
-                                                                            Foreground="#FFCC66"
+                                                                            Foreground="{DynamicResource WarningForeground}"
                                                                             IsVisible="{Binding IsMath}" />
                                                                     </Grid>
                                                                 </DataTemplate>
@@ -898,7 +898,7 @@
                                     <ItemsControl ItemsSource="{Binding MatchRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:ReviewMatchRow">
-                                                <Border Background="#18000000" BorderBrush="{DynamicResource CardBorder}"
+                                                <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"
                                                     BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
                                                     <Grid ColumnDefinitions="2*, Auto, *" VerticalAlignment="Center">
                                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
@@ -1020,10 +1020,10 @@
                                 <!-- Result Phase -->
                                 <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
                                     <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
-                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding IsAnswerCorrect}" />
                                     <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
-                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding !IsAnswerCorrect}" />
 
                                     <StackPanel>
@@ -1038,7 +1038,7 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="•" FontSize="14" Foreground="#44CC88" VerticalAlignment="Top" />
+                                                            <TextBlock Grid.Column="0" Text="•" FontSize="14" Foreground="{DynamicResource SuccessForeground}" VerticalAlignment="Top" />
                                                             <ItemsControl Grid.Column="1" ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                                                 <ItemsControl.ItemsPanel>
                                                                     <ItemsPanelTemplate>
@@ -1054,11 +1054,11 @@
                                                                             </Grid.ColumnDefinitions>
                                                                             <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                                 VerticalAlignment="Center"
-                                                                                Foreground="#44CC88"
+                                                                                Foreground="{DynamicResource SuccessForeground}"
                                                                                 IsVisible="{Binding IsText}" />
                                                                             <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                                 VerticalAlignment="Center"
-                                                                                Foreground="#44CC88"
+                                                                                Foreground="{DynamicResource SuccessForeground}"
                                                                                 IsVisible="{Binding IsMath}" />
                                                                         </Grid>
                                                                     </DataTemplate>
@@ -1070,7 +1070,7 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="→" FontSize="14" Foreground="#44CC88" Margin="0,0,0,0" VerticalAlignment="Top" />
+                                                            <TextBlock Grid.Column="0" Text="→" FontSize="14" Foreground="{DynamicResource SuccessForeground}" Margin="0,0,0,0" VerticalAlignment="Top" />
                                                             <ItemsControl Grid.Column="1" ItemsSource="{Binding CorrectRightText, Converter={StaticResource MixedMathSegmentsConverter}}">
                                                                 <ItemsControl.ItemsPanel>
                                                                     <ItemsPanelTemplate>
@@ -1086,11 +1086,11 @@
                                                                             </Grid.ColumnDefinitions>
                                                                             <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                                 VerticalAlignment="Center"
-                                                                                Foreground="#44CC88"
+                                                                                Foreground="{DynamicResource SuccessForeground}"
                                                                                 IsVisible="{Binding IsText}" />
                                                                             <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                                 VerticalAlignment="Center"
-                                                                                Foreground="#44CC88"
+                                                                                Foreground="{DynamicResource SuccessForeground}"
                                                                                 IsVisible="{Binding IsMath}" />
                                                                         </Grid>
                                                                     </DataTemplate>
@@ -1105,7 +1105,7 @@
 
                                     <StackPanel IsVisible="{Binding HasWrongMatches}">
                                         <TextBlock Text="Incorrect selections:" FontSize="14"
-                                            Foreground="#FF8888" />
+                                            Foreground="{DynamicResource DangerForeground}" />
                                         <ItemsControl ItemsSource="{Binding WrongMatches}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="sys:String">
@@ -1125,11 +1125,11 @@
                                                                     </Grid.ColumnDefinitions>
                                                                     <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
                                                                         VerticalAlignment="Center"
-                                                                        Foreground="#FF8888"
+                                                                        Foreground="{DynamicResource DangerForeground}"
                                                                         IsVisible="{Binding IsText}" />
                                                                     <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
                                                                         VerticalAlignment="Center"
-                                                                        Foreground="#FF8888"
+                                                                        Foreground="{DynamicResource DangerForeground}"
                                                                         IsVisible="{Binding IsMath}" />
                                                                 </Grid>
                                                             </DataTemplate>
@@ -1165,21 +1165,21 @@
                                         <Button Grid.Column="0" Content="{Binding CurrentTrueFalseTrueOptionText}"
                                             Click="TrueAnswer_Click" FontSize="16"
                                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                            Background="#2E9E44" Foreground="#FFFFFF" />
+                                            Background="{DynamicResource SuccessBackground}" Foreground="#FFFFFF" />
                                         <Button Grid.Column="1" Content="{Binding CurrentTrueFalseFalseOptionText}"
                                             Click="FalseAnswer_Click" FontSize="16"
                                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                            Background="#CC3D3D" Foreground="#FFFFFF" />
+                                            Background="{DynamicResource DangerBackground}" Foreground="#FFFFFF" />
                                     </Grid>
                                 </StackPanel>
 
                                 <!-- Result Phase -->
                                 <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
                                     <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
-                                        Foreground="#4444FF44" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding IsAnswerCorrect}" />
                                     <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
-                                        Foreground="#FF4444" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
                                         IsVisible="{Binding !IsAnswerCorrect}" />
 
                                     <StackPanel>
@@ -1209,13 +1209,13 @@
                                 HorizontalAlignment="Center" IsVisible="{Binding IsFlipCard}">
                                     <Button Content="✕ Incorrect" Click="Incorrect_Click"
                                         FontSize="16"
-                                        Background="#60FF4444" Padding="20,10"
+                                        Background="{DynamicResource DangerBackground}" Padding="20,10"
                                         Width="180" Height="46"
                                         HorizontalContentAlignment="Center"
                                         IsVisible="{Binding IsAnswerRevealed}" />
                                     <Button Content="✓ Correct" Click="Correct_Click"
                                         FontSize="16"
-                                        Background="#6044FF44" Padding="20,10"
+                                        Background="{DynamicResource SuccessBackground}" Padding="20,10"
                                         Width="180" Height="46"
                                         HorizontalContentAlignment="Center"
                                         IsVisible="{Binding IsAnswerRevealed}" />
@@ -1234,7 +1234,7 @@
                         BorderThickness="1"
                         Foreground="{DynamicResource TextPrimary}"
                         Opacity="0.85"
-                        IsVisible="{Binding ShouldShowSkipRedoButtons}"
+                        IsVisible="{Binding ShouldShowSkipButton}"
                         CornerRadius="10" />
                 </Grid>
             </Grid>
@@ -1248,7 +1248,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="4">
                             <TextBlock Text="Session Complete!" FontSize="24" FontWeight="Bold" />
                             <TextBlock Text="{Binding SessionMarker}" FontSize="14"
-                                Foreground="#FF8D7F" FontStyle="Italic"
+                                Foreground="{DynamicResource WarningForeground}" FontStyle="Italic"
                                 IsVisible="{Binding IsPartialSession}" />
                         </StackPanel>
                         <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="64"

@@ -94,13 +94,24 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    public bool ShowSkipRedoButtons
+    public bool ShowSkipButton
     {
-        get => _settings.ShowSkipRedoButtons;
+        get => _settings.ShowSkipButton;
         set
         {
-            _settings.ShowSkipRedoButtons = value;
-            OnPropertyChanged(nameof(ShowSkipRedoButtons));
+            _settings.ShowSkipButton = value;
+            OnPropertyChanged(nameof(ShowSkipButton));
+            MetaDataManager.SaveMetaData(_settings);
+        }
+    }
+
+    public bool ShowRetryLaterButton
+    {
+        get => _settings.ShowRetryLaterButton;
+        set
+        {
+            _settings.ShowRetryLaterButton = value;
+            OnPropertyChanged(nameof(ShowRetryLaterButton));
             MetaDataManager.SaveMetaData(_settings);
         }
     }
@@ -159,8 +170,11 @@ public class SettingsViewModel : ViewModelBase
             case nameof(AppMetaData.ShowProgress):
                 OnPropertyChanged(nameof(ShowProgress));
                 break;
-            case nameof(AppMetaData.ShowSkipRedoButtons):
-                OnPropertyChanged(nameof(ShowSkipRedoButtons));
+            case nameof(AppMetaData.ShowSkipButton):
+                OnPropertyChanged(nameof(ShowSkipButton));
+                break;
+            case nameof(AppMetaData.ShowRetryLaterButton):
+                OnPropertyChanged(nameof(ShowRetryLaterButton));
                 break;
             case nameof(AppMetaData.ShowAnswerStreakInReview):
                 OnPropertyChanged(nameof(ShowAnswerStreakInReview));
@@ -256,6 +270,8 @@ public class SettingsViewModel : ViewModelBase
             {
                 Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
             }
+
+            App.ApplyAccessibilityPalette(App.IsLightThemeName(themeName));
         }
     }
 
@@ -274,7 +290,8 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedTheme));
         OnPropertyChanged(nameof(ShowTimer));
         OnPropertyChanged(nameof(ShowProgress));
-        OnPropertyChanged(nameof(ShowSkipRedoButtons));
+        OnPropertyChanged(nameof(ShowSkipButton));
+        OnPropertyChanged(nameof(ShowRetryLaterButton));
         OnPropertyChanged(nameof(ShowAnswerStreakInReview));
         OnPropertyChanged(nameof(ShowBackgroundSwirl));
         OnPropertyChanged(nameof(DatabasePath));

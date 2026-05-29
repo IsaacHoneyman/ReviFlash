@@ -547,21 +547,21 @@
                                             Background="#7044AAFF" CornerRadius="8"
                                             Padding="12,8">
                                             <TextBlock Text="📋" FontSize="16"
-                                                Foreground="{DynamicResource IconForeground}" />
+                                                Foreground="{DynamicResource TextPrimary}" />
                                         </Button>
 
                                         <Button Click="EditCard_Click"
                                             Background="#70FFFFFF" CornerRadius="8"
                                             Padding="12,8">
                                             <TextBlock Text="✏️" FontSize="16"
-                                                Foreground="{DynamicResource IconForeground}" />
+                                                Foreground="{DynamicResource TextPrimary}" />
                                         </Button>
 
                                         <Button Click="DeleteCard_Click"
                                             Background="#90FF4444" CornerRadius="8"
                                             Padding="12,8">
                                             <TextBlock Text="🗑️" FontSize="16"
-                                                Foreground="{DynamicResource IconForeground}" />
+                                                Foreground="{DynamicResource TextPrimary}" />
                                         </Button>
                                     </StackPanel>
                                 </Grid>

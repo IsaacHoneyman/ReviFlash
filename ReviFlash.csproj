@@ -7,7 +7,7 @@
     <ApplicationIcon>Assets\ReviFlashLogo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <EnableDefaultAvaloniaXamlItems>false</EnableDefaultAvaloniaXamlItems>
-    <Version>0.8.1</Version>
+    <Version>0.8.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
