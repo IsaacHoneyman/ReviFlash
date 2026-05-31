@@ -13,6 +13,8 @@ public static class BackupManager
 {
     private sealed record TrueFalseAnswerPayload(bool CorrectAnswerIsTrue, string TrueLabel, string FalseLabel);
 
+    private sealed record BackupManifest(bool IncludeStats);
+
     private sealed record FlashCardExportPackage(List<DeckExportEntry> Decks);
 
     private sealed record DeckExportEntry(
@@ -55,12 +57,19 @@ public static class BackupManager
         }
 
         string? tempDatabasePath = null;
+        string? tempMetadataPath = null;
         string databaseBackupPath = databasePath;
+        string metadataBackupPath = metadataPath;
 
         try
         {
             if (!includeStats)
             {
+                tempMetadataPath = Path.Combine(Path.GetTempPath(), $"ReviFlashBackup_{Guid.NewGuid():N}.json");
+                File.Copy(metadataPath, tempMetadataPath, overwrite: true);
+                StripStatsFromMetadata(tempMetadataPath);
+                metadataBackupPath = tempMetadataPath;
+
                 tempDatabasePath = Path.Combine(Path.GetTempPath(), $"ReviFlashBackup_{Guid.NewGuid():N}.db");
                 File.Copy(databasePath, tempDatabasePath, overwrite: true);
                 RemoveStatsFromDatabase(tempDatabasePath);
@@ -71,11 +80,26 @@ public static class BackupManager
             using var zip = new FileStream(zipFilePath, FileMode.Create);
             using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
 
-            AddFileToArchiveSafely(archive, metadataPath, AppStoragePaths.MetadataFileName);
+            AddFileToArchiveSafely(archive, metadataBackupPath, AppStoragePaths.MetadataFileName);
             AddFileToArchiveSafely(archive, databaseBackupPath, AppStoragePaths.DatabaseFileName);
+            AddTextEntryToArchive(archive, "backup-manifest.json", JsonSerializer.Serialize(new BackupManifest(includeStats)));
         }
         finally
         {
+            if (tempMetadataPath is not null)
+            {
+                try
+                {
+                    if (File.Exists(tempMetadataPath))
+                    {
+                        File.Delete(tempMetadataPath);
+                    }
+                }
+                catch
+                {
+                }
+            }
+
             if (tempDatabasePath is not null)
             {
                 try
@@ -117,6 +141,18 @@ public static class BackupManager
         using var command = connection.CreateCommand();
         command.CommandText = "DROP TABLE IF EXISTS DeckStats;";
         command.ExecuteNonQuery();
+
+        command.CommandText = "DROP TABLE IF EXISTS AnswerStreaks;";
+        command.ExecuteNonQuery();
+    }
+
+    private static void StripStatsFromMetadata(string metadataPath)
+    {
+        var metadata = ReadMetadataFromPath(metadataPath);
+        metadata.LaunchStreak = 0;
+        metadata.BestLaunchStreak = 0;
+        metadata.BestAnswerStreak = 0;
+        SaveMetadataToPath(metadataPath, metadata);
     }
 
     public static void TryRestoreFromBackup(string zipFilePath)
@@ -128,6 +164,7 @@ public static class BackupManager
 
         using var zip = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
         using var archive = new ZipArchive(zip, ZipArchiveMode.Read);
+        bool includeStats = ReadBackupManifest(archive)?.IncludeStats ?? true;
 
         if (archive.GetEntry(AppStoragePaths.MetadataFileName) == null ||
             archive.GetEntry(AppStoragePaths.DatabaseFileName) == null)
@@ -146,6 +183,7 @@ public static class BackupManager
             string stagedDatabase = ExtractEntryToPath(archive, AppStoragePaths.DatabaseFileName, stagingDirectory);
 
             var restoredMetadata = ReadMetadataFromPath(stagedMetadata);
+            AppMetaData? currentMetadata = File.Exists(metadataPath) ? ReadMetadataFromPath(metadataPath) : null;
             // DatabaseManager.ConfigureDatabasePath(restoredMetadata.DatabasePath); Don't use old one
             databasePath = DatabaseManager.DatabasePath;
 
@@ -170,6 +208,16 @@ public static class BackupManager
             File.Copy(stagedDatabase, databasePath, overwrite: true);
 
             DatabaseManager.InitDatabase();
+            if (!includeStats)
+            {
+                MergeRestoredStats(stagingDirectory, databasePath);
+
+                if (currentMetadata is not null)
+                {
+                    PreserveCurrentStats(restoredMetadata, currentMetadata);
+                }
+            }
+
             ApplyRestoredMetadata(restoredMetadata);
             RefreshOpenViewsAfterRestore();
 
@@ -335,6 +383,90 @@ public static class BackupManager
         string json = File.ReadAllText(metadataPath);
         return System.Text.Json.JsonSerializer.Deserialize<AppMetaData>(json)
             ?? new AppMetaData();
+    }
+
+    private static void SaveMetadataToPath(string metadataPath, AppMetaData metadata)
+    {
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        string json = JsonSerializer.Serialize(metadata, options);
+        File.WriteAllText(metadataPath, json);
+    }
+
+    private static BackupManifest? ReadBackupManifest(ZipArchive archive)
+    {
+        var entry = archive.GetEntry("backup-manifest.json");
+        if (entry is null)
+        {
+            return null;
+        }
+
+        using var entryStream = entry.Open();
+        return JsonSerializer.Deserialize<BackupManifest>(entryStream);
+    }
+
+    private static void AddTextEntryToArchive(ZipArchive archive, string entryName, string contents)
+    {
+        var entry = archive.CreateEntry(entryName);
+        using var entryStream = entry.Open();
+        using var writer = new StreamWriter(entryStream);
+        writer.Write(contents);
+    }
+
+    private static void PreserveCurrentStats(AppMetaData restoredMetadata, AppMetaData currentMetadata)
+    {
+        restoredMetadata.LaunchStreak = currentMetadata.LaunchStreak;
+        restoredMetadata.BestLaunchStreak = currentMetadata.BestLaunchStreak;
+        restoredMetadata.BestAnswerStreak = currentMetadata.BestAnswerStreak;
+    }
+
+    private static void MergeRestoredStats(string sourceDirectory, string targetDatabasePath)
+    {
+        string sourceDatabasePath = Path.Combine(sourceDirectory, $"{AppStoragePaths.DatabaseFileName}.bak");
+        if (!File.Exists(sourceDatabasePath))
+        {
+            return;
+        }
+
+        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "DeckStats", ["DeckId", "CorrectCount", "TotalAttempts", "TimeTakenSeconds", "DateChecked"]);
+        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "AnswerStreaks", ["TargetType", "TargetId", "BestStreak"]);
+    }
+
+    private static void RestoreTableFromBackup(string sourceDatabasePath, string targetDatabasePath, string tableName, IReadOnlyList<string> columns)
+    {
+        using var sourceConnection = new SqliteConnection($"Data Source={sourceDatabasePath}");
+        using var targetConnection = new SqliteConnection($"Data Source={targetDatabasePath}");
+        sourceConnection.Open();
+        targetConnection.Open();
+
+        using var transaction = targetConnection.BeginTransaction();
+
+        using (var clearCommand = targetConnection.CreateCommand())
+        {
+            clearCommand.Transaction = transaction;
+            clearCommand.CommandText = $"DELETE FROM {tableName};";
+            clearCommand.ExecuteNonQuery();
+        }
+
+        using var selectCommand = sourceConnection.CreateCommand();
+        selectCommand.CommandText = $"SELECT {string.Join(", ", columns)} FROM {tableName};";
+
+        using var reader = selectCommand.ExecuteReader();
+        while (reader.Read())
+        {
+            using var insertCommand = targetConnection.CreateCommand();
+            insertCommand.Transaction = transaction;
+            insertCommand.CommandText = $"INSERT INTO {tableName} ({string.Join(", ", columns)}) VALUES ({string.Join(", ", columns.Select(column => "$" + column))});";
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                object value = reader.IsDBNull(i) ? DBNull.Value : reader.GetValue(i);
+                insertCommand.Parameters.AddWithValue("$" + columns[i], value);
+            }
+
+            insertCommand.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
     }
 
     private static void ApplyRestoredMetadata(AppMetaData metadata)
