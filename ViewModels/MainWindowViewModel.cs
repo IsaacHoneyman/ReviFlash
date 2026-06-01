@@ -14,6 +14,13 @@ public class MainWindowViewModel : ViewModelBase
 {
     private readonly AppMetaData _settings;
 
+    private enum StatsScope
+    {
+        Overall,
+        Deck,
+        Group,
+    }
+
     public enum DeckSelectionMode
     {
         None,
@@ -30,6 +37,18 @@ public class MainWindowViewModel : ViewModelBase
         {
             Label = label;
             TimeModifier = timeModifier;
+        }
+    }
+
+    public class GroupingOption
+    {
+        public string Label { get; set; }
+        public string Value { get; set; }
+
+        public GroupingOption(string label, string value)
+        {
+            Label = label;
+            Value = value;
         }
     }
 
@@ -59,6 +78,17 @@ public class MainWindowViewModel : ViewModelBase
     {
         get => _bestAnswerStreakText;
         set { _bestAnswerStreakText = value; OnPropertyChanged(nameof(BestAnswerStreakText)); }
+    }
+
+    private bool _isGraphView;
+    public bool IsGraphView
+    {
+        get => _isGraphView;
+        set
+        {
+            _isGraphView = value;
+            OnPropertyChanged(nameof(IsGraphView));
+        }
     }
 
     public static string VersionText => $"Version B-{GetAssemblyVersionText()}";
@@ -197,6 +227,37 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public ObservableCollection<GroupingOption> GraphGroupingOptions { get; } = new()
+    {
+        new GroupingOption("Daily", "Daily"),
+        new GroupingOption("Weekly", "Weekly"),
+        new GroupingOption("Monthly", "Monthly")
+    };
+
+    private GroupingOption _selectedAttemptsGrouping = null!;
+    public GroupingOption SelectedAttemptsGrouping
+    {
+        get => _selectedAttemptsGrouping;
+        set
+        {
+            _selectedAttemptsGrouping = value;
+            OnPropertyChanged(nameof(SelectedAttemptsGrouping));
+            if (IsGraphView) RefreshGraphStats();
+        }
+    }
+
+    private GroupingOption _selectedTimeGrouping = null!;
+    public GroupingOption SelectedTimeGrouping
+    {
+        get => _selectedTimeGrouping;
+        set
+        {
+            _selectedTimeGrouping = value;
+            OnPropertyChanged(nameof(SelectedTimeGrouping));
+            if (IsGraphView) RefreshGraphStats();
+        }
+    }
+
     private int _totalQuestions = 0;
     public int TotalQuestions
     {
@@ -324,6 +385,49 @@ public class MainWindowViewModel : ViewModelBase
 
     public bool IsViewingAnyStats => IsViewingDeckStats || IsViewingGroupStats;
 
+    public string CurrentStatsTitle
+    {
+        get
+        {
+            if (IsViewingDeckStats && SelectedDeckForStats != null)
+            {
+                return SelectedDeckForStats.Name;
+            }
+
+            if (IsViewingGroupStats && SelectedGroupForStats != null)
+            {
+                return SelectedGroupForStats.Name;
+            }
+
+            return "Overall";
+        }
+    }
+
+    public string GraphViewTitle => $"{CurrentStatsTitle} Graph View";
+
+    private string _graphDateRangeText = "";
+    public string GraphDateRangeText
+    {
+        get => _graphDateRangeText;
+        private set
+        {
+            _graphDateRangeText = value;
+            OnPropertyChanged(nameof(GraphDateRangeText));
+            OnPropertyChanged(nameof(GraphViewSubtitle));
+        }
+    }
+
+    public string GraphViewSubtitle => AttemptsGraphPoints.Count == 0
+        ? "No study history recorded for the selected scope yet."
+        : string.IsNullOrWhiteSpace(GraphDateRangeText)
+            ? SelectedTimePeriod?.Label ?? "All Time"
+            : GraphDateRangeText;
+
+    public ObservableCollection<GraphStatPointViewModel> AttemptsGraphPoints { get; private set; } = [];
+    public ObservableCollection<GraphStatPointViewModel> TimeGraphPoints { get; private set; } = [];
+
+    public bool HasGraphData => AttemptsGraphPoints.Count > 0;
+
     public ObservableCollection<TimePeriodOption> TimePeriods { get; set; } = [];
     public ObservableCollection<FlashCardDeck> Decks { get; set; } = [];
     public ObservableCollection<StudyGroup> StudyGroups { get; set; } = [];
@@ -378,6 +482,9 @@ public class MainWindowViewModel : ViewModelBase
 
         // Set "All Time" as default
         SelectedTimePeriod = TimePeriods[0];
+        
+        SelectedAttemptsGrouping = GraphGroupingOptions[0];
+        SelectedTimeGrouping = GraphGroupingOptions[0];
 
         // Sorting options (default alphabetical A-Z)
         SortOptions.Add(new SortOption("Name A-Z", "name_asc"));
@@ -436,6 +543,7 @@ public class MainWindowViewModel : ViewModelBase
         BestAnswerStreakText = "0";
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
         Grade = GradeCalculator.CalculateGradeWithDefault(correct, total);
+        RefreshGraphStats();
     }
 
     public void RefreshStats()
@@ -456,6 +564,7 @@ public class MainWindowViewModel : ViewModelBase
 
     public void ShowDeckStats(FlashCardDeck deck)
     {
+        IsGraphView = false;
         SelectedDeckForStats = deck;
         IsViewingDeckStats = true;
         IsViewingGroupStats = false;
@@ -469,10 +578,12 @@ public class MainWindowViewModel : ViewModelBase
         BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Deck", deck.ID).ToString();
         Percentage = percentage;
         Grade = grade;
+        RefreshGraphStats();
     }
 
     public void ShowGroupStats(StudyGroup group)
     {
+        IsGraphView = false;
         SelectedGroupForStats = group;
         IsViewingGroupStats = true;
         IsViewingDeckStats = false;
@@ -506,15 +617,164 @@ public class MainWindowViewModel : ViewModelBase
         BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Group", group.ID).ToString();
         Percentage = percentage;
         Grade = grade;
+        RefreshGraphStats();
     }
 
     public void ShowOverallStats()
     {
+        IsGraphView = false;
         IsViewingDeckStats = false;
         IsViewingGroupStats = false;
         SelectedDeckForStats = null;
         SelectedGroupForStats = null;
         LoadStats();
+    }
+
+    public void EnterGraphView()
+    {
+        IsGraphView = true;
+        RefreshGraphStats();
+    }
+
+    public void ExitGraphView()
+    {
+        IsGraphView = false;
+        OnPropertyChanged(nameof(GraphViewTitle));
+        OnPropertyChanged(nameof(GraphViewSubtitle));
+    }
+
+    private StatsScope GetCurrentStatsScope()
+    {
+        if (IsViewingDeckStats && SelectedDeckForStats != null)
+        {
+            return StatsScope.Deck;
+        }
+
+        if (IsViewingGroupStats && SelectedGroupForStats != null)
+        {
+            return StatsScope.Group;
+        }
+
+        return StatsScope.Overall;
+    }
+
+    private void RefreshGraphStats()
+    {
+        var timeModifier = SelectedTimePeriod?.TimeModifier;
+        var rawRows = GetDailyStatsForCurrentScope(timeModifier);
+
+        // Discard anomalies where attempts are 0
+        var validRows = rawRows.Where(r => r.total > 0).ToList();
+
+        // Attempts Grouping
+        var attemptsRows = GroupRows(validRows, SelectedAttemptsGrouping?.Value).ToList();
+        int maxAttempts = attemptsRows.Count == 0 ? 0 : attemptsRows.Max(row => row.total);
+
+        // Time Grouping
+        var timeRows = GroupRows(validRows, SelectedTimeGrouping?.Value).ToList();
+        int maxTime = timeRows.Count == 0 ? 0 : timeRows.Max(row => row.timeTakenSeconds);
+
+        AttemptsGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
+            attemptsRows.Select(row => new GraphStatPointViewModel(
+                row.label,
+                row.correct,
+                row.total,
+                row.timeTakenSeconds,
+                maxAttempts,
+                0))); // maxTime not relevant for attempts chart
+
+        TimeGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
+            timeRows.Select(row => new GraphStatPointViewModel(
+                row.label,
+                row.correct,
+                row.total,
+                row.timeTakenSeconds,
+                0, // maxAttempts not relevant for time chart
+                maxTime)));
+
+        GraphDateRangeText = validRows.Count == 0
+            ? "No study history recorded yet."
+            : $"{validRows.First().date:MMM d, yyyy} - {validRows.Last().date:MMM d, yyyy}";
+
+        OnPropertyChanged(nameof(AttemptsGraphPoints));
+        OnPropertyChanged(nameof(TimeGraphPoints));
+        OnPropertyChanged(nameof(HasGraphData));
+        OnPropertyChanged(nameof(GraphViewTitle));
+        OnPropertyChanged(nameof(GraphViewSubtitle));
+        OnPropertyChanged(nameof(CurrentStatsTitle));
+    }
+
+    private IEnumerable<(DateOnly date, int correct, int total, int timeTakenSeconds, string label)> GroupRows(
+        List<(DateOnly date, int correct, int total, int timeTakenSeconds)> validRows, string? groupingValue)
+    {
+        if (groupingValue == "Weekly")
+        {
+            return validRows.GroupBy(r =>
+                {
+                    int diff = (7 + (r.date.DayOfWeek - DayOfWeek.Monday)) % 7;
+                    return r.date.AddDays(-1 * diff);
+                })
+                .Select(g => (
+                    date: g.Key,
+                    correct: g.Sum(x => x.correct),
+                    total: g.Sum(x => x.total),
+                    timeTakenSeconds: g.Sum(x => x.timeTakenSeconds),
+                    label: g.Key.ToString("MMM d")
+                )).OrderBy(r => r.date);
+        }
+        else if (groupingValue == "Monthly")
+        {
+            return validRows.GroupBy(r => new { r.date.Year, r.date.Month })
+                .Select(g => (
+                    date: new DateOnly(g.Key.Year, g.Key.Month, 1),
+                    correct: g.Sum(x => x.correct),
+                    total: g.Sum(x => x.total),
+                    timeTakenSeconds: g.Sum(x => x.timeTakenSeconds),
+                    label: new DateOnly(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy")
+                )).OrderBy(r => r.date);
+        }
+        else
+        {
+            return validRows.Select(r => (r.date, r.correct, r.total, r.timeTakenSeconds, label: r.date.ToString("MMM d")));
+        }
+    }
+
+    private List<(DateOnly date, int correct, int total, int timeTakenSeconds)> GetDailyStatsForCurrentScope(string? timeModifier)
+    {
+        return GetCurrentStatsScope() switch
+        {
+            StatsScope.Deck when SelectedDeckForStats != null => FlashCardRepository.GetStatsByDate(SelectedDeckForStats.ID, timeModifier),
+            StatsScope.Group when SelectedGroupForStats != null => GetDailyStatsForGroup(SelectedGroupForStats.ID, timeModifier),
+            _ => FlashCardRepository.GetStatsByDate(null, timeModifier)
+        };
+    }
+
+    private static List<(DateOnly date, int correct, int total, int timeTakenSeconds)> GetDailyStatsForGroup(ulong groupId, string? timeModifier)
+    {
+        var decksInGroup = FlashCardRepository.GetDecksForStudyGroup(groupId);
+        var totalsByDate = new SortedDictionary<DateOnly, (int correct, int total, int timeTakenSeconds)>();
+
+        foreach (var deck in decksInGroup)
+        {
+            foreach (var row in FlashCardRepository.GetStatsByDate(deck.ID, timeModifier))
+            {
+                if (totalsByDate.TryGetValue(row.date, out var existing))
+                {
+                    totalsByDate[row.date] = (
+                        existing.correct + row.correct,
+                        existing.total + row.total,
+                        existing.timeTakenSeconds + row.timeTakenSeconds);
+                }
+                else
+                {
+                    totalsByDate[row.date] = (row.correct, row.total, row.timeTakenSeconds);
+                }
+            }
+        }
+
+        return totalsByDate
+            .Select(entry => (entry.Key, entry.Value.correct, entry.Value.total, entry.Value.timeTakenSeconds))
+            .ToList();
     }
 
     public (int correct, int total, int timeTakenSeconds, double percentage, string grade) GetDeckStats(ulong deckID, string? timeModifier = null)
@@ -688,6 +948,7 @@ public class MainWindowViewModel : ViewModelBase
 
     public void RefreshAfterBackupRestore()
     {
+        IsGraphView = false;
         RefreshStreakTexts();
         CancelSelectionMode();
         LoadDecksFromDatabase();

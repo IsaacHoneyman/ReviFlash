@@ -184,6 +184,22 @@ public partial class MainWindow : Window
         }
     }
 
+    public void GraphStats_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.EnterGraphView();
+        }
+    }
+
+    public void ExitGraphView_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ExitGraphView();
+        }
+    }
+
     private void DeckCard_Click(object sender, PointerPressedEventArgs e)
     {
         // Ignore pointer events originating from action buttons inside the deck card.
