@@ -430,6 +430,51 @@ public static class FlashCardRepository
         return (0, 0, 0);
     }
 
+    public static List<(DateOnly date, int correct, int total, int timeTakenSeconds)> GetStatsByDate(ulong? deckID = null, string? timeModifier = null)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        string sql = @"
+            SELECT
+                DateChecked,
+                COALESCE(SUM(CorrectCount), 0) as TotalCorrect,
+                COALESCE(SUM(TotalAttempts), 0) as TotalTotal,
+                COALESCE(SUM(TimeTakenSeconds), 0) as TotalTimeTakenSeconds
+            FROM DeckStats
+            WHERE 1=1";
+
+        if (deckID.HasValue)
+        {
+            sql += " AND DeckId = @deckId";
+            command.Parameters.AddWithValue("@deckId", deckID.Value);
+        }
+
+        if (!string.IsNullOrEmpty(timeModifier))
+        {
+            sql += " AND DateChecked >= DATE('now', @timeModifier)";
+            command.Parameters.AddWithValue("@timeModifier", timeModifier);
+        }
+
+        sql += " GROUP BY DateChecked ORDER BY DateChecked ASC;";
+        command.CommandText = sql;
+
+        var stats = new List<(DateOnly date, int correct, int total, int timeTakenSeconds)>();
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var date = DateOnly.Parse(reader.GetString(0));
+            int correct = reader.GetInt32(1);
+            int total = reader.GetInt32(2);
+            int timeTakenSeconds = reader.GetInt32(3);
+            stats.Add((date, correct, total, timeTakenSeconds));
+        }
+
+        return stats;
+    }
+
     public static int GetBestAnswerStreak(string targetType, ulong targetId)
     {
         using var connection = DatabaseManager.GetConnection();

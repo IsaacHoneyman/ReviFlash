@@ -7,7 +7,7 @@
     xmlns:converters="using:ReviFlash.Converters"
     x:Class="ReviFlash.Views.MainWindow"
     x:DataType="vm:MainWindowViewModel"
-    Icon="/Assets/ReviFlashLogo.ico"
+    Icon="/Assets/ReviFlashLogo3.ico"
     Title="ReviFlash"
     Width="1000" Height="600"
     WindowStartupLocation="CenterScreen"
@@ -263,7 +263,9 @@
 
         <DataTemplate DataType="{x:Type vm:MainWindowViewModel}">
 
-            <Grid RowDefinitions="86, *">
+            <Grid>
+
+                <Grid IsVisible="{Binding !IsGraphView}" RowDefinitions="86, *">
 
                 <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="24, 16, 24, 0">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12"
@@ -535,9 +537,264 @@
                                         FontSize="24" FontWeight="Bold" />
                                 </StackPanel>
                             </Border>
+
+                            <Button Click="GraphStats_Click"
+                                Content="Graph View"
+                                CornerRadius="10" Padding="14, 10" FontSize="14" FontWeight="SemiBold"
+                                Background="{DynamicResource StatTileBackground}"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Cursor="Hand" />
                         </StackPanel>
                     </Border>
 
+                </Grid>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsGraphView}" RowDefinitions="Auto, *" Margin="24, 16, 24, 24">
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" ColumnSpacing="12" Margin="0, 0, 0, 16"
+                        VerticalAlignment="Center">
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Text="{Binding GraphViewTitle}" FontSize="30" FontWeight="Bold"
+                                Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="{Binding GraphViewSubtitle}" FontSize="13"
+                                Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+
+                        <ComboBox Grid.Column="1"
+                            ItemsSource="{Binding TimePeriods}"
+                            SelectedItem="{Binding SelectedTimePeriod}"
+                            CornerRadius="8"
+                            Height="40"
+                            Padding="12, 8" FontSize="14"
+                            Width="240"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource StatTileBackground}"
+                            Foreground="{DynamicResource TextPrimary}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="vm:MainWindowViewModel+TimePeriodOption">
+                                    <TextBlock Text="{Binding Label}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Button Grid.Column="2" Click="ExitGraphView_Click"
+                            Background="{DynamicResource CardBackground}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="10" Padding="16,10"
+                            Height="40"
+                            VerticalAlignment="Center"
+                            Cursor="Hand" Opacity="0.85">
+                            <TextBlock Text="Exit" FontSize="12" FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Button>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="18">
+                            <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="14">
+                                <Border Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="Total Questions" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding TotalQuestions}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="Accuracy" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="Total Time" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding TotalTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="3" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="Average Time" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding AverageTimePerCardText}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="4" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="Grade" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding Grade}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Border Background="{DynamicResource CardBackground}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1.5"
+                                CornerRadius="20"
+                                Padding="20">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Attempts Chart" FontSize="18" FontWeight="Bold"
+                                                Foreground="{DynamicResource TextPrimary}" />
+                                            <TextBlock Text="Green shows correct answers, red shows incorrect answers." FontSize="12"
+                                                Foreground="{DynamicResource TextSecondary}" />
+                                        </StackPanel>
+                                        
+                                        <ComboBox Grid.Column="1" VerticalAlignment="Top"
+                                            ItemsSource="{Binding GraphGroupingOptions}"
+                                            SelectedItem="{Binding SelectedAttemptsGrouping}"
+                                            CornerRadius="6" Height="32"
+                                            Padding="10, 4" FontSize="12" Width="100"
+                                            Background="{DynamicResource StatTileBackground}"
+                                            Foreground="{DynamicResource TextPrimary}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="vm:MainWindowViewModel+GroupingOption">
+                                                    <TextBlock Text="{Binding Label}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                        VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding AttemptsGraphPoints}" Margin="0,0,0,24">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="12" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="vm:GraphStatPointViewModel">
+                                                    <StackPanel Width="88" Spacing="8">
+                                                        <StackPanel HorizontalAlignment="Center" Spacing="2" Height="34">
+                                                            <TextBlock Text="{Binding Label}"
+                                                                FontSize="11"
+                                                                HorizontalAlignment="Center"
+                                                                Foreground="{DynamicResource TextPrimary}" />
+
+                                                            <StackPanel Orientation="Horizontal"
+                                                                HorizontalAlignment="Center"
+                                                                Spacing="3">
+                                                                <TextBlock Text="{Binding CorrectCountText}"
+                                                                    FontSize="10" FontWeight="SemiBold"
+                                                                    Foreground="{DynamicResource SuccessForeground}" />
+                                                                <TextBlock Text="|"
+                                                                    FontSize="10"
+                                                                    Foreground="{DynamicResource TextPrimary}" />
+                                                                <TextBlock Text="{Binding IncorrectCountText}"
+                                                                    FontSize="10" FontWeight="SemiBold"
+                                                                    Foreground="{DynamicResource DangerForeground}" />
+                                                            </StackPanel>
+                                                        </StackPanel>
+
+                                                        <Border Height="160" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+                                                            <Border Width="28" Height="{Binding AttemptsBarHeight}"
+                                                                CornerRadius="6" ClipToBounds="True" Background="#EEEF6B5B"
+                                                                VerticalAlignment="Bottom"
+                                                                IsVisible="{Binding HasAttempts}"
+                                                                ToolTip.Tip="{Binding AttemptsTooltip}">
+                                                                <Border Height="{Binding CorrectBarHeight}"
+                                                                    Background="{DynamicResource GradientStart}"
+                                                                    VerticalAlignment="Bottom" />
+                                                            </Border>
+                                                        </Border>
+
+                                                        <TextBlock Text="{Binding AccuracyText}" FontSize="11"
+                                                            HorizontalAlignment="Center"
+                                                            Foreground="{DynamicResource TextSecondary}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource CardBackground}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1.5"
+                                CornerRadius="20"
+                                Padding="20">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Study Time Chart" FontSize="18" FontWeight="Bold"
+                                                Foreground="{DynamicResource TextPrimary}" />
+                                            <TextBlock Text="The bar height shows total time spent studying." FontSize="12"
+                                                Foreground="{DynamicResource TextSecondary}" />
+                                        </StackPanel>
+
+                                        <ComboBox Grid.Column="1" VerticalAlignment="Top"
+                                            ItemsSource="{Binding GraphGroupingOptions}"
+                                            SelectedItem="{Binding SelectedTimeGrouping}"
+                                            CornerRadius="6" Height="32"
+                                            Padding="10, 4" FontSize="12" Width="100"
+                                            Background="{DynamicResource StatTileBackground}"
+                                            Foreground="{DynamicResource TextPrimary}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="vm:MainWindowViewModel+GroupingOption">
+                                                    <TextBlock Text="{Binding Label}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                        VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding TimeGraphPoints}" Margin="0,0,0,24">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="12" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="vm:GraphStatPointViewModel">
+                                                    <StackPanel Width="88" Spacing="8">
+                                                        <StackPanel HorizontalAlignment="Center" Spacing="2" Height="34">
+                                                            <TextBlock Text="{Binding Label}" FontSize="12"
+                                                                HorizontalAlignment="Center"
+                                                                Foreground="{DynamicResource TextPrimary}" />
+                                                            <TextBlock Text="{Binding TimeValueText}" FontSize="11"
+                                                                FontWeight="SemiBold"
+                                                                HorizontalAlignment="Center"
+                                                                Foreground="{DynamicResource TextPrimary}" />
+                                                        </StackPanel>
+
+                                                        <Border Height="160" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+                                                            <Border Width="28" Height="{Binding TimeBarHeight}"
+                                                                CornerRadius="6" Background="#FF4AA3FF"
+                                                                VerticalAlignment="Bottom"
+                                                                IsVisible="{Binding HasTime}"
+                                                                ToolTip.Tip="{Binding TimeTooltip}" />
+                                                        </Border>
+
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{DynamicResource CardBackground}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1.5"
+                                CornerRadius="20"
+                                Padding="20"
+                                IsVisible="{Binding !HasGraphData}">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="No chart data yet" FontSize="18" FontWeight="Bold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                    <TextBlock Text="Study a deck or group to populate the graph view with daily activity." FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </DataTemplate>
