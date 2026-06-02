@@ -517,7 +517,7 @@ public static class BackupManager
             decks.Add(new DeckExportEntry(
                 deckName,
                 LoadDeckCards(connection, deckId),
-                LoadDeckStats(connection, deckId)));
+                []));
         }
 
         return new FlashCardExportPackage(decks);
