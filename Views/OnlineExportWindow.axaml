@@ -3,12 +3,73 @@
         xmlns:vm="using:ReviFlash.ViewModels"
         x:Class="ReviFlash.Views.OnlineExportWindow"
         x:DataType="vm:OnlineExportViewModel"
-        Title="Online Export"
-        Width="600" Height="400"
+        Title="Online Export - Authentication"
+        Width="450" Height="550"
         WindowStartupLocation="CenterOwner">
 
-  <Border Background="{DynamicResource AppBackground}" Padding="16">
-    <TextBlock Text="Online Export (coming soon)" Foreground="{DynamicResource TextPrimary}" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" />
-  </Border>
+  <Border Background="{DynamicResource AppBackground}" Padding="32">
+    <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320">
+      
+      <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4" Padding="8">
+        <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development." 
+                   Foreground="Orange" 
+                   FontSize="12" 
+                   TextWrapping="Wrap" 
+                   TextAlignment="Center"/>
+      </Border>
 
+      <TextBlock Text="{Binding HeaderText}" 
+                 Foreground="{DynamicResource TextPrimary}" 
+                 FontSize="24" 
+                 FontWeight="Bold" 
+                 HorizontalAlignment="Center" 
+                 Margin="0,8,0,8"/>
+
+      <TextBox Text="{Binding Username}" 
+               Watermark="Choose a Username" 
+               IsVisible="{Binding IsSignUpMode}" />
+
+      <TextBox Text="{Binding Email}" 
+               Watermark="Email address" />
+      
+      <TextBox Text="{Binding Password}" 
+               Watermark="Password" 
+               PasswordChar="•" />
+
+      <Button Content="Log In" 
+              Command="{Binding LoginCommand}" 
+              IsVisible="{Binding IsLoginMode}"
+              HorizontalAlignment="Stretch" 
+              HorizontalContentAlignment="Center" 
+              Classes="accent"/>
+              
+      <Button Content="Create Account" 
+              Command="{Binding SignUpCommand}" 
+              IsVisible="{Binding IsSignUpMode}"
+              HorizontalAlignment="Stretch" 
+              HorizontalContentAlignment="Center" 
+              Classes="accent"/>
+
+      <Button Content="{Binding ToggleModeText}"
+              Command="{Binding ToggleModeCommand}"
+              Background="Transparent"
+              Foreground="DodgerBlue"
+              HorizontalAlignment="Center"
+              BorderThickness="0"
+              Cursor="Hand" />
+
+      <TextBlock Text="{Binding StatusMessage}" 
+                 Foreground="Orange" 
+                 TextWrapping="Wrap" 
+                 HorizontalAlignment="Center" />
+                 
+      <TextBlock Text="Authentication is required to modify or delete uploaded flashcard decks. All credentials are cryptographically secured. Email and password data cannot be accessed by the development team or database administrators." 
+                 Foreground="Gray" 
+                 FontSize="11" 
+                 TextWrapping="Wrap" 
+                 TextAlignment="Center" 
+                 Margin="0,16,0,0"/>
+                 
+    </StackPanel>
+  </Border>
 </Window>

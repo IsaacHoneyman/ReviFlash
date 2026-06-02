@@ -1,14 +1,23 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ReviFlash.ViewModels"
-        x:Class="ReviFlash.Views.OnlineImportWindow"
-        x:DataType="vm:OnlineImportViewModel"
-        Title="Online Import"
-        Width="600" Height="400"
-        WindowStartupLocation="CenterOwner">
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vm="using:ReviFlash.ViewModels"
+  x:Class="ReviFlash.Views.OnlineImportWindow"
+  x:DataType="vm:OnlineImportViewModel"
+  Title="Online Import"
+  Width="600" Height="400"
+  WindowStartupLocation="CenterOwner">
 
   <Border Background="{DynamicResource AppBackground}" Padding="16">
-    <TextBlock Text="Online Import (coming soon)" Foreground="{DynamicResource TextPrimary}" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" />
+    <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320">
+    <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4"
+      Padding="8">
+      <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development."
+        Foreground="Orange"
+        FontSize="12"
+        TextWrapping="Wrap"
+        TextAlignment="Center" />
+    </Border>
+    </StackPanel>
   </Border>
-
+ 
 </Window>
