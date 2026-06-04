@@ -353,7 +353,7 @@ public class ReviewViewModel : ViewModelBase
 
     public void SkipCard()
     {
-        if (!_settings.ShowSkipButton || _sessionCards.Count <= 1)
+        if (!_settings.ShowSkipButton || _sessionCards.Count <= 1 || _currentIndex >= _sessionCards.Count - 1)
         {
             return;
         }
@@ -564,11 +564,6 @@ public class ReviewViewModel : ViewModelBase
     private void SkipCurrentCard()
     {
         _sessionCards.RemoveAt(_currentIndex);
-
-        if (_currentIndex >= _sessionCards.Count)
-        {
-            _currentIndex = _sessionCards.Count - 1;
-        }
     }
 
     private void ResetForCurrentCard()
