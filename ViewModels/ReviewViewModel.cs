@@ -358,7 +358,7 @@ public class ReviewViewModel : ViewModelBase
             return;
         }
 
-        MoveCurrentCardToEnd();
+        SkipCurrentCard();
         ResetForCurrentCard();
     }
 
@@ -554,6 +554,16 @@ public class ReviewViewModel : ViewModelBase
         var current = _sessionCards[_currentIndex];
         _sessionCards.RemoveAt(_currentIndex);
         _sessionCards.Add(current);
+
+        if (_currentIndex >= _sessionCards.Count)
+        {
+            _currentIndex = _sessionCards.Count - 1;
+        }
+    }
+
+    private void SkipCurrentCard()
+    {
+        _sessionCards.RemoveAt(_currentIndex);
 
         if (_currentIndex >= _sessionCards.Count)
         {
