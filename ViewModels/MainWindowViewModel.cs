@@ -315,12 +315,28 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private static string FormatTime(TimeSpan time)
+    {
+        if (time.TotalDays >= 1)
+        {
+            return $"{time.Hours + 24 * time.Days}:{time:mm\\:ss}";
+        }
+        if (time.TotalHours >= 1)
+        {
+            return time.ToString(@"h\:mm\:ss");
+        }
+        else
+        {
+            return time.ToString(@"m\:ss");
+        }
+    }
+
     public string TotalTimeFormatted
     {
         get
         {
             var time = TimeSpan.FromSeconds(TotalTimeSeconds);
-            return time.TotalHours >= 1 ? time.ToString(@"hh\:mm\:ss") : time.ToString(@"mm\:ss");
+            return FormatTime(time);
         }
     }
 
@@ -336,12 +352,7 @@ public class MainWindowViewModel : ViewModelBase
             var avgSeconds = (int)Math.Round((double)TotalTimeSeconds / TotalCardCount);
             var time = TimeSpan.FromSeconds(avgSeconds);
 
-            if (time.TotalHours >= 1)
-            {
-                return time.ToString(@"h\:mm\:ss");
-            }
-
-            return time.ToString(@"m\:ss");
+            return FormatTime(time);
         }
     }
 
