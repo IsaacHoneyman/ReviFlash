@@ -7,7 +7,7 @@
     xmlns:converters="using:ReviFlash.Converters"
     x:Class="ReviFlash.Views.MainWindow"
     x:DataType="vm:MainWindowViewModel"
-    Icon="/Assets/ReviFlashLogo3.ico"
+    Icon="/Assets/ReviFlashLogo.ico"
     Title="ReviFlash"
     Width="1000" Height="600"
     WindowStartupLocation="CenterScreen"
