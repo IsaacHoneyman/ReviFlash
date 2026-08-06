@@ -401,6 +401,13 @@ public partial class MainWindow : Window
     {
         var window = new OnlineImportWindow();
         await window.ShowDialog(this);
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.LoadDecksFromDatabase();
+            vm.FilterDecks();
+            vm.RefreshStats();
+        }
     }
 
     private async void OpenOnlineExport_Click(object sender, RoutedEventArgs e)
@@ -520,7 +527,7 @@ public partial class MainWindow : Window
     private void RetryLater_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.RetryLater();
     private void Correct_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkCorrect();
     private void Incorrect_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkIncorrect();
-    
+
     private async void QuitSession_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new ConfirmDialogWindow("Quit this session and save your progress so far?");

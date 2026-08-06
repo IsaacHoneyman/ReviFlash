@@ -3,73 +3,141 @@
         xmlns:vm="using:ReviFlash.ViewModels"
         x:Class="ReviFlash.Views.OnlineExportWindow"
         x:DataType="vm:OnlineExportViewModel"
-        Title="Online Export - Authentication"
+        Title="Online Export"
         Width="450" Height="550"
         WindowStartupLocation="CenterOwner">
 
   <Border Background="{DynamicResource AppBackground}" Padding="32">
-    <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320">
+    <Grid>
       
-      <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4" Padding="8">
-        <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development." 
+      <!-- ========================================== -->
+      <!-- STATE 1: UNAUTHENTICATED (LOGIN/SIGNUP)    -->
+      <!-- ========================================== -->
+      <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320" 
+                  IsVisible="{Binding IsNotAuthenticated}">
+        
+        <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4" Padding="8">
+          <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development." 
+                     Foreground="Orange" 
+                     FontSize="12" 
+                     TextWrapping="Wrap" 
+                     TextAlignment="Center"/>
+        </Border>
+
+        <TextBlock Text="{Binding HeaderText}" 
+                   Foreground="{DynamicResource TextPrimary}" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,8,0,8"/>
+
+        <TextBox Text="{Binding Username}" 
+                 Watermark="Choose a Username" 
+                 IsVisible="{Binding IsSignUpMode}" />
+
+        <TextBox Text="{Binding Email}" 
+                 Watermark="Email address" />
+        
+        <TextBox Text="{Binding Password}" 
+                 Watermark="Password" 
+                 PasswordChar="•" />
+
+        <Button Content="Log In" 
+                Command="{Binding LoginCommand}" 
+                IsVisible="{Binding IsLoginMode}"
+                HorizontalAlignment="Stretch" 
+                HorizontalContentAlignment="Center" 
+                Classes="accent"/>
+                
+        <Button Content="Create Account" 
+                Command="{Binding SignUpCommand}" 
+                IsVisible="{Binding IsSignUpMode}"
+                HorizontalAlignment="Stretch" 
+                HorizontalContentAlignment="Center" 
+                Classes="accent"/>
+
+        <Button Content="{Binding ToggleModeText}"
+                Command="{Binding ToggleModeCommand}"
+                Background="Transparent"
+                Foreground="DodgerBlue"
+                HorizontalAlignment="Center"
+                BorderThickness="0"
+                Cursor="Hand" />
+
+        <TextBlock Text="{Binding StatusMessage}" 
                    Foreground="Orange" 
-                   FontSize="12" 
                    TextWrapping="Wrap" 
-                   TextAlignment="Center"/>
-      </Border>
+                   HorizontalAlignment="Center" />
+                   
+        <TextBlock Text="Authentication is required to modify or delete uploaded flashcard decks. All credentials are cryptographically secured. Email and password data cannot be accessed by the development team or database administrators." 
+                   Foreground="Gray" 
+                   FontSize="11" 
+                   TextWrapping="Wrap" 
+                   TextAlignment="Center" 
+                   Margin="0,16,0,0"/>
+                   
+      </StackPanel>
 
-      <TextBlock Text="{Binding HeaderText}" 
-                 Foreground="{DynamicResource TextPrimary}" 
-                 FontSize="24" 
-                 FontWeight="Bold" 
-                 HorizontalAlignment="Center" 
-                 Margin="0,8,0,8"/>
+      <!-- ========================================== -->
+      <!-- STATE 2: AUTHENTICATED (UPLOAD SCREEN)     -->
+      <!-- ========================================== -->
+      <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320" 
+                  IsVisible="{Binding IsAuthenticated}">
 
-      <TextBox Text="{Binding Username}" 
-               Watermark="Choose a Username" 
-               IsVisible="{Binding IsSignUpMode}" />
+        <!-- Welcome Banner matching standard header color and size -->
+        <TextBlock Text="{Binding WelcomeText}" 
+                   Foreground="{DynamicResource TextPrimary}" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,8,0,0"/>
 
-      <TextBox Text="{Binding Email}" 
-               Watermark="Email address" />
-      
-      <TextBox Text="{Binding Password}" 
-               Watermark="Password" 
-               PasswordChar="•" />
+        <TextBlock Text="Select a local flashcard set to upload to your ReviFlash account." 
+                   Foreground="{DynamicResource TextSecondary}" 
+                   FontSize="14" 
+                   TextWrapping="Wrap" 
+                   TextAlignment="Center"
+                   Margin="0,0,0,8"/>
 
-      <Button Content="Log In" 
-              Command="{Binding LoginCommand}" 
-              IsVisible="{Binding IsLoginMode}"
-              HorizontalAlignment="Stretch" 
-              HorizontalContentAlignment="Center" 
-              Classes="accent"/>
-              
-      <Button Content="Create Account" 
-              Command="{Binding SignUpCommand}" 
-              IsVisible="{Binding IsSignUpMode}"
-              HorizontalAlignment="Stretch" 
-              HorizontalContentAlignment="Center" 
-              Classes="accent"/>
+        <ComboBox ItemsSource="{Binding AvailableDecks}"
+                  SelectedItem="{Binding SelectedDeckToUpload}"
+                  HorizontalAlignment="Stretch"
+                  CornerRadius="8"
+                  Padding="12,8">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
 
-      <Button Content="{Binding ToggleModeText}"
-              Command="{Binding ToggleModeCommand}"
-              Background="Transparent"
-              Foreground="DodgerBlue"
-              HorizontalAlignment="Center"
-              BorderThickness="0"
-              Cursor="Hand" />
+        <Button Content="Upload Deck" 
+                Command="{Binding UploadCommand}" 
+                HorizontalAlignment="Stretch" 
+                HorizontalContentAlignment="Center" 
+                Background="{DynamicResource GradientStart}"
+                Foreground="{DynamicResource PrimaryButtonForeground}"
+                CornerRadius="8"
+                Padding="12,10"
+                FontWeight="Bold"
+                Cursor="Hand"/>
 
-      <TextBlock Text="{Binding StatusMessage}" 
-                 Foreground="Orange" 
-                 TextWrapping="Wrap" 
-                 HorizontalAlignment="Center" />
-                 
-      <TextBlock Text="Authentication is required to modify or delete uploaded flashcard decks. All credentials are cryptographically secured. Email and password data cannot be accessed by the development team or database administrators." 
-                 Foreground="Gray" 
-                 FontSize="11" 
-                 TextWrapping="Wrap" 
-                 TextAlignment="Center" 
-                 Margin="0,16,0,0"/>
-                 
-    </StackPanel>
+        <TextBlock Text="{Binding StatusMessage}" 
+                   Foreground="Orange" 
+                   TextWrapping="Wrap" 
+                   HorizontalAlignment="Center" />
+
+        <Button Content="Log Out"
+                Command="{Binding LogoutCommand}"
+                Background="Transparent"
+                Foreground="{DynamicResource DangerForeground}"
+                HorizontalAlignment="Center"
+                BorderThickness="0"
+                Cursor="Hand" 
+                Margin="0,16,0,0"/>
+
+      </StackPanel>
+
+    </Grid>
   </Border>
 </Window>

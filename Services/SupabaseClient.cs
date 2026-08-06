@@ -22,21 +22,20 @@ namespace ReviFlash.Services
         {
             _projectUrl = SupabaseConfig.ProjectUrl?.TrimEnd('/') ?? throw new InvalidOperationException("Supabase ProjectUrl not configured.");
             var anon = SupabaseConfig.AnonKey ?? throw new InvalidOperationException("Supabase anon key not configured.");
+            var authToken = SupabaseConfig.CurrentAccessToken ?? anon;
 
             _http = new HttpClient();
             _http.DefaultRequestHeaders.Add("apikey", anon);
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", anon);
+            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         // --- AUTHENTICATION METHODS ---
 
-        // Add the username parameter here:
         public async Task<(bool Success, string Message, string? AccessToken)> SignUpAsync(string email, string password, string username)
         {
             var url = $"{_projectUrl}/auth/v1/signup";
 
-            // Add the "data" object. Supabase automatically converts this to raw_user_meta_data!
             var payload = new
             {
                 email,
@@ -64,7 +63,7 @@ namespace ReviFlash.Services
             }
         }
 
-        public async Task<(bool Success, string Message, string? AccessToken)> SignInAsync(string email, string password)
+        public async Task<(bool Success, string Message, string? AccessToken, string? UserId, string? Username)> SignInAsync(string email, string password)
         {
             var url = $"{_projectUrl}/auth/v1/token?grant_type=password";
             var payload = new { email, password };
@@ -78,15 +77,26 @@ namespace ReviFlash.Services
                 if (res.IsSuccessStatusCode)
                 {
                     using var doc = JsonDocument.Parse(json);
-                    var token = doc.RootElement.GetProperty("access_token").GetString();
-                    return (true, "Login successful!", token);
+                    var root = doc.RootElement;
+
+                    var token = root.GetProperty("access_token").GetString();
+                    var userNode = root.GetProperty("user");
+                    var userId = userNode.GetProperty("id").GetString();
+
+                    string? username = "User";
+                    if (userNode.TryGetProperty("user_metadata", out var meta) && meta.TryGetProperty("username", out var uname))
+                    {
+                        username = uname.GetString();
+                    }
+
+                    return (true, "Login successful!", token, userId, username);
                 }
 
-                return (false, ExtractErrorMessage(json), null);
+                return (false, ExtractErrorMessage(json), null, null, null);
             }
             catch (Exception ex)
             {
-                return (false, $"Network error: {ex.Message}", null);
+                return (false, $"Network error: {ex.Message}", null, null, null);
             }
         }
 
@@ -104,16 +114,31 @@ namespace ReviFlash.Services
 
         // --- DATABASE / STORAGE METHODS ---
 
-        public async Task<List<DeckMetadata>> GetPublicDecksAsync()
+        public async Task<List<DeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)
         {
-            var url = $"{_projectUrl}/rest/v1/decks?select=id,title,description,storage_path,card_count,tags,slug,version,created_at,updated_at&visibility=eq.public";
+            var url = $"{_projectUrl}/rest/v1/decks?select=id,title,description,storage_path,card_count,version,created_at,updated_at&visibility=eq.public";
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var escapedSearch = Uri.EscapeDataString($"*{searchText}*");
+                url += $"&title=ilike.{escapedSearch}";
+            }
+
+            url += $"&limit={limit}";
+
             using var res = await _http.GetAsync(url).ConfigureAwait(false);
-            res.EnsureSuccessStatusCode();
+
+            if (!res.IsSuccessStatusCode)
+            {
+                var errorContent = await res.Content.ReadAsStringAsync();
+                throw new Exception($"Database Error ({res.StatusCode}): {errorContent}");
+            }
+
             var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
             var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             return JsonSerializer.Deserialize<List<DeckMetadata>>(json, opts) ?? new List<DeckMetadata>();
         }
-
+        
         public async Task<string> DownloadDeckJsonAsync(string storagePath, string bucket = "decks")
         {
             if (string.IsNullOrWhiteSpace(storagePath)) throw new ArgumentNullException(nameof(storagePath));
@@ -125,6 +150,52 @@ namespace ReviFlash.Services
             using var res = await _http.GetAsync(url).ConfigureAwait(false);
             res.EnsureSuccessStatusCode();
             return await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+
+        public async Task<(bool Success, string Message)> UploadDeckAsync(string userId, string title, int cardCount, string jsonPayload)
+        {
+            string fileName = $"{userId}/{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}_export.json";
+
+            string storageUrl = $"{_projectUrl}/storage/v1/object/decks/{fileName}";
+            var storageContent = new StringContent(jsonPayload, Encoding.UTF8);
+            storageContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            try
+            {
+                using var storageRes = await _http.PostAsync(storageUrl, storageContent).ConfigureAwait(false);
+                if (!storageRes.IsSuccessStatusCode)
+                {
+                    var storageErr = await storageRes.Content.ReadAsStringAsync();
+                    return (false, $"Storage Error: {storageRes.StatusCode} - {storageErr}");
+                }
+
+                string dbUrl = $"{_projectUrl}/rest/v1/decks";
+                var dbPayload = new
+                {
+                    title = title,
+                    description = "Uploaded via ReviFlash Desktop",
+                    storage_path = fileName,
+                    card_count = cardCount
+                };
+
+                var dbContent = new StringContent(JsonSerializer.Serialize(dbPayload), Encoding.UTF8, "application/json");
+                _http.DefaultRequestHeaders.Add("Prefer", "return=minimal");
+
+                using var dbRes = await _http.PostAsync(dbUrl, dbContent).ConfigureAwait(false);
+                _http.DefaultRequestHeaders.Remove("Prefer"); // Clean up header
+
+                if (dbRes.IsSuccessStatusCode)
+                {
+                    return (true, "Deck uploaded successfully!");
+                }
+
+                var dbErr = await dbRes.Content.ReadAsStringAsync();
+                return (false, $"Database Error: {dbRes.StatusCode} - {dbErr}");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Network error: {ex.Message}");
+            }
         }
 
         public void Dispose()

@@ -1,23 +1,84 @@
 <Window xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:vm="using:ReviFlash.ViewModels"
-  x:Class="ReviFlash.Views.OnlineImportWindow"
-  x:DataType="vm:OnlineImportViewModel"
-  Title="Online Import"
-  Width="600" Height="400"
-  WindowStartupLocation="CenterOwner">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ReviFlash.ViewModels"
+        xmlns:models="using:ReviFlash.Models"
+        x:Class="ReviFlash.Views.OnlineImportWindow"
+        x:DataType="vm:OnlineImportViewModel"
+        Title="Discover Flashcards"
+        Width="700" Height="600"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppBackground}">
 
-  <Border Background="{DynamicResource AppBackground}" Padding="16">
-    <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320">
-    <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4"
-      Padding="8">
-      <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development."
-        Foreground="Orange"
-        FontSize="12"
-        TextWrapping="Wrap"
-        TextAlignment="Center" />
-    </Border>
-    </StackPanel>
-  </Border>
- 
+    <Grid RowDefinitions="Auto, *, Auto" Margin="24">
+        
+        <!-- Search Header -->
+        <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,16">
+            <TextBlock Text="Community Flashcards" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+            <TextBlock Text="Search and download public flashcard sets created by other users." 
+                       Foreground="{DynamicResource TextSecondary}" FontSize="14" TextWrapping="Wrap"/>
+            
+            <Grid ColumnDefinitions="*, Auto" Margin="0,8,0,0">
+                <TextBox Grid.Column="0" 
+                         Text="{Binding SearchText}"
+                         Watermark="Search by title, subject, or keywords..."
+                         CornerRadius="8" Padding="12,10" FontSize="14"
+                         Background="{DynamicResource CardBackground}"
+                         Foreground="{DynamicResource TextPrimary}"
+                         Margin="0,0,12,0">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+                
+                <Button Grid.Column="1" 
+                        Content="Search" 
+                        Command="{Binding SearchCommand}"
+                        CornerRadius="8" Padding="16,10" FontSize="14" FontWeight="SemiBold"
+                        Background="{DynamicResource GradientStart}"
+                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                        Cursor="Hand"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Search Results Grid -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBackground}" 
+                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" 
+                CornerRadius="16" Padding="16">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding SearchResults}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:DeckMetadata">
+                            <Border Background="#14000000" 
+                                    BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" 
+                                    CornerRadius="12" Padding="16" Margin="0,0,0,12">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="{Binding Description}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding CardCount, StringFormat='{}📦 {0} Cards'}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}📅 {0:MMM dd, yyyy}'}" FontSize="12" Foreground="Gray"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="1" Content="Download" 
+                                            Command="{Binding $parent[Window].((vm:OnlineImportViewModel)DataContext).DownloadCommand}"
+                                            CommandParameter="{Binding}"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource StatTileBackground}"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            CornerRadius="8" Padding="16,10" FontWeight="SemiBold" Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Status Footer -->
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" 
+                   Foreground="{DynamicResource TextSecondary}" 
+                   HorizontalAlignment="Center" Margin="0,16,0,0" />
+    </Grid>
 </Window>

@@ -120,7 +120,7 @@ public static class BackupManager
     {
         if (!File.Exists(sourceFilePath))
         {
-                AppLogger.Error($"Skipping missing backup file: {sourceFilePath}");
+            AppLogger.Error($"Skipping missing backup file: {sourceFilePath}");
             return false;
         }
 
@@ -184,7 +184,6 @@ public static class BackupManager
 
             var restoredMetadata = ReadMetadataFromPath(stagedMetadata);
             AppMetaData? currentMetadata = File.Exists(metadataPath) ? ReadMetadataFromPath(metadataPath) : null;
-            // DatabaseManager.ConfigureDatabasePath(restoredMetadata.DatabasePath); Don't use old one
             databasePath = DatabaseManager.DatabasePath;
 
             BackupExistingFile(metadataPath, stagingDirectory, $"{AppStoragePaths.MetadataFileName}.bak");
@@ -754,6 +753,73 @@ public static class BackupManager
         command.Parameters.AddWithValue("$timeTakenSeconds", stat.TimeTakenSeconds);
         command.Parameters.AddWithValue("$dateChecked", stat.DateChecked);
         command.ExecuteNonQuery();
+    }
+
+    public static string GenerateCloudExportJson(ulong deckId)
+    {
+        var exportData = BuildExportPackage([deckId]);
+        var deckExport = exportData.Decks.FirstOrDefault()
+            ?? throw new InvalidOperationException("Failed to generate export package.");
+
+        var payload = new
+        {
+            ExportVersion = 1,
+            DeckName = deckExport.Name,
+            Cards = deckExport.Cards
+        };
+
+        return JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    public static void TryImportCloudDeck(string jsonPayload)
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+        using var document = JsonDocument.Parse(jsonPayload);
+        var root = document.RootElement;
+
+        string deckName = root.TryGetProperty("DeckName", out var nameProp)
+            ? nameProp.GetString() ?? "Imported Cloud Deck"
+            : "Imported Cloud Deck";
+
+        var cards = root.TryGetProperty("Cards", out var cardsProp)
+            ? JsonSerializer.Deserialize<List<CardExportEntry>>(cardsProp.GetRawText(), options) ?? []
+            : [];
+
+        if (cards.Count == 0)
+        {
+            throw new InvalidDataException("The downloaded deck does not contain any readable cards.");
+        }
+
+        DatabaseManager.InitDatabase();
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        long deckId = InsertDeck(connection, transaction, deckName);
+
+        foreach (var card in cards)
+        {
+            long cardId = InsertCard(connection, transaction, deckId, card);
+
+            if (card.Options is not null)
+            {
+                foreach (var (index, option) in card.Options.Select((value, i) => (i, value)))
+                {
+                    InsertMultiChoiceOption(connection, transaction, cardId, index, option);
+                }
+            }
+
+            if (card.Pairs is not null)
+            {
+                foreach (var (index, pair) in card.Pairs.Select((value, i) => (i, value)))
+                {
+                    InsertMatchPair(connection, transaction, cardId, index, pair);
+                }
+            }
+        }
+
+        transaction.Commit();
     }
 
 }
