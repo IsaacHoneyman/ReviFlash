@@ -24,6 +24,27 @@ public class AppMetaData : INotifyPropertyChanged
     private bool _showAdditionalFieldLatexPreviews = true;
     private bool _showBackgroundSwirl = true;
     private string _databasePath = AppStoragePaths.DatabasePath;
+    private string? _supabaseAccessToken;
+    private string? _supabaseUserId;
+    private string? _supabaseUsername;
+
+    public string? SupabaseAccessToken
+    {
+        get => _supabaseAccessToken;
+        set => SetField(ref _supabaseAccessToken, value);
+    }
+
+    public string? SupabaseUserId
+    {
+        get => _supabaseUserId;
+        set => SetField(ref _supabaseUserId, value);
+    }
+
+    public string? SupabaseUsername
+    {
+        get => _supabaseUsername;
+        set => SetField(ref _supabaseUsername, value);
+    }
 
     public string Theme
     {
@@ -151,5 +172,8 @@ public class AppMetaData : INotifyPropertyChanged
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;
         DatabasePath = other.DatabasePath;
+        SupabaseAccessToken = other.SupabaseAccessToken;
+        SupabaseUserId = other.SupabaseUserId;
+        SupabaseUsername = other.SupabaseUsername;
     }
 }

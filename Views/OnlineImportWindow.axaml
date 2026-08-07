@@ -56,8 +56,8 @@
                                         <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
                                         <TextBlock Text="{Binding Description}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
                                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
-                                            <TextBlock Text="{Binding CardCount, StringFormat='{}📦 {0} Cards'}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}📅 {0:MMM dd, yyyy}'}" FontSize="12" Foreground="Gray"/>
+                                            <TextBlock Text="{Binding CardCount, StringFormat='{} {0} Cards'}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{} {0:MMM dd, yyyy}'}" FontSize="12" Foreground="Gray"/>
                                         </StackPanel>
                                     </StackPanel>
                                     

@@ -1,143 +1,189 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ReviFlash.ViewModels"
+        xmlns:models="using:ReviFlash.Models"
         x:Class="ReviFlash.Views.OnlineExportWindow"
         x:DataType="vm:OnlineExportViewModel"
-        Title="Online Export"
-        Width="450" Height="550"
-        WindowStartupLocation="CenterOwner">
+        Title="Cloud Manager"
+        Width="{Binding WindowWidth}" Height="{Binding WindowHeight}"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppBackground}">
 
-  <Border Background="{DynamicResource AppBackground}" Padding="32">
-    <Grid>
+  <Grid Margin="32">
+    
+    <!-- ========================================== -->
+    <!-- STATE 1: UNAUTHENTICATED (LOGIN/SIGNUP)    -->
+    <!-- ========================================== -->
+    <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="350" 
+                IsVisible="{Binding IsNotAuthenticated}">
       
-      <!-- ========================================== -->
-      <!-- STATE 1: UNAUTHENTICATED (LOGIN/SIGNUP)    -->
-      <!-- ========================================== -->
-      <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320" 
-                  IsVisible="{Binding IsNotAuthenticated}">
+      <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4" Padding="8">
+        <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development." 
+                   Foreground="Orange" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
+      </Border>
+
+      <TextBlock Text="{Binding HeaderText}" 
+                 Foreground="{DynamicResource TextPrimary}" 
+                 FontSize="28" FontWeight="Bold" 
+                 HorizontalAlignment="Center" Margin="0,8,0,8"/>
+
+      <TextBox Text="{Binding Username}" Watermark="Choose a Username" IsVisible="{Binding IsSignUpMode}" />
+      <TextBox Text="{Binding Email}" Watermark="Email address" />
+      <TextBox Text="{Binding Password}" Watermark="Password" PasswordChar="•" />
+
+      <Button Content="Log In" Command="{Binding LoginCommand}" IsVisible="{Binding IsLoginMode}"
+              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="accent" Padding="12"/>
+              
+      <Button Content="Create Account" Command="{Binding SignUpCommand}" IsVisible="{Binding IsSignUpMode}"
+              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="accent" Padding="12"/>
+
+      <Button Content="{Binding ToggleModeText}" Command="{Binding ToggleModeCommand}"
+              Background="Transparent" Foreground="DodgerBlue" HorizontalAlignment="Center"
+              BorderThickness="0" Cursor="Hand" />
+
+      <TextBlock Text="{Binding StatusMessage}" Foreground="Orange" TextWrapping="Wrap" HorizontalAlignment="Center" />
+                 
+      <TextBlock Text="Authentication is required to modify or delete uploaded flashcard decks. All credentials are cryptographically secured." 
+                 Foreground="{DynamicResource TextSecondary}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0,16,0,0"/>
+    </StackPanel>
+
+    <!-- ========================================== -->
+    <!-- STATE 2: AUTHENTICATED (CLOUD DASHBOARD)   -->
+    <!-- ========================================== -->
+    <Grid RowDefinitions="Auto, *" IsVisible="{Binding IsAuthenticated}">
         
-        <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4" Padding="8">
-          <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development." 
-                     Foreground="Orange" 
-                     FontSize="12" 
-                     TextWrapping="Wrap" 
-                     TextAlignment="Center"/>
-        </Border>
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,24">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{Binding WelcomeText}" Foreground="{DynamicResource TextPrimary}" FontSize="32" FontWeight="Bold"/>
+                <TextBlock Text="Manage your cloud backups and synchronize your local flashcards." Foreground="{DynamicResource TextSecondary}" FontSize="16"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="Orange" VerticalAlignment="Center" MaxWidth="300" TextWrapping="Wrap"/>
+                <Button Content="Log Out" Command="{Binding LogoutCommand}"
+                        Background="#90FF4444" Foreground="{DynamicResource IconForeground}"
+                        CornerRadius="8" Padding="16,10" FontWeight="SemiBold" Cursor="Hand"/>
+            </StackPanel>
+        </Grid>
 
-        <TextBlock Text="{Binding HeaderText}" 
-                   Foreground="{DynamicResource TextPrimary}" 
-                   FontSize="24" 
-                   FontWeight="Bold" 
-                   HorizontalAlignment="Center" 
-                   Margin="0,8,0,8"/>
+        <!-- Dual Pane Workspace -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
+            
+            <!-- LEFT PANE: LOCAL DECKS -->
+            <Border Grid.Column="0" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" CornerRadius="20" Padding="20">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Local Decks (On this device)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBox Text="{Binding LocalSearchText, Mode=TwoWay}" Watermark="Search local decks..."
+                                 CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
 
-        <TextBox Text="{Binding Username}" 
-                 Watermark="Choose a Username" 
-                 IsVisible="{Binding IsSignUpMode}" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
+                        <ItemsControl ItemsSource="{Binding FilteredLocalDecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:FlashCardDeck">
+                                    <Border Background="#14000000" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding CardCount, StringFormat='{} {0} cards'}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                            </StackPanel>
 
-        <TextBox Text="{Binding Email}" 
-                 Watermark="Email address" />
-        
-        <TextBox Text="{Binding Password}" 
-                 Watermark="Password" 
-                 PasswordChar="•" />
+                                            <Button Grid.Column="1" Content="Upload" 
+                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).UploadCommand}" CommandParameter="{Binding}"
+                                                    Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                    CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
 
-        <Button Content="Log In" 
-                Command="{Binding LoginCommand}" 
-                IsVisible="{Binding IsLoginMode}"
-                HorizontalAlignment="Stretch" 
-                HorizontalContentAlignment="Center" 
-                Classes="accent"/>
-                
-        <Button Content="Create Account" 
-                Command="{Binding SignUpCommand}" 
-                IsVisible="{Binding IsSignUpMode}"
-                HorizontalAlignment="Stretch" 
-                HorizontalContentAlignment="Center" 
-                Classes="accent"/>
+            <!-- RIGHT PANE: CLOUD DECKS -->
+            <Border Grid.Column="1" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" CornerRadius="20" Padding="20">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Cloud Decks (Backed up securely)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBox Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search cloud decks..."
+                                 CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                    </StackPanel>
 
-        <Button Content="{Binding ToggleModeText}"
-                Command="{Binding ToggleModeCommand}"
-                Background="Transparent"
-                Foreground="DodgerBlue"
-                HorizontalAlignment="Center"
-                BorderThickness="0"
-                Cursor="Hand" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
+                        <ItemsControl ItemsSource="{Binding FilteredCloudDecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DeckMetadata">
+                                    <Border Background="#14000000" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*, Auto, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding CardCount, StringFormat='{} {0} cards'}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                            </StackPanel>
 
-        <TextBlock Text="{Binding StatusMessage}" 
-                   Foreground="Orange" 
-                   TextWrapping="Wrap" 
-                   HorizontalAlignment="Center" />
-                   
-        <TextBlock Text="Authentication is required to modify or delete uploaded flashcard decks. All credentials are cryptographically secured. Email and password data cannot be accessed by the development team or database administrators." 
-                   Foreground="Gray" 
-                   FontSize="11" 
-                   TextWrapping="Wrap" 
-                   TextAlignment="Center" 
-                   Margin="0,16,0,0"/>
-                   
-      </StackPanel>
+                                            <Button Grid.Column="1" Content="Update" Margin="0,0,8,0"
+                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).UpdateCommand}" CommandParameter="{Binding}"
+                                                    Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
+                                                    CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
 
-      <!-- ========================================== -->
-      <!-- STATE 2: AUTHENTICATED (UPLOAD SCREEN)     -->
-      <!-- ========================================== -->
-      <StackPanel Spacing="16" VerticalAlignment="Center" MaxWidth="320" 
-                  IsVisible="{Binding IsAuthenticated}">
-
-        <!-- Welcome Banner matching standard header color and size -->
-        <TextBlock Text="{Binding WelcomeText}" 
-                   Foreground="{DynamicResource TextPrimary}" 
-                   FontSize="24" 
-                   FontWeight="Bold" 
-                   HorizontalAlignment="Center" 
-                   Margin="0,8,0,0"/>
-
-        <TextBlock Text="Select a local flashcard set to upload to your ReviFlash account." 
-                   Foreground="{DynamicResource TextSecondary}" 
-                   FontSize="14" 
-                   TextWrapping="Wrap" 
-                   TextAlignment="Center"
-                   Margin="0,0,0,8"/>
-
-        <ComboBox ItemsSource="{Binding AvailableDecks}"
-                  SelectedItem="{Binding SelectedDeckToUpload}"
-                  HorizontalAlignment="Stretch"
-                  CornerRadius="8"
-                  Padding="12,8">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}" />
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
-
-        <Button Content="Upload Deck" 
-                Command="{Binding UploadCommand}" 
-                HorizontalAlignment="Stretch" 
-                HorizontalContentAlignment="Center" 
-                Background="{DynamicResource GradientStart}"
-                Foreground="{DynamicResource PrimaryButtonForeground}"
-                CornerRadius="8"
-                Padding="12,10"
-                FontWeight="Bold"
-                Cursor="Hand"/>
-
-        <TextBlock Text="{Binding StatusMessage}" 
-                   Foreground="Orange" 
-                   TextWrapping="Wrap" 
-                   HorizontalAlignment="Center" />
-
-        <Button Content="Log Out"
-                Command="{Binding LogoutCommand}"
-                Background="Transparent"
-                Foreground="{DynamicResource DangerForeground}"
-                HorizontalAlignment="Center"
-                BorderThickness="0"
-                Cursor="Hand" 
-                Margin="0,16,0,0"/>
-
-      </StackPanel>
-
+                                            <Button Grid.Column="2" Content="Delete" 
+                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).DeleteCommand}" CommandParameter="{Binding}"
+                                                    Background="Transparent" Foreground="{DynamicResource DangerForeground}"
+                                                    CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
-  </Border>
+    <!-- ========================================== -->
+    <!-- OVERLAY 3: MANUAL DECK SELECTION MENU      -->
+    <!-- ========================================== -->
+    <Grid Background="#B3000000" IsVisible="{Binding IsSelectingUpdateDeck}">
+        <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1.5" CornerRadius="20" Padding="32"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Width="450">
+            <StackPanel Spacing="16">
+                
+                <TextBlock Text="Select Local Deck" FontSize="24" FontWeight="Bold" 
+                           Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
+                           
+                <TextBlock Text="Choose which local flashcard set you want to push to the cloud to overwrite this backup."
+                           Foreground="{DynamicResource TextSecondary}" FontSize="14" 
+                           TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,8" />
+                           
+                <ComboBox ItemsSource="{Binding LocalDecks}"
+                          SelectedItem="{Binding SelectedLocalDeckForUpdate}"
+                          HorizontalAlignment="Stretch" CornerRadius="8" Padding="12,10">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="16" Margin="0,16,0,0">
+                    <Button Grid.Column="0" Content="Cancel" Command="{Binding CancelUpdateCommand}"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Background="#70FFFFFF" Foreground="{DynamicResource TextPrimary}" 
+                            CornerRadius="8" Padding="12,10" Cursor="Hand" FontWeight="SemiBold" />
+                            
+                    <Button Grid.Column="1" Content="Confirm Update" Command="{Binding ConfirmUpdateCommand}"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
+                            CornerRadius="8" Padding="12,10" FontWeight="Bold" Cursor="Hand" />
+                </Grid>
+                
+            </StackPanel>
+        </Border>
+    </Grid>
+  </Grid>
 </Window>

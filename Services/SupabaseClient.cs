@@ -138,7 +138,7 @@ namespace ReviFlash.Services
             var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             return JsonSerializer.Deserialize<List<DeckMetadata>>(json, opts) ?? new List<DeckMetadata>();
         }
-        
+
         public async Task<string> DownloadDeckJsonAsync(string storagePath, string bucket = "decks")
         {
             if (string.IsNullOrWhiteSpace(storagePath)) throw new ArgumentNullException(nameof(storagePath));
@@ -191,6 +191,89 @@ namespace ReviFlash.Services
 
                 var dbErr = await dbRes.Content.ReadAsStringAsync();
                 return (false, $"Database Error: {dbRes.StatusCode} - {dbErr}");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Network error: {ex.Message}");
+            }
+        }
+
+        public async Task<List<DeckMetadata>> GetUserDecksAsync(string userId)
+        {
+            var url = $"{_projectUrl}/rest/v1/decks?select=id,title,description,storage_path,card_count,version,created_at,updated_at&storage_path=ilike.{userId}/*";
+
+            using var res = await _http.GetAsync(url).ConfigureAwait(false);
+            if (!res.IsSuccessStatusCode) return [];
+
+            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<List<DeckMetadata>>(json, opts) ?? new List<DeckMetadata>();
+        }
+
+        public async Task<(bool Success, string Message)> UpdateCloudDeckAsync(string storagePath, string title, int cardCount, string jsonPayload)
+        {
+            try
+            {
+                string storageUrl = $"{_projectUrl}/storage/v1/object/decks/{storagePath}";
+                var storageContent = new StringContent(jsonPayload, System.Text.Encoding.UTF8);
+                storageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+                var storageReq = new HttpRequestMessage(HttpMethod.Put, storageUrl) { Content = storageContent };
+                using var storageRes = await _http.SendAsync(storageReq).ConfigureAwait(false);
+
+                if (!storageRes.IsSuccessStatusCode)
+                {
+                    var storageErr = await storageRes.Content.ReadAsStringAsync();
+                    return (false, $"Storage Update Error: {storageRes.StatusCode} - {storageErr}");
+                }
+
+                string dbUrl = $"{_projectUrl}/rest/v1/decks?storage_path=eq.{Uri.EscapeDataString(storagePath)}";
+                var dbPayload = new
+                {
+                    title = title,
+                    card_count = cardCount,
+                    updated_at = DateTimeOffset.UtcNow.ToString("o")
+                };
+
+                var dbContent = new StringContent(System.Text.Json.JsonSerializer.Serialize(dbPayload), System.Text.Encoding.UTF8, "application/json");
+                var patchReq = new HttpRequestMessage(new HttpMethod("PATCH"), dbUrl) { Content = dbContent };
+
+                using var dbRes = await _http.SendAsync(patchReq).ConfigureAwait(false);
+
+                if (dbRes.IsSuccessStatusCode)
+                {
+                    return (true, "Deck updated successfully!");
+                }
+
+                var dbErr = await dbRes.Content.ReadAsStringAsync();
+                return (false, $"Database Update Error: {dbRes.StatusCode} - {dbErr}");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Network error: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message)> DeleteCloudDeckAsync(string storagePath)
+        {
+            try
+            {
+                string storageUrl = $"{_projectUrl}/storage/v1/object/decks/{storagePath}";
+                using var storageRes = await _http.DeleteAsync(storageUrl).ConfigureAwait(false);
+
+                if (!storageRes.IsSuccessStatusCode)
+                {
+                    var storageErr = await storageRes.Content.ReadAsStringAsync();
+                    return (false, $"Storage Delete Error: {storageRes.StatusCode} - {storageErr}");
+                }
+
+                string dbUrl = $"{_projectUrl}/rest/v1/decks?storage_path=eq.{Uri.EscapeDataString(storagePath)}";
+                using var dbRes = await _http.DeleteAsync(dbUrl).ConfigureAwait(false);
+
+                if (dbRes.IsSuccessStatusCode) return (true, "Deck deleted successfully.");
+
+                var dbErr = await dbRes.Content.ReadAsStringAsync();
+                return (false, $"Database delete failed: {dbErr}");
             }
             catch (Exception ex)
             {

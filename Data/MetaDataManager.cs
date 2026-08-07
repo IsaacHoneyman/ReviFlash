@@ -16,13 +16,12 @@ public static class MetaDataManager
     public static AppMetaData LoadMetaDataOnStartup()
     {
         AppMetaData data = LoadMetaData();
-        if (data.Theme == "Dark")
+
+        if (!string.IsNullOrEmpty(data.SupabaseAccessToken))
         {
-            data.Theme = "Default";
-        }
-        else if (data.Theme == "Pastel")
-        {
-            data.Theme = "Plains";
+            Services.SupabaseConfig.CurrentAccessToken = data.SupabaseAccessToken;
+            Services.SupabaseConfig.CurrentUserId = data.SupabaseUserId;
+            Services.SupabaseConfig.CurrentUsername = data.SupabaseUsername;
         }
 
         if (string.IsNullOrWhiteSpace(data.DatabasePath))
@@ -31,7 +30,7 @@ public static class MetaDataManager
         }
 
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
-        
+
         if (today == data.LastLaunchDate.AddDays(1))
         {
             data.LaunchStreak++;
