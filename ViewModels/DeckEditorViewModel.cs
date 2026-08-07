@@ -2,13 +2,14 @@ using System;
 using System.Collections.ObjectModel;
 using ReviFlash.Models;
 using ReviFlash.Data;
-using ReviFlash.Utilities;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 using Avalonia.Threading;
+
+using static ReviFlash.Utilities.CardUtility;
 
 namespace ReviFlash.ViewModels;
 
@@ -66,7 +67,6 @@ public class MatchPairEditor : ViewModelBase
 
 public class DeckEditorViewModel : ViewModelBase
 {
-    private readonly AppMetaData _settings;
     public FlashCardDeck CurrentDeck { get; }
     public ObservableCollection<FlashCard> Cards { get; set; } = new();
     private bool _isCardsLoading;
@@ -172,11 +172,11 @@ public class DeckEditorViewModel : ViewModelBase
     public string SaveButtonText => _editingCardId.HasValue ? "Update Card" : "Save Card";
     public List<string> AvailableCardTypes { get; } = new()
     {
-        GradingConstants.CARD_TYPE_FLIP,
-        GradingConstants.CARD_TYPE_TYPE,
-        GradingConstants.CARD_TYPE_MULTI_CHOICE,
-        GradingConstants.CARD_TYPE_MATCH,
-        GradingConstants.CARD_TYPE_TRUE_FALSE
+        CARD_TYPE_FLIP,
+        CARD_TYPE_TYPE,
+        CARD_TYPE_MULTI_CHOICE,
+        CARD_TYPE_MATCH,
+        CARD_TYPE_TRUE_FALSE
     };
 
     private string _selectedCardType = "Flip";
@@ -201,12 +201,12 @@ public class DeckEditorViewModel : ViewModelBase
         }
     }
 
-    public bool IsTypeCardType => SelectedCardType == GradingConstants.CARD_TYPE_TYPE;
-    public bool IsMultiChoiceCardType => SelectedCardType == GradingConstants.CARD_TYPE_MULTI_CHOICE;
-    public bool IsMatchCardType => SelectedCardType == GradingConstants.CARD_TYPE_MATCH;
-    public bool IsTrueFalseCardType => SelectedCardType == GradingConstants.CARD_TYPE_TRUE_FALSE;
+    public bool IsTypeCardType => SelectedCardType == CARD_TYPE_TYPE;
+    public bool IsMultiChoiceCardType => SelectedCardType == CARD_TYPE_MULTI_CHOICE;
+    public bool IsMatchCardType => SelectedCardType == CARD_TYPE_MATCH;
+    public bool IsTrueFalseCardType => SelectedCardType == CARD_TYPE_TRUE_FALSE;
     public bool ShowFrontBackEditor => true;
-    public bool ShowAdditionalFieldLatexPreviews => _settings.ShowAdditionalFieldLatexPreviews;
+    public bool ShowAdditionalFieldLatexPreviews => MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
 
     public bool IsCardsLoading
     {
@@ -220,16 +220,16 @@ public class DeckEditorViewModel : ViewModelBase
 
     private void InitializeCardTypeDefaults()
     {
-        if (SelectedCardType == GradingConstants.CARD_TYPE_MATCH)
+        if (SelectedCardType == CARD_TYPE_MATCH)
         {
             if (string.IsNullOrWhiteSpace(NewFront))
             {
-                NewFront = GradingConstants.CARD_TYPE_MATCH_PLACEHOLDER;
+                NewFront = CARD_TYPE_MATCH_PLACEHOLDER;
             }
 
             if (string.IsNullOrWhiteSpace(NewBack))
             {
-                NewBack = GradingConstants.CARD_TYPE_MATCH_PLACEHOLDER;
+                NewBack = CARD_TYPE_MATCH_PLACEHOLDER;
             }
 
             if (MatchPairs.Count == 0)
@@ -239,22 +239,22 @@ public class DeckEditorViewModel : ViewModelBase
             }
         }
 
-        if (SelectedCardType == GradingConstants.CARD_TYPE_MULTI_CHOICE && MultiChoiceOptions.Count == 0)
+        if (SelectedCardType == CARD_TYPE_MULTI_CHOICE && MultiChoiceOptions.Count == 0)
         {
             AddOptionRow();
             AddOptionRow();
         }
 
-        if (SelectedCardType == GradingConstants.CARD_TYPE_TRUE_FALSE)
+        if (SelectedCardType == CARD_TYPE_TRUE_FALSE)
         {
             if (string.IsNullOrWhiteSpace(NewTrueOptionText))
             {
-                NewTrueOptionText = GradingConstants.TRUE_LABEL;
+                NewTrueOptionText = TRUE_LABEL;
             }
 
             if (string.IsNullOrWhiteSpace(NewFalseOptionText))
             {
-                NewFalseOptionText = GradingConstants.FALSE_LABEL;
+                NewFalseOptionText = FALSE_LABEL;
             }
         }
     }
@@ -273,10 +273,8 @@ public class DeckEditorViewModel : ViewModelBase
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
-    public DeckEditorViewModel(FlashCardDeck deck, AppMetaData settings)
+    public DeckEditorViewModel(FlashCardDeck deck)
     {
-        _settings = settings;
-        _settings.PropertyChanged += Settings_PropertyChanged;
         CurrentDeck = deck;
         _deckName = deck.Name;
 
@@ -462,10 +460,10 @@ public class DeckEditorViewModel : ViewModelBase
         // instance of the target type (preserving the DB ID) and persist that.
         string targetTypeName = SelectedCardType switch
         {
-            GradingConstants.CARD_TYPE_TYPE => nameof(TypeFlashCard),
-            GradingConstants.CARD_TYPE_MULTI_CHOICE => nameof(MultiFlashCard),
-            GradingConstants.CARD_TYPE_MATCH => nameof(MatchFlashCard),
-            GradingConstants.CARD_TYPE_TRUE_FALSE => nameof(TrueFalseFlashCard),
+            CARD_TYPE_TYPE => nameof(TypeFlashCard),
+            CARD_TYPE_MULTI_CHOICE => nameof(MultiFlashCard),
+            CARD_TYPE_MATCH => nameof(MatchFlashCard),
+            CARD_TYPE_TRUE_FALSE => nameof(TrueFalseFlashCard),
             _ => nameof(FlipFlashCard)
         };
 
@@ -525,10 +523,10 @@ public class DeckEditorViewModel : ViewModelBase
     {
         return SelectedCardType switch
         {
-            GradingConstants.CARD_TYPE_TYPE => new TypeFlashCard(frontValue, backValue, typeAnswerValue),
-            GradingConstants.CARD_TYPE_MULTI_CHOICE => new MultiFlashCard(frontValue, backValue, optionTuples ?? []),
-            GradingConstants.CARD_TYPE_MATCH => new MatchFlashCard(frontValue, backValue, matchPairs ?? []),
-            GradingConstants.CARD_TYPE_TRUE_FALSE => new TrueFalseFlashCard(frontValue, backValue, isTrueFalseAnswerTrue, trueOptionValue, falseOptionValue),
+            CARD_TYPE_TYPE => new TypeFlashCard(frontValue, backValue, typeAnswerValue),
+            CARD_TYPE_MULTI_CHOICE => new MultiFlashCard(frontValue, backValue, optionTuples ?? []),
+            CARD_TYPE_MATCH => new MatchFlashCard(frontValue, backValue, matchPairs ?? []),
+            CARD_TYPE_TRUE_FALSE => new TrueFalseFlashCard(frontValue, backValue, isTrueFalseAnswerTrue, trueOptionValue, falseOptionValue),
             _ => new FlipFlashCard(frontValue, backValue)
         };
     }
@@ -570,8 +568,8 @@ public class DeckEditorViewModel : ViewModelBase
     {
         if (IsMatchCardType)
         {
-            NewFront = GradingConstants.CARD_TYPE_MATCH_PLACEHOLDER;
-            NewBack = GradingConstants.CARD_TYPE_MATCH_PLACEHOLDER;
+            NewFront = CARD_TYPE_MATCH_PLACEHOLDER;
+            NewBack = CARD_TYPE_MATCH_PLACEHOLDER;
             return;
         }
 
@@ -583,8 +581,8 @@ public class DeckEditorViewModel : ViewModelBase
     {
         NewTypeAnswer = string.Empty;
         NewTrueFalseAnswerIsTrue = true;
-        NewTrueOptionText = GradingConstants.TRUE_LABEL;
-        NewFalseOptionText = GradingConstants.FALSE_LABEL;
+        NewTrueOptionText = TRUE_LABEL;
+        NewFalseOptionText = FALSE_LABEL;
 
         if (IsMultiChoiceCardType)
         {
@@ -709,8 +707,8 @@ public class DeckEditorViewModel : ViewModelBase
         }
 
         // No snapshot — fall back to original blank heuristics
-        var frontEmpty = string.IsNullOrWhiteSpace(NewFront) || (IsMatchCardType && NewFront == GradingConstants.CARD_TYPE_MATCH_PLACEHOLDER);
-        var backEmpty = string.IsNullOrWhiteSpace(NewBack) || (IsMatchCardType && NewBack == GradingConstants.CARD_TYPE_MATCH_PLACEHOLDER);
+        var frontEmpty = string.IsNullOrWhiteSpace(NewFront) || (IsMatchCardType && NewFront == CARD_TYPE_MATCH_PLACEHOLDER);
+        var backEmpty = string.IsNullOrWhiteSpace(NewBack) || (IsMatchCardType && NewBack == CARD_TYPE_MATCH_PLACEHOLDER);
         var typeAnswerEmpty = string.IsNullOrWhiteSpace(NewTypeAnswer);
         var multiEmpty = MultiChoiceOptions.All(o => string.IsNullOrWhiteSpace(o.OptionText));
         var matchEmpty = MatchPairs.All(p => string.IsNullOrWhiteSpace(p.LeftText) && string.IsNullOrWhiteSpace(p.RightText));
@@ -769,11 +767,11 @@ public class DeckEditorViewModel : ViewModelBase
         switch (card)
         {
             case TypeFlashCard typeCard:
-                SelectedCardType = GradingConstants.CARD_TYPE_TYPE;
+                SelectedCardType = CARD_TYPE_TYPE;
                 NewTypeAnswer = typeCard.Answer;
                 break;
             case MultiFlashCard multiCard:
-                SelectedCardType = GradingConstants.CARD_TYPE_MULTI_CHOICE;
+                SelectedCardType = CARD_TYPE_MULTI_CHOICE;
                 foreach (var (optionText, isCorrect) in multiCard.Options)
                 {
                     MultiChoiceOptions.Add(new MultiChoiceOptionEditor
@@ -784,7 +782,7 @@ public class DeckEditorViewModel : ViewModelBase
                 }
                 break;
             case MatchFlashCard matchCard:
-                SelectedCardType = GradingConstants.CARD_TYPE_MATCH;
+                SelectedCardType = CARD_TYPE_MATCH;
                 foreach (var (leftText, rightText) in matchCard.Options)
                 {
                     MatchPairs.Add(new MatchPairEditor
@@ -795,13 +793,13 @@ public class DeckEditorViewModel : ViewModelBase
                 }
                 break;
             case TrueFalseFlashCard trueFalseCard:
-                SelectedCardType = GradingConstants.CARD_TYPE_TRUE_FALSE;
+                SelectedCardType = CARD_TYPE_TRUE_FALSE;
                 NewTrueFalseAnswerIsTrue = trueFalseCard.CorrectAnswerIsTrue;
                 NewTrueOptionText = trueFalseCard.TrueLabel;
                 NewFalseOptionText = trueFalseCard.FalseLabel;
                 break;
             default:
-                SelectedCardType = GradingConstants.CARD_TYPE_FLIP;
+                SelectedCardType = CARD_TYPE_FLIP;
                 break;
         }
 

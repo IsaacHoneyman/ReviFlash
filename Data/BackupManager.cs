@@ -151,7 +151,6 @@ public static class BackupManager
         var metadata = ReadMetadataFromPath(metadataPath);
         metadata.LaunchStreak = 0;
         metadata.BestLaunchStreak = 0;
-        metadata.BestAnswerStreak = 0;
         SaveMetadataToPath(metadataPath, metadata);
     }
 
@@ -415,7 +414,6 @@ public static class BackupManager
     {
         restoredMetadata.LaunchStreak = currentMetadata.LaunchStreak;
         restoredMetadata.BestLaunchStreak = currentMetadata.BestLaunchStreak;
-        restoredMetadata.BestAnswerStreak = currentMetadata.BestAnswerStreak;
     }
 
     private static void MergeRestoredStats(string sourceDirectory, string targetDatabasePath)
@@ -470,10 +468,8 @@ public static class BackupManager
 
     private static void ApplyRestoredMetadata(AppMetaData metadata)
     {
-        // Don't restore DatabasePath from backup as it may contain old machine-specific path
-        // Reset it to current application's path for cross-machine compatibility
         metadata.DatabasePath = AppStoragePaths.DatabasePath;
-        ReviFlash.App.SetCurrentMetaData(metadata);
+        MetaDataManager.LoadMetaDataFrom(metadata);
         SettingsViewModel.ApplyTheme(metadata, metadata.Theme);
     }
 

@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ReviFlash.Models;
-using ReviFlash.Services;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels
 {
@@ -112,7 +112,7 @@ namespace ReviFlash.ViewModels
             try
             {
                 using var client = new SupabaseClient();
-                string json = await client.DownloadDeckJsonAsync(deck.StoragePath);
+                string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
                 BackupManager.TryImportCloudDeck(json);
 
                 cts.Cancel();

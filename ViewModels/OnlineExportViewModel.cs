@@ -4,12 +4,11 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ReviFlash.Services;
+using ReviFlash.Utilities;
 using ReviFlash.Models;
 using ReviFlash.Data;
 using System.Threading;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace ReviFlash.ViewModels
 {
@@ -93,7 +92,7 @@ namespace ReviFlash.ViewModels
 
         public string HeaderText => IsLoginMode ? "Welcome Back" : "Create an Account";
         public string ToggleModeText => IsLoginMode ? "Don't have an account? Sign up" : "Already have an account? Log in";
-        public string WelcomeText => $"Welcome, {SupabaseConfig.CurrentUsername}!";
+        public string WelcomeText => $"Welcome, {MetaDataManager.Data.SupabaseUsername}!";
 
         public ICommand ToggleModeCommand { get; }
         public ICommand LoginCommand { get; }
@@ -193,14 +192,9 @@ namespace ReviFlash.ViewModels
             UploadCommand = new RelayCommand<FlashCardDeck>(async (d) => await UploadAsync(d));
             DeleteCommand = new RelayCommand<DeckMetadata>(async (d) => await DeleteAsync(d));
 
-            var metaData = MetaDataManager.LoadMetaDataOnStartup();
-
-            if (!string.IsNullOrEmpty(metaData.SupabaseAccessToken))
+            if (!string.IsNullOrEmpty(MetaDataManager.Data.SupabaseAccessToken) &&  
+            MetaDataManager.Data.SupabaseExpirationTime > DateTime.Now)
             {
-                SupabaseConfig.CurrentAccessToken = metaData.SupabaseAccessToken;
-                SupabaseConfig.CurrentUserId = metaData.SupabaseUserId;
-                SupabaseConfig.CurrentUsername = metaData.SupabaseUsername;
-
                 IsAuthenticated = true;
                 OnPropertyChanged(nameof(WelcomeText));
 
@@ -246,11 +240,11 @@ namespace ReviFlash.ViewModels
 
         private async Task LoadCloudDecksAsync()
         {
-            if (string.IsNullOrEmpty(SupabaseConfig.CurrentUserId)) return;
+            if (string.IsNullOrEmpty(MetaDataManager.Data.SupabaseUserId)) return;
 
             CloudDecks.Clear();
             using var client = new SupabaseClient();
-            var remoteDecks = await client.GetUserDecksAsync(SupabaseConfig.CurrentUserId);
+            var remoteDecks = await client.GetUserCloudDecksAsync(MetaDataManager.Data.SupabaseUserId);
 
             foreach (var deck in remoteDecks)
             {
@@ -292,22 +286,15 @@ namespace ReviFlash.ViewModels
             StatusMessage = "Logging in...";
 
             using var client = new SupabaseClient();
-            var (success, message, token, userId, username) = await client.SignInAsync(Email, Password);
+            var (success, message, token, userId, username, expiration) = await client.SignInAsync(Email, Password);
 
             StatusMessage = message;
 
             if (success && !string.IsNullOrEmpty(token))
             {
-                SupabaseConfig.CurrentAccessToken = token;
-                SupabaseConfig.CurrentUserId = userId;
-                SupabaseConfig.CurrentUsername = username;
+                MetaDataManager.Data.SetSupabase(token, userId, username, expiration);
                 Password = string.Empty;
-
-                var metaData = MetaDataManager.LoadMetaDataOnStartup();
-                metaData.SupabaseAccessToken = token;
-                metaData.SupabaseUserId = userId;
-                metaData.SupabaseUsername = username;
-                MetaDataManager.SaveMetaData(metaData);
+                MetaDataManager.SaveMetaData();
 
                 OnPropertyChanged(nameof(WelcomeText));
 
@@ -327,26 +314,19 @@ namespace ReviFlash.ViewModels
 
         private void Logout()
         {
-            SupabaseConfig.CurrentAccessToken = null;
-            SupabaseConfig.CurrentUserId = null;
-            SupabaseConfig.CurrentUsername = null;
             IsAuthenticated = false;
-
             AvailableDecks = [];
             SelectedDeckToUpload = null;
 
-            var metaData = MetaDataManager.LoadMetaDataOnStartup();
-            metaData.SupabaseAccessToken = null;
-            metaData.SupabaseUserId = null;
-            metaData.SupabaseUsername = null;
-            MetaDataManager.SaveMetaData(metaData);
+            MetaDataManager.Data.SetSupabase(null, null, null, DateTime.MinValue);
+            MetaDataManager.SaveMetaData();
 
             StatusMessage = "You have been securely logged out.";
         }
 
         private async Task UploadAsync(FlashCardDeck? deck)
         {
-            if (deck == null || string.IsNullOrEmpty(SupabaseConfig.CurrentUserId)) return;
+            if (deck == null || string.IsNullOrEmpty(MetaDataManager.Data.SupabaseUserId)) return;
 
             var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
             if (cards.Count == 0)
@@ -362,7 +342,7 @@ namespace ReviFlash.ViewModels
             {
                 string jsonPayload = BackupManager.GenerateCloudExportJson(deck.ID);
                 using var client = new SupabaseClient();
-                var (success, message) = await client.UploadDeckAsync(SupabaseConfig.CurrentUserId, deck.Name, cards.Count, jsonPayload);
+                var (success, message) = await client.UploadCloudDeckAsync(MetaDataManager.Data.SupabaseUserId, deck.Name, cards.Count, jsonPayload);
 
                 cts.Cancel();
                 StatusMessage = message;

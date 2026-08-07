@@ -8,12 +8,12 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using ReviFlash.Utilities;
 
+using static ReviFlash.Utilities.CardUtility;
+
 namespace ReviFlash.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private readonly AppMetaData _settings;
-
     private enum StatsScope
     {
         Overall,
@@ -180,7 +180,7 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public bool ShowBackgroundSwirl => _settings.ShowBackgroundSwirl;
+    public bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
 
     public static int CompareVersionNumber(string versionA, string versionB)
     {
@@ -198,7 +198,7 @@ public class MainWindowViewModel : ViewModelBase
 
     private static int[] ExtractVersionNumber(string version)
     {
-        Match match = Regex.Match(version, @"(\d+)\.(\d+)\.(\d+)");
+        Match match = TextUtility.VersionRegex().Match(version);
 
         if (!match.Success)
             return [0, 0, 0];
@@ -473,15 +473,12 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public MainWindowViewModel(AppMetaData settings)
+    public MainWindowViewModel()
     {
-        _settings = settings;
-        _settings.PropertyChanged += Settings_PropertyChanged;
+        MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
         RefreshStreakTexts();
-        RefreshAnswerStreakText();
         CurrentPage = this;
 
-        // Initialize time period options
         TimePeriods.Add(new TimePeriodOption("All Time", null!));
         TimePeriods.Add(new TimePeriodOption("Last 6 Months", "-6 months"));
         TimePeriods.Add(new TimePeriodOption("Last 3 Months", "-3 months"));
@@ -491,13 +488,11 @@ public class MainWindowViewModel : ViewModelBase
         TimePeriods.Add(new TimePeriodOption("Last 3 Days", "-3 days"));
         TimePeriods.Add(new TimePeriodOption("Last Day", "-1 days"));
 
-        // Set "All Time" as default
         SelectedTimePeriod = TimePeriods[0];
         
         SelectedAttemptsGrouping = GraphGroupingOptions[0];
         SelectedTimeGrouping = GraphGroupingOptions[0];
 
-        // Sorting options (default alphabetical A-Z)
         SortOptions.Add(new SortOption("Name A-Z", "name_asc"));
         SortOptions.Add(new SortOption("Name Z-A", "name_desc"));
         SortOptions.Add(new SortOption("Cards (high → low)", "cards_desc"));
@@ -512,8 +507,6 @@ public class MainWindowViewModel : ViewModelBase
         RefreshDashboardItems();
     }
 
-    public AppMetaData Settings => _settings;
-
     private void Settings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
@@ -525,21 +518,13 @@ public class MainWindowViewModel : ViewModelBase
             case nameof(AppMetaData.BestLaunchStreak):
                 RefreshStreakTexts();
                 break;
-            case nameof(AppMetaData.BestAnswerStreak):
-                RefreshAnswerStreakText();
-                break;
         }
     }
 
     private void RefreshStreakTexts()
     {
-        StreakText = $"{_settings.LaunchStreak} Day Streak";
-        BestEverStreakText = $"{_settings.BestLaunchStreak} Days";
-    }
-
-    private void RefreshAnswerStreakText()
-    {
-        BestAnswerStreakText = _settings.BestAnswerStreak.ToString();
+        StreakText = $"{MetaDataManager.Data.LaunchStreak} Day Streak";
+        BestEverStreakText = $"{MetaDataManager.Data.BestLaunchStreak} Days";
     }
 
     private void LoadStats()
@@ -553,7 +538,7 @@ public class MainWindowViewModel : ViewModelBase
         TotalCardCount = FlashCardRepository.GetCardCount();
         BestAnswerStreakText = "0";
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
-        Grade = GradeCalculator.CalculateGradeWithDefault(correct, total);
+        Grade = CalculateGradeWithDefault(correct, total);
         RefreshGraphStats();
     }
 
@@ -619,7 +604,7 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         double percentage = totalQuestions > 0 ? Math.Round((double)totalCorrect / totalQuestions * 100, 1) : 0;
-        string grade = GradeCalculator.CalculateGradeWithDefault(totalCorrect, totalQuestions);
+        string grade = CalculateGradeWithDefault(totalCorrect, totalQuestions);
 
         TotalQuestions = totalQuestions;
         TotalCorrect = totalCorrect;
@@ -793,7 +778,7 @@ public class MainWindowViewModel : ViewModelBase
         var (correct, total, timeTakenSeconds) = FlashCardRepository.GetStats(deckID, timeModifier);
         double percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
 
-        string grade = GradeCalculator.CalculateGradeWithDefault(correct, total);
+        string grade = CalculateGradeWithDefault(correct, total);
 
         return (correct, total, timeTakenSeconds, percentage, grade);
     }

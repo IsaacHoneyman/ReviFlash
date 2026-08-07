@@ -50,7 +50,6 @@ public class ReviewMatchRow : ViewModelBase
 public class ReviewViewModel : ViewModelBase
     , IDisposable
 {
-    private readonly AppMetaData _settings;
     private readonly List<FlashCard> _sessionCards;
     private readonly Dictionary<ulong, ulong>? _cardDeckMap;
     private readonly ulong? _reviewGroupId;
@@ -135,23 +134,21 @@ public class ReviewViewModel : ViewModelBase
         set { _timerText = value; OnPropertyChanged(nameof(TimerText)); }
     }
 
-    public bool ShouldShowTimer => _settings.ShowTimer;
-    public bool ShouldShowProgress => _settings.ShowProgress;
-    public bool ShouldShowSkipButton => _settings.ShowSkipButton;
-    public bool ShouldShowRetryLaterButton => _settings.ShowRetryLaterButton;
-    public bool CanRetryLater => _settings.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
-    public bool ShouldShowAnswerStreak => _settings.ShowAnswerStreakInReview;
+    public bool ShouldShowTimer => MetaDataManager.Data.ShowTimer;
+    public bool ShouldShowProgress => MetaDataManager.Data.ShowProgress;
+    public bool ShouldShowSkipButton => MetaDataManager.Data.ShowSkipButton;
+    public bool ShouldShowRetryLaterButton => MetaDataManager.Data.ShowRetryLaterButton;
+    public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
+    public bool ShouldShowAnswerStreak => MetaDataManager.Data.ShowAnswerStreakInReview;
     public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
     public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";
 
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
 
-    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, AppMetaData settings, Dictionary<ulong, ulong>? cardDeckMap = null, ulong? reviewGroupId = null)
+    public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, Dictionary<ulong, ulong>? cardDeckMap = null, ulong? reviewGroupId = null)
     {
         ArgumentNullException.ThrowIfNull(cards);
-        _settings = settings;
-        _settings.PropertyChanged += Settings_PropertyChanged;
 
         _sessionCards = [.. cards.OrderBy(_ => Guid.NewGuid()).ToList()]; // Shuffle cards
         if (_sessionCards.Count == 0)
@@ -353,7 +350,7 @@ public class ReviewViewModel : ViewModelBase
 
     public void SkipCard()
     {
-        if (!_settings.ShowSkipButton || _sessionCards.Count <= 1 || _currentIndex >= _sessionCards.Count - 1)
+        if (!MetaDataManager.Data.ShowSkipButton || _sessionCards.Count <= 1 || _currentIndex >= _sessionCards.Count - 1)
         {
             return;
         }
@@ -364,7 +361,7 @@ public class ReviewViewModel : ViewModelBase
 
     public void RetryLater()
     {
-        if (!_settings.ShowRetryLaterButton || _sessionCards.Count <= 1)
+        if (!MetaDataManager.Data.ShowRetryLaterButton || _sessionCards.Count <= 1)
         {
             return;
         }

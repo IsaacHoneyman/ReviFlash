@@ -21,12 +21,11 @@ public partial class MainWindow : Window
 
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        var settings = GetSettings();
         // 1. Create the new window
         var settingsWindow = new SettingsWindow
         {
             // 2. Give it the dedicated ViewModel
-            DataContext = new SettingsViewModel(settings)
+            DataContext = new SettingsViewModel()
         };
 
         // 3. Show it as a modal dialog. 
@@ -55,13 +54,12 @@ public partial class MainWindow : Window
 
     public async void CreateDeck_Click(object sender, RoutedEventArgs e)
     {
-        var settings = GetSettings();
         var newDeck = new FlashCardDeck("New Flashcard Set");
         ReviFlash.Data.FlashCardRepository.SaveNewDeck(newDeck);
 
         var editor = new DeckEditorWindow
         {
-            DataContext = new DeckEditorViewModel(newDeck, settings)
+            DataContext = new DeckEditorViewModel(newDeck)
         };
         await editor.ShowDialog(this);
 
@@ -89,13 +87,12 @@ public partial class MainWindow : Window
 
     public async void EditDeck_Click(object sender, RoutedEventArgs e)
     {
-        var settings = GetSettings();
         var button = (Button)sender;
         var selectedDeck = (FlashCardDeck)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck"));
 
         var editor = new DeckEditorWindow
         {
-            DataContext = new DeckEditorViewModel(selectedDeck, settings)
+            DataContext = new DeckEditorViewModel(selectedDeck)
         };
         await editor.ShowDialog(this);
 
@@ -418,11 +415,10 @@ public partial class MainWindow : Window
 
     private void StartReviewSession(FlashCardDeck deck)
     {
-        var settings = GetSettings();
         var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
         if (cards.Count == 0) return;
 
-        var reviewVM = new ReviewViewModel(cards, deck.ID, settings)
+        var reviewVM = new ReviewViewModel(cards, deck.ID)
         {
             OnSessionComplete = (score, total, time, isPartial) =>
             {
@@ -437,7 +433,6 @@ public partial class MainWindow : Window
 
     private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks, ulong? groupId = null)
     {
-        var settings = GetSettings();
         var allCards = new List<FlashCard>();
         var cardDeckMap = new Dictionary<ulong, ulong>();
 
@@ -459,7 +454,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, settings, cardDeckMap, groupId)
+        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap, groupId)
         {
             OnSessionComplete = (score, total, time, isPartial) =>
             {
@@ -539,8 +534,6 @@ public partial class MainWindow : Window
     }
 
     private ReviewViewModel? GetReviewVM() => (DataContext as MainWindowViewModel)?.CurrentPage as ReviewViewModel;
-
-    private AppMetaData GetSettings() => (DataContext as MainWindowViewModel)?.Settings ?? new AppMetaData();
 
     private void ReturnToDashboard_Click(object sender, RoutedEventArgs e)
     {

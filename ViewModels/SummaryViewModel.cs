@@ -1,5 +1,6 @@
 using System;
-using ReviFlash.Utilities;
+
+using static ReviFlash.Utilities.CardUtility;
 
 namespace ReviFlash.ViewModels;
 
@@ -16,7 +17,7 @@ public class SummaryViewModel : ViewModelBase
         : TimeTaken.ToString(@"mm\:ss");
     public string SessionMarker => IsPartialSession ? "(Partial)" : "";
 
-    public string Grade => GradeCalculator.CalculateGradeWithDefault(Score, Total);
+    public string Grade => CalculateGradeWithDefault(Score, Total);
 
     public SummaryViewModel(int score, int total, TimeSpan time, bool isPartialSession = false)
     {

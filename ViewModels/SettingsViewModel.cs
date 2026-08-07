@@ -11,11 +11,8 @@ namespace ReviFlash.ViewModels;
 
 public class SettingsViewModel : ViewModelBase
 {
-    private readonly AppMetaData _settings;
-
-    // 1. The list of themes that the ComboBox will display
-    public List<string> AvailableThemes { get; } = new()
-    {
+    public List<string> AvailableThemes { get; } =
+    [
         "Default",
         "Midnight",
         "Forest",
@@ -32,7 +29,7 @@ public class SettingsViewModel : ViewModelBase
         "Plains",
         "Water",
         "Pride",
-    };
+    ];
 
     private ObservableCollection<FlashCardDeck> _availableDecks = new();
     public ObservableCollection<FlashCardDeck> AvailableDecks
@@ -50,110 +47,109 @@ public class SettingsViewModel : ViewModelBase
 
     public string DatabasePath
     {
-        get => _settings.DatabasePath;
+        get => MetaDataManager.Data.DatabasePath;
         set
         {
-            _settings.DatabasePath = string.IsNullOrWhiteSpace(value)
+            MetaDataManager.Data.DatabasePath = string.IsNullOrWhiteSpace(value)
                 ? AppStoragePaths.DatabasePath
                 : Path.GetFullPath(value);
-            DatabaseManager.ConfigureDatabasePath(_settings.DatabasePath);
+            DatabaseManager.ConfigureDatabasePath(MetaDataManager.Data.DatabasePath);
             OnPropertyChanged(nameof(DatabasePath));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public string SelectedTheme
     {
-        get => _settings.Theme == "Dark" ? "Default" : _settings.Theme;
+        get => MetaDataManager.Data.Theme == "Dark" ? "Default" : MetaDataManager.Data.Theme;
         set
         {
-            ApplyTheme(_settings, value);
-            MetaDataManager.SaveMetaData(_settings);
+            ApplyTheme(MetaDataManager.Data, value);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public bool ShowTimer
     {
-        get => _settings.ShowTimer;
+        get => MetaDataManager.Data.ShowTimer;
         set
         {
-            _settings.ShowTimer = value;
+            MetaDataManager.Data.ShowTimer = value;
             OnPropertyChanged(nameof(ShowTimer));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public bool ShowProgress
     {
-        get => _settings.ShowProgress;
+        get => MetaDataManager.Data.ShowProgress;
         set
         {
-            _settings.ShowProgress = value;
+            MetaDataManager.Data.ShowProgress = value;
             OnPropertyChanged(nameof(ShowProgress));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public bool ShowSkipButton
     {
-        get => _settings.ShowSkipButton;
+        get => MetaDataManager.Data.ShowSkipButton;
         set
         {
-            _settings.ShowSkipButton = value;
+            MetaDataManager.Data.ShowSkipButton = value;
             OnPropertyChanged(nameof(ShowSkipButton));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public bool ShowRetryLaterButton
     {
-        get => _settings.ShowRetryLaterButton;
+        get => MetaDataManager.Data.ShowRetryLaterButton;
         set
         {
-            _settings.ShowRetryLaterButton = value;
+            MetaDataManager.Data.ShowRetryLaterButton = value;
             OnPropertyChanged(nameof(ShowRetryLaterButton));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
     
     public bool ShowAnswerStreakInReview
     {
-        get => _settings.ShowAnswerStreakInReview;
+        get => MetaDataManager.Data.ShowAnswerStreakInReview;
         set
         {
-            _settings.ShowAnswerStreakInReview = value;
+            MetaDataManager.Data.ShowAnswerStreakInReview = value;
             OnPropertyChanged(nameof(ShowAnswerStreakInReview));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public bool ShowAdditionalFieldLatexPreviews
     {
-        get => _settings.ShowAdditionalFieldLatexPreviews;
+        get => MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
         set
         {
-            _settings.ShowAdditionalFieldLatexPreviews = value;
+            MetaDataManager.Data.ShowAdditionalFieldLatexPreviews = value;
             OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
     public bool ShowBackgroundSwirl
     {
-        get => _settings.ShowBackgroundSwirl;
+        get => MetaDataManager.Data.ShowBackgroundSwirl;
         set
         {
-            _settings.ShowBackgroundSwirl = value;
+            MetaDataManager.Data.ShowBackgroundSwirl = value;
             OnPropertyChanged(nameof(ShowBackgroundSwirl));
-            MetaDataManager.SaveMetaData(_settings);
+            MetaDataManager.SaveMetaData();
         }
     }
 
-    public SettingsViewModel(AppMetaData settings)
+    public SettingsViewModel()
     {
-        _settings = settings;
-        _settings.PropertyChanged += Settings_PropertyChanged;
-        DatabaseManager.ConfigureDatabasePath(_settings.DatabasePath);
+        MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
+        DatabaseManager.ConfigureDatabasePath(MetaDataManager.Data.DatabasePath);
         LoadDecks();
     }
 

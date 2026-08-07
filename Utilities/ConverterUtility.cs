@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Avalonia.Data.Converters;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Converters;
 
 public static class MathDelimiterHelper
 {
-    private static readonly Regex InlineMathRegex = new(@"\$\$(.+?)\$\$|\$(.+?)\$", RegexOptions.Singleline | RegexOptions.Compiled);
-
     public static bool IsDelimitedMath(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return false;
@@ -22,18 +21,18 @@ public static class MathDelimiterHelper
         if (string.IsNullOrWhiteSpace(value)) return string.Empty;
         var trimmed = value.Trim();
         if (!IsDelimitedMath(trimmed)) return trimmed;
-        return trimmed.Substring(2, trimmed.Length - 4).Trim();
+        return trimmed[2..^2].Trim();
     }
 
     public static IReadOnlyList<MixedMathSegment> ParseSegments(string? value)
     {
-        if (string.IsNullOrEmpty(value)) return Array.Empty<MixedMathSegment>();
+        if (string.IsNullOrEmpty(value)) return [];
 
         var segments = new List<MixedMathSegment>();
         var input = value;
         var currentIndex = 0;
 
-        foreach (Match match in InlineMathRegex.Matches(input))
+        foreach (Match match in TextUtility.InlineMathRegex().Matches(input))
         {
             if (match.Index > currentIndex)
             {
@@ -61,16 +60,10 @@ public static class MathDelimiterHelper
     }
 }
 
-public sealed class MixedMathSegment
+public sealed class MixedMathSegment(string content, bool isMath)
 {
-    public MixedMathSegment(string content, bool isMath)
-    {
-        Content = content;
-        IsMath = isMath;
-    }
-
-    public string Content { get; }
-    public bool IsMath { get; }
+    public string Content { get; } = content;
+    public bool IsMath { get; } = isMath;
     public bool IsText => !IsMath;
 }
 

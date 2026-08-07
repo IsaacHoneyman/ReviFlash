@@ -7,14 +7,32 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using ReviFlash.ViewModels;
 using ReviFlash.Views;
-using ReviFlash.Models;
 using ReviFlash.Data;
 
 namespace ReviFlash;
 
 public partial class App : Application
 {
-    public static AppMetaData CurrentMetaData { get; private set; } = new();
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        MetaDataManager.InitMetaData();
+        DatabaseManager.ConfigureDatabasePath(MetaDataManager.Data.DatabasePath);
+        DatabaseManager.InitDatabase();
+        ApplyAccessibilityPalette(IsLightThemeName(MetaDataManager.Data.Theme));
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            DisableAvaloniaDataAnnotationValidation();
+            desktop.MainWindow = new MainWindow { DataContext = new MainWindowViewModel() };
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
 
     public static bool IsLightThemeName(string themeName)
     {
@@ -23,10 +41,7 @@ public partial class App : Application
 
     public static void ApplyAccessibilityPalette(bool isLightTheme)
     {
-        if (Current is null)
-        {
-            return;
-        }
+        if (Current is null) return;
 
         Current.Resources["SuccessForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#1D6A42") : Color.Parse("#44CC88"));
         Current.Resources["WarningForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#8A5A00") : Color.Parse("#FFCC66"));
@@ -36,42 +51,11 @@ public partial class App : Application
         Current.Resources["SurfaceOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#12000000") : Color.Parse("#18000000"));
     }
 
-    public static void SetCurrentMetaData(AppMetaData metaData)
-    {
-        CurrentMetaData.ApplyFrom(metaData);
-    }
-
-    public override void Initialize()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
-    public override void OnFrameworkInitializationCompleted()
-    {
-        SetCurrentMetaData(Data.MetaDataManager.LoadMetaDataOnStartup());
-        DatabaseManager.ConfigureDatabasePath(CurrentMetaData.DatabasePath);
-        DatabaseManager.InitDatabase();
-        ApplyAccessibilityPalette(IsLightThemeName(CurrentMetaData.Theme));
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(CurrentMetaData),
-            };
-        }
-
-        base.OnFrameworkInitializationCompleted();
-    }
-
     private void DisableAvaloniaDataAnnotationValidation()
     {
-        // Get an array of plugins to remove
         var dataValidationPluginsToRemove =
             BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
 
-        // remove each entry found
         foreach (var plugin in dataValidationPluginsToRemove)
         {
             BindingPlugins.DataValidators.Remove(plugin);
