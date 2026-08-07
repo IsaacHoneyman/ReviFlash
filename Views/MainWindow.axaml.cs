@@ -9,6 +9,7 @@ using ReviFlash.Models;
 using ReviFlash.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
+using ReviFlash.Data.Local;
 
 namespace ReviFlash.Views;
 
@@ -55,7 +56,7 @@ public partial class MainWindow : Window
     public async void CreateDeck_Click(object sender, RoutedEventArgs e)
     {
         var newDeck = new FlashCardDeck("New Flashcard Set");
-        ReviFlash.Data.FlashCardRepository.SaveNewDeck(newDeck);
+        FlashCardRepository.SaveNewDeck(newDeck);
 
         var editor = new DeckEditorWindow
         {
@@ -349,12 +350,12 @@ public partial class MainWindow : Window
 
         try
         {
-            BackupManager.TryCreateDeckExport(saveFile.Path.LocalPath, vm.GetSelectedDecks().Select(deck => deck.ID).ToList());
+            DeckTransferManager.TryCreateDeckExport(saveFile.Path.LocalPath, vm.GetSelectedDecks().Select(deck => deck.ID).ToList());
             vm.CancelSelectionMode();
         }
         catch (Exception ex)
         {
-            AppLogger.Error("Export failed", ex);
+            Logger.LogError("Export failed", ex);
         }
     }
 
@@ -382,7 +383,7 @@ public partial class MainWindow : Window
 
         try
         {
-            BackupManager.TryImportDeckExport(files[0].Path.LocalPath);
+            DeckTransferManager.TryImportDeckExport(files[0].Path.LocalPath);
             vm.CancelSelectionMode();
             vm.LoadDecksFromDatabase();
             vm.FilterDecks();
@@ -390,7 +391,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            AppLogger.Error("Import failed", ex);
+            Logger.LogError("Import failed", ex);
         }
     }
 

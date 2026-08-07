@@ -1,9 +1,11 @@
+using System;
+using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace ReviFlash.Utilities;
 
-/// <summary> Precompiled Regex & Json Utility </summary>
+/// <summary> Precompiled Regex & Json & Path Utility </summary>
 public static partial class TextUtility
 {
     // --- Regex ---
@@ -18,4 +20,13 @@ public static partial class TextUtility
 
     public static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
     public static readonly JsonSerializerOptions CaseInsensitive = new() { PropertyNameCaseInsensitive = true }; 
+
+    // --- Paths ---
+
+    public const string MetadataFileName = "metadata.json";
+    public const string DatabaseFileName = "reviflash.db";
+
+    public static string BaseDirectory => AppDomain.CurrentDomain.BaseDirectory;
+    public static string MetadataPath => Path.Combine(BaseDirectory, MetadataFileName);
+    public static string DatabasePath => Path.Combine(BaseDirectory, DatabaseFileName);
 }

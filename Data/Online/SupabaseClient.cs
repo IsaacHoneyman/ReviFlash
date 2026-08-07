@@ -5,22 +5,21 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ReviFlash.Data;
 using ReviFlash.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Reflection.Metadata.Ecma335;
+using ReviFlash.Utilities;
+using ReviFlash.Data.Local;
 
-namespace ReviFlash.Utilities;
+namespace ReviFlash.Data.Online;
 
 /// <summary> Interface to online shared database. </summary>
-public sealed class SupabaseClient : IDisposable
+public sealed class SupabaseConnection : IDisposable
 {
     private const string ProjectURL = "https://hegjwggsueldwtnxpnnv.supabase.co";
     private const string AnonKey = "sb_publishable_XETpGgIYnJHFwrq28EV-4w_-aZ_UdV4";
 
     private readonly HttpClient _http;
 
-    public SupabaseClient()
+    public SupabaseConnection()
     {
         var authToken = MetaDataManager.Data.SupabaseAccessToken ?? AnonKey;
 
@@ -28,11 +27,15 @@ public sealed class SupabaseClient : IDisposable
         _http.DefaultRequestHeaders.Add("apikey", AnonKey);
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
         _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        Logger.LogInfo("Supabase connection initalised.");
     }
 
     public void Dispose()
     {
         _http?.Dispose();
+        Logger.LogInfo("Supabase connection disposed.");
+
     }
 
     // --- AUTHENTICATION METHODS ---

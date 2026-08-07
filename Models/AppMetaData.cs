@@ -1,10 +1,12 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Data;
+using ReviFlash.Utilities;
 using ReviFlash.ViewModels;
 
 namespace ReviFlash.Models;
 
+/// <summary> Non flash card persistent data. </summary>
 public partial class AppMetaData : ObservableObject
 {
     [ObservableProperty] private string _theme = "Default";
@@ -20,7 +22,7 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private bool _showAnswerStreakInReview = true;
     [ObservableProperty] private bool _showAdditionalFieldLatexPreviews = true;
     [ObservableProperty] private bool _showBackgroundSwirl = true;
-    [ObservableProperty] private string _databasePath = AppStoragePaths.DatabasePath;
+    [ObservableProperty] private string _databasePath = TextUtility.DatabasePath;
     [ObservableProperty] private string? _supabaseAccessToken;
     [ObservableProperty] private string? _supabaseUserId;
     [ObservableProperty] private string? _supabaseUsername;

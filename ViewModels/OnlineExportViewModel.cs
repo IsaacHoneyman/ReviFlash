@@ -4,11 +4,11 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ReviFlash.Utilities;
 using ReviFlash.Models;
-using ReviFlash.Data;
 using System.Threading;
 using System.Collections.ObjectModel;
+using ReviFlash.Data.Local;
+using ReviFlash.Data.Online;
 
 namespace ReviFlash.ViewModels
 {
@@ -243,7 +243,7 @@ namespace ReviFlash.ViewModels
             if (string.IsNullOrEmpty(MetaDataManager.Data.SupabaseUserId)) return;
 
             CloudDecks.Clear();
-            using var client = new SupabaseClient();
+            using var client = new SupabaseConnection();
             var remoteDecks = await client.GetUserCloudDecksAsync(MetaDataManager.Data.SupabaseUserId);
 
             foreach (var deck in remoteDecks)
@@ -264,7 +264,7 @@ namespace ReviFlash.ViewModels
 
             StatusMessage = "Creating account...";
 
-            using var client = new SupabaseClient();
+            using var client = new SupabaseConnection();
             var (success, message, _) = await client.SignUpAsync(Email, Password, Username);
 
             StatusMessage = message;
@@ -285,7 +285,7 @@ namespace ReviFlash.ViewModels
 
             StatusMessage = "Logging in...";
 
-            using var client = new SupabaseClient();
+            using var client = new SupabaseConnection();
             var (success, message, token, userId, username, expiration) = await client.SignInAsync(Email, Password);
 
             StatusMessage = message;
@@ -340,8 +340,8 @@ namespace ReviFlash.ViewModels
 
             try
             {
-                string jsonPayload = BackupManager.GenerateCloudExportJson(deck.ID);
-                using var client = new SupabaseClient();
+                string jsonPayload = DeckTransferManager.GenerateCloudExportJson(deck.ID);
+                using var client = new SupabaseConnection();
                 var (success, message) = await client.UploadCloudDeckAsync(MetaDataManager.Data.SupabaseUserId, deck.Name, cards.Count, jsonPayload);
 
                 cts.Cancel();
@@ -379,8 +379,8 @@ namespace ReviFlash.ViewModels
 
             try
             {
-                string jsonPayload = BackupManager.GenerateCloudExportJson(SelectedLocalDeckForUpdate.ID);
-                using var client = new SupabaseClient();
+                string jsonPayload = DeckTransferManager.GenerateCloudExportJson(SelectedLocalDeckForUpdate.ID);
+                using var client = new SupabaseConnection();
 
                 var (success, message) = await client.UpdateCloudDeckAsync(
                     TargetCloudDeckToUpdate.StoragePath,
@@ -408,7 +408,7 @@ namespace ReviFlash.ViewModels
 
             try
             {
-                using var client = new SupabaseClient();
+                using var client = new SupabaseConnection();
                 var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath);
 
                 cts.Cancel();

@@ -5,8 +5,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ReviFlash.Data;
 using ReviFlash.Models;
-using ReviFlash.Utilities;
+using ReviFlash.Data.Local;
+using ReviFlash.Data.Online;
 
 namespace ReviFlash.ViewModels
 {
@@ -76,7 +78,7 @@ namespace ReviFlash.ViewModels
 
             try
             {
-                using var client = new SupabaseClient();
+                using var client = new SupabaseConnection();
                 var results = await client.GetPublicDecksAsync(SearchText, limit: 25);
 
                 foreach (var deck in results)
@@ -111,9 +113,9 @@ namespace ReviFlash.ViewModels
 
             try
             {
-                using var client = new SupabaseClient();
+                using var client = new SupabaseConnection();
                 string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
-                BackupManager.TryImportCloudDeck(json);
+                DeckTransferManager.TryImportCloudDeck(json);
 
                 cts.Cancel();
                 StatusMessage = $"Successfully imported '{deck.Title}'! You can now review it.";

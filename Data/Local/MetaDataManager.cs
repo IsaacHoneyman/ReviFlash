@@ -5,23 +5,23 @@ using ReviFlash.Models;
 using ReviFlash.Utilities;
 using ReviFlash.ViewModels;
 
-namespace ReviFlash.Data;
+namespace ReviFlash.Data.Local;
 
+/// <summary> Responsible for meta data mangement in running application. </summary>
 public static class MetaDataManager
 {
     public static AppMetaData Data { get; private set; } = null!;
 
     private static string GetFilePath()
     {
-        return AppStoragePaths.MetadataPath;
+        return TextUtility.MetadataPath;
     }
 
     public static void InitMetaData()
     {
-        AppLogger.Info("Hello?");
         AppMetaData data = LoadMetaData();
 
-        if (string.IsNullOrWhiteSpace(data.DatabasePath)) data.DatabasePath = AppStoragePaths.DatabasePath;
+        if (string.IsNullOrWhiteSpace(data.DatabasePath)) data.DatabasePath = TextUtility.DatabasePath;
 
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
         if (today == data.LastLaunchDate.AddDays(1)) data.LaunchStreak++;
@@ -34,6 +34,8 @@ public static class MetaDataManager
         data.Version = MainWindowViewModel.VersionText;
         Data = data;
         SaveMetaData();
+
+        Logger.LogInfo("ReviFlash metadata initalised.");
     }
 
     public static void LoadMetaDataFrom(AppMetaData data)
@@ -70,8 +72,7 @@ public static class MetaDataManager
         }
         catch (Exception ex)
         {
-            AppLogger.Info($"{GetFilePath()}");
-            AppLogger.Error("Failed to load metadata", ex);
+            Logger.LogError("Metadata load failed", ex);
             return new();
         }
     }
@@ -80,7 +81,7 @@ public static class MetaDataManager
     {
         if (Data == null)
         {
-            AppLogger.Info("Meta Data Is Null, Saving Will Not Occur");
+            Logger.LogWarning("Meta Data attempted to save NULL instance.");
             return;
         }
         File.WriteAllText(GetFilePath(), JsonSerializer.Serialize(Data, TextUtility.Indented));        

@@ -7,10 +7,11 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using ReviFlash.ViewModels;
 using ReviFlash.Views;
-using ReviFlash.Data;
+using ReviFlash.Data.Local;
 
 namespace ReviFlash;
 
+/// <summary> App container. </summary>
 public partial class App : Application
 {
     public override void Initialize()
@@ -21,9 +22,8 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         MetaDataManager.InitMetaData();
-        DatabaseManager.ConfigureDatabasePath(MetaDataManager.Data.DatabasePath);
         DatabaseManager.InitDatabase();
-        ApplyAccessibilityPalette(IsLightThemeName(MetaDataManager.Data.Theme));
+        ApplyAccessibilityPalette(AppThemes.IsLightTheme(MetaDataManager.Data.Theme));
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -34,9 +34,15 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    public static bool IsLightThemeName(string themeName)
+    private void DisableAvaloniaDataAnnotationValidation()
     {
-        return themeName is "Desert" or "Sepia" or "Sun" or "Rose" or "Plains" or "Water" or "Pride";
+        var dataValidationPluginsToRemove =
+            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
+
+        foreach (var plugin in dataValidationPluginsToRemove)
+        {
+            BindingPlugins.DataValidators.Remove(plugin);
+        }
     }
 
     public static void ApplyAccessibilityPalette(bool isLightTheme)
@@ -49,16 +55,5 @@ public partial class App : Application
         Current.Resources["SuccessBackground"] = new SolidColorBrush(Color.Parse("#2E9E44"));
         Current.Resources["DangerBackground"] = new SolidColorBrush(Color.Parse("#CC3D3D"));
         Current.Resources["SurfaceOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#12000000") : Color.Parse("#18000000"));
-    }
-
-    private void DisableAvaloniaDataAnnotationValidation()
-    {
-        var dataValidationPluginsToRemove =
-            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
-
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
     }
 }

@@ -3,9 +3,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Styling;
-using ReviFlash.Data;
 using ReviFlash.Models;
-using System.IO;
+using ReviFlash.Data.Local;
 
 namespace ReviFlash.ViewModels;
 
@@ -43,20 +42,6 @@ public class SettingsViewModel : ViewModelBase
     {
         get => _selectedDeckForStatDeletion;
         set { _selectedDeckForStatDeletion = value; OnPropertyChanged(nameof(SelectedDeckForStatDeletion)); }
-    }
-
-    public string DatabasePath
-    {
-        get => MetaDataManager.Data.DatabasePath;
-        set
-        {
-            MetaDataManager.Data.DatabasePath = string.IsNullOrWhiteSpace(value)
-                ? AppStoragePaths.DatabasePath
-                : Path.GetFullPath(value);
-            DatabaseManager.ConfigureDatabasePath(MetaDataManager.Data.DatabasePath);
-            OnPropertyChanged(nameof(DatabasePath));
-            MetaDataManager.SaveMetaData();
-        }
     }
 
     public string SelectedTheme
@@ -148,8 +133,6 @@ public class SettingsViewModel : ViewModelBase
 
     public SettingsViewModel()
     {
-        MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
-        DatabaseManager.ConfigureDatabasePath(MetaDataManager.Data.DatabasePath);
         LoadDecks();
     }
 
@@ -180,9 +163,6 @@ public class SettingsViewModel : ViewModelBase
                 break;
             case nameof(AppMetaData.ShowBackgroundSwirl):
                 OnPropertyChanged(nameof(ShowBackgroundSwirl));
-                break;
-            case nameof(AppMetaData.DatabasePath):
-                OnPropertyChanged(nameof(DatabasePath));
                 break;
         }
     }
@@ -267,7 +247,7 @@ public class SettingsViewModel : ViewModelBase
                 Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
             }
 
-            App.ApplyAccessibilityPalette(App.IsLightThemeName(themeName));
+            App.ApplyAccessibilityPalette(AppThemes.IsLightTheme(themeName));
         }
     }
 
@@ -290,7 +270,6 @@ public class SettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowRetryLaterButton));
         OnPropertyChanged(nameof(ShowAnswerStreakInReview));
         OnPropertyChanged(nameof(ShowBackgroundSwirl));
-        OnPropertyChanged(nameof(DatabasePath));
         LoadDecks();
     }
 

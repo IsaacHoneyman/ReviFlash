@@ -1,7 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using ReviFlash.Models;
-using ReviFlash.Data;
+using ReviFlash.Data.Local;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
@@ -336,11 +336,11 @@ public class DeckEditorViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            AppLogger.Info($"Cancelled card load for deck '{CurrentDeck.Name}' ({CurrentDeck.ID}).");
+            Logger.LogInfo($"Cancelled card load for deck '{CurrentDeck.Name}' ({CurrentDeck.ID}).");
         }
         catch (Exception ex)
         {
-            AppLogger.Error($"Failed to load cards for deck '{CurrentDeck.Name}' ({CurrentDeck.ID})", ex);
+            Logger.LogError($"Failed to load cards for deck '{CurrentDeck.Name}' ({CurrentDeck.ID})", ex);
         }
         finally
         {

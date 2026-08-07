@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using ReviFlash.Models;
-using ReviFlash.Data;
+using ReviFlash.Data.Local;
 using System.Linq;
 using System;
 using System.Reflection;
@@ -1017,10 +1017,5 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         return totalSeconds;
-    }
-
-    public void EditDeck(FlashCardDeck deckToEdit)
-    {
-        AppLogger.Info($"Opening editor for: {deckToEdit.Name}");
     }
 }

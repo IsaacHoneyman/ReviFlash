@@ -2,7 +2,8 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using ReviFlash.Data;
+using ReviFlash.Data.Backup.Local;
+using ReviFlash.Data.Local;
 using ReviFlash.ViewModels;
 
 namespace ReviFlash.Views;
@@ -59,7 +60,7 @@ public partial class SettingsWindow : Window
 
         try
         {
-            BackupManager.TryRestoreFromBackup(files[0].Path.LocalPath);
+            BackupManager.TryRestoreBackup(files[0].Path.LocalPath);
 
             if (DataContext is SettingsViewModel vm)
             {

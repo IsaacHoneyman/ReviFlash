@@ -4,3 +4,8 @@ Supabase
 TextUtility
 MetaDataManager
 AppMetaData
+App.axaml
+Program.cs
+AppThemes.cs
+AppThemes.axaml
+Logger.txt
