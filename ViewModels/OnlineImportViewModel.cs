@@ -16,7 +16,7 @@ public partial class OnlineImportViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = string.Empty;
     [ObservableProperty] private bool _isSearching;
 
-    public ObservableCollection<DeckMetadata> SearchResults { get; } = [];
+    public ObservableCollection<FlashCardDeckMetadata> SearchResults { get; } = [];
     public OnlineImportViewModel() { _ = SearchAsync(); }
 
     [RelayCommand]
@@ -32,7 +32,6 @@ public partial class OnlineImportViewModel : ViewModelBase
         {
             using var client = new SupabaseConnection();
             var results = await client.GetPublicDecksAsync(SearchText, limit: 25);
-
             foreach (var deck in results) SearchResults.Add(deck);
 
             cts.Cancel();
@@ -43,14 +42,11 @@ public partial class OnlineImportViewModel : ViewModelBase
             cts.Cancel();
             StatusMessage = $"Search failed: {ex.Message}";
         }
-        finally
-        {
-            IsSearching = false;
-        }
+        finally { IsSearching = false; }
     }
 
     [RelayCommand]
-    private async Task DownloadAsync(DeckMetadata? deck)
+    private async Task DownloadAsync(FlashCardDeckMetadata? deck)
     {
         if (deck == null || string.IsNullOrWhiteSpace(deck.StoragePath))
         {

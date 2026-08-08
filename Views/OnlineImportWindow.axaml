@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ReviFlash.ViewModels"
         xmlns:models="using:ReviFlash.Models"
+        xmlns:onlineData="using:ReviFlash.Data.Online"
         x:Class="ReviFlash.Views.OnlineImportWindow"
         x:DataType="vm:OnlineImportViewModel"
         Title="Discover Flashcards"
@@ -47,7 +48,7 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding SearchResults}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:DeckMetadata">
+                        <DataTemplate x:DataType="onlineData:FlashCardDeckMetadata">
                             <Border Background="#14000000" 
                                     BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" 
                                     CornerRadius="12" Padding="16" Margin="0,0,0,12">

@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ReviFlash.Models;
 using ReviFlash.Utilities;
 using ReviFlash.Data.Local;
 
@@ -237,18 +236,18 @@ public sealed class SupabaseConnection : IDisposable
         return await res.Content.ReadAsStringAsync().ConfigureAwait(false);
     }
 
-    public async Task<List<DeckMetadata>> GetUserCloudDecksAsync(string userId)
+    public async Task<List<FlashCardDeckMetadata>> GetUserCloudDecksAsync(string userId)
     {
         var url = $"{ProjectURL}/rest/v1/decks?select=id,title,description,storage_path,card_count,version,created_at,updated_at&storage_path=ilike.{userId}/*";
 
         using var res = await _http.GetAsync(url).ConfigureAwait(false);
         if (!res.IsSuccessStatusCode) return [];
 
-        return JsonSerializer.Deserialize<List<DeckMetadata>>(
+        return JsonSerializer.Deserialize<List<FlashCardDeckMetadata>>(
             await res.Content.ReadAsStringAsync().ConfigureAwait(false), TextUtility.CaseInsensitive) ?? [];
     }
 
-    public async Task<List<DeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)
+    public async Task<List<FlashCardDeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)
     {
         var url = $"{ProjectURL}/rest/v1/decks?select=id,title,description,storage_path,card_count,version,created_at,updated_at&visibility=eq.public";
         if (!string.IsNullOrWhiteSpace(searchText))
@@ -263,7 +262,7 @@ public sealed class SupabaseConnection : IDisposable
         if (!res.IsSuccessStatusCode)
             throw new Exception($"Database Error ({res.StatusCode}): {await res.Content.ReadAsStringAsync()}");
 
-        return JsonSerializer.Deserialize<List<DeckMetadata>>(
+        return JsonSerializer.Deserialize<List<FlashCardDeckMetadata>>(
             await res.Content.ReadAsStringAsync().ConfigureAwait(false), TextUtility.CaseInsensitive) ?? [];
     }
 }

@@ -22,14 +22,9 @@ public class GraphStatPointViewModel : ViewModelBase
 
     public string CorrectCountText => CorrectCount.ToString();
     public string IncorrectCountText => IncorrectCount.ToString();
-
-    public string AccuracyText => TotalCount > 0
-        ? $"{Math.Round((double)CorrectCount / TotalCount * 100, 1)}%"
-        : "0%";
-
+    public string AccuracyText => TotalCount > 0 ? $"{Math.Round((double)CorrectCount / TotalCount * 100, 1)}%" : "0%";
     public string TimeText => TimeSpan.FromSeconds(TimeTakenSeconds).ToString(TimeTakenSeconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
     public string TimeValueText => TimeText;
-
     public string AttemptsTooltip => $"{Label}: {CorrectCount}/{TotalCount} correct, {TimeText}";
     public string TimeTooltip => $"{Label}: {TimeText} spent";
 
@@ -41,15 +36,12 @@ public class GraphStatPointViewModel : ViewModelBase
         TimeTakenSeconds = timeTakenSeconds;
 
         AttemptsBarHeight = totalCount > 0 && maxAttempts > 0
-            ? Math.Max(8, (int)Math.Round((double)totalCount * MaxChartHeight / maxAttempts))
-            : 0;
+            ? Math.Max(8, (int)Math.Round((double)totalCount * MaxChartHeight / maxAttempts)) : 0;
 
         CorrectBarHeight = totalCount > 0
-            ? (int)Math.Round((double)AttemptsBarHeight * correctCount / totalCount)
-            : 0;
+            ? (int)Math.Round((double)AttemptsBarHeight * correctCount / totalCount) : 0;
 
         TimeBarHeight = timeTakenSeconds > 0 && maxTimeSeconds > 0
-            ? Math.Max(8, (int)Math.Round((double)timeTakenSeconds * MaxChartHeight / maxTimeSeconds))
-            : 0;
+            ? Math.Max(8, (int)Math.Round((double)timeTakenSeconds * MaxChartHeight / maxTimeSeconds)) : 0;
     }
 }

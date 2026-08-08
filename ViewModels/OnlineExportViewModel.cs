@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
+using System.Linq;
 
 namespace ReviFlash.ViewModels;
 
@@ -39,7 +40,7 @@ public partial class OnlineExportViewModel : ViewModelBase
     [ObservableProperty] private FlashCardDeck? _selectedDeckToUpload;
 
     [ObservableProperty] private bool _isSelectingUpdateDeck;
-    [ObservableProperty] private DeckMetadata? _targetCloudDeckToUpdate;
+    [ObservableProperty] private FlashCardDeckMetadata? _targetCloudDeckToUpdate;
     [ObservableProperty] private FlashCardDeck? _selectedLocalDeckForUpdate;
 
     private string _localSearchText = string.Empty;
@@ -59,8 +60,8 @@ public partial class OnlineExportViewModel : ViewModelBase
     public ObservableCollection<FlashCardDeck> LocalDecks { get; } = [];
     public ObservableCollection<FlashCardDeck> FilteredLocalDecks { get; } = [];
 
-    public ObservableCollection<DeckMetadata> CloudDecks { get; } = [];
-    public ObservableCollection<DeckMetadata> FilteredCloudDecks { get; } = [];
+    public ObservableCollection<FlashCardDeckMetadata> CloudDecks { get; } = [];
+    public ObservableCollection<FlashCardDeckMetadata> FilteredCloudDecks { get; } = [];
 
     public OnlineExportViewModel()
     {
@@ -108,7 +109,7 @@ public partial class OnlineExportViewModel : ViewModelBase
     }
 
     [RelayCommand()]
-    private void SetupUpdate(DeckMetadata? deck)
+    private void SetupUpdate(FlashCardDeckMetadata? deck)
     {
         if (deck == null) return;
         TargetCloudDeckToUpdate = deck;
@@ -254,7 +255,7 @@ public partial class OnlineExportViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(DeckMetadata? deck)
+    private async Task DeleteAsync(FlashCardDeckMetadata? deck)
     {
         if (deck?.StoragePath == null) return;
 
@@ -279,30 +280,16 @@ public partial class OnlineExportViewModel : ViewModelBase
 
     private void RefreshLocalDecks()
     {
-        var searchText = LocalSearchText?.Trim().ToLowerInvariant() ?? "";
         FilteredLocalDecks.Clear();
-
-        foreach (var deck in LocalDecks)
-        {
-            if (string.IsNullOrWhiteSpace(searchText) || deck.Name.ToLowerInvariant().Contains(searchText))
-            {
-                FilteredLocalDecks.Add(deck);
-            }
-        }
+        var fDecks = LocalDecks.FilterBySearch(LocalSearchText);
+        foreach (var d in fDecks) FilteredLocalDecks.Add(d);
     }
 
     private void RefreshCloudDecks()
     {
-        var searchText = CloudSearchText?.Trim().ToLowerInvariant() ?? "";
         FilteredCloudDecks.Clear();
-
-        foreach (var deck in CloudDecks)
-        {
-            if (string.IsNullOrWhiteSpace(searchText) || (deck.Title?.ToLowerInvariant().Contains(searchText) ?? false))
-            {
-                FilteredCloudDecks.Add(deck);
-            }
-        }
+        var fDecks = CloudDecks.FilterBySearch(CloudSearchText);
+        foreach (var d in fDecks) FilteredCloudDecks.Add(d);
     }
 
     private async Task LoadCloudDecksAsync()
@@ -312,11 +299,7 @@ public partial class OnlineExportViewModel : ViewModelBase
         CloudDecks.Clear();
         using var client = new SupabaseConnection();
         var remoteDecks = await client.GetUserCloudDecksAsync(MetaDataManager.Data.SupabaseUserId);
-
-        foreach (var deck in remoteDecks)
-        {
-            CloudDecks.Add(deck);
-        }
+        foreach (var deck in remoteDecks) CloudDecks.Add(deck);
 
         RefreshCloudDecks();
     }
@@ -329,14 +312,8 @@ public partial class OnlineExportViewModel : ViewModelBase
             StatusMessage = baseMessage + new string('.', dotCount);
             dotCount = (dotCount % 3) + 1;
 
-            try
-            {
-                await Task.Delay(400, token);
-            }
-            catch (TaskCanceledException)
-            {
-                break;
-            }
+            try { await Task.Delay(400, token); }
+            catch (TaskCanceledException) { break; }
         }
     }
 }

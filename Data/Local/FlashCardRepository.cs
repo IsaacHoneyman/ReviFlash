@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ReviFlash.Data.Online;
 using ReviFlash.Models;
 
 namespace ReviFlash.Data.Local;
@@ -98,7 +100,7 @@ public static class FlashCardRepository
             optionCommand.ExecuteNonQuery();
         }
     }
-    
+
     private static void SaveMatchPairs(ulong cardID, List<(string leftText, string rightText)> pairs, Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
     {
         for (int i = 0; i < pairs.Count; i++)
@@ -749,5 +751,35 @@ public static class FlashCardRepository
         }
 
         return map;
+    }
+
+    // ---Extensions ---
+
+    public static IEnumerable<FlashCardDeckMetadata> FilterBySearch(this IEnumerable<FlashCardDeckMetadata> decks, string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return decks;
+
+        var parsedText = text.Trim();
+        return decks.Where(d => d.MatchesSearch(parsedText));
+    }
+
+    private static bool MatchesSearch(this FlashCardDeckMetadata deck, string parsedText)
+    {
+        return deck.Title?.Contains(parsedText, StringComparison.OrdinalIgnoreCase) ?? false ||
+               deck.CardCount.ToString().Contains(parsedText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static IEnumerable<FlashCardDeck> FilterBySearch(this IEnumerable<FlashCardDeck> decks, string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return decks;
+
+        var parsedText = text.Trim();
+        return decks.Where(d => d.MatchesSearch(parsedText));
+    }
+
+    private static bool MatchesSearch(this FlashCardDeck deck, string parsedText)
+    {
+        return deck.Name.Contains(parsedText, StringComparison.OrdinalIgnoreCase) ||
+               deck.CardCount.ToString().Contains(parsedText, StringComparison.OrdinalIgnoreCase);
     }
 }

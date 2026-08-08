@@ -92,19 +92,8 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
 
     private void RefreshFilteredAvailableDecks()
     {
-        var searchText = DeckSearchText.Trim();
-        bool isSearchEmpty = string.IsNullOrWhiteSpace(searchText);
-
         FilteredAvailableDecks.Clear();
-
-        foreach (var deck in AvailableDecks)
-        {
-            if (isSearchEmpty ||
-                deck.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                deck.CardCount.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
-            {
-                FilteredAvailableDecks.Add(deck);
-            }
-        }
+        var fDecks = AvailableDecks.FilterBySearch(DeckSearchText);
+        foreach (var d in fDecks) FilteredAvailableDecks.Add(d);
     }
 }
