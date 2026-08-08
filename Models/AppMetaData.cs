@@ -1,8 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using ReviFlash.Data;
 using ReviFlash.Utilities;
-using ReviFlash.ViewModels;
 
 namespace ReviFlash.Models;
 
@@ -14,7 +12,7 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private DateOnly _lastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
     [ObservableProperty] private int _launchStreak = 1;
     [ObservableProperty] private int _bestLaunchStreak = 1;
-    [ObservableProperty] private string _version = MainWindowViewModel.VersionText;
+    [ObservableProperty] private string _version = TextUtility.VersionText;
     [ObservableProperty] private bool _showTimer = true;
     [ObservableProperty] private bool _showProgress = true;
     [ObservableProperty] private bool _showSkipButton = true;

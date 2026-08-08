@@ -91,24 +91,6 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public static string VersionText => $"Version B-{GetAssemblyVersionText()}";
-
-    private static string GetAssemblyVersionText()
-    {
-        var assembly = typeof(MainWindowViewModel).Assembly;
-        var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-
-        if (!string.IsNullOrWhiteSpace(informationalVersion))
-        {
-            return informationalVersion.Split('+')[0];
-        }
-
-        var version = assembly.GetName().Version;
-        return version is null
-            ? "Unknown"
-            : $"{version.Major}.{version.Minor}.{version.Build}";
-    }
-
 
     private string _searchText = "";
     public string SearchText
@@ -181,32 +163,6 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     public bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
-
-    public static int CompareVersionNumber(string versionA, string versionB)
-    {
-        int[] aVersion = ExtractVersionNumber(versionA);
-        int[] bVersion = ExtractVersionNumber(versionB);
-
-        for (int i = 0; i < 3; i++)
-        {
-            if (aVersion[i] > bVersion[i]) return 1;
-            if (aVersion[i] < bVersion[i]) return -1;
-        }
-
-        return 0; 
-    }
-
-    private static int[] ExtractVersionNumber(string version)
-    {
-        Match match = TextUtility.VersionRegex().Match(version);
-
-        if (!match.Success)
-            return [0, 0, 0];
-
-        return
-        [   int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value),
-            int.Parse(match.Groups[3].Value) ];
-    }
 
     private TimePeriodOption _selectedTimePeriod = null!;
     public TimePeriodOption SelectedTimePeriod

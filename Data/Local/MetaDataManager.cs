@@ -31,7 +31,7 @@ public static class MetaDataManager
         data.LastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
 
         SettingsViewModel.ApplyTheme(data, data.Theme);
-        data.Version = MainWindowViewModel.VersionText;
+        data.Version = TextUtility.VersionText;
         Data = data;
         SaveMetaData();
 
@@ -70,9 +70,9 @@ public static class MetaDataManager
 
             return data;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.LogError("Metadata load failed", ex);
+            Logger.LogWarning("Metadata load failed");
             return new();
         }
     }

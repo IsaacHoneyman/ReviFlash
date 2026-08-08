@@ -182,7 +182,10 @@ public partial class SettingsWindow : Window
 
             await updateClient.DownloadAndApplyUpdateAsync(updateInfo, progress =>
             {
-                statusText?.Text = $"Downloading update... {progress}%";
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    statusText?.Text = $"Downloading update... {progress}%";
+                });
             });
         }
         else

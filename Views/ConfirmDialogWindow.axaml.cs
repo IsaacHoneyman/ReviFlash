@@ -17,6 +17,5 @@ public partial class ConfirmDialogWindow : Window
     }
 
     private void Confirm_Click(object sender, RoutedEventArgs e) => Close(true);
-    
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close(false);
 }
