@@ -79,7 +79,7 @@
         <DataTemplate DataType="{x:Type models:StudyGroup}">
             <Border Width="286" Height="145"
                 Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource GradientStart}"
+                BorderBrush="{DynamicResource GroupCardBorder}"
                 BorderThickness="1.5" CornerRadius="20"
                 Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
                 Focusable="True"
@@ -93,7 +93,7 @@
                         <Border Grid.Column="0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Background="{DynamicResource GradientStart}"
+                            Background="{DynamicResource GroupCardBorder}"
                             CornerRadius="8" Padding="9,5"
                             Height="28" MinHeight="28">
                             <StackPanel Orientation="Horizontal"

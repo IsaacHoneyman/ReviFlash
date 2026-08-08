@@ -3,18 +3,11 @@ using System.Collections.Generic;
 
 namespace ReviFlash.Models;
 
-public abstract class FlashCard
+public abstract class FlashCard(string front, string back)
 {
-    public ulong ID {get; protected set; }
-    public string Front { get; private set; }
-    public string Back { get; private set; }
-    
-    public FlashCard(string front, string back)
-    {
-        Front = front;
-        Back = back;
-        ID = ulong.MaxValue; // Placeholder ID until saved to database
-    }
+    public ulong ID { get; protected set; } = ulong.MaxValue;
+    public string Front { get; private set; } = front;
+    public string Back { get; private set; } = back;
 
     public void AssignDatabaseID(ulong id)
     {

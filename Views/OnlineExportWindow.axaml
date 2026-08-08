@@ -124,7 +124,7 @@
                                             </StackPanel>
 
                                             <Button Grid.Column="1" Content="Update" Margin="0,0,8,0"
-                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).UpdateCommand}" CommandParameter="{Binding}"
+                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).SetupUpdateCommand}" CommandParameter="{Binding}"
                                                     Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
                                                     CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
 

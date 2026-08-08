@@ -2,19 +2,13 @@ using System;
 
 namespace ReviFlash.Models;
 
-public class StudyGroup
+public class StudyGroup(string name)
 {
-    public ulong ID { get; private set; }
-    public string Name { get; set; }
+    public ulong ID { get; private set; } = ulong.MaxValue;
+    public string Name { get; set; } = name;
     public int CardCount { get; set; }
     public int DeckCount { get; set; }
     public bool IsSelectedForMultiReview { get; set; }
-
-    public StudyGroup(string name)
-    {
-        Name = name;
-        ID = ulong.MaxValue;
-    }
 
     public StudyGroup(string name, ulong id, int deckCount, int cardCount) : this(name)
     {

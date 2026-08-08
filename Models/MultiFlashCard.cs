@@ -8,7 +8,7 @@ public class MultiFlashCard : FlashCard
 {
     public List<(string optionText, bool isCorrect)> Options { get; set; } = [];
     public override IReadOnlyList<MultiChoicePreviewOption> MultiChoiceOptionsPreview =>
-        Options.Select(o => new MultiChoicePreviewOption { Text = o.optionText, IsCorrect = o.isCorrect }).ToList();
+        [.. Options.Select(o => new MultiChoicePreviewOption { Text = o.optionText, IsCorrect = o.isCorrect })];
 
     public MultiFlashCard(string front, string back, List<(string optionText, bool isCorrect)> options) : base(front, back)
     {

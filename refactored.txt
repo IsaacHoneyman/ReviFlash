@@ -1,11 +1,1 @@
-CardUtility
-ConverterUtility
-Supabase
-TextUtility
-MetaDataManager
-AppMetaData
-App.axaml
-Program.cs
-AppThemes.cs
-AppThemes.axaml
-Logger.txt
+all of  data util app model, view models have deck editor graph stat main window and review left to do

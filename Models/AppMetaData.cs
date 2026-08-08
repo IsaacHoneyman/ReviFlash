@@ -9,7 +9,7 @@ namespace ReviFlash.Models;
 /// <summary> Non flash card persistent data. </summary>
 public partial class AppMetaData : ObservableObject
 {
-    [ObservableProperty] private string _theme = "Default";
+    [ObservableProperty] private string _theme = "Vaporwave";
     [ObservableProperty] private DateOnly _firstLaunchDate = DateOnly.FromDateTime(DateTime.Now);
     [ObservableProperty] private DateOnly _lastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
     [ObservableProperty] private int _launchStreak = 1;

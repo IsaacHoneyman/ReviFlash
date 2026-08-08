@@ -3,6 +3,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using ReviFlash.ViewModels;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 
 namespace ReviFlash;
@@ -39,4 +40,8 @@ public class ViewLocator : IDataTemplate
 
     public bool Match(object? data) { return data is ViewModelBase; }
 }
+
+/// <summary> Based view model class. </summary>
+public abstract class ViewModelBase : ObservableObject { }
+
 

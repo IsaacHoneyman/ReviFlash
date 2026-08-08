@@ -23,7 +23,7 @@ public partial class App : Application
     {
         MetaDataManager.InitMetaData();
         DatabaseManager.InitDatabase();
-        ApplyAccessibilityPalette(AppThemes.IsLightTheme(MetaDataManager.Data.Theme));
+        ApplyAccessibilityPalette(false); // Default to dark theme for accessibility
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

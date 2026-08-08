@@ -1,253 +1,158 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using Avalonia;
 using Avalonia.Styling;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
+using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ReviFlash.ViewModels;
 
-public class SettingsViewModel : ViewModelBase
+public partial class SettingsViewModel : ViewModelBase
 {
-    public List<string> AvailableThemes { get; } =
-    [
-        "Default",
-        "Midnight",
-        "Forest",
-        "Focus",
-        "Amethyst",
-        "Slate",
-        "Ember",
-        "Crimson",
-        "Light",
-        "Desert",
-        "Sepia",
-        "Sun",
-        "Rose",
-        "Plains",
-        "Water",
-        "Pride",
-    ];
+    private static readonly Dictionary<string, ThemeVariant> ThemeMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Pinks & Violets / Pinks (Synthwave, Sakura, Vaporwave, MidnightRose)
+        { "Vaporwave", AppThemes.Vaporwave },
+        { "Synthwave", AppThemes.Synthwave },
+        { "Midnight Rose", AppThemes.MidnightRose },        
+        { "Sakura", AppThemes.Sakura },
 
-    private ObservableCollection<FlashCardDeck> _availableDecks = new();
-    public ObservableCollection<FlashCardDeck> AvailableDecks
-    {
-        get => _availableDecks;
-        set { _availableDecks = value; OnPropertyChanged(nameof(AvailableDecks)); }
-    }
+        // Neutrals & True Monochromes (Dark grays/blacks)
+        { "Eclipse", AppThemes.Eclipse },
+        { "Graphite", AppThemes.Graphite },
+        { "Midnight Slate", AppThemes.MidnightSlate },
+        { "Focus", AppThemes.Focus },
+        { "Slate", AppThemes.Slate },
 
-    private FlashCardDeck? _selectedDeckForStatDeletion = null;
-    public FlashCardDeck? SelectedDeckForStatDeletion
-    {
-        get => _selectedDeckForStatDeletion;
-        set { _selectedDeckForStatDeletion = value; OnPropertyChanged(nameof(SelectedDeckForStatDeletion)); }
-    }
+        // Reds & Crimson (Deep reds, wines, blood)
+        { "Crimson", AppThemes.Crimson },
+        { "Ember", AppThemes.Ember },
+        { "Blood Moon", AppThemes.BloodMoon },
 
-    public string SelectedTheme
-    {
-        get => MetaDataManager.Data.Theme == "Dark" ? "Default" : MetaDataManager.Data.Theme;
-        set
-        {
-            ApplyTheme(MetaDataManager.Data, value);
-            MetaDataManager.SaveMetaData();
-        }
-    }
 
-    public bool ShowTimer
-    {
-        get => MetaDataManager.Data.ShowTimer;
-        set
-        {
-            MetaDataManager.Data.ShowTimer = value;
-            OnPropertyChanged(nameof(ShowTimer));
-            MetaDataManager.SaveMetaData();
-        }
-    }
+        // Purples (Nether, Amethyst, Void)
+        { "Nether", AppThemes.Nether },
+        { "Amethyst", AppThemes.Amethyst },
+        { "Void", AppThemes.Void },
 
-    public bool ShowProgress
-    {
-        get => MetaDataManager.Data.ShowProgress;
-        set
-        {
-            MetaDataManager.Data.ShowProgress = value;
-            OnPropertyChanged(nameof(ShowProgress));
-            MetaDataManager.SaveMetaData();
-        }
-    }
+        // Blues & Teals (Cobalt, Midnight, Nordic, Ocean, Abyssal)
+        { "Cobalt", AppThemes.Cobalt },
+        { "Midnight", AppThemes.Midnight },
+        { "Nordic", AppThemes.Nordic },
+        { "Ocean", AppThemes.Ocean },
+        { "Abyssal", AppThemes.Abyssal },
 
-    public bool ShowSkipButton
-    {
-        get => MetaDataManager.Data.ShowSkipButton;
-        set
-        {
-            MetaDataManager.Data.ShowSkipButton = value;
-            OnPropertyChanged(nameof(ShowSkipButton));
-            MetaDataManager.SaveMetaData();
-        }
-    }
+        // Greens (Matrix, Forest, Mint, DeepMoss, Toxic)
+        { "Matrix", AppThemes.Matrix },
+        { "Forest", AppThemes.Forest },
+        { "Mint Choco", AppThemes.MintChoco },
+        { "Toxic", AppThemes.Toxic },
 
-    public bool ShowRetryLaterButton
-    {
-        get => MetaDataManager.Data.ShowRetryLaterButton;
-        set
-        {
-            MetaDataManager.Data.ShowRetryLaterButton = value;
-            OnPropertyChanged(nameof(ShowRetryLaterButton));
-            MetaDataManager.SaveMetaData();
-        }
-    }
-    
-    public bool ShowAnswerStreakInReview
-    {
-        get => MetaDataManager.Data.ShowAnswerStreakInReview;
-        set
-        {
-            MetaDataManager.Data.ShowAnswerStreakInReview = value;
-            OnPropertyChanged(nameof(ShowAnswerStreakInReview));
-            MetaDataManager.SaveMetaData();
-        }
-    }
+        // Oranges & Warm Tones (Sunset, Coffee, Honeycomb, DarkAmber, SolarFlare, Bunker)
+        { "Sunset", AppThemes.Sunset },
+        { "Coffee", AppThemes.Coffee },
+        { "Honeycomb", AppThemes.Honeycomb },
+        { "Dark Amber", AppThemes.DarkAmber },
+        { "Bunker", AppThemes.Bunker },
 
-    public bool ShowAdditionalFieldLatexPreviews
-    {
-        get => MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
-        set
-        {
-            MetaDataManager.Data.ShowAdditionalFieldLatexPreviews = value;
-            OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
-            MetaDataManager.SaveMetaData();
-        }
-    }
+        // Cyberpunk (Multi-color neon)
+        { "Cyberpunk", AppThemes.Cyberpunk },
 
-    public bool ShowBackgroundSwirl
-    {
-        get => MetaDataManager.Data.ShowBackgroundSwirl;
-        set
-        {
-            MetaDataManager.Data.ShowBackgroundSwirl = value;
-            OnPropertyChanged(nameof(ShowBackgroundSwirl));
-            MetaDataManager.SaveMetaData();
-        }
-    }
+        // Light Themes Section
+        { "Sun", AppThemes.Sun },
+        { "Desert", AppThemes.Desert },
+        { "Sepia", AppThemes.Sepia },
+        { "Rose", AppThemes.Rose },
+        { "Plains", AppThemes.Plains },
+    };
+
+    public IEnumerable<string> AvailableThemes => ThemeMap.Keys;
+
+    public ObservableCollection<FlashCardDeck> AvailableDecks { get; } = [];
+
+    [ObservableProperty] private FlashCardDeck? _selectedDeckForStatDeletion;
+    [ObservableProperty] private string _selectedTheme;
+    [ObservableProperty] private bool _showTimer;
+    [ObservableProperty] private bool _showProgress;
+    [ObservableProperty] private bool _showSkipButton;
+    [ObservableProperty] private bool _showRetryLaterButton;
+    [ObservableProperty] private bool _showAnswerStreakInReview;
+    [ObservableProperty] private bool _showAdditionalFieldLatexPreviews;
+    [ObservableProperty] private bool _showBackgroundSwirl;
 
     public SettingsViewModel()
     {
+        _selectedTheme = MetaDataManager.Data.Theme;
+        _showTimer = MetaDataManager.Data.ShowTimer;
+        _showProgress = MetaDataManager.Data.ShowProgress;
+        _showSkipButton = MetaDataManager.Data.ShowSkipButton;
+        _showRetryLaterButton = MetaDataManager.Data.ShowRetryLaterButton;
+        _showAnswerStreakInReview = MetaDataManager.Data.ShowAnswerStreakInReview;
+        _showAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
+        _showBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
+
         LoadDecks();
     }
 
-    private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    partial void OnSelectedThemeChanged(string value)
     {
-        switch (e.PropertyName)
-        {
-            case nameof(AppMetaData.Theme):
-                OnPropertyChanged(nameof(SelectedTheme));
-                break;
-            case nameof(AppMetaData.ShowTimer):
-                OnPropertyChanged(nameof(ShowTimer));
-                break;
-            case nameof(AppMetaData.ShowProgress):
-                OnPropertyChanged(nameof(ShowProgress));
-                break;
-            case nameof(AppMetaData.ShowSkipButton):
-                OnPropertyChanged(nameof(ShowSkipButton));
-                break;
-            case nameof(AppMetaData.ShowRetryLaterButton):
-                OnPropertyChanged(nameof(ShowRetryLaterButton));
-                break;
-            case nameof(AppMetaData.ShowAnswerStreakInReview):
-                OnPropertyChanged(nameof(ShowAnswerStreakInReview));
-                break;
-            case nameof(AppMetaData.ShowAdditionalFieldLatexPreviews):
-                OnPropertyChanged(nameof(ShowAdditionalFieldLatexPreviews));
-                break;
-            case nameof(AppMetaData.ShowBackgroundSwirl):
-                OnPropertyChanged(nameof(ShowBackgroundSwirl));
-                break;
-        }
+        ApplyTheme(MetaDataManager.Data, value);
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowTimerChanged(bool value)
+    {
+        MetaDataManager.Data.ShowTimer = value;
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowProgressChanged(bool value)
+    {
+        MetaDataManager.Data.ShowProgress = value;
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowSkipButtonChanged(bool value)
+    {
+        MetaDataManager.Data.ShowSkipButton = value;
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowRetryLaterButtonChanged(bool value)
+    {
+        MetaDataManager.Data.ShowRetryLaterButton = value;
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowAnswerStreakInReviewChanged(bool value)
+    {
+        MetaDataManager.Data.ShowAnswerStreakInReview = value;
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowAdditionalFieldLatexPreviewsChanged(bool value)
+    {
+        MetaDataManager.Data.ShowAdditionalFieldLatexPreviews = value;
+        MetaDataManager.SaveMetaData();
+    }
+
+    partial void OnShowBackgroundSwirlChanged(bool value)
+    {
+        MetaDataManager.Data.ShowBackgroundSwirl = value;
+        MetaDataManager.SaveMetaData();
     }
 
     public static void ApplyTheme(AppMetaData settings, string themeName)
     {
-        if (themeName == "Pastel")
-        {
-            themeName = "Plains";
-        }
-
-        settings.Theme = themeName == "Default" ? "Default" : themeName;
+        settings.Theme = themeName;
 
         if (Application.Current != null)
         {
-            if (themeName == "Default" || themeName == "Dark")
-            {
-                Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
-            }
-            else if (themeName == "Light")
-            {
-                Application.Current.RequestedThemeVariant = ThemeVariant.Light;
-            }
-            else if (themeName == "Midnight")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Midnight;
-            }
-            else if (themeName == "Forest")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Forest;
-            }
-            else if (themeName == "Desert")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Desert;
-            }
-            else if (themeName == "Sepia")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Sepia;
-            }
-            else if (themeName == "Sun")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Sun;
-            }
-            else if (themeName == "Slate")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Slate;
-            }
-            else if (themeName == "Ember")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Ember;
-            }
-            else if (themeName == "Crimson")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Crimson;
-            }
-            else if (themeName == "Focus")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Focus;
-            }
-            else if (themeName == "Amethyst")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Amethyst;
-            }
-            else if (themeName == "Rose")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Rose;
-            }
-            else if (themeName == "Plains")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Plains;
-            }
-            else if (themeName == "Water")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Water;
-            }
-            else if (themeName == "Pride")
-            {
-                Application.Current.RequestedThemeVariant = AppThemes.Pride;
-            }
-            else
-            {
-                Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
-            }
-
-            App.ApplyAccessibilityPalette(AppThemes.IsLightTheme(themeName));
+            if (ThemeMap.TryGetValue(themeName, out var variant)) Application.Current.RequestedThemeVariant = variant;
+            else Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
+            App.ApplyAccessibilityPalette(false); // Default to dark theme for accessibility
         }
     }
 
@@ -263,13 +168,15 @@ public class SettingsViewModel : ViewModelBase
 
     public void RefreshFromMetadata()
     {
-        OnPropertyChanged(nameof(SelectedTheme));
-        OnPropertyChanged(nameof(ShowTimer));
-        OnPropertyChanged(nameof(ShowProgress));
-        OnPropertyChanged(nameof(ShowSkipButton));
-        OnPropertyChanged(nameof(ShowRetryLaterButton));
-        OnPropertyChanged(nameof(ShowAnswerStreakInReview));
-        OnPropertyChanged(nameof(ShowBackgroundSwirl));
+        SelectedTheme = MetaDataManager.Data.Theme;
+        ShowTimer = MetaDataManager.Data.ShowTimer;
+        ShowProgress = MetaDataManager.Data.ShowProgress;
+        ShowSkipButton = MetaDataManager.Data.ShowSkipButton;
+        ShowRetryLaterButton = MetaDataManager.Data.ShowRetryLaterButton;
+        ShowAnswerStreakInReview = MetaDataManager.Data.ShowAnswerStreakInReview;
+        ShowAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
+        ShowBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
+
         LoadDecks();
     }
 

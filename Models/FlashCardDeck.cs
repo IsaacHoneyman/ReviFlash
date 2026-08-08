@@ -3,20 +3,14 @@ using System.Collections.Generic;
 
 namespace ReviFlash.Models;
 
-public class FlashCardDeck
+public class FlashCardDeck(string name)
 {
-    public ulong ID { get; private set; }
-    public string Name { get; set; }
+    public ulong ID { get; private set; } = ulong.MaxValue;
+    public string Name { get; set; } = name;
     public int CardCount { get; set; }
     public bool IsSelectedForMultiReview { get; set; }
     private readonly List<FlashCard> flashCards = [];
     public IReadOnlyList<FlashCard> FlashCards => flashCards.AsReadOnly();
-
-    public FlashCardDeck(string name)
-    {
-        Name = name;
-        ID = ulong.MaxValue; // Placeholder ID until saved to database
-    }
 
     public FlashCardDeck(string name, ulong id, int cardCount) : this(name)
     {
