@@ -81,6 +81,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private bool _showAnswerStreakInReview;
     [ObservableProperty] private bool _showAdditionalFieldLatexPreviews;
     [ObservableProperty] private bool _showBackgroundSwirl;
+    [ObservableProperty] private bool _checkForUpdatesOnStartup;
 
     public SettingsViewModel()
     {
@@ -92,6 +93,7 @@ public partial class SettingsViewModel : ViewModelBase
         _showAnswerStreakInReview = MetaDataManager.Data.ShowAnswerStreakInReview;
         _showAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
         _showBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
+        _checkForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
 
         LoadDecks();
     }
@@ -144,6 +146,12 @@ public partial class SettingsViewModel : ViewModelBase
         MetaDataManager.SaveMetaData();
     }
 
+    partial void OnCheckForUpdatesOnStartupChanged(bool value)
+    {
+        MetaDataManager.Data.CheckForUpdatesOnStartup = value;
+        MetaDataManager.SaveMetaData();
+    }
+
     public static void ApplyTheme(AppMetaData settings, string themeName)
     {
         settings.Theme = themeName;
@@ -176,6 +184,7 @@ public partial class SettingsViewModel : ViewModelBase
         ShowAnswerStreakInReview = MetaDataManager.Data.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
+        CheckForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
 
         LoadDecks();
     }

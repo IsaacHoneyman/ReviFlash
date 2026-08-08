@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ReviFlash.Data.Backup.Local;
 using ReviFlash.Data.Local;
+using ReviFlash.Data.Online;
 using ReviFlash.ViewModels;
 
 namespace ReviFlash.Views;
@@ -147,6 +148,46 @@ public partial class SettingsWindow : Window
                 statusText.Text = $"Stats for \"{deckName}\" were deleted.";
                 statusText.IsVisible = true;
             }
+        }
+    }
+
+    private async void CheckForUpdates_Click(object? sender, RoutedEventArgs e)
+    {
+        var statusText = this.FindControl<TextBlock>("UpdateStatusText");
+        if (statusText != null)
+        {
+            statusText.Text = "Checking for updates...";
+            statusText.IsVisible = true;
+        }
+
+        var updateClient = new UpdateClient();
+        var updateInfo = await updateClient.CheckForUpdatesAsync();
+
+        if (updateInfo == null)
+        {
+            statusText?.Text = "You are already on the latest version.";
+            return;
+        }
+
+        statusText?.Text = $"Version {updateInfo.TargetFullRelease.Version} available!";
+        var confirmDialog = new ConfirmDialogWindow(
+        $"Version {updateInfo.TargetFullRelease.Version} is available. Download and restart now?"
+    );
+
+        bool confirmed = await confirmDialog.ShowDialog<bool>(this);
+
+        if (confirmed)
+        {
+            statusText?.Text = "Downloading update... 0%";
+
+            await updateClient.DownloadAndApplyUpdateAsync(updateInfo, progress =>
+            {
+                statusText?.Text = $"Downloading update... {progress}%";
+            });
+        }
+        else
+        {
+            if (statusText != null) statusText.Text = "Update cancelled.";
         }
     }
 }

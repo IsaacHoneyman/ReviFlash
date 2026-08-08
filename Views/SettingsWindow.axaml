@@ -1,219 +1,268 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ReviFlash.ViewModels"
-        x:Class="ReviFlash.Views.SettingsWindow"
-        x:DataType="vm:SettingsViewModel"
-        Title="Settings"
-        Width="420" Height="720"
-        WindowStartupLocation="CenterOwner"
-        CanResize="False"
-        Background="{DynamicResource AppBackground}">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.SettingsWindow"
+    x:DataType="vm:SettingsViewModel"
+    Title="Settings"
+    Width="420" Height="720"
+    WindowStartupLocation="CenterOwner"
+    CanResize="False"
+    Background="{DynamicResource AppBackground}">
 
     <ScrollViewer Margin="24,24,8,24"
-                  Padding="0,0,16,0"
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
+        Padding="0,0,16,0"
+        VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="16">
-            <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
-            
+            <TextBlock Text="Settings" FontSize="28" FontWeight="Bold"
+                Foreground="{DynamicResource TextPrimary}" />
+
             <!-- Application Theme moved into Appearance section -->
 
             <Border Background="{DynamicResource CardBackground}"
-        BorderBrush="{DynamicResource CardBorder}"
-        BorderThickness="1"
-        CornerRadius="10"
-        Padding="16">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Apperance"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextPrimary}"/>
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Apperance"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
 
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Application Theme" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableThemes}"
-                      SelectedItem="{Binding SelectedTheme}"
-                      HorizontalAlignment="Right" Width="180" CornerRadius="5"/>
-        </Grid>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Application Theme"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableThemes}"
+                            SelectedItem="{Binding SelectedTheme}"
+                            HorizontalAlignment="Right" Width="180" CornerRadius="5" />
+                    </Grid>
 
-        <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
-            <TextBlock Grid.Column="0" Text="Background Swirl" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center"/>
-        </Grid>
-    </StackPanel>
-</Border>
+                    <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
+                        <TextBlock Grid.Column="0" Text="Background Swirl"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-            <Border Background="{DynamicResource CardBackground}" 
-        BorderBrush="{DynamicResource CardBorder}" 
-        BorderThickness="1" 
-        CornerRadius="10" 
-        Padding="16">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Review" 
-                   FontWeight="SemiBold" 
-                   Foreground="{DynamicResource TextPrimary}"/>
-        
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Timer" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowTimer}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" />
-        </Grid>
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Review"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
 
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Progress Meter" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowProgress}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" />
-        </Grid>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show Timer" VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowTimer}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
 
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Skip Button" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipButton}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" />
-        </Grid>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show Progress Meter"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowProgress}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
 
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Retry Later Button" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowRetryLaterButton}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" />
-        </Grid>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show Skip Button"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipButton}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
 
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show Answer Streak" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowAnswerStreakInReview}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" />
-        </Grid>
-    </StackPanel>
-</Border>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show Retry Later Button"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowRetryLaterButton}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
 
-            <Border Background="{DynamicResource CardBackground}" 
-        BorderBrush="{DynamicResource CardBorder}" 
-        BorderThickness="1" 
-        CornerRadius="10" 
-        Padding="16">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Editor" 
-                   FontWeight="SemiBold" 
-                   Foreground="{DynamicResource TextPrimary}"/>
-        
-        <Grid ColumnDefinitions="*, Auto">
-            <TextBlock Grid.Column="0" Text="Show LaTeX Previews for Additional Fields" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimary}"/>
-            <CheckBox Grid.Column="1" IsChecked="{Binding ShowAdditionalFieldLatexPreviews}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center" />
-        </Grid>
-    </StackPanel>
-</Border>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show Answer Streak"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowAnswerStreakInReview}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-        <Border Background="{DynamicResource CardBackground}"
-            BorderBrush="{DynamicResource CardBorder}"
-            BorderThickness="1"
-            CornerRadius="10"
-            Padding="16">
-        <StackPanel Spacing="10">
-            <TextBlock Text="Backup"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextPrimary}"/>
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Editor"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
 
-            <TextBlock Text="Create a backup zip or restore the app from an existing backup file."
-                   TextWrapping="Wrap"
-                   Foreground="{DynamicResource TextSecondary}"/>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show LaTeX Previews for Additional Fields"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1"
+                            IsChecked="{Binding ShowAdditionalFieldLatexPreviews}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-            <Grid ColumnDefinitions="*, Auto">
-                <TextBlock Grid.Column="0"
-                           Text="Include flashcard stats in backup"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextPrimary}"/>
-                <CheckBox x:Name="IncludeStatsInBackupCheckBox"
-                          Grid.Column="1"
-                          IsChecked="True"
-                          HorizontalAlignment="Right"
-                          VerticalAlignment="Center"/>
-            </Grid>
-
-            <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
-            <Button Grid.Column="0"
-                Content="Create Backup"
-                Click="CreateBackup_Click"
-                HorizontalAlignment="Stretch"
-                CornerRadius="8"
-                Padding="12,10"
-                FontWeight="Bold"
-                Background="{DynamicResource CardBorder}"
-                Foreground="{DynamicResource TextPrimary}"
-                Cursor="Hand"/>
-
-            <Button Grid.Column="1"
-                Content="Restore Backup"
-                Click="RestoreBackup_Click"
-                HorizontalAlignment="Stretch"
-                CornerRadius="8"
-                Padding="12,10"
-                FontWeight="Bold"
-                Background="{DynamicResource CardBorder}"
-                Foreground="{DynamicResource TextPrimary}"
-                Cursor="Hand"/>
-            </Grid>
-
-            <TextBlock x:Name="BackupStatusText"
-                   IsVisible="False"
-                   TextWrapping="Wrap"
-                   Foreground="{DynamicResource TextSecondary}"/>
-        </StackPanel>
-        </Border>
-
-            <Border Background="{DynamicResource SurfaceOverlayBackground}"
-                    BorderBrush="{DynamicResource DangerForeground}"
-                    BorderThickness="1.5"
-                    CornerRadius="10"
-                    Padding="16">
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Danger Zone"
-                               FontWeight="SemiBold"
-                               FontSize="16"
-                               Foreground="{DynamicResource DangerForeground}"/>
+                    <TextBlock Text="Backup"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
 
-                    <TextBlock Text="Delete all flashcard stats across every deck. This cannot be undone."
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource TextPrimary}"/>
+                    <TextBlock
+                        Text="Create a backup zip or restore the app from an existing backup file."
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
 
-                    <Button Content="Delete All Flashcard Stats"
-                            Click="DeleteAllStats_Click"
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0"
+                            Text="Include flashcard stats in backup"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox x:Name="IncludeStatsInBackupCheckBox"
+                            Grid.Column="1"
+                            IsChecked="True"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                        <Button Grid.Column="0"
+                            Content="Create Backup"
+                            Click="CreateBackup_Click"
                             HorizontalAlignment="Stretch"
                             CornerRadius="8"
                             Padding="12,10"
                             FontWeight="Bold"
-                            Background="{DynamicResource DangerBackground}"
-                            Foreground="{DynamicResource IconForeground}"
-                            Cursor="Hand"/>
+                            Background="{DynamicResource CardBorder}"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+
+                        <Button Grid.Column="1"
+                            Content="Restore Backup"
+                            Click="RestoreBackup_Click"
+                            HorizontalAlignment="Stretch"
+                            CornerRadius="8"
+                            Padding="12,10"
+                            FontWeight="Bold"
+                            Background="{DynamicResource CardBorder}"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+                    </Grid>
+
+                    <TextBlock x:Name="BackupStatusText"
+                        IsVisible="False"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Updates"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0"
+                            Text="Check for updates on startup"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1"
+                            IsChecked="{Binding CheckForUpdatesOnStartup}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Button Content="Check for Updates Now"
+                        Click="CheckForUpdates_Click"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8"
+                        Padding="12,10"
+                        FontWeight="Bold"
+                        Background="{DynamicResource CardBorder}"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Cursor="Hand" />
+
+                    <TextBlock x:Name="UpdateStatusText"
+                        IsVisible="False"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SurfaceOverlayBackground}"
+                BorderBrush="{DynamicResource DangerForeground}"
+                BorderThickness="1.5"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Danger Zone"
+                        FontWeight="SemiBold"
+                        FontSize="16"
+                        Foreground="{DynamicResource DangerForeground}" />
+
+                    <TextBlock
+                        Text="Delete all flashcard stats across every deck. This cannot be undone."
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextPrimary}" />
+
+                    <Button Content="Delete All Flashcard Stats"
+                        Click="DeleteAllStats_Click"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8"
+                        Padding="12,10"
+                        FontWeight="Bold"
+                        Background="{DynamicResource DangerBackground}"
+                        Foreground="{DynamicResource IconForeground}"
+                        Cursor="Hand" />
 
                     <TextBlock x:Name="DeleteStatsStatusText"
-                               IsVisible="False"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource TextSecondary}"/>
+                        IsVisible="False"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
 
-                    <Separator Background="{DynamicResource CardBorder}" Opacity="0.3" Margin="0,8"/>
+                    <Separator Background="{DynamicResource CardBorder}" Opacity="0.3" Margin="0,8" />
 
                     <TextBlock Text="Delete Individual Deck Stats"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource DangerForeground}"/>
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource DangerForeground}" />
 
                     <TextBlock Text="Delete stats for a specific flashcard set."
-                               TextWrapping="Wrap"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextSecondary}"/>
+                        TextWrapping="Wrap"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}" />
 
                     <ComboBox ItemsSource="{Binding AvailableDecks}"
-                              SelectedItem="{Binding SelectedDeckForStatDeletion}"
-                              HorizontalAlignment="Stretch"
-                              CornerRadius="8"
-                              Padding="12,8">
+                        SelectedItem="{Binding SelectedDeckForStatDeletion}"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8"
+                        Padding="12,8">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Name}" />
@@ -222,15 +271,15 @@
                     </ComboBox>
 
                     <Button Content="Delete This Deck's Stats"
-                            Click="DeleteDeckStats_Click"
-                            HorizontalAlignment="Stretch"
-                            CornerRadius="8"
-                            Padding="12,10"
-                            FontWeight="Bold"
-                            IsEnabled="{Binding SelectedDeckForStatDeletion, Converter={x:Static ObjectConverters.IsNotNull}}"
-                            Background="{DynamicResource DangerBackground}"
-                            Foreground="{DynamicResource IconForeground}"
-                            Cursor="Hand"/>
+                        Click="DeleteDeckStats_Click"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8"
+                        Padding="12,10"
+                        FontWeight="Bold"
+                        IsEnabled="{Binding SelectedDeckForStatDeletion, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Background="{DynamicResource DangerBackground}"
+                        Foreground="{DynamicResource IconForeground}"
+                        Cursor="Hand" />
                 </StackPanel>
             </Border>
         </StackPanel>

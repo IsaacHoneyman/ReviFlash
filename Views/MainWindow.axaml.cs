@@ -4,12 +4,12 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
-using ReviFlash.Data;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 using ReviFlash.Data.Local;
+using ReviFlash.Data.Online;
 
 namespace ReviFlash.Views;
 
@@ -18,19 +18,37 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Loaded += MainWindow_Loaded;
     }
+
+    private async void MainWindow_Loaded(object? sender, RoutedEventArgs e)
+    {
+        if (!MetaDataManager.Data.CheckForUpdatesOnStartup) return;
+        var updateClient = new UpdateClient();
+        var updateInfo = await updateClient.CheckForUpdatesAsync();
+
+        if (updateInfo != null)
+        {
+            var confirmDialog = new ConfirmDialogWindow(
+                $"Version {updateInfo.TargetFullRelease.Version} is available. Download and restart now?"
+            );
+
+            bool confirmed = await confirmDialog.ShowDialog<bool>(this);
+
+            if (confirmed)
+            {
+                await updateClient.DownloadAndApplyUpdateAsync(updateInfo);
+            }
+        }
+    } 
 
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        // 1. Create the new window
         var settingsWindow = new SettingsWindow
         {
-            // 2. Give it the dedicated ViewModel
             DataContext = new SettingsViewModel()
         };
 
-        // 3. Show it as a modal dialog. 
-        // We 'await' it so the main thread knows to pause interactions on the main window.
         await settingsWindow.ShowDialog(this);
     }
 

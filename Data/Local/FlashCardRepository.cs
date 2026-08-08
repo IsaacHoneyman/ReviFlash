@@ -743,7 +743,7 @@ public static class FlashCardRepository
 
             if (!map.TryGetValue(cardId, out var list))
             {
-                list = new List<(string, string)>();
+                list = [];
                 map[cardId] = list;
             }
 

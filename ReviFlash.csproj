@@ -7,7 +7,9 @@
     <ApplicationIcon>Assets\ReviFlashLogo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <EnableDefaultAvaloniaXamlItems>false</EnableDefaultAvaloniaXamlItems>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,5 +35,6 @@
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 </Project>

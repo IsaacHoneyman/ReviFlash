@@ -22,6 +22,7 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private bool _showAnswerStreakInReview = true;
     [ObservableProperty] private bool _showAdditionalFieldLatexPreviews = true;
     [ObservableProperty] private bool _showBackgroundSwirl = true;
+    [ObservableProperty] private bool _checkForUpdatesOnStartup = true;
     [ObservableProperty] private string _databasePath = TextUtility.DatabasePath;
     [ObservableProperty] private string? _supabaseAccessToken;
     [ObservableProperty] private string? _supabaseUserId;
