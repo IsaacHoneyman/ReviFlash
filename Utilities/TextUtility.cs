@@ -29,7 +29,7 @@ public static partial class TextUtility
     public const string DatabaseFileName = "reviflash.db";
 
     private static readonly string AppDataDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "ReviFlash"
     );
 
@@ -63,5 +63,15 @@ public static partial class TextUtility
         return version is null
             ? "Unknown"
             : $"{version.Major}.{version.Minor}.{version.Build}";
+    }
+
+    // --- Misc ---
+
+    public static string FormatTime(TimeSpan time)
+    {
+        return 
+        (time.TotalDays >= 1) ? $"{time.Hours + 24 * time.Days}:{time:mm\\:ss}" :
+        (time.TotalHours >= 1) ? time.ToString(@"h\:mm\:ss") :
+        time.ToString(@"m\:ss");
     }
 }

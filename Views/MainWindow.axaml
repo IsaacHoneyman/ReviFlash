@@ -411,7 +411,7 @@
                             <Grid ColumnDefinitions="*">
                                 <TextBlock Grid.Column="0" Text="Overall Stats" FontSize="18" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}"
-                                    IsVisible="{Binding !IsViewingAnyStats}" />
+                                    IsVisible="{Binding !IsViewingStats}" />
                                 <TextBlock Grid.Column="0" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
                                     Foreground="{DynamicResource TextPrimary}"
                                     IsVisible="{Binding IsViewingDeckStats}" />
@@ -441,7 +441,7 @@
                                     BorderThickness="1"
                                     CornerRadius="10" Padding="16,10"
                                     Height="40"
-                                    IsVisible="{Binding IsViewingAnyStats}" VerticalAlignment="Center"
+                                    IsVisible="{Binding IsViewingStats}" VerticalAlignment="Center"
                                     Cursor="Hand" Opacity="0.85">
                                     <TextBlock Text="Exit" FontSize="12" FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimary}"
@@ -518,7 +518,7 @@
                             <Border Background="{DynamicResource StatTileBackground}"
                                 CornerRadius="10"
                                 Padding="16"
-                                IsVisible="{Binding IsViewingAnyStats}">
+                                IsVisible="{Binding IsViewingStats}">
                                 <StackPanel>
                                     <TextBlock Text="Best Answer Streak"
                                         Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -530,7 +530,7 @@
                             <Border Background="{DynamicResource StatTileBackground}"
                                 CornerRadius="10"
                                 Padding="16"
-                                IsVisible="{Binding !IsViewingAnyStats}">
+                                IsVisible="{Binding !IsViewingStats}">
                                 <StackPanel>
                                     <TextBlock Text="Best Ever Streak"
                                         Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -635,7 +635,8 @@
                                 BorderBrush="{DynamicResource CardBorder}"
                                 BorderThickness="1.5"
                                 CornerRadius="20"
-                                Padding="20">
+                                Padding="20"
+                                IsVisible="{Binding HasGraphData}">
                                 <StackPanel Spacing="12">
                                     <Grid ColumnDefinitions="*, Auto">
                                         <StackPanel Grid.Column="0" Spacing="4">
@@ -652,11 +653,6 @@
                                             Padding="10, 4" FontSize="12" Width="100"
                                             Background="{DynamicResource StatTileBackground}"
                                             Foreground="{DynamicResource TextPrimary}">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="vm:MainWindowViewModel+GroupingOption">
-                                                    <TextBlock Text="{Binding Label}" />
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
                                         </ComboBox>
                                     </Grid>
 
@@ -719,7 +715,8 @@
                                 BorderBrush="{DynamicResource CardBorder}"
                                 BorderThickness="1.5"
                                 CornerRadius="20"
-                                Padding="20">
+                                Padding="20"
+                                IsVisible="{Binding HasGraphData}">
                                 <StackPanel Spacing="12">
                                     <Grid ColumnDefinitions="*, Auto">
                                         <StackPanel Grid.Column="0" Spacing="4">
@@ -736,11 +733,6 @@
                                             Padding="10, 4" FontSize="12" Width="100"
                                             Background="{DynamicResource StatTileBackground}"
                                             Foreground="{DynamicResource TextPrimary}">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate DataType="vm:MainWindowViewModel+GroupingOption">
-                                                    <TextBlock Text="{Binding Label}" />
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
                                         </ComboBox>
                                     </Grid>
 

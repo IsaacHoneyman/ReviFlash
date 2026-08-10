@@ -3,431 +3,167 @@ using ReviFlash.Models;
 using ReviFlash.Data.Local;
 using System.Linq;
 using System;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using ReviFlash.Utilities;
 
 using static ReviFlash.Utilities.CardUtility;
+using CommunityToolkit.Mvvm.ComponentModel;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase
 {
-    private enum StatsScope
+    private enum StatsScope { Overall, Deck, Group, }
+    public enum DeckSelectionMode { None, Review, Export, }
+
+    private const string SORT_NAME_ASC = "name_asc";
+    private const string SORT_NAME_DESC = "name_desc";
+    private const string SORT_CARDS_ASC = "cards_asc";
+    private const string SORT_CARDS_DESC = "cards_desc";
+    private const string SORT_STUDYTIME_ASC = "studytime_asc";
+    private const string SORT_STUDYTIME_DESC = "studytime_desc";
+
+    public class TimePeriodOption(string label, string timeModifier)
     {
-        Overall,
-        Deck,
-        Group,
+        public string Label { get; set; } = label;
+        public string TimeModifier { get; set; } = timeModifier;
     }
 
-    public enum DeckSelectionMode
+    public class SortOption(string label, string key)
     {
-        None,
-        Review,
-        Export,
-    }
-
-    public class TimePeriodOption
-    {
-        public string Label { get; set; }
-        public string TimeModifier { get; set; }
-
-        public TimePeriodOption(string label, string timeModifier)
-        {
-            Label = label;
-            TimeModifier = timeModifier;
-        }
-    }
-
-    public class GroupingOption
-    {
-        public string Label { get; set; }
-        public string Value { get; set; }
-
-        public GroupingOption(string label, string value)
-        {
-            Label = label;
-            Value = value;
-        }
-    }
-
-    private object _currentPage = new();
-    public object CurrentPage
-    {
-        get => _currentPage;
-        set { _currentPage = value; OnPropertyChanged(nameof(CurrentPage)); }
-    }
-
-    private string _streakText = "0 Day Streak";
-    public string StreakText
-    {
-        get => _streakText;
-        set { _streakText = value; OnPropertyChanged(nameof(StreakText)); }
-    }
-
-    private string _bestEverStreakText = "0 Day Streak";
-    public string BestEverStreakText
-    {
-        get => _bestEverStreakText;
-        set { _bestEverStreakText = value; OnPropertyChanged(nameof(BestEverStreakText)); }
-    }
-
-    private string _bestAnswerStreakText = "0";
-    public string BestAnswerStreakText
-    {
-        get => _bestAnswerStreakText;
-        set { _bestAnswerStreakText = value; OnPropertyChanged(nameof(BestAnswerStreakText)); }
-    }
-
-    private bool _isGraphView;
-    public bool IsGraphView
-    {
-        get => _isGraphView;
-        set
-        {
-            _isGraphView = value;
-            OnPropertyChanged(nameof(IsGraphView));
-        }
-    }
-
-
-    private string _searchText = "";
-    public string SearchText
-    {
-        get => _searchText;
-        set
-        {
-            _searchText = value;
-            FilterDecks();
-        }
-    }
-
-    private DeckSelectionMode _selectionMode = DeckSelectionMode.None;
-    public DeckSelectionMode SelectionMode
-    {
-        get => _selectionMode;
-        set
-        {
-            _selectionMode = value;
-            OnPropertyChanged(nameof(SelectionMode));
-            OnPropertyChanged(nameof(IsSelectionModeActive));
-            OnPropertyChanged(nameof(IsReviewSelectionMode));
-            OnPropertyChanged(nameof(IsExportSelectionMode));
-            OnPropertyChanged(nameof(CanShowDeckManagementActions));
-            OnPropertyChanged(nameof(ReviewSelectionButtonText));
-            OnPropertyChanged(nameof(ExportSelectionButtonText));
-        }
-    }
-
-    private readonly HashSet<ulong> _selectedDeckIds = [];
-    public bool HasSelectedDecks => _selectedDeckIds.Count > 0;
-    public int SelectedDeckCount => _selectedDeckIds.Count;
-    public bool IsSelectionModeActive => SelectionMode != DeckSelectionMode.None;
-    public bool IsReviewSelectionMode => SelectionMode == DeckSelectionMode.Review;
-    public bool IsExportSelectionMode => SelectionMode == DeckSelectionMode.Export;
-    public bool CanShowDeckManagementActions => !IsSelectionModeActive;
-    public string ReviewSelectionButtonText => !IsReviewSelectionMode
-        ? "Select Multiple"
-        : HasSelectedDecks
-            ? $"Play Selected ({SelectedDeckCount})"
-            : "Cancel";
-    public string ExportSelectionButtonText => !IsExportSelectionMode
-        ? "Export"
-        : HasSelectedDecks
-            ? $"Export Selected ({SelectedDeckCount})"
-            : "Cancel";
-
-    private bool _showGroups = true;
-    public bool ShowGroups
-    {
-        get => _showGroups;
-        set
-        {
-            _showGroups = value;
-            OnPropertyChanged(nameof(ShowGroups));
-            RefreshDashboardItems();
-        }
-    }
-
-    private bool _showSets = true;
-    public bool ShowSets
-    {
-        get => _showSets;
-        set
-        {
-            _showSets = value;
-            OnPropertyChanged(nameof(ShowSets));
-            RefreshDashboardItems();
-        }
-    }
-
-    public bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
-
-    private TimePeriodOption _selectedTimePeriod = null!;
-    public TimePeriodOption SelectedTimePeriod
-    {
-        get => _selectedTimePeriod;
-        set
-        {
-            _selectedTimePeriod = value;
-            OnPropertyChanged(nameof(SelectedTimePeriod));
-            if (IsViewingDeckStats && SelectedDeckForStats != null)
-            {
-                ShowDeckStats(SelectedDeckForStats);
-            }
-            else
-            {
-                LoadStats();
-            }
-        }
-    }
-
-    public ObservableCollection<GroupingOption> GraphGroupingOptions { get; } = new()
-    {
-        new GroupingOption("Daily", "Daily"),
-        new GroupingOption("Weekly", "Weekly"),
-        new GroupingOption("Monthly", "Monthly")
-    };
-
-    private GroupingOption _selectedAttemptsGrouping = null!;
-    public GroupingOption SelectedAttemptsGrouping
-    {
-        get => _selectedAttemptsGrouping;
-        set
-        {
-            _selectedAttemptsGrouping = value;
-            OnPropertyChanged(nameof(SelectedAttemptsGrouping));
-            if (IsGraphView) RefreshGraphStats();
-        }
-    }
-
-    private GroupingOption _selectedTimeGrouping = null!;
-    public GroupingOption SelectedTimeGrouping
-    {
-        get => _selectedTimeGrouping;
-        set
-        {
-            _selectedTimeGrouping = value;
-            OnPropertyChanged(nameof(SelectedTimeGrouping));
-            if (IsGraphView) RefreshGraphStats();
-        }
-    }
-
-    private int _totalQuestions = 0;
-    public int TotalQuestions
-    {
-        get => _totalQuestions;
-        set
-        {
-            _totalQuestions = value;
-            OnPropertyChanged(nameof(TotalQuestions));
-        }
-    }
-
-    private int _totalCardCount = 0;
-    public int TotalCardCount
-    {
-        get => _totalCardCount;
-        set
-        {
-            _totalCardCount = value;
-            OnPropertyChanged(nameof(TotalCardCount));
-            OnPropertyChanged(nameof(AverageTimePerCardText));
-        }
-    }
-
-    private int _totalCorrect = 0;
-    public int TotalCorrect
-    {
-        get => _totalCorrect;
-        set { _totalCorrect = value; OnPropertyChanged(nameof(TotalCorrect)); }
-    }
-
-    private double _percentage = 0;
-    public double Percentage
-    {
-        get => _percentage;
-        set { _percentage = value; OnPropertyChanged(nameof(Percentage)); }
-    }
-
-    private string _grade = "U";
-    public string Grade
-    {
-        get => _grade;
-        set { _grade = value; OnPropertyChanged(nameof(Grade)); }
-    }
-
-    private int _totalTimeSeconds = 0;
-    public int TotalTimeSeconds
-    {
-        get => _totalTimeSeconds;
-        set
-        {
-            _totalTimeSeconds = value;
-            OnPropertyChanged(nameof(TotalTimeSeconds));
-            OnPropertyChanged(nameof(TotalTimeFormatted));
-            OnPropertyChanged(nameof(AverageTimePerCardText));
-        }
-    }
-
-    private static string FormatTime(TimeSpan time)
-    {
-        if (time.TotalDays >= 1)
-        {
-            return $"{time.Hours + 24 * time.Days}:{time:mm\\:ss}";
-        }
-        if (time.TotalHours >= 1)
-        {
-            return time.ToString(@"h\:mm\:ss");
-        }
-        else
-        {
-            return time.ToString(@"m\:ss");
-        }
-    }
-
-    public string TotalTimeFormatted
-    {
-        get
-        {
-            var time = TimeSpan.FromSeconds(TotalTimeSeconds);
-            return FormatTime(time);
-        }
-    }
-
-    public string AverageTimePerCardText
-    {
-        get
-        {
-            if (TotalCardCount <= 0)
-            {
-                return "0:00";
-            }
-
-            var avgSeconds = (int)Math.Round((double)TotalTimeSeconds / TotalCardCount);
-            var time = TimeSpan.FromSeconds(avgSeconds);
-
-            return FormatTime(time);
-        }
-    }
-
-    private bool _isViewingDeckStats = false;
-    public bool IsViewingDeckStats
-    {
-        get => _isViewingDeckStats;
-        set 
-        { 
-            _isViewingDeckStats = value; 
-            OnPropertyChanged(nameof(IsViewingDeckStats));
-            OnPropertyChanged(nameof(IsViewingAnyStats));
-        }
-    }
-
-    private FlashCardDeck? _selectedDeckForStats = null;
-    public FlashCardDeck? SelectedDeckForStats
-    {
-        get => _selectedDeckForStats;
-        set { _selectedDeckForStats = value; OnPropertyChanged(nameof(SelectedDeckForStats)); }
-    }
-
-    private bool _isViewingGroupStats = false;
-    public bool IsViewingGroupStats
-    {
-        get => _isViewingGroupStats;
-        set 
-        { 
-            _isViewingGroupStats = value; 
-            OnPropertyChanged(nameof(IsViewingGroupStats));
-            OnPropertyChanged(nameof(IsViewingAnyStats));
-        }
-    }
-
-    private StudyGroup? _selectedGroupForStats = null;
-    public StudyGroup? SelectedGroupForStats
-    {
-        get => _selectedGroupForStats;
-        set { _selectedGroupForStats = value; OnPropertyChanged(nameof(SelectedGroupForStats)); }
-    }
-
-    public bool IsViewingAnyStats => IsViewingDeckStats || IsViewingGroupStats;
-
-    public string CurrentStatsTitle
-    {
-        get
-        {
-            if (IsViewingDeckStats && SelectedDeckForStats != null)
-            {
-                return SelectedDeckForStats.Name;
-            }
-
-            if (IsViewingGroupStats && SelectedGroupForStats != null)
-            {
-                return SelectedGroupForStats.Name;
-            }
-
-            return "Overall";
-        }
-    }
-
-    public string GraphViewTitle => $"{CurrentStatsTitle} Graph View";
-
-    private string _graphDateRangeText = "";
-    public string GraphDateRangeText
-    {
-        get => _graphDateRangeText;
-        private set
-        {
-            _graphDateRangeText = value;
-            OnPropertyChanged(nameof(GraphDateRangeText));
-            OnPropertyChanged(nameof(GraphViewSubtitle));
-        }
-    }
-
-    public string GraphViewSubtitle => AttemptsGraphPoints.Count == 0
-        ? "No study history recorded for the selected scope yet."
-        : string.IsNullOrWhiteSpace(GraphDateRangeText)
-            ? SelectedTimePeriod?.Label ?? "All Time"
-            : GraphDateRangeText;
-
-    public ObservableCollection<GraphStatPointViewModel> AttemptsGraphPoints { get; private set; } = [];
-    public ObservableCollection<GraphStatPointViewModel> TimeGraphPoints { get; private set; } = [];
-
-    public bool HasGraphData => AttemptsGraphPoints.Count > 0;
-
-    public ObservableCollection<TimePeriodOption> TimePeriods { get; set; } = [];
-    public ObservableCollection<FlashCardDeck> Decks { get; set; } = [];
-    public ObservableCollection<StudyGroup> StudyGroups { get; set; } = [];
-    public ObservableCollection<object> DashboardItems { get; set; } = [];
-    public ObservableCollection<FlashCardDeck> FilteredDecks { get; set; } = [];
-
-    public class SortOption
-    {
-        public string Label { get; set; } = "";
-        public string Key { get; set; } = ""; // internal key used for switching
-
-        public SortOption(string label, string key)
-        {
-            Label = label;
-            Key = key;
-        }
+        public string Label { get; set; } = label;
+        public string Key { get; set; } = key;
 
         public override string ToString() => Label;
     }
 
-    public ObservableCollection<SortOption> SortOptions { get; } = new();
+    [ObservableProperty] private object _currentPage = new();
+    [ObservableProperty] private string _bestAnswerStreakText = "0";
+    [ObservableProperty] private bool _isGraphView;
+    [ObservableProperty] private string _searchText = "";
+    [ObservableProperty] private string _streakText = "0 Day Streak";
+    [ObservableProperty] private string _bestEverStreakText = "0 Day Streak";
+    public static bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
 
-    private SortOption? _selectedSortOption = null;
-    public SortOption? SelectedSortOption
+    [NotifyPropertyChangedFor(nameof(IsSelectionModeActive))]
+    [NotifyPropertyChangedFor(nameof(IsReviewSelectionMode))]
+    [NotifyPropertyChangedFor(nameof(IsExportSelectionMode))]
+    [NotifyPropertyChangedFor(nameof(CanShowDeckManagementActions))]
+    [NotifyPropertyChangedFor(nameof(ReviewSelectionButtonText))]
+    [NotifyPropertyChangedFor(nameof(ExportSelectionButtonText))]
+    [ObservableProperty] private DeckSelectionMode _selectionMode = DeckSelectionMode.None;
+
+    private readonly HashSet<ulong> _selectedDeckIds = [];
+    public bool HasSelectedDecks => _selectedDeckIds.Count > 0;
+    public int SelectedDeckCount => _selectedDeckIds.Count;
+
+    public bool IsSelectionModeActive => SelectionMode != DeckSelectionMode.None;
+    public bool IsReviewSelectionMode => SelectionMode == DeckSelectionMode.Review;
+    public bool IsExportSelectionMode => SelectionMode == DeckSelectionMode.Export;
+
+    public bool CanShowDeckManagementActions => !IsSelectionModeActive;
+    public string ReviewSelectionButtonText => !IsReviewSelectionMode ?
+        "Select Multiple" : HasSelectedDecks ?
+        $"Play Selected ({SelectedDeckCount})" : "Cancel";
+    public string ExportSelectionButtonText => !IsExportSelectionMode ?
+        "Export" : HasSelectedDecks ?
+        $"Export Selected ({SelectedDeckCount})" : "Cancel";
+
+    [ObservableProperty] private bool _showGroups = true;
+    partial void OnShowGroupsChanged(bool value) => RefreshDashboardItems();
+    [ObservableProperty] private bool _showSets = true;
+    partial void OnShowSetsChanged(bool value) => RefreshDashboardItems();
+    [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
+    [ObservableProperty] private TimePeriodOption _selectedTimePeriod = null!;
+    partial void OnSelectedTimePeriodChanged(TimePeriodOption value)
     {
-        get => _selectedSortOption;
-        set
-        {
-            _selectedSortOption = value;
-            OnPropertyChanged(nameof(SelectedSortOption));
-            FilterDecks();
-        }
+        if (IsViewingDeckStats && !IsGraphView && SelectedDeckForStats != null) { ShowDeckStats(SelectedDeckForStats); }
+        else if (IsViewingGroupStats && !IsGraphView && SelectedGroupForStats != null) { ShowGroupStats(SelectedGroupForStats); }
+        else { LoadStats(); }
     }
+
+    public ObservableCollection<string> GraphGroupingOptions { get; } = ["Daily", "Weekly", "Monthly"];
+
+    [ObservableProperty] private string _selectedAttemptsGrouping = null!;
+    partial void OnSelectedAttemptsGroupingChanged(string value) { if (IsGraphView) RefreshGraphStats(); }
+
+    [ObservableProperty] private string _selectedTimeGrouping = null!;
+    partial void OnSelectedTimeGroupingChanged(string value) { if (IsGraphView) RefreshGraphStats(); }
+
+    [ObservableProperty] private int _totalQuestions = 0;
+    [NotifyPropertyChangedFor(nameof(AverageTimePerCardText))]
+    [ObservableProperty] private int _totalCardCount = 0;
+
+    [ObservableProperty] private int _totalCorrect = 0;
+    [ObservableProperty] private double _percentage = 0;
+    [ObservableProperty] private string _grade = "U";
+
+    [NotifyPropertyChangedFor(nameof(TotalTimeFormatted))]
+    [NotifyPropertyChangedFor(nameof(AverageTimePerCardText))]
+    [ObservableProperty] private int _totalTimeSeconds = 0;
+
+    public string TotalTimeFormatted => TextUtility.FormatTime(TimeSpan.FromSeconds(TotalTimeSeconds));
+    public string AverageTimePerCardText => TotalCardCount <= 0 ? "0.00" :
+        TextUtility.FormatTime(TimeSpan.FromSeconds((int)Math.Round((double)TotalTimeSeconds / TotalCardCount)));
+
+
+    [NotifyPropertyChangedFor(nameof(IsViewingStats))]
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private bool _isViewingDeckStats = false;
+    [NotifyPropertyChangedFor(nameof(IsViewingStats))]
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private bool _isViewingGroupStats = false;
+    public bool IsViewingStats => IsViewingDeckStats || IsViewingGroupStats;
+
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private FlashCardDeck? _selectedDeckForStats = null;
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private StudyGroup? _selectedGroupForStats = null;
+
+    public string CurrentStatsTitle =>
+        IsViewingDeckStats ? SelectedDeckForStats?.Name ?? "Overall" :
+        IsViewingGroupStats ? SelectedGroupForStats?.Name ?? "Overal" :
+        "Overall";
+
+    public string GraphViewTitle => $"{CurrentStatsTitle} Graph View";
+
+    [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
+    [ObservableProperty] private string _graphDateRangeText = "";
+
+    public string GraphViewSubtitle => AttemptsGraphPoints.Count == 0
+        ? ""
+        : string.IsNullOrWhiteSpace(GraphDateRangeText)
+            ? SelectedTimePeriod?.Label ?? "All Time"
+            : GraphDateRangeText;
+
+    public ObservableCollection<TimePeriodOption> TimePeriods { get; } = [
+        new("All Time", null!), new("Last 6 Months", "-6 months"), new("Last 3 Months", "-3 months"),
+        new("Last Month", "-1 months"), new("Last 2 Weeks", "-14 days"), new("Last Week", "-7 days"),
+        new("Last 3 Days", "-3 days"), new("Last Day", "-1 days")
+    ];
+
+    public ObservableCollection<SortOption> SortOptions { get; } = [
+        new("Name A-Z", SORT_NAME_ASC), new("Name Z-A", SORT_NAME_DESC), new("Cards (high → low)", SORT_CARDS_DESC),
+        new("Cards (low → high)", SORT_CARDS_ASC), new("Study time (high → low)", SORT_STUDYTIME_DESC),
+        new("Study time (low → high)", SORT_STUDYTIME_ASC)
+    ];
+
+    [NotifyPropertyChangedFor(nameof(HasGraphData))]
+    [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
+    [ObservableProperty] private ObservableCollection<GraphStatPointViewModel> _attemptsGraphPoints = [];
+    [ObservableProperty] private ObservableCollection<GraphStatPointViewModel> _timeGraphPoints = [];
+    public ObservableCollection<FlashCardDeck> Decks { get; } = [];
+    public ObservableCollection<StudyGroup> StudyGroups { get; } = [];
+    public ObservableCollection<object> DashboardItems { get; } = [];
+    public ObservableCollection<FlashCardDeck> FilteredDecks { get; } = [];
+    public bool HasGraphData => AttemptsGraphPoints.Count > 0;
+
+    [ObservableProperty] private SortOption? _selectedSortOption = null;
+    partial void OnSelectedSortOptionChanged(SortOption? value) => FilterDecks();
 
     public MainWindowViewModel()
     {
@@ -435,27 +171,9 @@ public class MainWindowViewModel : ViewModelBase
         RefreshStreakTexts();
         CurrentPage = this;
 
-        TimePeriods.Add(new TimePeriodOption("All Time", null!));
-        TimePeriods.Add(new TimePeriodOption("Last 6 Months", "-6 months"));
-        TimePeriods.Add(new TimePeriodOption("Last 3 Months", "-3 months"));
-        TimePeriods.Add(new TimePeriodOption("Last Month", "-1 months"));
-        TimePeriods.Add(new TimePeriodOption("Last 2 Weeks", "-14 days"));
-        TimePeriods.Add(new TimePeriodOption("Last Week", "-7 days"));
-        TimePeriods.Add(new TimePeriodOption("Last 3 Days", "-3 days"));
-        TimePeriods.Add(new TimePeriodOption("Last Day", "-1 days"));
-
         SelectedTimePeriod = TimePeriods[0];
-        
         SelectedAttemptsGrouping = GraphGroupingOptions[0];
         SelectedTimeGrouping = GraphGroupingOptions[0];
-
-        SortOptions.Add(new SortOption("Name A-Z", "name_asc"));
-        SortOptions.Add(new SortOption("Name Z-A", "name_desc"));
-        SortOptions.Add(new SortOption("Cards (high → low)", "cards_desc"));
-        SortOptions.Add(new SortOption("Cards (low → high)", "cards_asc"));
-        SortOptions.Add(new SortOption("Study time (high → low)", "studytime_desc"));
-        SortOptions.Add(new SortOption("Study time (low → high)", "studytime_asc"));
-
         SelectedSortOption = SortOptions[0];
 
         LoadDecksFromDatabase();
@@ -541,10 +259,10 @@ public class MainWindowViewModel : ViewModelBase
         IsViewingDeckStats = false;
 
         var timeModifier = SelectedTimePeriod?.TimeModifier;
-        
+
         // Get all decks in the group and sum their stats
         var decksInGroup = FlashCardRepository.GetDecksForStudyGroup(group.ID);
-        
+
         int totalCorrect = 0;
         int totalQuestions = 0;
         int totalSeconds = 0;
@@ -591,8 +309,6 @@ public class MainWindowViewModel : ViewModelBase
     public void ExitGraphView()
     {
         IsGraphView = false;
-        OnPropertyChanged(nameof(GraphViewTitle));
-        OnPropertyChanged(nameof(GraphViewSubtitle));
     }
 
     private StatsScope GetCurrentStatsScope()
@@ -610,6 +326,8 @@ public class MainWindowViewModel : ViewModelBase
         return StatsScope.Overall;
     }
 
+    // Callers must set IsViewingDeckStats/SelectedDeckForStats/IsViewingGroupStats/SelectedGroupForStats
+    // before calling this, so CurrentStatsTitle/GraphViewTitle notifications have already fired.
     private void RefreshGraphStats()
     {
         var timeModifier = SelectedTimePeriod?.TimeModifier;
@@ -619,11 +337,11 @@ public class MainWindowViewModel : ViewModelBase
         var validRows = rawRows.Where(r => r.total > 0).ToList();
 
         // Attempts Grouping
-        var attemptsRows = GroupRows(validRows, SelectedAttemptsGrouping?.Value).ToList();
+        var attemptsRows = GroupRows(validRows, SelectedAttemptsGrouping).ToList();
         int maxAttempts = attemptsRows.Count == 0 ? 0 : attemptsRows.Max(row => row.total);
 
         // Time Grouping
-        var timeRows = GroupRows(validRows, SelectedTimeGrouping?.Value).ToList();
+        var timeRows = GroupRows(validRows, SelectedTimeGrouping).ToList();
         int maxTime = timeRows.Count == 0 ? 0 : timeRows.Max(row => row.timeTakenSeconds);
 
         AttemptsGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
@@ -647,13 +365,6 @@ public class MainWindowViewModel : ViewModelBase
         GraphDateRangeText = validRows.Count == 0
             ? "No study history recorded yet."
             : $"{validRows.First().date:MMM d, yyyy} - {validRows.Last().date:MMM d, yyyy}";
-
-        OnPropertyChanged(nameof(AttemptsGraphPoints));
-        OnPropertyChanged(nameof(TimeGraphPoints));
-        OnPropertyChanged(nameof(HasGraphData));
-        OnPropertyChanged(nameof(GraphViewTitle));
-        OnPropertyChanged(nameof(GraphViewSubtitle));
-        OnPropertyChanged(nameof(CurrentStatsTitle));
     }
 
     private IEnumerable<(DateOnly date, int correct, int total, int timeTakenSeconds, string label)> GroupRows(
@@ -743,40 +454,29 @@ public class MainWindowViewModel : ViewModelBase
     {
         FilteredDecks.Clear();
 
-        List<FlashCardDeck> resultsList;
+        List<FlashCardDeck> resultsList = [.. Decks.FilterBySearch(SearchText)];
 
-        if (string.IsNullOrWhiteSpace(SearchText))
-        {
-            resultsList = Decks.ToList();
-        }
-        else
-        {
-            var lowerSearch = SearchText.ToLower();
-            resultsList = Decks.Where(d => d.Name.ToLower().Contains(lowerSearch)).ToList();
-        }
-
-        // Apply selected sort
         if (SelectedSortOption != null)
         {
             switch (SelectedSortOption.Key)
             {
-                case "name_asc":
-                    resultsList = resultsList.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
+                case SORT_NAME_ASC:
+                    resultsList = [.. resultsList.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)];
                     break;
-                case "name_desc":
-                    resultsList = resultsList.OrderByDescending(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
+                case SORT_NAME_DESC:
+                    resultsList = [.. resultsList.OrderByDescending(d => d.Name, StringComparer.OrdinalIgnoreCase)];
                     break;
-                case "cards_asc":
-                    resultsList = resultsList.OrderBy(d => d.CardCount).ToList();
+                case SORT_CARDS_ASC:
+                    resultsList = [.. resultsList.OrderBy(d => d.CardCount)];
                     break;
-                case "cards_desc":
-                    resultsList = resultsList.OrderByDescending(d => d.CardCount).ToList();
+                case SORT_CARDS_DESC:
+                    resultsList = [.. resultsList.OrderByDescending(d => d.CardCount)];
                     break;
-                case "studytime_asc":
-                    resultsList = resultsList.OrderBy(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds).ToList();
+                case SORT_STUDYTIME_ASC:
+                    resultsList = [.. resultsList.OrderBy(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds)];
                     break;
-                case "studytime_desc":
-                    resultsList = resultsList.OrderByDescending(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds).ToList();
+                case SORT_STUDYTIME_DESC:
+                    resultsList = [.. resultsList.OrderByDescending(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds)];
                     break;
                 default:
                     break;
@@ -937,12 +637,12 @@ public class MainWindowViewModel : ViewModelBase
 
                 groupsToAdd = SelectedSortOption.Key switch
                 {
-                    "name_asc" => groupsToAdd.OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase),
-                    "name_desc" => groupsToAdd.OrderByDescending(g => g.Name, StringComparer.OrdinalIgnoreCase),
-                    "cards_asc" => groupsToAdd.OrderBy(g => g.CardCount),
-                    "cards_desc" => groupsToAdd.OrderByDescending(g => g.CardCount),
-                    "studytime_asc" => groupsToAdd.OrderBy(g => GetGroupStudyTimeSeconds(g, timeModifier)),
-                    "studytime_desc" => groupsToAdd.OrderByDescending(g => GetGroupStudyTimeSeconds(g, timeModifier)),
+                    SORT_NAME_ASC => groupsToAdd.OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase),
+                    SORT_NAME_DESC => groupsToAdd.OrderByDescending(g => g.Name, StringComparer.OrdinalIgnoreCase),
+                    SORT_CARDS_ASC => groupsToAdd.OrderBy(g => g.CardCount),
+                    SORT_CARDS_DESC => groupsToAdd.OrderByDescending(g => g.CardCount),
+                    SORT_STUDYTIME_ASC => groupsToAdd.OrderBy(g => GetGroupStudyTimeSeconds(g, timeModifier)),
+                    SORT_STUDYTIME_DESC => groupsToAdd.OrderByDescending(g => GetGroupStudyTimeSeconds(g, timeModifier)),
                     _ => groupsToAdd
                 };
             }

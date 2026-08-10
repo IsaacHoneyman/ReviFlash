@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
-using System.Linq;
 
 namespace ReviFlash.ViewModels;
 

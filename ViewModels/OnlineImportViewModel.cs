@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReviFlash.Data.Local;
-using ReviFlash.Models;
 using ReviFlash.Data.Online;
 
 namespace ReviFlash.ViewModels;
