@@ -68,7 +68,7 @@ public partial class SettingsWindow : Window
                 vm.RefreshFromMetadata();
             }
 
-            if (Owner is MainWindow { DataContext: MainWindowViewModel mainVm })
+            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
             {
                 mainVm.RefreshAfterBackupRestore();
             }
@@ -107,7 +107,7 @@ public partial class SettingsWindow : Window
 
         FlashCardRepository.DeleteAllStats();
 
-        if (Owner is MainWindow { DataContext: MainWindowViewModel mainVm })
+        if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
         {
             mainVm.RefreshStats();
         }
@@ -137,7 +137,7 @@ public partial class SettingsWindow : Window
 
             vm.DeleteStatsForSelectedDeck();
 
-            if (Owner is MainWindow { DataContext: MainWindowViewModel mainVm })
+            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
             {
                 mainVm.RefreshStats();
             }

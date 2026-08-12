@@ -10,6 +10,7 @@ public class SummaryViewModel(int score, int total, TimeSpan time, bool isPartia
     public int Total { get; } = total;
     public TimeSpan TimeTaken { get; } = time;
     public bool IsPartialSession { get; } = isPartialSession;
+    public Action? OnReturnToDashboard { get; set; }
 
     public double Percentage => Total > 0 ? Math.Round((double)Score / Total * 100, 1) : 0;
     public string TimeFormatted => TimeTaken.TotalHours >= 1

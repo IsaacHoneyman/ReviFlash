@@ -51,7 +51,7 @@ public static partial class TextUtility
 
     private static string GetAssemblyVersionText()
     {
-        var assembly = typeof(MainWindowViewModel).Assembly;
+        var assembly = typeof(DashboardViewModel).Assembly;
         var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
         if (!string.IsNullOrWhiteSpace(informationalVersion))

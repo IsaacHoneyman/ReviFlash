@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.SummaryView"
+    x:DataType="vm:SummaryViewModel">
+
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Border Width="420" Background="{DynamicResource CardBackground}" CornerRadius="26"
+            Padding="32">
+            <StackPanel Spacing="20" HorizontalAlignment="Center">
+                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="Session Complete!" FontSize="24" FontWeight="Bold" />
+                    <TextBlock Text="{Binding SessionMarker}" FontSize="14"
+                        Foreground="{DynamicResource WarningForeground}" FontStyle="Italic"
+                        IsVisible="{Binding IsPartialSession}" />
+                </StackPanel>
+                <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="64"
+                    FontWeight="Black" Foreground="{DynamicResource GradientStart}" />
+                <TextBlock Text="{Binding Grade, StringFormat='Grade: {0}'}" FontSize="20"
+                    Foreground="{DynamicResource TextSecondary}" />
+                <TextBlock Text="{Binding TimeFormatted, StringFormat='Time: {0}'}"
+                    FontSize="18" FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextSecondary}" />
+                <Button Content="Finish" Click="ReturnToDashboard_Click"
+                    HorizontalAlignment="Stretch" Margin="0,20,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

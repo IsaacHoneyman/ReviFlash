@@ -1,0 +1,725 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:math="clr-namespace:AvaloniaMath.Controls;assembly=AvaloniaMath"
+    xmlns:converters="using:ReviFlash.Converters"
+    x:Class="ReviFlash.Views.ReviewView"
+    x:DataType="vm:ReviewViewModel">
+
+    <UserControl.Resources>
+        <converters:MixedMathSegmentsConverter x:Key="MixedMathSegmentsConverter" />
+        <converters:IsMathDelimitedConverter x:Key="IsMathDelimitedConverter" />
+        <converters:IsNotMathDelimitedConverter x:Key="IsNotMathDelimitedConverter" />
+        <converters:StripMathDelimitersConverter x:Key="StripMathDelimitersConverter" />
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Top Bar with Timer, Progress, and Quit Button -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto, *" Margin="24, 16, 24, 16" VerticalAlignment="Center">
+            <!-- Timer -->
+            <StackPanel Grid.Column="0" Spacing="8">
+                <StackPanel IsVisible="{Binding ShouldShowTimer}">
+                    <TextBlock Text="Time" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding TimerText}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                </StackPanel>
+                <StackPanel IsVisible="{Binding ShouldShowAnswerStreak}">
+                    <TextBlock Text="Streak" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding CurrentAnswerStreakText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="{Binding BestAnswerStreakText}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Progress (Center) -->
+            <StackPanel Grid.Column="1" HorizontalAlignment="Center" IsVisible="{Binding ShouldShowProgress}">
+                <TextBlock Text="Progress" FontSize="14" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding ProgressCardCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding ProgressPercentage, StringFormat='{}{0}%'}" FontSize="14" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="4" CornerRadius="2" Margin="0,4,0,0" Width="100" />
+            </StackPanel>
+
+            <!-- Quit Button -->
+            <Button Grid.Column="2" Click="QuitSession_Click"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10" Padding="16,10"
+                VerticalAlignment="Top" Margin="0, 0, 0, 0" HorizontalAlignment="Right" Cursor="Hand"
+                Opacity="0.85"
+                ToolTip.Tip="Quit and save progress">
+                <TextBlock Text="Quit" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
+                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+            </Button>
+        </Grid>
+
+        <!-- Review Card -->
+        <Grid Grid.Row="1" Margin="0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalAlignment="Center"
+                Margin="0,0,-16,0"
+                Padding="0,0,16,0">
+            <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
+                Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Spacing="20">
+                <TextBlock Text="{Binding CurrentNumber, StringFormat='Card {0} of {1}'}"
+                    HorizontalAlignment="Center"
+                    FontSize="16"
+                    Foreground="{DynamicResource TextSecondary}" />
+
+                <ItemsControl ItemsSource="{Binding CurrentCard.Front, Converter={StaticResource MixedMathSegmentsConverter}}"
+                    HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                            <Grid>
+                                <TextBlock Text="{Binding Content}"
+                                    TextWrapping="Wrap"
+                                    FontSize="18"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    IsVisible="{Binding IsText}" />
+                                <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Separator Background="{DynamicResource CardBorder}" Opacity="0.3"
+                    Margin="0,20" />
+
+                <ItemsControl ItemsSource="{Binding CurrentCard.Back, Converter={StaticResource MixedMathSegmentsConverter}}"
+                    IsVisible="{Binding ShowBackAnswer}" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                            <Grid>
+                                <TextBlock Text="{Binding Content}"
+                                    TextWrapping="Wrap"
+                                    FontSize="18"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    IsVisible="{Binding IsText}" />
+                                <math:FormulaBlock Formula="{Binding Content}" IsVisible="{Binding IsMath}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel Spacing="15" Margin="0,20,0,0">
+                    <!-- Flip Card: Show Answer Button -->
+                    <Button Content="Show Answer" Click="ShowAnswer_Click"
+                        IsVisible="{Binding ShowAnswerButtonVisible}"
+                        FontSize="16"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Background="{DynamicResource GradientStart}"
+                        Foreground="{DynamicResource PrimaryButtonForeground}" />
+
+                    <!-- Type Card: Text Input -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsTypeCard}">
+                        <!-- Input Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                            <TextBox Text="{Binding UserTypedAnswer, Mode=TwoWay}"
+                                Watermark="Type your answer..."
+                                CornerRadius="8" Padding="12, 10" FontSize="16"
+                                Background="{DynamicResource CardBackground}"
+                                Foreground="{DynamicResource TextPrimary}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1.5" />
+                            <Button Content="Submit Answer" Click="SubmitAnswer_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" />
+                        </StackPanel>
+
+                        <!-- Result Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                            <!-- Correct/Incorrect Visual -->
+                            <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding IsAnswerCorrect}" />
+                            <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding !IsAnswerCorrect}" />
+
+                            <!-- Show Correct Answer -->
+                            <StackPanel>
+                                <TextBlock Text="Correct Answer:"
+                                    Foreground="{DynamicResource TextSecondary}" FontSize="14" />
+                                <TextBlock Text="{Binding CurrentTypeCardAnswer}"
+                                    Foreground="{DynamicResource TextPrimary}" FontSize="16"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <!-- Next Button -->
+                            <Button Content="Next" Click="NextCard_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                            <Button Content="Retry Later" Click="RetryLater_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}"
+                                IsVisible="{Binding CanRetryLater}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Multi Choice Card -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsMultiChoiceCard}">
+                        <!-- Input Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                            <TextBlock Text="Select all options you think are correct:" FontSize="14"
+                                Foreground="{DynamicResource TextSecondary}" />
+
+                            <ItemsControl ItemsSource="{Binding MultiChoiceAnswerOptions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ReviewOptionItem">
+                                        <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"
+                                            BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
+                                            <Grid ColumnDefinitions="Auto, *">
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                    VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding OptionText, Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                    HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                            <Grid Margin="0,0,2,0" VerticalAlignment="Center">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Content}" FontSize="16"
+                                                                    TextWrapping="Wrap" MaxWidth="520"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource TextPrimary}"
+                                                                    IsVisible="{Binding IsText}" />
+                                                                <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="16"
+                                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                    IsVisible="{Binding IsMath}"
+                                                                    Foreground="{DynamicResource TextPrimary}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Button Content="Submit Answer" Click="SubmitAnswer_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" />
+                        </StackPanel>
+
+                        <!-- Result Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                            <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding IsAnswerCorrect}" />
+                            <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding !IsAnswerCorrect}" />
+
+                            <StackPanel>
+                                <TextBlock Text="Correct options:" FontSize="14"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                                <ItemsControl ItemsSource="{Binding MultiChoiceAnswerOptions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReviewOptionItem">
+                                            <StackPanel Spacing="6" Margin="0,2,0,0" IsVisible="{Binding IsCorrect}" Orientation="Horizontal">
+                                                <TextBlock Text="✓" FontSize="15" Foreground="{DynamicResource SuccessForeground}" VerticalAlignment="Top" />
+                                                <ItemsControl ItemsSource="{Binding OptionText, Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                    HorizontalAlignment="Stretch">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                            <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Content}" FontSize="15" TextWrapping="Wrap"
+                                                                    MaxWidth="520"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource SuccessForeground}"
+                                                                    IsVisible="{Binding IsText}" />
+                                                                <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="15"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource SuccessForeground}"
+                                                                    IsVisible="{Binding IsMath}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <StackPanel IsVisible="{Binding HasSelectedWrongOptions}">
+                                <TextBlock Text="You selected these incorrectly:" FontSize="14"
+                                    Foreground="{DynamicResource DangerForeground}" />
+                                <ItemsControl ItemsSource="{Binding SelectedWrongOptions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:String">
+                                            <StackPanel Spacing="6" Margin="0,2,0,0" Orientation="Horizontal">
+                                                <TextBlock Text="✕" FontSize="14" Foreground="{DynamicResource DangerForeground}" VerticalAlignment="Top" />
+                                                <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                    HorizontalAlignment="Stretch">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                            <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                    MaxWidth="520"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource DangerForeground}"
+                                                                    IsVisible="{Binding IsText}" />
+                                                                <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource DangerForeground}"
+                                                                    IsVisible="{Binding IsMath}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <StackPanel IsVisible="{Binding HasMissedCorrectOptions}">
+                                <TextBlock Text="You missed these correct options:" FontSize="14"
+                                    Foreground="{DynamicResource WarningForeground}" />
+                                <ItemsControl ItemsSource="{Binding MissedCorrectOptions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:String">
+                                            <StackPanel Spacing="6" Margin="0,2,0,0" Orientation="Horizontal">
+                                                <TextBlock Text="•" FontSize="14" Foreground="{DynamicResource WarningForeground}" VerticalAlignment="Top" />
+                                                <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                    HorizontalAlignment="Stretch">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                            <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                    MaxWidth="520"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource WarningForeground}"
+                                                                    IsVisible="{Binding IsText}" />
+                                                                <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource WarningForeground}"
+                                                                    IsVisible="{Binding IsMath}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <Button Content="Next" Click="NextCard_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                            <Button Content="Retry Later" Click="RetryLater_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}"
+                                IsVisible="{Binding CanRetryLater}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Match Card -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsMatchCard}">
+                        <!-- Input Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                            <TextBlock Text="Match each left item to the correct right item:" FontSize="14"
+                                Foreground="{DynamicResource TextSecondary}" />
+
+                            <ItemsControl ItemsSource="{Binding MatchRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ReviewMatchRow">
+                                        <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"
+                                            BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
+                                            <Grid ColumnDefinitions="2*, Auto, *" VerticalAlignment="Center">
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <ItemsControl ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                    <Grid Margin="0,0,2,0" VerticalAlignment="Center">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="16"
+                                                                            VerticalAlignment="Center" TextWrapping="Wrap"
+                                                                            MaxWidth="520"
+                                                                            Foreground="{DynamicResource TextPrimary}"
+                                                                            IsVisible="{Binding IsText}" />
+                                                                        <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="16"
+                                                                            VerticalAlignment="Center"
+                                                                            IsVisible="{Binding IsMath}"
+                                                                            Foreground="{DynamicResource TextPrimary}" />
+                                                                    </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="→" Margin="10,0"
+                                                    VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                                <ComboBox Grid.Column="2"
+                                                    ItemsSource="{Binding RightChoices}"
+                                                    SelectedItem="{Binding SelectedRightText, Mode=TwoWay}"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    CornerRadius="8" Padding="8,6">
+                                                    <ComboBox.SelectionBoxItemTemplate>
+                                                        <DataTemplate x:DataType="sys:String">
+                                                            <Grid ClipToBounds="True">
+                                                                <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                                    VerticalAlignment="Center" Margin="2">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal" />
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                            <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="*" />
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14"
+                                                                                    TextWrapping="NoWrap"
+                                                                                    TextTrimming="CharacterEllipsis"
+                                                                                    VerticalAlignment="Center"
+                                                                                    Foreground="{DynamicResource TextPrimary}"
+                                                                                    IsVisible="{Binding IsText}" />
+                                                                                <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                                    VerticalAlignment="Center"
+                                                                                    IsVisible="{Binding IsMath}"
+                                                                                    Foreground="{DynamicResource TextPrimary}" />
+                                                                            </Grid>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ComboBox.SelectionBoxItemTemplate>
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate x:DataType="sys:String">
+                                                            <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                                VerticalAlignment="Center" Margin="2">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <WrapPanel />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                        <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="*" />
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14"
+                                                                                TextWrapping="Wrap"
+                                                                                TextTrimming="None"
+                                                                                MaxWidth="520"
+                                                                                VerticalAlignment="Center"
+                                                                                Foreground="{DynamicResource TextPrimary}"
+                                                                                IsVisible="{Binding IsText}" />
+                                                                            <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                                VerticalAlignment="Center"
+                                                                                IsVisible="{Binding IsMath}"
+                                                                                Foreground="{DynamicResource TextPrimary}" />
+                                                                        </Grid>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Button Content="Submit Answer" Click="SubmitAnswer_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" />
+                        </StackPanel>
+
+                        <!-- Result Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                            <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding IsAnswerCorrect}" />
+                            <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding !IsAnswerCorrect}" />
+
+                            <StackPanel>
+                                <TextBlock Text="Correct matches:" FontSize="14"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                                <ItemsControl ItemsSource="{Binding MatchRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReviewMatchRow">
+                                            <StackPanel Spacing="0">
+                                                <Grid Margin="0,2,0,0" VerticalAlignment="Top">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="•" FontSize="14" Foreground="{DynamicResource SuccessForeground}" VerticalAlignment="Top" />
+                                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding LeftText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource SuccessForeground}"
+                                                                        IsVisible="{Binding IsText}" />
+                                                                    <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource SuccessForeground}"
+                                                                        IsVisible="{Binding IsMath}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Grid>
+                                                <Grid Margin="0,0,0,2" VerticalAlignment="Top">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="→" FontSize="14" Foreground="{DynamicResource SuccessForeground}" Margin="0,0,0,0" VerticalAlignment="Top" />
+                                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding CorrectRightText, Converter={StaticResource MixedMathSegmentsConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                                <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource SuccessForeground}"
+                                                                        IsVisible="{Binding IsText}" />
+                                                                    <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource SuccessForeground}"
+                                                                        IsVisible="{Binding IsMath}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Grid>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <StackPanel IsVisible="{Binding HasWrongMatches}">
+                                <TextBlock Text="Incorrect selections:" FontSize="14"
+                                    Foreground="{DynamicResource DangerForeground}" />
+                                <ItemsControl ItemsSource="{Binding WrongMatches}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:String">
+                                            <ItemsControl ItemsSource="{Binding ., Converter={StaticResource MixedMathSegmentsConverter}}"
+                                                Margin="0,2,0,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="converters:MixedMathSegment">
+                                                        <Grid Margin="0,0,1,0" VerticalAlignment="Center">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Content}" FontSize="14" TextWrapping="Wrap"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="{DynamicResource DangerForeground}"
+                                                                IsVisible="{Binding IsText}" />
+                                                            <math:FormulaBlock Grid.Column="1" Formula="{Binding Content}" FontSize="14"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="{DynamicResource DangerForeground}"
+                                                                IsVisible="{Binding IsMath}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <Button Content="Next" Click="NextCard_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                            <Button Content="Retry Later" Click="RetryLater_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}"
+                                IsVisible="{Binding CanRetryLater}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- True/False Card -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsTrueFalseCard}">
+                        <!-- Input Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
+                            <TextBlock Text="Pick the correct option:" FontSize="14"
+                                Foreground="{DynamicResource TextSecondary}" />
+
+                            <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                                <Button Grid.Column="0" Content="{Binding CurrentTrueFalseTrueOptionText}"
+                                    Click="TrueAnswer_Click" FontSize="16"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                    Background="{DynamicResource SuccessBackground}" Foreground="#FFFFFF" />
+                                <Button Grid.Column="1" Content="{Binding CurrentTrueFalseFalseOptionText}"
+                                    Click="FalseAnswer_Click" FontSize="16"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                    Background="{DynamicResource DangerBackground}" Foreground="#FFFFFF" />
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Result Phase -->
+                        <StackPanel Spacing="10" IsVisible="{Binding IsAnswerChecked}">
+                            <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding IsAnswerCorrect}" />
+                            <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                                Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
+                                IsVisible="{Binding !IsAnswerCorrect}" />
+
+                            <StackPanel>
+                                <TextBlock Text="Correct option:"
+                                    Foreground="{DynamicResource TextSecondary}" FontSize="14" />
+                                <TextBlock Text="{Binding CurrentTrueFalseCorrectOptionText}"
+                                    Foreground="{DynamicResource TextPrimary}" FontSize="16"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <Button Content="Next" Click="NextCard_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                            <Button Content="Retry Later" Click="RetryLater_Click"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Background="{DynamicResource GradientStart}"
+                                Foreground="{DynamicResource PrimaryButtonForeground}"
+                                IsVisible="{Binding CanRetryLater}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Flip Card: Answer Reveal (Both Flip and Type manual mode) -->
+                    <StackPanel Orientation="Horizontal" Spacing="20"
+                        HorizontalAlignment="Center" IsVisible="{Binding IsFlipCard}">
+                            <Button Content="✕ Incorrect" Click="Incorrect_Click"
+                                FontSize="16"
+                                Background="{DynamicResource DangerBackground}" Padding="20,10"
+                                Width="180" Height="46"
+                                HorizontalContentAlignment="Center"
+                                IsVisible="{Binding IsAnswerRevealed}" />
+                            <Button Content="✓ Correct" Click="Correct_Click"
+                                FontSize="16"
+                                Background="{DynamicResource SuccessBackground}" Padding="20,10"
+                                Width="180" Height="46"
+                                HorizontalContentAlignment="Center"
+                                IsVisible="{Binding IsAnswerRevealed}" />
+                    </StackPanel>
+                </StackPanel>
+                </StackPanel>
+            </Border>
+            </ScrollViewer>
+
+            <Button Content="Skip" Click="SkipCard_Click"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,24,16"
+                FontSize="14" Padding="16,10"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                Foreground="{DynamicResource TextPrimary}"
+                Opacity="0.85"
+                IsVisible="{Binding ShouldShowSkipButton}"
+                CornerRadius="10" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -11,7 +11,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class DashboardViewModel : ViewModelBase
 {
     private enum StatsScope { Overall, Deck, Group, }
     public enum DeckSelectionMode { None, Review, Export, }
@@ -165,7 +165,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private SortOption? _selectedSortOption = null;
     partial void OnSelectedSortOptionChanged(SortOption? value) => FilterDecks();
 
-    public MainWindowViewModel()
+    public DashboardViewModel()
     {
         MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
         RefreshStreakTexts();
