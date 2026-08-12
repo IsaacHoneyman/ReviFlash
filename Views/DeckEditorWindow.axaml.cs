@@ -48,6 +48,7 @@ public partial class DeckEditorWindow : Window
         if (DataContext is DeckEditorViewModel vm)
         {
             vm.CancelCardLoad();
+            vm.Dispose();
         }
 
         _cardLoadScheduled = false;

@@ -8,68 +8,30 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 using static ReviFlash.Utilities.CardUtility;
 
 namespace ReviFlash.ViewModels;
 
-public class MultiChoiceOptionEditor : ViewModelBase
+public partial class MultiChoiceOptionEditor : ViewModelBase
 {
-    private string _optionText = "";
-    private bool _isCorrect;
-
-    public string OptionText
-    {
-        get => _optionText;
-        set
-        {
-            _optionText = value;
-            OnPropertyChanged(nameof(OptionText));
-        }
-    }
-
-    public bool IsCorrect
-    {
-        get => _isCorrect;
-        set
-        {
-            _isCorrect = value;
-            OnPropertyChanged(nameof(IsCorrect));
-        }
-    }
+    [ObservableProperty] private string _optionText = "";
+    [ObservableProperty] private bool _isCorrect;
 }
 
-public class MatchPairEditor : ViewModelBase
+public partial class MatchPairEditor : ViewModelBase
 {
-    private string _leftText = "";
-    private string _rightText = "";
-
-    public string LeftText
-    {
-        get => _leftText;
-        set
-        {
-            _leftText = value;
-            OnPropertyChanged(nameof(LeftText));
-        }
-    }
-
-    public string RightText
-    {
-        get => _rightText;
-        set
-        {
-            _rightText = value;
-            OnPropertyChanged(nameof(RightText));
-        }
-    }
+    [ObservableProperty] private string _leftText = "";
+    [ObservableProperty] private string _rightText = "";
 }
 
-public class DeckEditorViewModel : ViewModelBase
+public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 {
+    private bool _disposed;
+
     public FlashCardDeck CurrentDeck { get; }
-    public ObservableCollection<FlashCard> Cards { get; set; } = new();
-    private bool _isCardsLoading;
+    [ObservableProperty] private ObservableCollection<FlashCard> _cards = new();
     private CancellationTokenSource? _cardLoadCts;
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
     public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();
@@ -92,82 +54,19 @@ public class DeckEditorViewModel : ViewModelBase
 
     private EditorSnapshot? _lastSnapshot = null;
 
-    private string _deckName;
-    public string DeckName
+    [ObservableProperty] private string _deckName;
+    partial void OnDeckNameChanged(string value)
     {
-        get => _deckName;
-        set
-        {
-            _deckName = value;
-            CurrentDeck.Name = value;
-            FlashCardRepository.UpdateDeck(CurrentDeck);
-        }
+        CurrentDeck.Name = value;
+        FlashCardRepository.UpdateDeck(CurrentDeck);
     }
 
-    private string _newFront = "";
-    public string NewFront
-    {
-        get => _newFront;
-        set
-        {
-            _newFront = value;
-            OnPropertyChanged(nameof(NewFront));
-        }
-    }
-    private string _newBack = "";
-    public string NewBack
-    {
-        get => _newBack;
-        set
-        {
-            _newBack = value;
-            OnPropertyChanged(nameof(NewBack));
-        }
-    }
-
-    private string _newTypeAnswer = "";
-    public string NewTypeAnswer
-    {
-        get => _newTypeAnswer;
-        set
-        {
-            _newTypeAnswer = value;
-            OnPropertyChanged(nameof(NewTypeAnswer));
-        }
-    }
-
-    private bool _newTrueFalseAnswerIsTrue = true;
-    public bool NewTrueFalseAnswerIsTrue
-    {
-        get => _newTrueFalseAnswerIsTrue;
-        set
-        {
-            _newTrueFalseAnswerIsTrue = value;
-            OnPropertyChanged(nameof(NewTrueFalseAnswerIsTrue));
-        }
-    }
-
-    private string _newTrueOptionText = "True";
-    public string NewTrueOptionText
-    {
-        get => _newTrueOptionText;
-        set
-        {
-            _newTrueOptionText = value;
-            OnPropertyChanged(nameof(NewTrueOptionText));
-        }
-    }
-
-    private string _newFalseOptionText = "False";
-    public string NewFalseOptionText
-    {
-        get => _newFalseOptionText;
-        set
-        {
-            _newFalseOptionText = value;
-            OnPropertyChanged(nameof(NewFalseOptionText));
-        }
-    }
+    [ObservableProperty] private string _newFront = "";
+    [ObservableProperty] private string _newBack = "";
+    [ObservableProperty] private string _newTypeAnswer = "";
+    [ObservableProperty] private bool _newTrueFalseAnswerIsTrue = true;
+    [ObservableProperty] private string _newTrueOptionText = "True";
+    [ObservableProperty] private string _newFalseOptionText = "False";
 
     public string SaveButtonText => _editingCardId.HasValue ? "Update Card" : "Save Card";
     public List<string> AvailableCardTypes { get; } = new()
@@ -179,25 +78,16 @@ public class DeckEditorViewModel : ViewModelBase
         CARD_TYPE_TRUE_FALSE
     };
 
-    private string _selectedCardType = "Flip";
-    public string SelectedCardType
+    [NotifyPropertyChangedFor(nameof(IsTypeCardType))]
+    [NotifyPropertyChangedFor(nameof(IsMultiChoiceCardType))]
+    [NotifyPropertyChangedFor(nameof(IsMatchCardType))]
+    [NotifyPropertyChangedFor(nameof(IsTrueFalseCardType))]
+    [ObservableProperty] private string _selectedCardType = "Flip";
+    partial void OnSelectedCardTypeChanged(string value)
     {
-        get => _selectedCardType;
-        set
+        if (!_suppressCardTypeDefaultInitialization)
         {
-            _selectedCardType = value;
-
-            if (!_suppressCardTypeDefaultInitialization)
-            {
-                InitializeCardTypeDefaults();
-            }
-
-            OnPropertyChanged(nameof(SelectedCardType));
-            OnPropertyChanged(nameof(IsTypeCardType));
-            OnPropertyChanged(nameof(IsMultiChoiceCardType));
-            OnPropertyChanged(nameof(IsMatchCardType));
-            OnPropertyChanged(nameof(IsTrueFalseCardType));
-            OnPropertyChanged(nameof(ShowFrontBackEditor));
+            InitializeCardTypeDefaults();
         }
     }
 
@@ -208,15 +98,7 @@ public class DeckEditorViewModel : ViewModelBase
     public bool ShowFrontBackEditor => true;
     public bool ShowAdditionalFieldLatexPreviews => MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
 
-    public bool IsCardsLoading
-    {
-        get => _isCardsLoading;
-        private set
-        {
-            _isCardsLoading = value;
-            OnPropertyChanged(nameof(IsCardsLoading));
-        }
-    }
+    [ObservableProperty] private bool _isCardsLoading;
 
     private void InitializeCardTypeDefaults()
     {
@@ -259,17 +141,8 @@ public class DeckEditorViewModel : ViewModelBase
         }
     }
 
-    private string _validationMessage = "";
-    public string ValidationMessage
-    {
-        get => _validationMessage;
-        set
-        {
-            _validationMessage = value;
-            OnPropertyChanged(nameof(ValidationMessage));
-            OnPropertyChanged(nameof(HasValidationMessage));
-        }
-    }
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    [ObservableProperty] private string _validationMessage = "";
 
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
@@ -277,6 +150,8 @@ public class DeckEditorViewModel : ViewModelBase
     {
         CurrentDeck = deck;
         _deckName = deck.Name;
+
+        MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
 
         AddOptionRow();
         AddOptionRow();
@@ -292,11 +167,21 @@ public class DeckEditorViewModel : ViewModelBase
         }
     }
 
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        MetaDataManager.Data.PropertyChanged -= Settings_PropertyChanged;
+    }
+
     private void LoadCards()
     {
         var savedCards = FlashCardRepository.GetCardsForDeck(CurrentDeck.ID);
         Cards = new ObservableCollection<FlashCard>(savedCards);
-        OnPropertyChanged(nameof(Cards));
     }
 
     public async Task LoadCardsIncrementallyAsync(int batchSize = 8)
@@ -455,9 +340,6 @@ public class DeckEditorViewModel : ViewModelBase
         string trueOptionValue,
         string falseOptionValue)
     {
-        // If the selected card type matches the existing card's concrete type,
-        // update the existing instance in-place. Otherwise, construct a new
-        // instance of the target type (preserving the DB ID) and persist that.
         string targetTypeName = SelectedCardType switch
         {
             CARD_TYPE_TYPE => nameof(TypeFlashCard),
@@ -559,7 +441,7 @@ public class DeckEditorViewModel : ViewModelBase
         ValidationMessage = "";
 
         OnPropertyChanged(nameof(SaveButtonText));
-        
+
         // Snapshot the cleared/default editor state as the baseline.
         TakeEditorSnapshot();
     }
@@ -658,16 +540,12 @@ public class DeckEditorViewModel : ViewModelBase
         Cards.Remove(card);
     }
 
-    // Return true when the editor is in the same state as the last snapshot
-    // (i.e. no unsaved changes since the last load/save/clear). If there is no
-    // snapshot yet, fall back to the original "blank" checks used for new cards.
     public bool EditorIsBlank()
     {
         if (_lastSnapshot is not null)
         {
             var snap = _lastSnapshot;
 
-            // Compare simple fields
             if (snap.CardType != SelectedCardType) return false;
             if (snap.Front != NewFront) return false;
             if (snap.Back != NewBack) return false;
@@ -743,10 +621,8 @@ public class DeckEditorViewModel : ViewModelBase
         );
     }
 
-    // Copy a card's content into the editor fields without starting an edit operation.
     public void CopyCardToEditor(FlashCard card)
     {
-        // Copying prepares a new card draft, so clear any active edit target.
         _editingCard = null;
         _editingCardId = null;
         LoadCardIntoEditor(card);
@@ -808,8 +684,6 @@ public class DeckEditorViewModel : ViewModelBase
         ValidationMessage = "";
         OnPropertyChanged(nameof(SaveButtonText));
 
-        // Snapshot editor contents after loading a card for editing/copying so
-        // subsequent EditorIsBlank checks compare against this state.
         TakeEditorSnapshot();
     }
 

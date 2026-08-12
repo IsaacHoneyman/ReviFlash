@@ -326,8 +326,6 @@ public partial class MainWindowViewModel : ViewModelBase
         return StatsScope.Overall;
     }
 
-    // Callers must set IsViewingDeckStats/SelectedDeckForStats/IsViewingGroupStats/SelectedGroupForStats
-    // before calling this, so CurrentStatsTitle/GraphViewTitle notifications have already fired.
     private void RefreshGraphStats()
     {
         var timeModifier = SelectedTimePeriod?.TimeModifier;

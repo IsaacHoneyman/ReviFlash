@@ -5,50 +5,30 @@ using System.Diagnostics;
 using System.Linq;
 using System.Timers;
 using System.ComponentModel;
-using ReviFlash.Data;
+using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
 
 namespace ReviFlash.ViewModels;
 
-public class ReviewOptionItem : ViewModelBase
+public partial class ReviewOptionItem : ViewModelBase
 {
-    private bool _isSelected;
-
     public string OptionText { get; set; } = "";
     public bool IsCorrect { get; set; }
 
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set
-        {
-            _isSelected = value;
-            OnPropertyChanged(nameof(IsSelected));
-        }
-    }
+    [ObservableProperty] private bool _isSelected;
 }
 
-public class ReviewMatchRow : ViewModelBase
+public partial class ReviewMatchRow : ViewModelBase
 {
-    private string? _selectedRightText;
-
     public string LeftText { get; set; } = "";
     public string CorrectRightText { get; set; } = "";
     public List<string> RightChoices { get; set; } = [];
 
-    public string? SelectedRightText
-    {
-        get => _selectedRightText;
-        set
-        {
-            _selectedRightText = value;
-            OnPropertyChanged(nameof(SelectedRightText));
-        }
-    }
+    [ObservableProperty] private string? _selectedRightText;
 }
 
-public class ReviewViewModel : ViewModelBase
+public partial class ReviewViewModel : ViewModelBase
     , IDisposable
 {
     private readonly List<FlashCard> _sessionCards;
@@ -70,10 +50,15 @@ public class ReviewViewModel : ViewModelBase
 
     // Scoring
     public int CorrectCount { get; private set; } = 0;
-    public int CurrentAnswerStreak { get; private set; } = 0;
-    public int BestAnswerStreak { get; private set; } = 0;
-    public bool IsAnswerRevealed { get; set; } = false;
-    public string UserTypedAnswer { get; set; } = "";
+    [NotifyPropertyChangedFor(nameof(CurrentAnswerStreakText))]
+    [ObservableProperty] private int _currentAnswerStreak = 0;
+    [NotifyPropertyChangedFor(nameof(BestAnswerStreakText))]
+    [ObservableProperty] private int _bestAnswerStreak = 0;
+    [NotifyPropertyChangedFor(nameof(ShowAnswerButtonVisible))]
+    [NotifyPropertyChangedFor(nameof(ShowBackAnswer))]
+    [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [ObservableProperty] private bool _isAnswerRevealed = false;
+    [ObservableProperty] private string _userTypedAnswer = "";
     public Action<int, int, TimeSpan, bool> OnSessionComplete = delegate { };
 
     public bool IsTypeCard => CurrentCard is TypeFlashCard;
@@ -92,22 +77,8 @@ public class ReviewViewModel : ViewModelBase
         ? (trueFalseCard.CorrectAnswerIsTrue ? trueFalseCard.TrueLabel : trueFalseCard.FalseLabel)
         : "";
     public bool ShowBackAnswer => IsAnswerRevealed;
-    private bool _isAnswerChecked = false;
-    public bool IsAnswerChecked
-    {
-        get => _isAnswerChecked;
-        set
-        {
-            if (_isAnswerChecked == value)
-            {
-                return;
-            }
-
-            _isAnswerChecked = value;
-            OnPropertyChanged(nameof(IsAnswerChecked));
-            OnPropertyChanged(nameof(CanRetryLater));
-        }
-    }
+    [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [ObservableProperty] private bool _isAnswerChecked = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
     public ObservableCollection<ReviewMatchRow> MatchRows { get; } = new();
@@ -121,19 +92,9 @@ public class ReviewViewModel : ViewModelBase
     public ObservableCollection<string> MissedCorrectOptions { get; } = new();
     public ObservableCollection<string> WrongMatches { get; } = new();
     
-    private bool _isAnswerCorrect = false;
-    public bool IsAnswerCorrect
-    {
-        get => _isAnswerCorrect;
-        set { _isAnswerCorrect = value; OnPropertyChanged(nameof(IsAnswerCorrect)); }
-    }
+    [ObservableProperty] private bool _isAnswerCorrect = false;
 
-    private string _timerText = "0:00:00";
-    public string TimerText
-    {
-        get => _timerText;
-        set { _timerText = value; OnPropertyChanged(nameof(TimerText)); }
-    }
+    [ObservableProperty] private string _timerText = "0:00:00";
 
     public bool ShouldShowTimer => MetaDataManager.Data.ShowTimer;
     public bool ShouldShowProgress => MetaDataManager.Data.ShowProgress;
@@ -162,6 +123,7 @@ public class ReviewViewModel : ViewModelBase
         _cardDeckMap = cardDeckMap;
         _reviewGroupId = reviewGroupId;
 
+        MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
         RefreshBestAnswerStreak();
 
         LoadMultiChoiceOptionsForCurrentCard();
@@ -215,10 +177,6 @@ public class ReviewViewModel : ViewModelBase
     public void Reveal()
     {
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(IsAnswerRevealed));
-        OnPropertyChanged(nameof(ShowAnswerButtonVisible));
-        OnPropertyChanged(nameof(ShowBackAnswer));
-        OnPropertyChanged(nameof(CanRetryLater));
     }
 
     public void MarkCorrect()
@@ -239,9 +197,6 @@ public class ReviewViewModel : ViewModelBase
         RecordCurrentCardResult(IsAnswerCorrect);
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(IsAnswerRevealed));
-        OnPropertyChanged(nameof(IsAnswerChecked));
-        OnPropertyChanged(nameof(ShowBackAnswer));
     }
 
     public void CheckMultiChoiceAnswer()
@@ -277,9 +232,6 @@ public class ReviewViewModel : ViewModelBase
 
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(IsAnswerRevealed));
-        OnPropertyChanged(nameof(IsAnswerChecked));
-        OnPropertyChanged(nameof(ShowBackAnswer));
         OnPropertyChanged(nameof(HasSelectedWrongOptions));
         OnPropertyChanged(nameof(HasMissedCorrectOptions));
     }
@@ -311,9 +263,6 @@ public class ReviewViewModel : ViewModelBase
 
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(IsAnswerRevealed));
-        OnPropertyChanged(nameof(IsAnswerChecked));
-        OnPropertyChanged(nameof(ShowBackAnswer));
         OnPropertyChanged(nameof(HasWrongMatches));
     }
 
@@ -329,11 +278,7 @@ public class ReviewViewModel : ViewModelBase
 
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(IsAnswerRevealed));
-        OnPropertyChanged(nameof(IsAnswerChecked));
-        OnPropertyChanged(nameof(IsAnswerCorrect));
         OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
-        OnPropertyChanged(nameof(ShowBackAnswer));
     }
 
     public void NextCard()
@@ -425,6 +370,7 @@ public class ReviewViewModel : ViewModelBase
         }
 
         _disposed = true;
+        MetaDataManager.Data.PropertyChanged -= Settings_PropertyChanged;
         _displayTimer?.Stop();
         _displayTimer?.Dispose();
         _displayTimer = null;
@@ -452,15 +398,12 @@ public class ReviewViewModel : ViewModelBase
     private void UpdateAnswerStreak(bool isCorrect)
     {
         CurrentAnswerStreak = isCorrect ? CurrentAnswerStreak + 1 : 0;
-        OnPropertyChanged(nameof(CurrentAnswerStreak));
-        OnPropertyChanged(nameof(CurrentAnswerStreakText));
 
         var (targetType, targetId) = GetBestStreakTarget();
         if (CurrentAnswerStreak > BestAnswerStreak)
         {
             BestAnswerStreak = CurrentAnswerStreak;
             FlashCardRepository.UpdateBestAnswerStreak(targetType, targetId, BestAnswerStreak);
-            OnPropertyChanged(nameof(BestAnswerStreakText));
         }
     }
 
@@ -468,8 +411,6 @@ public class ReviewViewModel : ViewModelBase
     {
         var (targetType, targetId) = GetBestStreakTarget();
         BestAnswerStreak = FlashCardRepository.GetBestAnswerStreak(targetType, targetId);
-        OnPropertyChanged(nameof(BestAnswerStreak));
-        OnPropertyChanged(nameof(BestAnswerStreakText));
     }
 
     private (string targetType, ulong targetId) GetBestStreakTarget()
@@ -578,8 +519,6 @@ public class ReviewViewModel : ViewModelBase
         LoadMatchRowsForCurrentCard();
         RefreshBestAnswerStreak();
         OnPropertyChanged(nameof(CurrentCard));
-        OnPropertyChanged(nameof(IsAnswerRevealed));
-        OnPropertyChanged(nameof(UserTypedAnswer));
         OnPropertyChanged(nameof(CurrentNumber));
         OnPropertyChanged(nameof(ProgressPercentage));
         OnPropertyChanged(nameof(ProgressCardCount));
@@ -592,7 +531,6 @@ public class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrentTrueFalseTrueOptionText));
         OnPropertyChanged(nameof(CurrentTrueFalseFalseOptionText));
         OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
-        OnPropertyChanged(nameof(ShowBackAnswer));
         OnPropertyChanged(nameof(ShowAnswerButtonVisible));
         OnPropertyChanged(nameof(HasSelectedWrongOptions));
         OnPropertyChanged(nameof(HasMissedCorrectOptions));
