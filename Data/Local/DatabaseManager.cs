@@ -30,14 +30,23 @@ public static class DatabaseManager
             command.CommandText = @"
                 PRAGMA foreign_keys = ON;
 
+                CREATE TABLE IF NOT EXISTS Folders (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    ParentFolderID INTEGER NULL,
+                    FOREIGN KEY (ParentFolderID) REFERENCES Folders(ID) ON DELETE SET NULL
+                );
+
                 CREATE TABLE IF NOT EXISTS Decks (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Name TEXT NOT NULL
+                    Name TEXT NOT NULL,
+                    FolderID INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL
                 );
 
                 CREATE TABLE IF NOT EXISTS StudyGroups (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Name TEXT NOT NULL
+                    Name TEXT NOT NULL,
+                    FolderID INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL
                 );
 
                 CREATE TABLE IF NOT EXISTS StudyGroupDecks (
@@ -95,6 +104,10 @@ public static class DatabaseManager
             ";
             
             command.ExecuteNonQuery();
+
+            ApplyMigrations(connection);
+            CreateIndexes(connection);
+
             Logger.LogInfo("Database initialisation completed successfully.");
         }
         catch (Exception ex)
@@ -102,6 +115,54 @@ public static class DatabaseManager
             Logger.LogError("Critical failure during database initialization", ex);
             throw; 
         }
+    }
+
+    /// <summary>
+    /// Brings databases created before a schema change up to date. Every step is
+    /// guarded so running it on an already current database is a no-op.
+    /// </summary>
+    private static void ApplyMigrations(SqliteConnection connection)
+    {
+        // Folders: added after release, so existing Decks/StudyGroups tables predate the column.
+        AddColumnIfMissing(connection, "Decks", "FolderID", "INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL");
+        AddColumnIfMissing(connection, "StudyGroups", "FolderID", "INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL");
+    }
+
+    private static void CreateIndexes(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            CREATE INDEX IF NOT EXISTS IX_Folders_Parent ON Folders(ParentFolderID);
+            CREATE INDEX IF NOT EXISTS IX_Decks_Folder ON Decks(FolderID);
+            CREATE INDEX IF NOT EXISTS IX_StudyGroups_Folder ON StudyGroups(FolderID);
+            CREATE INDEX IF NOT EXISTS IX_Cards_Deck ON Cards(DeckID);
+        ";
+        command.ExecuteNonQuery();
+    }
+
+    private static void AddColumnIfMissing(SqliteConnection connection, string table, string column, string definition)
+    {
+        if (ColumnExists(connection, table, column)) return;
+
+        Logger.LogInfo($"Migrating database: adding {table}.{column}.");
+
+        using var command = connection.CreateCommand();
+        command.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+        command.ExecuteNonQuery();
+    }
+
+    private static bool ColumnExists(SqliteConnection connection, string table, string column)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info({table});";
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+
+        return false;
     }
 
     public static SqliteConnection GetConnection() => new(GetConnectionString());

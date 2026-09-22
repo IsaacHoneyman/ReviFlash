@@ -158,9 +158,11 @@ public partial class SettingsViewModel : ViewModelBase
 
         if (Application.Current != null)
         {
-            if (ThemeMap.TryGetValue(themeName, out var variant)) Application.Current.RequestedThemeVariant = variant;
-            else Application.Current.RequestedThemeVariant = ThemeVariant.Dark;
-            App.ApplyAccessibilityPalette(false); // Default to dark theme for accessibility
+            var variant = ThemeMap.TryGetValue(themeName, out var mapped) ? mapped : ThemeVariant.Dark;
+            Application.Current.RequestedThemeVariant = variant;
+
+            // Light palettes need the darker accent set, or reds and greens wash out.
+            App.ApplyAccessibilityPalette(App.IsLightTheme(variant));
         }
     }
 

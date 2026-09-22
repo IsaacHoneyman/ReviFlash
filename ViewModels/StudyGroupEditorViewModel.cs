@@ -1,15 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Data.Local;
 using ReviFlash.Models;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
 public partial class StudyGroupEditorViewModel : ViewModelBase
 {
     private readonly StudyGroup? _editingGroup;
+    private readonly ulong? _targetFolderID;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSave))]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -21,6 +24,12 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
         RefreshFilteredAvailableDecks();
     }
 
+    /// <summary> The same orderings the dashboard offers. </summary>
+    public List<SortOption> SortOptions { get; } = SearchUtility.CreateSortOptions();
+
+    [ObservableProperty] private SortOption? _selectedSortOption;
+    partial void OnSelectedSortOptionChanged(SortOption? value) => RefreshFilteredAvailableDecks();
+
     public ObservableCollection<FlashCardDeck> AvailableDecks { get; } = [];
     public ObservableCollection<FlashCardDeck> FilteredAvailableDecks { get; } = [];
     public ObservableCollection<FlashCardDeck> SelectedDecks { get; } = [];
@@ -29,10 +38,18 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
     public string WindowTitle => IsEditing ? "Edit Group" : "Create Group";
     public bool CanSave => !string.IsNullOrWhiteSpace(GroupName);
 
-    public StudyGroupEditorViewModel(StudyGroup? group = null)
+    /// <param name="targetFolderID"> Folder a newly created group is filed into; null for the main menu. </param>
+    public StudyGroupEditorViewModel(StudyGroup? group = null, ulong? targetFolderID = null)
     {
         _editingGroup = group;
+        _targetFolderID = targetFolderID;
+        SelectedSortOption = SortOptions[0];
+
         var allDecks = FlashCardRepository.GetAllDecks();
+
+        // Show which folder each set lives in: two sets can easily share a name once
+        // they are filed apart.
+        FolderTree.Load().ApplyPaths(allDecks, []);
 
         if (group != null)
         {
@@ -81,6 +98,9 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
             var newGroup = new StudyGroup(trimmedName);
             FlashCardRepository.SaveNewStudyGroup(newGroup);
             FlashCardRepository.SetStudyGroupDecks(newGroup.ID, deckIds);
+
+            if (_targetFolderID is ulong folderID) FolderRepository.MoveStudyGroup(newGroup.ID, folderID);
+
             return newGroup;
         }
 
@@ -93,7 +113,8 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
     private void RefreshFilteredAvailableDecks()
     {
         FilteredAvailableDecks.Clear();
-        var fDecks = AvailableDecks.FilterBySearch(DeckSearchText);
+
+        var fDecks = AvailableDecks.SearchAndSort(DeckSearchText, SelectedSortOption?.Mode ?? SortMode.Relevance);
         foreach (var d in fDecks) FilteredAvailableDecks.Add(d);
     }
 }

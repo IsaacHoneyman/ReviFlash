@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Media;
@@ -21,9 +22,9 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        MetaDataManager.InitMetaData();
+        MetaDataManager.InitMetaData(); // Applies the saved theme, and with it the accent palette.
         DatabaseManager.InitDatabase();
-        ApplyAccessibilityPalette(false); // Default to dark theme for accessibility
+        ApplyAccessibilityPalette(IsLightTheme());
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -43,6 +44,24 @@ public partial class App : Application
         {
             BindingPlugins.DataValidators.Remove(plugin);
         }
+    }
+
+    public static bool IsLightTheme(ThemeVariant? variant = null)
+    {
+        if (Current is null) return false;
+
+        variant ??= Current.ActualThemeVariant;
+
+        if (Current.TryFindResource("CardBackground", variant, out var value) && value is ISolidColorBrush brush)
+        {
+            var color = brush.Color;
+
+            // Rec. 709 relative luminance; above the midpoint the surface reads as light.
+            double luminance = ((0.2126 * color.R) + (0.7152 * color.G) + (0.0722 * color.B)) / 255.0;
+            return luminance > 0.5;
+        }
+
+        return false;
     }
 
     public static void ApplyAccessibilityPalette(bool isLightTheme)

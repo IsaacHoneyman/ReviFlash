@@ -544,24 +544,24 @@
                                     <StackPanel Grid.Column="1" Grid.Row="1"
                                         VerticalAlignment="Bottom" HorizontalAlignment="Right" Spacing="8" Margin="10,0,0,0">
                                         <Button Click="CopyCard_Click"
-                                            Background="#7044AAFF" CornerRadius="8"
-                                            Padding="12,8">
-                                            <TextBlock Text="📋" FontSize="16"
-                                                Foreground="{DynamicResource TextPrimary}" />
+                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                            Padding="10,8"
+                                            ToolTip.Tip="Duplicate Card">
+                                            <Path Classes="icon editorAction" Data="{StaticResource IconCopy}" />
                                         </Button>
 
                                         <Button Click="EditCard_Click"
-                                            Background="#70FFFFFF" CornerRadius="8"
-                                            Padding="12,8">
-                                            <TextBlock Text="✏️" FontSize="16"
-                                                Foreground="{DynamicResource TextPrimary}" />
+                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                            Padding="10,8"
+                                            ToolTip.Tip="Edit Card">
+                                            <Path Classes="icon editorAction" Data="{StaticResource IconEdit}" />
                                         </Button>
 
                                         <Button Click="DeleteCard_Click"
-                                            Background="#90FF4444" CornerRadius="8"
-                                            Padding="12,8">
-                                            <TextBlock Text="🗑️" FontSize="16"
-                                                Foreground="{DynamicResource TextPrimary}" />
+                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                            Padding="10,8"
+                                            ToolTip.Tip="Delete Card">
+                                            <Path Classes="icon editorAction danger" Data="{StaticResource IconDelete}" />
                                         </Button>
                                     </StackPanel>
                                 </Grid>

@@ -130,9 +130,11 @@ public static class FlashCardRepository
 
         var command = connection.CreateCommand();
         command.CommandText = @"
-            SELECT g.ID, g.Name,
+            SELECT g.ID, g.Name, g.FolderID,
                    COUNT(DISTINCT gd.DeckID) AS DeckCount,
-                   COALESCE(SUM(COALESCE(dc.CardCount, 0)), 0) AS CardCount
+                   COALESCE(SUM(COALESCE(dc.CardCount, 0)), 0) AS CardCount,
+                   COALESCE(SUM(COALESCE(ds.StudySeconds, 0)), 0) AS StudySeconds,
+                   MAX(ds.LastStudied) AS LastStudied
             FROM StudyGroups g
             LEFT JOIN StudyGroupDecks gd ON g.ID = gd.StudyGroupID
             LEFT JOIN (
@@ -140,7 +142,12 @@ public static class FlashCardRepository
                 FROM Cards
                 GROUP BY DeckID
             ) dc ON gd.DeckID = dc.DeckID
-            GROUP BY g.ID, g.Name
+            LEFT JOIN (
+                SELECT DeckId, SUM(TimeTakenSeconds) AS StudySeconds, MAX(DateChecked) AS LastStudied
+                FROM DeckStats
+                GROUP BY DeckId
+            ) ds ON gd.DeckID = ds.DeckId
+            GROUP BY g.ID, g.Name, g.FolderID
             ORDER BY g.Name COLLATE NOCASE;
         ";
 
@@ -149,10 +156,13 @@ public static class FlashCardRepository
         {
             ulong id = (ulong)reader.GetInt64(0);
             string name = reader.GetString(1);
-            int deckCount = reader.GetInt32(2);
-            int cardCount = reader.GetInt32(3);
+            ulong? folderId = reader.IsDBNull(2) ? null : (ulong)reader.GetInt64(2);
+            int deckCount = reader.GetInt32(3);
+            int cardCount = reader.GetInt32(4);
+            int studySeconds = reader.GetInt32(5);
+            DateTime? lastStudied = ReadNullableDate(reader, 6);
 
-            groups.Add(new StudyGroup(name, id, deckCount, cardCount));
+            groups.Add(new StudyGroup(name, id, deckCount, cardCount, folderId, studySeconds, lastStudied));
         }
 
         return groups;
@@ -206,19 +216,34 @@ public static class FlashCardRepository
 
         var command = connection.CreateCommand();
         command.CommandText = @"
-        SELECT d.ID, d.Name, COUNT(c.ID) as CardCount
+        SELECT d.ID, d.Name, d.FolderID,
+               COALESCE(c.CardCount, 0) AS CardCount,
+               COALESCE(s.StudySeconds, 0) AS StudySeconds,
+               s.LastStudied
         FROM Decks d
-        LEFT JOIN Cards c ON d.ID = c.DeckID
-        GROUP BY d.ID, d.Name;";
+        LEFT JOIN (
+            SELECT DeckID, COUNT(*) AS CardCount
+            FROM Cards
+            GROUP BY DeckID
+        ) c ON c.DeckID = d.ID
+        LEFT JOIN (
+            SELECT DeckId, SUM(TimeTakenSeconds) AS StudySeconds, MAX(DateChecked) AS LastStudied
+            FROM DeckStats
+            GROUP BY DeckId
+        ) s ON s.DeckId = d.ID
+        ORDER BY d.Name COLLATE NOCASE;";
 
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
             ulong id = (ulong)reader.GetInt64(0);
             string name = reader.GetString(1);
-            int cardCount = reader.GetInt32(2);
+            ulong? folderId = reader.IsDBNull(2) ? null : (ulong)reader.GetInt64(2);
+            int cardCount = reader.GetInt32(3);
+            int studySeconds = reader.GetInt32(4);
+            DateTime? lastStudied = ReadNullableDate(reader, 5);
 
-            decks.Add(new FlashCardDeck(name, id, cardCount));
+            decks.Add(new FlashCardDeck(name, id, cardCount, folderId, studySeconds, lastStudied));
         }
         return decks;
     }
@@ -715,6 +740,16 @@ public static class FlashCardRepository
         return map;
     }
 
+    /// <summary> DeckStats dates are stored as ISO text; treat anything unparseable as never studied. </summary>
+    private static DateTime? ReadNullableDate(Microsoft.Data.Sqlite.SqliteDataReader reader, int index)
+    {
+        if (reader.IsDBNull(index)) return null;
+
+        var raw = reader.GetValue(index)?.ToString();
+        return DateTime.TryParse(raw, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out var parsed) ? parsed : null;
+    }
+
     private static Dictionary<ulong, List<(string leftText, string rightText)>> BatchGetMatchPairs(List<ulong> cardIds, Microsoft.Data.Sqlite.SqliteConnection connection)
     {
         var map = new Dictionary<ulong, List<(string leftText, string rightText)>>();
@@ -753,33 +788,4 @@ public static class FlashCardRepository
         return map;
     }
 
-    // ---Extensions ---
-
-    public static IEnumerable<FlashCardDeckMetadata> FilterBySearch(this IEnumerable<FlashCardDeckMetadata> decks, string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return decks;
-
-        var parsedText = text.Trim();
-        return decks.Where(d => d.MatchesSearch(parsedText));
-    }
-
-    private static bool MatchesSearch(this FlashCardDeckMetadata deck, string parsedText)
-    {
-        return deck.Title?.Contains(parsedText, StringComparison.OrdinalIgnoreCase) ?? false ||
-               deck.CardCount.ToString().Contains(parsedText, StringComparison.OrdinalIgnoreCase);
-    }
-
-    public static IEnumerable<FlashCardDeck> FilterBySearch(this IEnumerable<FlashCardDeck> decks, string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return decks;
-
-        var parsedText = text.Trim();
-        return decks.Where(d => d.MatchesSearch(parsedText));
-    }
-
-    private static bool MatchesSearch(this FlashCardDeck deck, string parsedText)
-    {
-        return deck.Name.Contains(parsedText, StringComparison.OrdinalIgnoreCase) ||
-               deck.CardCount.ToString().Contains(parsedText, StringComparison.OrdinalIgnoreCase);
-    }
 }

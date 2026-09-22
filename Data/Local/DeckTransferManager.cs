@@ -29,7 +29,8 @@ public static class DeckTransferManager
         JsonSerializer.Serialize(entryStream, exportData, new JsonSerializerOptions { WriteIndented = true });
     }
 
-    public static int TryImportDeckExport(string zipFilePath)
+    /// <param name="targetFolderID"> Folder the imported sets are filed into; null for the main menu. </param>
+    public static int TryImportDeckExport(string zipFilePath, ulong? targetFolderID = null)
     {
         if (!File.Exists(zipFilePath)) throw new FileNotFoundException("The specified export file does not exist.");
 
@@ -51,7 +52,7 @@ public static class DeckTransferManager
         int importedDeckCount = 0;
         foreach (var deck in package.Decks)
         {
-            long deckId = DeckRepository.InsertDeck(connection, transaction, deck.Name);
+            long deckId = DeckRepository.InsertDeck(connection, transaction, deck.Name, targetFolderID);
 
             foreach (var card in deck.Cards)
             {
@@ -94,7 +95,8 @@ public static class DeckTransferManager
         return JsonSerializer.Serialize(payload, TextUtility.Indented);
     }
 
-    public static void TryImportCloudDeck(string jsonPayload)
+    /// <param name="targetFolderID"> Folder the downloaded set is filed into; null for the main menu. </param>
+    public static void TryImportCloudDeck(string jsonPayload, ulong? targetFolderID = null)
     {
         using var document = JsonDocument.Parse(jsonPayload);
         var root = document.RootElement;
@@ -112,7 +114,7 @@ public static class DeckTransferManager
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction();
-        long deckId = DeckRepository.InsertDeck(connection, transaction, deckName);
+        long deckId = DeckRepository.InsertDeck(connection, transaction, deckName, targetFolderID);
 
         foreach (var card in cards)
         {

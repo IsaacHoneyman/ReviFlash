@@ -76,8 +76,12 @@
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Local Decks (On this device)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                        <TextBox Text="{Binding LocalSearchText, Mode=TwoWay}" Watermark="Search local decks..."
-                                 CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0" Text="{Binding LocalSearchText, Mode=TwoWay}" Watermark="Search local decks..."
+                                     CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding LocalSortOptions}" SelectedItem="{Binding SelectedLocalSortOption}"
+                                      CornerRadius="8" Width="180" Background="{DynamicResource AppBackground}" />
+                        </Grid>
                     </StackPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
@@ -89,6 +93,9 @@
                                             <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
                                                 <TextBlock Text="{Binding CardCount, StringFormat='{} {0} cards'}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                                <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="11"
+                                                           IsVisible="{Binding HasFolderPath}" TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource TextSecondary}" />
                                             </StackPanel>
 
                                             <Button Grid.Column="1" Content="Upload" 
@@ -109,8 +116,12 @@
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Cloud Decks (Backed up securely)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                        <TextBox Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search cloud decks..."
-                                 CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0" Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search cloud decks..."
+                                     CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding CloudSortOptions}" SelectedItem="{Binding SelectedCloudSortOption}"
+                                      CornerRadius="8" Width="180" Background="{DynamicResource AppBackground}" />
+                        </Grid>
                     </StackPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">

@@ -155,15 +155,17 @@ public static class DeckRepository
         command.ExecuteNonQuery();
     }
 
-    public static long InsertDeck(SqliteConnection connection, SqliteTransaction transaction, string name)
+    /// <param name="folderID"> Folder the imported deck is filed into; null for the main menu. </param>
+    public static long InsertDeck(SqliteConnection connection, SqliteTransaction transaction, string name, ulong? folderID = null)
     {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = @"
-            INSERT INTO Decks (Name)
-            VALUES ($name);
+            INSERT INTO Decks (Name, FolderID)
+            VALUES ($name, $folderId);
             SELECT last_insert_rowid();";
         command.Parameters.AddWithValue("$name", name);
+        command.Parameters.AddWithValue("$folderId", folderID.HasValue ? folderID.Value : DBNull.Value);
         return (long)(command.ExecuteScalar() ?? throw new InvalidOperationException("Failed to insert deck."));
     }
 }

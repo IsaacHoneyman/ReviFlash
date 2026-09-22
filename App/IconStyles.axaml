@@ -1,0 +1,48 @@
+<Styles xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Presentation for the geometries in Icons.axaml. Size is chosen per use through the
+        class; stroke weight is nudged with it so larger icons do not read as thin.
+    -->
+
+    <!--
+        Width only: with Stretch="Uniform" the Path then takes its natural aspect ratio, so
+        a wide glyph like the folder is centred by its parent instead of being pinned to
+        the top of a fixed square.
+    -->
+    <Style Selector="Path.icon">
+        <Setter Property="Stroke" Value="{DynamicResource TextPrimary}" />
+        <Setter Property="StrokeThickness" Value="1.3" />
+        <Setter Property="StrokeLineCap" Value="Round" />
+        <Setter Property="StrokeJoin" Value="Round" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="Width" Value="15" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Destructive actions carry the only colour in the set. -->
+    <Style Selector="Path.icon.danger">
+        <Setter Property="Stroke" Value="{DynamicResource DangerForeground}" />
+    </Style>
+
+    <!-- Lead icon beside a card title. -->
+    <Style Selector="Path.icon.medium">
+        <Setter Property="StrokeThickness" Value="1.5" />
+        <Setter Property="Width" Value="21" />
+    </Style>
+
+    <!-- Toolbar scale, e.g. the settings button. -->
+    <Style Selector="Path.icon.large">
+        <Setter Property="StrokeThickness" Value="1.5" />
+        <Setter Property="Width" Value="22" />
+    </Style>
+
+    <!-- Card editor actions, which sit on larger buttons than the dashboard cards. -->
+    <Style Selector="Path.icon.editorAction">
+        <Setter Property="StrokeThickness" Value="1.4" />
+        <Setter Property="Width" Value="17" />
+    </Style>
+
+</Styles>

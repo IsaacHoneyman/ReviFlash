@@ -34,8 +34,9 @@ public partial class DashboardView : UserControl
 
     public async void CreateDeck_Click(object sender, RoutedEventArgs e)
     {
-        var newDeck = new FlashCardDeck("New Flashcard Set");
-        FlashCardRepository.SaveNewDeck(newDeck);
+        if (DataContext is not DashboardViewModel vm) return;
+
+        var newDeck = vm.CreateNewDeck();
 
         var editor = new DeckEditorWindow
         {
@@ -43,25 +44,161 @@ public partial class DashboardView : UserControl
         };
         await editor.ShowDialog(OwnerWindow);
 
-        if (DataContext is DashboardViewModel vm)
-        {
-            vm.LoadDecksFromDatabase();
-            vm.FilterDecks();
-        }
+        vm.ReloadLibrary();
     }
 
     public async void CreateGroup_Click(object sender, RoutedEventArgs e)
     {
+        if (DataContext is not DashboardViewModel vm) return;
+
         var editor = new StudyGroupEditorWindow
         {
-            DataContext = new StudyGroupEditorViewModel()
+            DataContext = new StudyGroupEditorViewModel(targetFolderID: vm.CurrentFolderID)
         };
 
         await editor.ShowDialog(OwnerWindow);
 
+        vm.ReloadLibrary();
+    }
+
+    // --- Folders ---
+
+    public async void CreateFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DashboardViewModel vm) return;
+
+        var prompt = new TextPromptWindow(
+            "Name your new folder",
+            "Create",
+            "New Folder",
+            vm.IsInFolder ? $"It will be created inside {vm.CurrentFolderName}." : "It will be created on the main menu.");
+
+        var name = await prompt.ShowDialog<string?>(OwnerWindow);
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        vm.CreateFolder(name);
+    }
+
+    public async void RenameFolder_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        var button = (Button)sender;
+        var folder = (Folder)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a Folder"));
+
+        if (DataContext is not DashboardViewModel vm) return;
+
+        var prompt = new TextPromptWindow("Rename folder", "Rename", folder.Name);
+        var name = await prompt.ShowDialog<string?>(OwnerWindow);
+
+        if (string.IsNullOrWhiteSpace(name) || name == folder.Name) return;
+
+        vm.RenameFolder(folder, name);
+    }
+
+    public async void DeleteFolder_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        var button = (Button)sender;
+        var folder = (Folder)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a Folder"));
+
+        if (DataContext is not DashboardViewModel vm) return;
+
+        // Deleting a folder never deletes what is inside it, so say so plainly.
+        string destination = vm.FolderTree.Get(folder.ParentFolderID)?.Name ?? "the main menu";
+        string message = folder.ItemCount == 0
+            ? $"Delete the empty folder '{folder.Name}'?"
+            : $"Delete the folder '{folder.Name}'? Its {folder.ContentsSummary.ToLowerInvariant()} will be moved to {destination}. No flashcards are deleted.";
+
+        var dialog = new ConfirmDialogWindow(message);
+        bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
+
+        if (confirmed) vm.DeleteFolder(folder);
+    }
+
+    public async void MoveItem_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        var button = (Button)sender;
+        var item = button.DataContext ?? throw new InvalidOperationException("Button has no DataContext to move");
+
+        if (DataContext is not DashboardViewModel vm) return;
+
+        ulong? currentFolderID = item switch
+        {
+            Folder folder => folder.ParentFolderID,
+            StudyGroup group => group.FolderID,
+            FlashCardDeck deck => deck.FolderID,
+            _ => null,
+        };
+
+        var picker = new MoveToFolderWindow
+        {
+            DataContext = new MoveToFolderViewModel(vm.FolderTree, item, currentFolderID)
+        };
+
+        var choice = await picker.ShowDialog<FolderChoice?>(OwnerWindow);
+        if (choice is null) return;
+
+        if (!vm.MoveItem(item, choice.FolderID))
+        {
+            var failed = new ConfirmDialogWindow("That move is not possible: a folder cannot be placed inside itself.");
+            await failed.ShowDialog<bool>(OwnerWindow);
+        }
+    }
+
+    private void FolderCard_Click(object sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
+        {
+            return;
+        }
+
+        var border = (Border)sender;
+        if (border.DataContext is Folder folder && DataContext is DashboardViewModel vm)
+        {
+            vm.OpenFolder(folder);
+        }
+    }
+
+    private void FolderCard_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Space))
+        {
+            return;
+        }
+
+        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
+        {
+            return;
+        }
+
+        var border = (Border)sender;
+        if (border.DataContext is Folder folder && DataContext is DashboardViewModel vm)
+        {
+            vm.OpenFolder(folder);
+            e.Handled = true;
+        }
+    }
+
+    private void Breadcrumb_Click(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+
         if (DataContext is DashboardViewModel vm)
         {
-            vm.LoadStudyGroupsFromDatabase();
+            // The main menu crumb carries no folder; everything else carries its folder.
+            vm.NavigateToFolder((button.DataContext as Folder)?.ID);
+        }
+    }
+
+    private void NavigateUp_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is DashboardViewModel vm)
+        {
+            vm.NavigateUp();
         }
     }
 
@@ -78,8 +215,7 @@ public partial class DashboardView : UserControl
 
         if (DataContext is DashboardViewModel vm)
         {
-            vm.LoadDecksFromDatabase();
-            vm.FilterDecks();
+            vm.ReloadLibrary();
         }
     }
 
@@ -135,7 +271,7 @@ public partial class DashboardView : UserControl
 
         if (DataContext is DashboardViewModel vm)
         {
-            vm.LoadStudyGroupsFromDatabase();
+            vm.ReloadLibrary();
         }
     }
 
@@ -362,10 +498,9 @@ public partial class DashboardView : UserControl
 
         try
         {
-            DeckTransferManager.TryImportDeckExport(files[0].Path.LocalPath);
+            DeckTransferManager.TryImportDeckExport(files[0].Path.LocalPath, vm.CurrentFolderID);
             vm.CancelSelectionMode();
-            vm.LoadDecksFromDatabase();
-            vm.FilterDecks();
+            vm.ReloadLibrary();
             vm.RefreshStats();
         }
         catch (Exception ex)
@@ -376,15 +511,13 @@ public partial class DashboardView : UserControl
 
     private async void OpenOnlineImport_Click(object sender, RoutedEventArgs e)
     {
-        var window = new OnlineImportWindow();
+        if (DataContext is not DashboardViewModel vm) return;
+
+        var window = new OnlineImportWindow(vm.CurrentFolderID);
         await window.ShowDialog(OwnerWindow);
 
-        if (DataContext is DashboardViewModel vm)
-        {
-            vm.LoadDecksFromDatabase();
-            vm.FilterDecks();
-            vm.RefreshStats();
-        }
+        vm.ReloadLibrary();
+        vm.RefreshStats();
     }
 
     private async void OpenOnlineExport_Click(object sender, RoutedEventArgs e)
@@ -464,8 +597,7 @@ public partial class DashboardView : UserControl
     {
         vm.CurrentPage = vm; // Switches back to the Dashboard template
         vm.CancelSelectionMode();
-        vm.LoadDecksFromDatabase();
-        vm.FilterDecks();
+        vm.ReloadLibrary();
         vm.RefreshStats(); // Refresh stats after session completes
     }
 }

@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
@@ -62,8 +63,21 @@ public partial class OnlineExportViewModel : ViewModelBase
     public ObservableCollection<FlashCardDeckMetadata> CloudDecks { get; } = [];
     public ObservableCollection<FlashCardDeckMetadata> FilteredCloudDecks { get; } = [];
 
+    /// <summary> Both panes offer the same orderings as every other list in the app. </summary>
+    public List<SortOption> LocalSortOptions { get; } = SearchUtility.CreateSortOptions();
+    public List<SortOption> CloudSortOptions { get; } = SearchUtility.CreateSortOptions();
+
+    [ObservableProperty] private SortOption? _selectedLocalSortOption;
+    partial void OnSelectedLocalSortOptionChanged(SortOption? value) => RefreshLocalDecks();
+
+    [ObservableProperty] private SortOption? _selectedCloudSortOption;
+    partial void OnSelectedCloudSortOptionChanged(SortOption? value) => RefreshCloudDecks();
+
     public OnlineExportViewModel()
     {
+        SelectedLocalSortOption = LocalSortOptions[0];
+        SelectedCloudSortOption = CloudSortOptions[0];
+
         if (!string.IsNullOrEmpty(MetaDataManager.Data.SupabaseAccessToken) &&  
             MetaDataManager.Data.SupabaseExpirationTime > DateTime.Now)
         {
@@ -71,7 +85,9 @@ public partial class OnlineExportViewModel : ViewModelBase
             OnPropertyChanged(nameof(WelcomeText));
 
             LocalDecks.Clear();
-            foreach (var deck in FlashCardRepository.GetAllDecks())
+            var localDecks = FlashCardRepository.GetAllDecks();
+            FolderTree.Load().ApplyPaths(localDecks, []);
+            foreach (var deck in localDecks)
             {
                 LocalDecks.Add(deck);
             }
@@ -163,7 +179,9 @@ public partial class OnlineExportViewModel : ViewModelBase
             OnPropertyChanged(nameof(WelcomeText));
 
             LocalDecks.Clear();
-            foreach (var deck in FlashCardRepository.GetAllDecks())
+            var localDecks = FlashCardRepository.GetAllDecks();
+            FolderTree.Load().ApplyPaths(localDecks, []);
+            foreach (var deck in localDecks)
             {
                 LocalDecks.Add(deck);
             }
@@ -280,14 +298,16 @@ public partial class OnlineExportViewModel : ViewModelBase
     private void RefreshLocalDecks()
     {
         FilteredLocalDecks.Clear();
-        var fDecks = LocalDecks.FilterBySearch(LocalSearchText);
+
+        var fDecks = LocalDecks.SearchAndSort(LocalSearchText, SelectedLocalSortOption?.Mode ?? SortMode.Relevance);
         foreach (var d in fDecks) FilteredLocalDecks.Add(d);
     }
 
     private void RefreshCloudDecks()
     {
         FilteredCloudDecks.Clear();
-        var fDecks = CloudDecks.FilterBySearch(CloudSearchText);
+
+        var fDecks = CloudDecks.SearchAndSort(CloudSearchText, SelectedCloudSortOption?.Mode ?? SortMode.Relevance);
         foreach (var d in fDecks) FilteredCloudDecks.Add(d);
     }
 

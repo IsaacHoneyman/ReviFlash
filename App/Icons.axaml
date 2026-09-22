@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        ReviFlash icon set.
+
+        Every glyph is drawn on the same 24x24 grid with round caps and joins, and is sized
+        to a shared 17x17 live area centred on (12,12). That matters: Stretch="Uniform"
+        fits a Path to its own ink bounds, so glyphs drawn to different extents would
+        render at different apparent sizes and sit off-centre from one another. Keep new
+        icons inside the same live area. Avalonia applies StrokeThickness in control space
+        rather than scaling it with Stretch, which means the weight set by the Path styles
+        below stays visually identical whether an icon is drawn at 15px or 24px.
+
+        These replace the emoji the interface used to rely on: emoji pick up a colour font
+        that varies by platform, ignore the active theme, and are missing outright on some
+        Linux systems.
+    -->
+
+    <StreamGeometry x:Key="IconEdit">M17.96 3.56 A 1.75 1.75 0 0 1 20.44 6.04 L 8.04 18.44 L 3.5 20.5 L 5.56 15.96 Z M14.96 6.56 L 17.44 9.04</StreamGeometry>
+
+    <StreamGeometry x:Key="IconStats">M3.5 20.5 L 20.5 20.5 M7.5 20.5 L 7.5 13 M12 20.5 L 12 8 M16.5 20.5 L 16.5 3.5</StreamGeometry>
+
+
+    <StreamGeometry x:Key="IconDelete">M3.5 6.9 L 20.5 6.9 M9.1 6.9 L 9.1 5.2 A 1.3 1.3 0 0 1 10.4 3.9 L 13.6 3.9 A 1.3 1.3 0 0 1 14.9 5.2 L 14.9 6.9 M5.7 6.9 L 6.7 18.9 A 1.8 1.8 0 0 0 8.5 20.5 L 15.5 20.5 A 1.8 1.8 0 0 0 17.3 18.9 L 18.3 6.9 M10.2 10.8 L 10.2 16.8 M13.8 10.8 L 13.8 16.8</StreamGeometry>
+
+    <StreamGeometry x:Key="IconFolder">M3.5 17.4 L 3.5 6.6 A 1.6 1.6 0 0 1 5.1 5 L 8.5 5 L 10.6 7.5 L 18.9 7.5 A 1.6 1.6 0 0 1 20.5 9.1 L 20.5 17.4 A 1.6 1.6 0 0 1 18.9 19 L 5.1 19 A 1.6 1.6 0 0 1 3.5 17.4 Z</StreamGeometry>
+
+    <StreamGeometry x:Key="IconSettings">M5.6 3.5 L 5.6 7.5 M5.6 11.7 L 5.6 20.5 M12 3.5 L 12 12.5 M12 16.7 L 12 20.5 M18.4 3.5 L 18.4 5.3 M18.4 9.5 L 18.4 20.5 M3.5 9.6 A 2.1 2.1 0 1 0 7.7 9.6 A 2.1 2.1 0 1 0 3.5 9.6 Z M9.9 14.6 A 2.1 2.1 0 1 0 14.1 14.6 A 2.1 2.1 0 1 0 9.9 14.6 Z M16.3 7.4 A 2.1 2.1 0 1 0 20.5 7.4 A 2.1 2.1 0 1 0 16.3 7.4 Z</StreamGeometry>
+
+    <StreamGeometry x:Key="IconCopy">M9 18.9 L 9 10.2 A 1.6 1.6 0 0 1 10.6 8.6 L 18.9 8.6 A 1.6 1.6 0 0 1 20.5 10.2 L 20.5 18.9 A 1.6 1.6 0 0 1 18.9 20.5 L 10.6 20.5 A 1.6 1.6 0 0 1 9 18.9 Z M6 15.4 L 5.1 15.4 A 1.6 1.6 0 0 1 3.5 13.8 L 3.5 5.1 A 1.6 1.6 0 0 1 5.1 3.5 L 13.4 3.5 A 1.6 1.6 0 0 1 15 5.1 L 15 6</StreamGeometry>
+
+</ResourceDictionary>

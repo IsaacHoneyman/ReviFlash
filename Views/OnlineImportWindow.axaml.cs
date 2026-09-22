@@ -5,9 +5,12 @@ namespace ReviFlash.Views;
 
 public partial class OnlineImportWindow : Window
 {
-    public OnlineImportWindow()
+    public OnlineImportWindow() : this(null) { }
+
+    /// <param name="targetFolderID"> Folder downloaded sets are filed into; null for the main menu. </param>
+    public OnlineImportWindow(ulong? targetFolderID)
     {
         InitializeComponent();
-        DataContext ??= new OnlineImportViewModel();
+        DataContext ??= new OnlineImportViewModel(targetFolderID);
     }
 }

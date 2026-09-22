@@ -24,6 +24,101 @@
     </UserControl.Styles>
 
     <UserControl.DataTemplates>
+        <DataTemplate DataType="{x:Type models:Folder}">
+            <Border Width="286" Height="145"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource FolderCardBorder}"
+                BorderThickness="1.5" CornerRadius="20"
+                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
+                Focusable="True"
+                PointerPressed="FolderCard_Click"
+                KeyDown="FolderCard_KeyDown">
+
+                <Grid RowDefinitions="Auto, *">
+
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
+                        VerticalAlignment="Top">
+                        <Border Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource FolderCardBorder}"
+                            CornerRadius="8" Padding="9,5"
+                            Height="28" MinHeight="28">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding ItemCount}"
+                                    FontSize="13" FontWeight="Bold"
+                                    Foreground="{DynamicResource FolderBadgeForeground}" />
+                                <TextBlock Text="Items" FontSize="11"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource FolderBadgeForeground}" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <Button Click="RenameFolder_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30" MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Rename Folder">
+                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                            </Button>
+
+                            <Button Click="MoveItem_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30" MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Move Folder">
+                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                            </Button>
+
+                            <Button Click="DeleteFolder_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30" MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Delete Folder (keeps its contents)">
+                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                        <Border Height="58" VerticalAlignment="Center" Padding="0,4,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <Path Classes="icon medium" Data="{StaticResource IconFolder}" />
+                                <TextBlock Text="{Binding Name}" FontSize="22"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextWrapping="Wrap"
+                                    TextTrimming="CharacterEllipsis"
+                                    MaxLines="2"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding ContentsSummary}" FontSize="13"
+                            Foreground="{DynamicResource TextSecondary}"
+                            TextTrimming="CharacterEllipsis"
+                            Margin="0, 4, 0, 0" />
+
+                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding HasFolderPath}"
+                            TextTrimming="CharacterEllipsis"
+                            Margin="0, 2, 0, 0" />
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type models:StudyGroup}">
             <Border Width="286" Height="145"
                 Background="{DynamicResource CardBackground}"
@@ -48,10 +143,10 @@
                                 Spacing="4">
                                 <TextBlock Text="{Binding DeckCount}"
                                     FontSize="13" FontWeight="Bold"
-                                    Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    Foreground="{DynamicResource GroupBadgeForeground}" />
                                 <TextBlock Text="Decks" FontSize="11"
                                     VerticalAlignment="Center"
-                                    Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    Foreground="{DynamicResource GroupBadgeForeground}" />
                             </StackPanel>
                         </Border>
 
@@ -59,37 +154,45 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
-                            Spacing="8">
+                            Spacing="6">
                             <Button Click="EditGroup_Click"
-                                Background="#70FFFFFF" CornerRadius="8"
-                                Padding="12,6" Height="30"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
                                 MinHeight="30"
                                 VerticalContentAlignment="Center"
-                                Cursor="Hand">
-                                <TextBlock Text="✏️" FontSize="12"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                Cursor="Hand"
+                                ToolTip.Tip="Edit Group">
+                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
                             </Button>
 
                             <Button Click="GroupStats_Click"
-                                Background="#7044AAFF" CornerRadius="8"
-                                Padding="12,6" Height="30"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
                                 MinHeight="30"
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand"
                                 ToolTip.Tip="View Group Stats">
-                                <TextBlock Text="📊" FontSize="12"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                <Path Classes="icon" Data="{StaticResource IconStats}" />
+                            </Button>
+
+                            <Button Click="MoveItem_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Move to Folder">
+                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
                             </Button>
 
                             <Button Click="DeleteGroup_Click"
-                                Background="#90FF4444" CornerRadius="8"
-                                Padding="12,6" Height="30"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
                                 MinHeight="30"
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand"
                                 ToolTip.Tip="Delete Group">
-                                <TextBlock Text="🗑️" FontSize="12"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -106,6 +209,12 @@
                         </Border>
                         <TextBlock Text="Click to review group" FontSize="14"
                             Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding ShowReviewHint}"
+                            Margin="0, 6, 0, 0" />
+                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="13"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding ShowLocationHint}"
+                            TextTrimming="CharacterEllipsis"
                             Margin="0, 6, 0, 0" />
                     </StackPanel>
 
@@ -149,37 +258,45 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
-                            Spacing="8">
+                            Spacing="6">
                             <Button Click="EditDeck_Click"
-                                Background="#70FFFFFF" CornerRadius="8"
-                                Padding="12,6" Height="30"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
                                 MinHeight="30"
                                 VerticalContentAlignment="Center"
-                                Cursor="Hand">
-                                <TextBlock Text="✏️" FontSize="12"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                Cursor="Hand"
+                                ToolTip.Tip="Edit Set">
+                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
                             </Button>
 
                             <Button Click="DeckStats_Click"
-                                Background="#7044AAFF" CornerRadius="8"
-                                Padding="12,6" Height="30"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
                                 MinHeight="30"
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand"
-                                ToolTip.Tip="View Deck Stats">
-                                <TextBlock Text="📊" FontSize="12"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                ToolTip.Tip="View Set Stats">
+                                <Path Classes="icon" Data="{StaticResource IconStats}" />
+                            </Button>
+
+                            <Button Click="MoveItem_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Move to Folder">
+                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
                             </Button>
 
                             <Button Click="DeleteDeck_Click"
-                                Background="#90FF4444" CornerRadius="8"
-                                Padding="12,6" Height="30"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
                                 MinHeight="30"
                                 VerticalContentAlignment="Center"
                                 Cursor="Hand"
-                                ToolTip.Tip="Delete Deck">
-                                <TextBlock Text="🗑️" FontSize="12"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                ToolTip.Tip="Delete Set">
+                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -196,7 +313,12 @@
                         </Border>
                         <TextBlock Text="Click to review" FontSize="14"
                             Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding !IsSelectedForMultiReview}"
+                            IsVisible="{Binding ShowReviewHint}"
+                            Margin="0, 6, 0, 0" />
+                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="13"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding ShowLocationHint}"
+                            TextTrimming="CharacterEllipsis"
                             Margin="0, 6, 0, 0" />
                         <TextBlock Text="Selected" FontSize="14"
                             Foreground="{DynamicResource GradientStart}"
@@ -234,20 +356,20 @@
 
             <Button Grid.Column="1" Click="SettingsButton_Click" Background="Transparent"
                 CornerRadius="18" Width="56" Height="56" Cursor="Hand"
-                VerticalAlignment="Center">
-                <TextBlock Text="⚙️" FontSize="28" HorizontalAlignment="Center"
-                    VerticalAlignment="Center" />
+                VerticalAlignment="Center"
+                ToolTip.Tip="Settings">
+                <Path Classes="icon large" Data="{StaticResource IconSettings}" />
             </Button>
         </Grid>
 
             <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 0">
 
-            <Grid Grid.Column="0" RowDefinitions="Auto, *, Auto" Margin="0, 0, 24, 0">
+            <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *" Margin="0, 0, 24, 0">
 
-                <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto" Margin="0, 0, 0, 18">
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto, Auto" Margin="0, 0, 0, 14">
                     <TextBox Grid.Column="0"
                         Text="{Binding SearchText, Mode=TwoWay}"
-                        Watermark="Search flashcard sets..."
+                        Watermark="{Binding SearchWatermark}"
                         CornerRadius="8" Padding="10, 7" FontSize="14" Margin="0, 0, 12, 0"
                         Background="{DynamicResource CardBackground}"
                         Foreground="{DynamicResource TextPrimary}" />
@@ -255,27 +377,85 @@
                     <ComboBox Grid.Column="1"
                         ItemsSource="{Binding SortOptions}"
                         SelectedItem="{Binding SelectedSortOption}"
-                        CornerRadius="8" Width="220" Margin="0,0,12,0"
+                        CornerRadius="8" Width="200" Margin="0,0,12,0"
                         Background="{DynamicResource CardBackground}" />
 
                     <Button Grid.Column="2"
-                        Click="CreateGroup_Click"
-                        Content="+ Create New Group"
+                        Click="CreateFolder_Click"
+                        Content="+ New Folder"
                         CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
                         Background="{DynamicResource StatTileBackground}"
                         Foreground="{DynamicResource TextPrimary}"
                         Cursor="Hand" Margin="0,0,12,0" />
 
                     <Button Grid.Column="3"
+                        Click="CreateGroup_Click"
+                        Content="+ New Group"
+                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                        Background="{DynamicResource StatTileBackground}"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Cursor="Hand" Margin="0,0,12,0" />
+
+                    <Button Grid.Column="4"
                         Click="CreateDeck_Click"
-                        Content="+ Create New Set"
+                        Content="+ New Set"
                         CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="Bold"
                         Background="{DynamicResource StatTileBackground}"
                         Foreground="{DynamicResource TextPrimary}"
                         Cursor="Hand" />
                 </Grid>
 
-                <Grid Grid.Row="1">
+                <!-- Breadcrumb trail, shown only once you are inside a folder. -->
+                <Grid Grid.Row="1" ColumnDefinitions="Auto, *" Margin="0,0,0,14"
+                    IsVisible="{Binding IsInFolder}">
+
+                    <Button Grid.Column="0"
+                        Click="NavigateUp_Click"
+                        Content="← Back"
+                        CornerRadius="8" Padding="10, 6" FontSize="13" FontWeight="SemiBold"
+                        Background="{DynamicResource StatTileBackground}"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Cursor="Hand" Margin="0,0,12,0"
+                        ToolTip.Tip="Back to the parent folder" />
+
+                    <ScrollViewer Grid.Column="1"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                            <Button Click="Breadcrumb_Click"
+                                Content="Main Menu"
+                                Background="Transparent"
+                                Foreground="{DynamicResource TextSecondary}"
+                                CornerRadius="6" Padding="8,5" FontSize="13" FontWeight="SemiBold"
+                                Cursor="Hand" />
+
+                            <ItemsControl ItemsSource="{Binding Breadcrumbs}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="2" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:Folder}">
+                                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Text="/" FontSize="13"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextSecondary}" />
+                                            <Button Click="Breadcrumb_Click"
+                                                Content="{Binding Name}"
+                                                Background="Transparent"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                CornerRadius="6" Padding="8,5" FontSize="13" FontWeight="SemiBold"
+                                                Cursor="Hand" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <Grid Grid.Row="2">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                         Margin="0,0,-16,0"
                         Padding="0,0,16,0">
@@ -288,6 +468,18 @@
                         </ItemsControl>
                     </ScrollViewer>
 
+                    <TextBlock Text="{Binding EmptyStateText}"
+                        IsVisible="{Binding HasNoItems}"
+                        FontSize="17"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        TextWrapping="Wrap"
+                        TextAlignment="Center"
+                        MaxWidth="420"
+                        Margin="0,0,0,80" />
+
                     <Border VerticalAlignment="Bottom"
                         HorizontalAlignment="Left"
                         Background="{DynamicResource CardBackground}"
@@ -299,6 +491,10 @@
                         <StackPanel Orientation="Horizontal"
                             Spacing="12"
                             VerticalAlignment="Center">
+                            <ToggleButton Content="Show Folders"
+                                IsChecked="{Binding ShowFolders, Mode=TwoWay}"
+                                Classes="dashboardToggle" />
+
                             <ToggleButton Content="Show Groups"
                                 IsChecked="{Binding ShowGroups, Mode=TwoWay}"
                                 Classes="dashboardToggle" />

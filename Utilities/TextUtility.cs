@@ -47,7 +47,7 @@ public static partial class TextUtility
 
     // --- Versions ---
 
-    public static string VersionText => $"Version P-{GetAssemblyVersionText()}";
+    public static string VersionText => $"Version {GetAssemblyVersionText()}";
 
     private static string GetAssemblyVersionText()
     {

@@ -16,12 +16,10 @@ public partial class DashboardViewModel : ViewModelBase
     private enum StatsScope { Overall, Deck, Group, }
     public enum DeckSelectionMode { None, Review, Export, }
 
-    private const string SORT_NAME_ASC = "name_asc";
-    private const string SORT_NAME_DESC = "name_desc";
-    private const string SORT_CARDS_ASC = "cards_asc";
-    private const string SORT_CARDS_DESC = "cards_desc";
-    private const string SORT_STUDYTIME_ASC = "studytime_asc";
-    private const string SORT_STUDYTIME_DESC = "studytime_desc";
+    // Ordering within a mixed list: folders, then groups, then sets.
+    private const int FolderPriority = 0;
+    private const int GroupPriority = 1;
+    private const int SetPriority = 2;
 
     public class TimePeriodOption(string label, string timeModifier)
     {
@@ -29,18 +27,12 @@ public partial class DashboardViewModel : ViewModelBase
         public string TimeModifier { get; set; } = timeModifier;
     }
 
-    public class SortOption(string label, string key)
-    {
-        public string Label { get; set; } = label;
-        public string Key { get; set; } = key;
-
-        public override string ToString() => Label;
-    }
-
     [ObservableProperty] private object _currentPage = new();
     [ObservableProperty] private string _bestAnswerStreakText = "0";
     [ObservableProperty] private bool _isGraphView;
+    [NotifyPropertyChangedFor(nameof(IsSearching))]
     [ObservableProperty] private string _searchText = "";
+    partial void OnSearchTextChanged(string value) => RefreshLibraryView();
     [ObservableProperty] private string _streakText = "0 Day Streak";
     [ObservableProperty] private string _bestEverStreakText = "0 Day Streak";
     public static bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
@@ -70,9 +62,39 @@ public partial class DashboardViewModel : ViewModelBase
         $"Export Selected ({SelectedDeckCount})" : "Cancel";
 
     [ObservableProperty] private bool _showGroups = true;
-    partial void OnShowGroupsChanged(bool value) => RefreshDashboardItems();
+    partial void OnShowGroupsChanged(bool value) => RefreshLibraryView();
     [ObservableProperty] private bool _showSets = true;
-    partial void OnShowSetsChanged(bool value) => RefreshDashboardItems();
+    partial void OnShowSetsChanged(bool value) => RefreshLibraryView();
+    [ObservableProperty] private bool _showFolders = true;
+    partial void OnShowFoldersChanged(bool value) => RefreshLibraryView();
+
+    // --- Folders ---
+
+    private FolderTree _folderTree = new([]);
+    private bool _suspendRefresh;
+
+    /// <summary> The folder currently open, or null at the main menu. </summary>
+    [NotifyPropertyChangedFor(nameof(IsInFolder))]
+    [NotifyPropertyChangedFor(nameof(CurrentFolderName))]
+    [NotifyPropertyChangedFor(nameof(SearchWatermark))]
+    [ObservableProperty] private ulong? _currentFolderID;
+
+    /// <summary> Trail from the main menu down to the open folder, for the breadcrumb bar. </summary>
+    public ObservableCollection<Folder> Breadcrumbs { get; } = [];
+
+    public FolderTree FolderTree => _folderTree;
+
+    public bool IsInFolder => CurrentFolderID.HasValue;
+    public string CurrentFolderName => _folderTree.Get(CurrentFolderID)?.Name ?? FolderTree.RootLabel;
+    public bool IsSearching => !SearchUtility.IsEmptyQuery(SearchText);
+
+    public string SearchWatermark => IsInFolder
+        ? $"Search in {CurrentFolderName} and its folders..."
+        : "Search sets, groups and folders...";
+
+    [NotifyPropertyChangedFor(nameof(HasNoItems))]
+    [ObservableProperty] private string _emptyStateText = "";
+    public bool HasNoItems => DashboardItems.Count == 0;
     [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
     [ObservableProperty] private TimePeriodOption _selectedTimePeriod = null!;
     partial void OnSelectedTimePeriodChanged(TimePeriodOption value)
@@ -146,11 +168,7 @@ public partial class DashboardViewModel : ViewModelBase
         new("Last 3 Days", "-3 days"), new("Last Day", "-1 days")
     ];
 
-    public ObservableCollection<SortOption> SortOptions { get; } = [
-        new("Name A-Z", SORT_NAME_ASC), new("Name Z-A", SORT_NAME_DESC), new("Cards (high → low)", SORT_CARDS_DESC),
-        new("Cards (low → high)", SORT_CARDS_ASC), new("Study time (high → low)", SORT_STUDYTIME_DESC),
-        new("Study time (low → high)", SORT_STUDYTIME_ASC)
-    ];
+    public ObservableCollection<SortOption> SortOptions { get; } = [.. SearchUtility.SortOptions];
 
     [NotifyPropertyChangedFor(nameof(HasGraphData))]
     [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
@@ -159,11 +177,10 @@ public partial class DashboardViewModel : ViewModelBase
     public ObservableCollection<FlashCardDeck> Decks { get; } = [];
     public ObservableCollection<StudyGroup> StudyGroups { get; } = [];
     public ObservableCollection<object> DashboardItems { get; } = [];
-    public ObservableCollection<FlashCardDeck> FilteredDecks { get; } = [];
     public bool HasGraphData => AttemptsGraphPoints.Count > 0;
 
     [ObservableProperty] private SortOption? _selectedSortOption = null;
-    partial void OnSelectedSortOptionChanged(SortOption? value) => FilterDecks();
+    partial void OnSelectedSortOptionChanged(SortOption? value) => RefreshLibraryView();
 
     public DashboardViewModel()
     {
@@ -176,9 +193,7 @@ public partial class DashboardViewModel : ViewModelBase
         SelectedTimeGrouping = GraphGroupingOptions[0];
         SelectedSortOption = SortOptions[0];
 
-        LoadDecksFromDatabase();
-        FilterDecks();
-        RefreshDashboardItems();
+        ReloadLibrary();
     }
 
     private void Settings_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -448,47 +463,172 @@ public partial class DashboardViewModel : ViewModelBase
         return (correct, total, timeTakenSeconds, percentage, grade);
     }
 
-    public void FilterDecks()
+    /// <summary>
+    /// Rebuilds the visible list: everything filed in the open folder, ranked by the
+    /// shared search, ordered by the chosen sort. While a search is running the scope
+    /// widens to the open folder's subfolders, but never above where you are standing.
+    /// </summary>
+    public void RefreshLibraryView()
     {
-        FilteredDecks.Clear();
+        if (_suspendRefresh) return;
 
-        List<FlashCardDeck> resultsList = [.. Decks.FilterBySearch(SearchText)];
-
-        if (SelectedSortOption != null)
+        // The open folder can disappear underneath us (deleted here, or replaced by a
+        // restored backup); fall back to the main menu rather than showing an empty void.
+        if (!_folderTree.Exists(CurrentFolderID))
         {
-            switch (SelectedSortOption.Key)
+            CurrentFolderID = null;
+            RefreshFolderMetadata();
+        }
+
+        var subtree = CurrentFolderID is ulong currentId ? _folderTree.SubtreeIds(currentId) : null;
+        bool InScope(ulong? folderID) => subtree is null || (folderID is ulong id && subtree.Contains(id));
+
+        var visible = new List<ISearchable>();
+
+        if (ShowFolders)
+        {
+            visible.AddRange(IsSearching
+                ? _folderTree.AllFolders.Where(folder => folder.ID != CurrentFolderID && InScope(folder.ParentFolderID))
+                : _folderTree.ChildrenOf(CurrentFolderID));
+        }
+
+        if (ShowGroups)
+        {
+            visible.AddRange(IsSearching
+                ? StudyGroups.Where(group => InScope(group.FolderID))
+                : StudyGroups.Where(group => group.FolderID == CurrentFolderID));
+        }
+
+        if (ShowSets)
+        {
+            visible.AddRange(IsSearching
+                ? Decks.Where(deck => InScope(deck.FolderID))
+                : Decks.Where(deck => deck.FolderID == CurrentFolderID));
+        }
+
+        var ordered = visible.SearchAndSort(SearchText, SelectedSortOption?.Mode ?? SortMode.Relevance, TypePriority);
+
+        DashboardItems.Clear();
+        foreach (var item in ordered)
+        {
+            if (item is FlashCardDeck deck) deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
+            DashboardItems.Add(item);
+        }
+
+        RefreshEmptyState();
+    }
+
+    private static int TypePriority(ISearchable item) => item switch
+    {
+        Folder => FolderPriority,
+        StudyGroup => GroupPriority,
+        _ => SetPriority,
+    };
+
+    /// <summary>
+    /// Recomputes folder card counts, the "found in" labels and the breadcrumb trail.
+    /// Only reloading or navigating changes these, so searching does not pay for them.
+    /// </summary>
+    private void RefreshFolderMetadata()
+    {
+        _folderTree.ApplyCounts(Decks, StudyGroups);
+        _folderTree.ApplyPaths(Decks, StudyGroups, CurrentFolderID);
+
+        Breadcrumbs.Clear();
+        foreach (var folder in _folderTree.AncestorChain(CurrentFolderID)) Breadcrumbs.Add(folder);
+
+        OnPropertyChanged(nameof(IsInFolder));
+        OnPropertyChanged(nameof(CurrentFolderName));
+        OnPropertyChanged(nameof(SearchWatermark));
+    }
+
+    private void RefreshEmptyState()
+    {
+        EmptyStateText =
+            IsSearching && IsInFolder ? $"Nothing in {CurrentFolderName} matches '{SearchText.Trim()}'." :
+            IsSearching ? $"Nothing matches '{SearchText.Trim()}'." :
+            IsInFolder ? $"{CurrentFolderName} is empty. Create a set here, or move one in." :
+            "No flashcard sets yet. Create one to get started.";
+
+        OnPropertyChanged(nameof(HasNoItems));
+    }
+
+    // --- Folder navigation ---
+
+    public void OpenFolder(Folder folder) => NavigateToFolder(folder.ID);
+
+    /// <summary> Moves to a folder (or the main menu when null), clearing the search as it goes. </summary>
+    public void NavigateToFolder(ulong? folderID)
+    {
+        // Both assignments would each trigger a rebuild; batch them into one.
+        _suspendRefresh = true;
+        CurrentFolderID = folderID;
+        SearchText = "";
+        _suspendRefresh = false;
+
+        RefreshFolderMetadata();
+        RefreshLibraryView();
+    }
+
+    public void NavigateUp() => NavigateToFolder(_folderTree.Get(CurrentFolderID)?.ParentFolderID);
+
+    // --- Folder management ---
+
+    public Folder CreateFolder(string name)
+    {
+        var folder = FolderRepository.CreateFolder(name.Trim(), CurrentFolderID);
+        ReloadLibrary();
+        return folder;
+    }
+
+    public void RenameFolder(Folder folder, string newName)
+    {
+        FolderRepository.RenameFolder(folder.ID, newName.Trim());
+        ReloadLibrary();
+    }
+
+    /// <summary> Deletes the folder only: its contents move up to the folder's parent. </summary>
+    public void DeleteFolder(Folder folder)
+    {
+        FolderRepository.DeleteFolder(folder.ID);
+
+        // Standing inside the folder that just went away, step up to where its contents went.
+        if (CurrentFolderID == folder.ID) CurrentFolderID = folder.ParentFolderID;
+
+        ReloadLibrary();
+    }
+
+    /// <summary> Refiles a set, group or folder. Returns false when the move is not allowed. </summary>
+    public bool MoveItem(object item, ulong? targetFolderID)
+    {
+        try
+        {
+            switch (item)
             {
-                case SORT_NAME_ASC:
-                    resultsList = [.. resultsList.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)];
+                case FlashCardDeck deck:
+                    FolderRepository.MoveDeck(deck.ID, targetFolderID);
                     break;
-                case SORT_NAME_DESC:
-                    resultsList = [.. resultsList.OrderByDescending(d => d.Name, StringComparer.OrdinalIgnoreCase)];
+                case StudyGroup group:
+                    FolderRepository.MoveStudyGroup(group.ID, targetFolderID);
                     break;
-                case SORT_CARDS_ASC:
-                    resultsList = [.. resultsList.OrderBy(d => d.CardCount)];
-                    break;
-                case SORT_CARDS_DESC:
-                    resultsList = [.. resultsList.OrderByDescending(d => d.CardCount)];
-                    break;
-                case SORT_STUDYTIME_ASC:
-                    resultsList = [.. resultsList.OrderBy(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds)];
-                    break;
-                case SORT_STUDYTIME_DESC:
-                    resultsList = [.. resultsList.OrderByDescending(d => FlashCardRepository.GetStats(d.ID).timeTakenSeconds)];
+                case Folder folder:
+                    FolderRepository.MoveFolder(folder.ID, targetFolderID);
                     break;
                 default:
-                    break;
+                    return false;
             }
         }
-
-        foreach (var deck in resultsList)
+        catch (InvalidOperationException ex)
         {
-            deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
-            FilteredDecks.Add(deck);
+            Logger.LogError("Move rejected", ex);
+            return false;
         }
 
-        RefreshDashboardItems();
+        ReloadLibrary();
+        return true;
     }
+
+    // --- Selection ---
 
     public void BeginReviewSelection()
     {
@@ -510,7 +650,7 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         NotifySelectionChanged();
-        FilterDecks();
+        RefreshLibraryView();
     }
 
     public void ToggleDeckSelection(FlashCardDeck deck)
@@ -527,7 +667,6 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         NotifySelectionChanged();
-        FilterDecks();
     }
 
     public List<FlashCardDeck> GetSelectedDecks() =>
@@ -544,7 +683,7 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         NotifySelectionChanged();
-        FilterDecks();
+        RefreshLibraryView();
     }
 
     private void NotifySelectionChanged()
@@ -555,45 +694,42 @@ public partial class DashboardViewModel : ViewModelBase
         OnPropertyChanged(nameof(ExportSelectionButtonText));
     }
 
+    // --- Loading ---
+
+    /// <summary> Reloads folders, sets and groups from the database, then rebuilds the view. </summary>
+    public void ReloadLibrary()
+    {
+        _folderTree = FolderTree.Load();
+
+        var savedDecks = FlashCardRepository.GetAllDecks();
+        Decks.Clear();
+        foreach (var deck in savedDecks) Decks.Add(deck);
+
+        var savedGroups = FlashCardRepository.GetAllStudyGroups();
+        StudyGroups.Clear();
+        foreach (var group in savedGroups) StudyGroups.Add(group);
+
+        // A folder we were standing in may be gone after a reload.
+        if (!_folderTree.Exists(CurrentFolderID)) CurrentFolderID = null;
+
+        RefreshFolderMetadata();
+        RefreshLibraryView();
+    }
+
     public void DeleteDeck(FlashCardDeck deckToDelete)
     {
         FlashCardRepository.DeleteDeck(deckToDelete.ID);
-        Decks.Remove(deckToDelete);
         _selectedDeckIds.Remove(deckToDelete.ID);
         NotifySelectionChanged();
-        LoadStudyGroupsFromDatabase();
-        FilterDecks();
-    }
 
-    public void LoadDecksFromDatabase()
-    {
-        var savedDecks = FlashCardRepository.GetAllDecks();
-        Decks.Clear();
-        foreach (var deck in savedDecks)
-        {
-            Decks.Add(deck);
-        }
-
-        LoadStudyGroupsFromDatabase();
-    }
-
-    public void LoadStudyGroupsFromDatabase()
-    {
-        var savedGroups = FlashCardRepository.GetAllStudyGroups();
-        StudyGroups.Clear();
-        foreach (var group in savedGroups)
-        {
-            StudyGroups.Add(group);
-        }
-
-        RefreshDashboardItems();
+        // Groups reload too: deleting a set changes the card counts of any group holding it.
+        ReloadLibrary();
     }
 
     public void DeleteStudyGroup(StudyGroup groupToDelete)
     {
         FlashCardRepository.DeleteStudyGroup(groupToDelete.ID);
-        StudyGroups.Remove(groupToDelete);
-        RefreshDashboardItems();
+        ReloadLibrary();
     }
 
     public void RefreshAfterBackupRestore()
@@ -601,75 +737,26 @@ public partial class DashboardViewModel : ViewModelBase
         IsGraphView = false;
         RefreshStreakTexts();
         CancelSelectionMode();
-        LoadDecksFromDatabase();
-        FilterDecks();
+
+        // The restored database has its own folders; start from the main menu.
+        _suspendRefresh = true;
+        CurrentFolderID = null;
+        SearchText = "";
+        _suspendRefresh = false;
+
+        ReloadLibrary();
         RefreshStats();
     }
 
-    public void CreateNewDeck()
+    /// <summary> Creates a set filed in the folder currently open. </summary>
+    public FlashCardDeck CreateNewDeck()
     {
         var newDeck = new FlashCardDeck("New Flashcard Set");
         FlashCardRepository.SaveNewDeck(newDeck);
 
-        LoadDecksFromDatabase();
-        FilterDecks();
-    }
+        if (CurrentFolderID is ulong folderID) FolderRepository.MoveDeck(newDeck.ID, folderID);
 
-    private void RefreshDashboardItems()
-    {
-        DashboardItems.Clear();
-
-        if (ShowGroups)
-        {
-            IEnumerable<StudyGroup> groupsToAdd = StudyGroups;
-
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                var lowerSearch = SearchText.ToLower();
-                groupsToAdd = groupsToAdd.Where(g => g.Name.ToLower().Contains(lowerSearch));
-            }
-
-            if (SelectedSortOption != null)
-            {
-                var timeModifier = SelectedTimePeriod?.TimeModifier;
-
-                groupsToAdd = SelectedSortOption.Key switch
-                {
-                    SORT_NAME_ASC => groupsToAdd.OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase),
-                    SORT_NAME_DESC => groupsToAdd.OrderByDescending(g => g.Name, StringComparer.OrdinalIgnoreCase),
-                    SORT_CARDS_ASC => groupsToAdd.OrderBy(g => g.CardCount),
-                    SORT_CARDS_DESC => groupsToAdd.OrderByDescending(g => g.CardCount),
-                    SORT_STUDYTIME_ASC => groupsToAdd.OrderBy(g => GetGroupStudyTimeSeconds(g, timeModifier)),
-                    SORT_STUDYTIME_DESC => groupsToAdd.OrderByDescending(g => GetGroupStudyTimeSeconds(g, timeModifier)),
-                    _ => groupsToAdd
-                };
-            }
-
-            foreach (var group in groupsToAdd)
-            {
-                DashboardItems.Add(group);
-            }
-        }
-
-        if (ShowSets)
-        {
-            foreach (var deck in FilteredDecks)
-            {
-                DashboardItems.Add(deck);
-            }
-        }
-    }
-
-    private static int GetGroupStudyTimeSeconds(StudyGroup group, string? timeModifier)
-    {
-        var decksInGroup = FlashCardRepository.GetDecksForStudyGroup(group.ID);
-        int totalSeconds = 0;
-
-        foreach (var deck in decksInGroup)
-        {
-            totalSeconds += FlashCardRepository.GetStats(deck.ID, timeModifier).timeTakenSeconds;
-        }
-
-        return totalSeconds;
+        ReloadLibrary();
+        return newDeck;
     }
 }

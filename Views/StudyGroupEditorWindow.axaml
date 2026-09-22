@@ -5,7 +5,7 @@
     x:Class="ReviFlash.Views.StudyGroupEditorWindow"
     x:DataType="vm:StudyGroupEditorViewModel"
     Title="{Binding WindowTitle}"
-    Width="1100" Height="720"
+    Width="1100" Height="700"
     WindowStartupLocation="CenterOwner"
     Background="{DynamicResource AppBackground}">
 
@@ -31,13 +31,22 @@
                         <TextBlock Text="Available Decks" FontSize="20" FontWeight="Bold"
                             Foreground="{DynamicResource TextPrimary}" />
 
-                        <TextBox Text="{Binding DeckSearchText, Mode=TwoWay}"
-                            Watermark="Search decks to add..."
-                            CornerRadius="8"
-                            Padding="10,7"
-                            FontSize="14"
-                            Background="{DynamicResource AppBackground}"
-                            Foreground="{DynamicResource TextPrimary}" />
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0"
+                                Text="{Binding DeckSearchText, Mode=TwoWay}"
+                                Watermark="Search decks to add..."
+                                CornerRadius="8"
+                                Padding="10,7"
+                                FontSize="14"
+                                Background="{DynamicResource AppBackground}"
+                                Foreground="{DynamicResource TextPrimary}" />
+
+                            <ComboBox Grid.Column="1"
+                                ItemsSource="{Binding SortOptions}"
+                                SelectedItem="{Binding SelectedSortOption}"
+                                CornerRadius="8" Width="180"
+                                Background="{DynamicResource AppBackground}" />
+                        </Grid>
                     </StackPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
@@ -61,6 +70,11 @@
                                                     TextWrapping="Wrap" />
                                                 <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}"
                                                     FontSize="12"
+                                                    Foreground="{DynamicResource TextSecondary}" />
+                                                <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}"
+                                                    FontSize="11"
+                                                    IsVisible="{Binding HasFolderPath}"
+                                                    TextTrimming="CharacterEllipsis"
                                                     Foreground="{DynamicResource TextSecondary}" />
                                             </StackPanel>
 

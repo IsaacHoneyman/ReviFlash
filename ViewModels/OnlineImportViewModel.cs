@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
@@ -16,7 +18,25 @@ public partial class OnlineImportViewModel : ViewModelBase
     [ObservableProperty] private bool _isSearching;
 
     public ObservableCollection<FlashCardDeckMetadata> SearchResults { get; } = [];
-    public OnlineImportViewModel() { _ = SearchAsync(); }
+
+    /// <summary> The same orderings the dashboard offers, applied to what the server returns. </summary>
+    public List<SortOption> SortOptions { get; } = SearchUtility.CreateSortOptions();
+
+    [ObservableProperty] private SortOption? _selectedSortOption;
+    partial void OnSelectedSortOptionChanged(SortOption? value) => ApplyOrdering();
+
+    // The server filters by title; keep the raw results so re-sorting costs no round trip.
+    private readonly List<FlashCardDeckMetadata> _rawResults = [];
+
+    /// <summary> Folder downloaded sets are filed into; null for the main menu. </summary>
+    private readonly ulong? _targetFolderID;
+
+    public OnlineImportViewModel(ulong? targetFolderID = null)
+    {
+        _targetFolderID = targetFolderID;
+        SelectedSortOption = SortOptions[0];
+        _ = SearchAsync();
+    }
 
     [RelayCommand]
     private async Task SearchAsync()
@@ -31,7 +51,10 @@ public partial class OnlineImportViewModel : ViewModelBase
         {
             using var client = new SupabaseConnection();
             var results = await client.GetPublicDecksAsync(SearchText, limit: 25);
-            foreach (var deck in results) SearchResults.Add(deck);
+
+            _rawResults.Clear();
+            _rawResults.AddRange(results);
+            ApplyOrdering();
 
             cts.Cancel();
             StatusMessage = SearchResults.Count == 0 ? "No decks found matching your search." : $"Found {SearchResults.Count} decks.";
@@ -60,7 +83,7 @@ public partial class OnlineImportViewModel : ViewModelBase
         {
             using var client = new SupabaseConnection();
             string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);            
-            DeckTransferManager.TryImportCloudDeck(json);
+            DeckTransferManager.TryImportCloudDeck(json, _targetFolderID);
 
             cts.Cancel();
             StatusMessage = $"Successfully imported '{deck.Title}'! You can now review it.";
@@ -70,6 +93,18 @@ public partial class OnlineImportViewModel : ViewModelBase
             cts.Cancel();
             StatusMessage = $"Import failed: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Ranks what the server returned locally, so cloud results come back in the same
+    /// order a local search would produce.
+    /// </summary>
+    private void ApplyOrdering()
+    {
+        SearchResults.Clear();
+
+        var ordered = _rawResults.SearchAndSort(SearchText, SelectedSortOption?.Mode ?? SortMode.Relevance);
+        foreach (var deck in ordered) SearchResults.Add(deck);
     }
 
     private async Task AnimateStatusAsync(string baseMessage, CancellationToken token)

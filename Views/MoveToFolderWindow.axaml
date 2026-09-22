@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.MoveToFolderWindow"
+    x:DataType="vm:MoveToFolderViewModel"
+    Title="{Binding WindowTitle}"
+    Width="520" Height="620"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource AppBackground}">
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="24">
+
+        <TextBlock Grid.Row="0"
+            Text="{Binding Header}"
+            FontSize="22" FontWeight="Bold"
+            Foreground="{DynamicResource TextPrimary}"
+            TextWrapping="Wrap"
+            TextTrimming="CharacterEllipsis"
+            MaxLines="2" />
+
+        <TextBox Grid.Row="1"
+            Text="{Binding SearchText, Mode=TwoWay}"
+            Watermark="Search folders..."
+            Margin="0,16,0,12"
+            CornerRadius="8" Padding="10,7" FontSize="14"
+            Background="{DynamicResource CardBackground}"
+            Foreground="{DynamicResource TextPrimary}" />
+
+        <Border Grid.Row="2"
+            Background="{DynamicResource CardBackground}"
+            BorderBrush="{DynamicResource CardBorder}"
+            BorderThickness="1.5"
+            CornerRadius="16"
+            Padding="8">
+            <ListBox ItemsSource="{Binding Choices}"
+                SelectedItem="{Binding SelectedChoice, Mode=TwoWay}"
+                Background="Transparent"
+                BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FolderChoice">
+                        <Grid Margin="{Binding Indent}" ColumnDefinitions="Auto, *">
+                            <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconFolder}"
+                                Margin="0,0,10,0" />
+
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Subtitle}" FontSize="11"
+                                    IsVisible="{Binding HasSubtitle}"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+            Margin="0,20,0,0" Spacing="12">
+            <Button Content="Cancel"
+                Click="Cancel_Click"
+                Background="#70FFFFFF"
+                Foreground="{DynamicResource TextPrimary}"
+                CornerRadius="8" Padding="20,10" FontWeight="SemiBold" Cursor="Hand" />
+
+            <Button Content="Move Here"
+                Click="Move_Click"
+                IsEnabled="{Binding CanMove}"
+                Background="{DynamicResource GradientStart}"
+                Foreground="{DynamicResource PrimaryButtonForeground}"
+                CornerRadius="8" Padding="20,10" FontWeight="Bold" Cursor="Hand" />
+        </StackPanel>
+    </Grid>
+</Window>
