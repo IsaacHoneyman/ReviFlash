@@ -1,1 +1,0 @@
-all of  data util app model, view models have deck editor graph stat main window and review left to do

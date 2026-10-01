@@ -451,7 +451,7 @@ public sealed class SupabaseConnection : IDisposable
     public async Task<List<FlashCardDeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)
     {
         // search_public_decks matches the title or the uploader's name and returns the most
-        // downloaded first, capped at p_limit (see Supabase/1.1_search_by_uploader.sql).
+        // downloaded first, capped at p_limit (a SQL function in the Supabase project).
         var url = $"{ProjectURL}/rest/v1/rpc/search_public_decks?select=id,owner_id,title,description,storage_path,card_count,download_count,version,created_at,updated_at,owner:profiles(display_name)&p_limit={limit}";
         if (!string.IsNullOrWhiteSpace(searchText))
         {
