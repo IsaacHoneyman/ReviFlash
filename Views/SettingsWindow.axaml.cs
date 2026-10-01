@@ -14,6 +14,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        Closed += (_, _) => (DataContext as SettingsViewModel)?.Detach();
     }
 
     private async void CreateBackup_Click(object? sender, RoutedEventArgs e)
@@ -55,6 +56,14 @@ public partial class SettingsWindow : Window
         });
 
         if (files.Count == 0)
+        {
+            return;
+        }
+
+        var confirmDialog = new ConfirmDialogWindow(
+            "Restoring replaces all of your current decks, groups, folders and settings with the ones in the backup. Continue?"
+        );
+        if (!await confirmDialog.ShowDialog<bool>(this))
         {
             return;
         }
@@ -120,35 +129,57 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private async void DeleteDeckStats_Click(object? sender, RoutedEventArgs e)
+    private async void OpenDeleteDeckStats_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is SettingsViewModel { SelectedDeckForStatDeletion: not null } vm)
+        var window = new DeleteDeckStatsWindow();
+        window.StatsDeleted += () =>
         {
-            var deckName = vm.SelectedDeckForStatDeletion.Name;
-            var confirmDialog = new ConfirmDialogWindow(
-                $"Are you sure you want to delete all stats for \"{deckName}\"? This cannot be undone."
-            );
+            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm }) mainVm.RefreshStats();
+        };
+        await window.ShowDialog(this);
+    }
 
-            bool confirmed = await confirmDialog.ShowDialog<bool>(this);
-            if (!confirmed)
-            {
-                return;
-            }
+    // --- Account ---
 
-            vm.DeleteStatsForSelectedDeck();
+    private async void SignIn_Click(object? sender, RoutedEventArgs e)
+    {
+        // The account section updates itself from the stored session.
+        await new LoginWindow().ShowDialog<bool>(this);
+    }
 
-            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
-            {
-                mainVm.RefreshStats();
-            }
+    private async void SignOut_Click(object? sender, RoutedEventArgs e)
+    {
+        await AuthSession.SignOutAsync();
+        SetAccountStatus(null);
+    }
 
-            var statusText = this.FindControl<TextBlock>("DeleteStatsStatusText");
-            if (statusText != null)
-            {
-                statusText.Text = $"Stats for \"{deckName}\" were deleted.";
-                statusText.IsVisible = true;
-            }
+    private async void ChangeUsername_Click(object? sender, RoutedEventArgs e)
+    {
+        const int min = LoginViewModel.MinUsernameLength, max = LoginViewModel.MaxUsernameLength;
+
+        var prompt = new TextPromptWindow("Change username", "Save", AuthSession.Username,
+            $"{min}-{max} characters. Shown on the decks you share.");
+        var username = await prompt.ShowDialog<string?>(this);
+        if (username is null || username == AuthSession.Username) return;
+
+        if (username.Length < min || username.Length > max)
+        {
+            SetAccountStatus($"Usernames must be {min}-{max} characters.");
+            return;
         }
+
+        SetAccountStatus("Saving username...");
+        var result = await AuthSession.ChangeUsernameAsync(username);
+        SetAccountStatus(result.Success ? $"Username changed to {username}." : $"Couldn't change username: {result.Message}");
+    }
+
+    private void SetAccountStatus(string? message)
+    {
+        var statusText = this.FindControl<TextBlock>("AccountStatusText");
+        if (statusText == null) return;
+
+        statusText.Text = message;
+        statusText.IsVisible = message is not null;
     }
 
     private async void CheckForUpdates_Click(object? sender, RoutedEventArgs e)
@@ -180,13 +211,16 @@ public partial class SettingsWindow : Window
         {
             statusText?.Text = "Downloading update... 0%";
 
-            await updateClient.DownloadAndApplyUpdateAsync(updateInfo, progress =>
+            bool applied = await updateClient.DownloadAndApplyUpdateAsync(updateInfo, progress =>
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     statusText?.Text = $"Downloading update... {progress}%";
                 });
             });
+
+            // Success restarts the app, so getting here means it failed.
+            if (!applied) statusText?.Text = "The update couldn't be installed. Please try again later.";
         }
         else
         {

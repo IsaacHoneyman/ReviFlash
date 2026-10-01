@@ -140,21 +140,6 @@ public static class DeckRepository
         command.ExecuteNonQuery();
     }
 
-    public static void InsertDeckStat(SqliteConnection connection, SqliteTransaction transaction, long deckId, DeckStatEntry stat)
-    {
-        using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = @"
-            INSERT INTO DeckStats (DeckId, CorrectCount, TotalAttempts, TimeTakenSeconds, DateChecked)
-            VALUES ($deckId, $correct, $total, $timeTakenSeconds, $dateChecked);";
-        command.Parameters.AddWithValue("$deckId", deckId);
-        command.Parameters.AddWithValue("$correct", stat.CorrectCount);
-        command.Parameters.AddWithValue("$total", stat.TotalAttempts);
-        command.Parameters.AddWithValue("$timeTakenSeconds", stat.TimeTakenSeconds);
-        command.Parameters.AddWithValue("$dateChecked", stat.DateChecked);
-        command.ExecuteNonQuery();
-    }
-
     /// <param name="folderID"> Folder the imported deck is filed into; null for the main menu. </param>
     public static long InsertDeck(SqliteConnection connection, SqliteTransaction transaction, string name, ulong? folderID = null)
     {

@@ -6,7 +6,7 @@
         x:Class="ReviFlash.Views.OnlineImportWindow"
         x:DataType="vm:OnlineImportViewModel"
         Title="Discover Flashcards"
-        Width="700" Height="600"
+        Width="760" Height="640" MinWidth="620" MinHeight="480"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource AppBackground}">
 
@@ -14,9 +14,18 @@
         
         <!-- Search Header -->
         <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,16">
-            <TextBlock Text="Community Flashcards" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
-            <TextBlock Text="Search and download public flashcard sets created by other users." 
-                       Foreground="{DynamicResource TextSecondary}" FontSize="14" TextWrapping="Wrap"/>
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="Community Flashcards" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                    <TextBlock Text="Search and download public flashcard sets created by other users."
+                               Foreground="{DynamicResource TextSecondary}" FontSize="14" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="{Binding AccountText}" Foreground="{DynamicResource TextSecondary}" FontSize="13" VerticalAlignment="Center"
+                               ToolTip.Tip="Sign out from Settings."/>
+                </StackPanel>
+            </Grid>
             
             <Grid ColumnDefinitions="*, Auto, Auto" Margin="0,8,0,0">
                 <TextBox Grid.Column="0" 
@@ -61,20 +70,25 @@
                                 <Grid ColumnDefinitions="*, Auto">
                                     <StackPanel Grid.Column="0" Spacing="4">
                                         <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="{Binding Description}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding UploaderName, StringFormat='by {0}'}" IsVisible="{Binding HasUploaderName}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Description, StringFormat='in {0}'}" IsVisible="{Binding HasDescription}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
                                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
-                                            <TextBlock Text="{Binding CardCount, StringFormat='{} {0} Cards'}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{} {0:MMM dd, yyyy}'}" FontSize="12" Foreground="Gray"/>
+                                            <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding DownloadCountText}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MMM dd, yyyy}'}" FontSize="12" Foreground="Gray"/>
                                         </StackPanel>
                                     </StackPanel>
                                     
-                                    <Button Grid.Column="1" Content="Download" 
+                                    <Button Grid.Column="1"
                                             Command="{Binding $parent[Window].((vm:OnlineImportViewModel)DataContext).DownloadCommand}"
                                             CommandParameter="{Binding}"
                                             VerticalAlignment="Center"
                                             Background="{DynamicResource StatTileBackground}"
                                             Foreground="{DynamicResource TextPrimary}"
-                                            CornerRadius="8" Padding="16,10" FontWeight="SemiBold" Cursor="Hand"/>
+                                            CornerRadius="8" Padding="12,10" Cursor="Hand"
+                                            ToolTip.Tip="Download">
+                                        <Path Classes="icon" Data="{StaticResource IconDownload}" />
+                                    </Button>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -83,9 +97,16 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Status Footer -->
-        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" 
-                   Foreground="{DynamicResource TextSecondary}" 
-                   HorizontalAlignment="Center" Margin="0,16,0,0" />
+        <!-- Footer: where downloads go and how, then status. -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *" Margin="0,16,0,0">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                <TextBlock Text="{Binding TargetFolderText}" Foreground="{DynamicResource TextSecondary}" FontSize="13" VerticalAlignment="Center"/>
+                <CheckBox IsChecked="{Binding IncludeFolderInfo}" Content="Recreate uploader's folders"
+                          Foreground="{DynamicResource TextSecondary}" FontSize="13"
+                          ToolTip.Tip="If the uploader included folder information, rebuild their folders inside the one you're saving to." />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="16,0,0,0" />
+        </Grid>
     </Grid>
 </Window>

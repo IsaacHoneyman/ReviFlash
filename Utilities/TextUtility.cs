@@ -12,7 +12,7 @@ public static partial class TextUtility
 {
     // --- Regex ---
 
-    [GeneratedRegex(@"\$\$(.+?)\$\$|\$(.+?)\$", RegexOptions.Singleline)]
+    [GeneratedRegex(@"(?<!\\)\$\$(.+?)(?<!\\)\$\$|(?<!\\)\$(.+?)(?<!\\)\$", RegexOptions.Singleline)]
     public static partial Regex InlineMathRegex();
 
     [GeneratedRegex(@"(\d+)\.(\d+)\.(\d+)")]

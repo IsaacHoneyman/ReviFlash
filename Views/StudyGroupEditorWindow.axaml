@@ -2,6 +2,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:ReviFlash.ViewModels"
     xmlns:models="using:ReviFlash.Models"
+    xmlns:views="using:ReviFlash.Views"
     x:Class="ReviFlash.Views.StudyGroupEditorWindow"
     x:DataType="vm:StudyGroupEditorViewModel"
     Title="{Binding WindowTitle}"
@@ -27,72 +28,10 @@
                 CornerRadius="20"
                 Padding="20">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Available Decks" FontSize="20" FontWeight="Bold"
-                            Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="Available Decks" FontSize="20" FontWeight="Bold"
+                        Foreground="{DynamicResource TextPrimary}" />
 
-                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0"
-                                Text="{Binding DeckSearchText, Mode=TwoWay}"
-                                Watermark="Search decks to add..."
-                                CornerRadius="8"
-                                Padding="10,7"
-                                FontSize="14"
-                                Background="{DynamicResource AppBackground}"
-                                Foreground="{DynamicResource TextPrimary}" />
-
-                            <ComboBox Grid.Column="1"
-                                ItemsSource="{Binding SortOptions}"
-                                SelectedItem="{Binding SelectedSortOption}"
-                                CornerRadius="8" Width="180"
-                                Background="{DynamicResource AppBackground}" />
-                        </Grid>
-                    </StackPanel>
-
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
-                        HorizontalScrollBarVisibility="Disabled"
-                        Margin="0,0,-16,0"
-                        Padding="0,0,16,0">
-                        <ItemsControl ItemsSource="{Binding FilteredAvailableDecks}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:FlashCardDeck">
-                                    <Border Background="#14000000"
-                                        BorderBrush="{DynamicResource CardBorder}"
-                                        BorderThickness="1"
-                                        CornerRadius="12"
-                                        Padding="14"
-                                        Margin="0,0,0,10">
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <StackPanel Grid.Column="0" Spacing="4">
-                                                <TextBlock Text="{Binding Name}" FontSize="18"
-                                                    FontWeight="SemiBold"
-                                                    Foreground="{DynamicResource TextPrimary}"
-                                                    TextWrapping="Wrap" />
-                                                <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}"
-                                                    FontSize="12"
-                                                    Foreground="{DynamicResource TextSecondary}" />
-                                                <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}"
-                                                    FontSize="11"
-                                                    IsVisible="{Binding HasFolderPath}"
-                                                    TextTrimming="CharacterEllipsis"
-                                                    Foreground="{DynamicResource TextSecondary}" />
-                                            </StackPanel>
-
-                                            <Button Grid.Column="1"
-                                                Content="Add"
-                                                Click="AddDeck_Click"
-                                                Background="{DynamicResource GradientStart}"
-                                                Foreground="{DynamicResource PrimaryButtonForeground}"
-                                                CornerRadius="8"
-                                                Padding="14,8"
-                                                FontWeight="SemiBold"
-                                                Cursor="Hand" />
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                    <views:DeckFolderBrowserView Grid.Row="1" DataContext="{Binding AvailableBrowser}" />
                 </Grid>
             </Border>
 

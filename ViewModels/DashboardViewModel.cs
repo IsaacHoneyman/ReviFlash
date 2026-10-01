@@ -8,13 +8,14 @@ using System.Collections.Generic;
 using static ReviFlash.Utilities.CardUtility;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Utilities;
+using ReviFlash.Data.Online;
 
 namespace ReviFlash.ViewModels;
 
 public partial class DashboardViewModel : ViewModelBase
 {
     private enum StatsScope { Overall, Deck, Group, }
-    public enum DeckSelectionMode { None, Review, Export, }
+    public enum DeckSelectionMode { None, Review, }
 
     // Ordering within a mixed list: folders, then groups, then sets.
     private const int FolderPriority = 0;
@@ -37,12 +38,15 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private string _bestEverStreakText = "0 Day Streak";
     public static bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
 
+    // --- Account ---
+
+    public bool IsSignedIn => AuthSession.IsSignedIn;
+    public string AccountText => IsSignedIn ? $"Welcome, {AuthSession.Username}" : "Guest";
+
     [NotifyPropertyChangedFor(nameof(IsSelectionModeActive))]
     [NotifyPropertyChangedFor(nameof(IsReviewSelectionMode))]
-    [NotifyPropertyChangedFor(nameof(IsExportSelectionMode))]
     [NotifyPropertyChangedFor(nameof(CanShowDeckManagementActions))]
     [NotifyPropertyChangedFor(nameof(ReviewSelectionButtonText))]
-    [NotifyPropertyChangedFor(nameof(ExportSelectionButtonText))]
     [ObservableProperty] private DeckSelectionMode _selectionMode = DeckSelectionMode.None;
 
     private readonly HashSet<ulong> _selectedDeckIds = [];
@@ -51,15 +55,11 @@ public partial class DashboardViewModel : ViewModelBase
 
     public bool IsSelectionModeActive => SelectionMode != DeckSelectionMode.None;
     public bool IsReviewSelectionMode => SelectionMode == DeckSelectionMode.Review;
-    public bool IsExportSelectionMode => SelectionMode == DeckSelectionMode.Export;
 
     public bool CanShowDeckManagementActions => !IsSelectionModeActive;
     public string ReviewSelectionButtonText => !IsReviewSelectionMode ?
         "Select Multiple" : HasSelectedDecks ?
         $"Play Selected ({SelectedDeckCount})" : "Cancel";
-    public string ExportSelectionButtonText => !IsExportSelectionMode ?
-        "Export" : HasSelectedDecks ?
-        $"Export Selected ({SelectedDeckCount})" : "Cancel";
 
     [ObservableProperty] private bool _showGroups = true;
     partial void OnShowGroupsChanged(bool value) => RefreshLibraryView();
@@ -206,6 +206,14 @@ public partial class DashboardViewModel : ViewModelBase
             case nameof(AppMetaData.LaunchStreak):
             case nameof(AppMetaData.BestLaunchStreak):
                 RefreshStreakTexts();
+                break;
+            // Signing in or out anywhere (the online windows, a refresh being rejected) lands here.
+            case nameof(AppMetaData.SupabaseRefreshToken):
+            case nameof(AppMetaData.SupabaseAccessToken):
+            case nameof(AppMetaData.SupabaseUsername):
+            case nameof(AppMetaData.SupabaseExpirationTime):
+                OnPropertyChanged(nameof(IsSignedIn));
+                OnPropertyChanged(nameof(AccountText));
                 break;
         }
     }
@@ -635,11 +643,6 @@ public partial class DashboardViewModel : ViewModelBase
         BeginSelectionMode(DeckSelectionMode.Review);
     }
 
-    public void BeginExportSelection()
-    {
-        BeginSelectionMode(DeckSelectionMode.Export);
-    }
-
     public void CancelSelectionMode()
     {
         SelectionMode = DeckSelectionMode.None;
@@ -691,7 +694,6 @@ public partial class DashboardViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasSelectedDecks));
         OnPropertyChanged(nameof(SelectedDeckCount));
         OnPropertyChanged(nameof(ReviewSelectionButtonText));
-        OnPropertyChanged(nameof(ExportSelectionButtonText));
     }
 
     // --- Loading ---

@@ -691,18 +691,28 @@
                     <!-- Flip Card: Answer Reveal (Both Flip and Type manual mode) -->
                     <StackPanel Orientation="Horizontal" Spacing="20"
                         HorizontalAlignment="Center" IsVisible="{Binding IsFlipCard}">
-                            <Button Content="✕ Incorrect" Click="Incorrect_Click"
+                            <Button Click="Incorrect_Click"
                                 FontSize="16"
                                 Background="{DynamicResource DangerBackground}" Padding="20,10"
                                 Width="180" Height="46"
-                                HorizontalContentAlignment="Center"
-                                IsVisible="{Binding IsAnswerRevealed}" />
-                            <Button Content="✓ Correct" Click="Correct_Click"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                IsVisible="{Binding IsAnswerRevealed}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}" />
+                                    <TextBlock Text="Incorrect" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="Correct_Click"
                                 FontSize="16"
                                 Background="{DynamicResource SuccessBackground}" Padding="20,10"
                                 Width="180" Height="46"
-                                HorizontalContentAlignment="Center"
-                                IsVisible="{Binding IsAnswerRevealed}" />
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                IsVisible="{Binding IsAnswerRevealed}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Path Classes="icon" Data="{StaticResource IconCheck}" Stroke="{Binding $parent[Button].Foreground}" />
+                                    <TextBlock Text="Correct" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                     </StackPanel>
                 </StackPanel>
                 </StackPanel>

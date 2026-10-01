@@ -351,8 +351,20 @@
                 </Border>
             </StackPanel>
 
-            <TextBlock Text="{x:Static utilities:TextUtility.VersionText}" FontSize="12" Foreground="{DynamicResource TextPrimary}"
-                VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,16,0" />
+            <!-- Account and version, so it's always clear whether you're signed in. -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12"
+                VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,16,0">
+                <TextBlock Text="{Binding AccountText}" FontSize="13" FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"
+                    MaxWidth="260" TextTrimming="CharacterEllipsis" />
+                <Button Content="Sign In" Click="SignIn_Click" IsVisible="{Binding !IsSignedIn}"
+                    Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
+                    CornerRadius="8" Padding="10,4" FontSize="12" FontWeight="SemiBold" Cursor="Hand"
+                    VerticalAlignment="Center" />
+                <TextBlock Text="·" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Static utilities:TextUtility.VersionText}" FontSize="12" Foreground="{DynamicResource TextPrimary}"
+                    VerticalAlignment="Center" />
+            </StackPanel>
 
             <Button Grid.Column="1" Click="SettingsButton_Click" Background="Transparent"
                 CornerRadius="18" Width="56" Height="56" Cursor="Hand"
@@ -511,32 +523,23 @@
                                 Foreground="{DynamicResource TextPrimary}"
                                 Cursor="Hand" />
 
-                            <Button Click="ExportFlashCards_Click"
-                                Content="{Binding ExportSelectionButtonText}"
-                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource StatTileBackground}"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
-
-                            <Button Click="ImportFlashCards_Click"
-                                Content="Import"
-                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource StatTileBackground}"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
                             <Button Click="OpenOnlineImport_Click"
-                                Content="Online Import"
-                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                CornerRadius="8" Padding="12, 8"
+                                VerticalContentAlignment="Center"
                                 Background="{DynamicResource StatTileBackground}"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
+                                Cursor="Hand"
+                                ToolTip.Tip="Import: download community decks">
+                                <Path Classes="icon" Data="{StaticResource IconDownload}" />
+                            </Button>
 
                             <Button Click="OpenOnlineExport_Click"
-                                Content="Online Export"
-                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                                CornerRadius="8" Padding="12, 8"
+                                VerticalContentAlignment="Center"
                                 Background="{DynamicResource StatTileBackground}"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
+                                Cursor="Hand"
+                                ToolTip.Tip="Export: upload and manage your decks">
+                                <Path Classes="icon" Data="{StaticResource IconUpload}" />
+                            </Button>
                         </StackPanel>
                     </Border>
                 </Grid>

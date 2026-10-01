@@ -17,22 +17,12 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanSave))]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
     private string _groupName = string.Empty;
-    [ObservableProperty] private string _deckSearchText = string.Empty;
-
-    partial void OnDeckSearchTextChanged(string value)
-    {
-        RefreshFilteredAvailableDecks();
-    }
-
-    /// <summary> The same orderings the dashboard offers. </summary>
-    public List<SortOption> SortOptions { get; } = SearchUtility.CreateSortOptions();
-
-    [ObservableProperty] private SortOption? _selectedSortOption;
-    partial void OnSelectedSortOptionChanged(SortOption? value) => RefreshFilteredAvailableDecks();
 
     public ObservableCollection<FlashCardDeck> AvailableDecks { get; } = [];
-    public ObservableCollection<FlashCardDeck> FilteredAvailableDecks { get; } = [];
     public ObservableCollection<FlashCardDeck> SelectedDecks { get; } = [];
+
+    /// <summary> Folder-aware picker over <see cref="AvailableDecks"/>. </summary>
+    public DeckFolderBrowser AvailableBrowser { get; }
 
     public bool IsEditing => _editingGroup != null;
     public string WindowTitle => IsEditing ? "Edit Group" : "Create Group";
@@ -43,13 +33,9 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
     {
         _editingGroup = group;
         _targetFolderID = targetFolderID;
-        SelectedSortOption = SortOptions[0];
+        AvailableBrowser = new DeckFolderBrowser("Add", AddDeck);
 
         var allDecks = FlashCardRepository.GetAllDecks();
-
-        // Show which folder each set lives in: two sets can easily share a name once
-        // they are filed apart.
-        FolderTree.Load().ApplyPaths(allDecks, []);
 
         if (group != null)
         {
@@ -65,7 +51,9 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
         }
         else { foreach (var deck in allDecks) AvailableDecks.Add(deck); }
 
-        RefreshFilteredAvailableDecks();
+        // Start where the group lives, so its neighbouring sets are the first on offer.
+        AvailableBrowser.NavigateTo(group?.FolderID ?? targetFolderID);
+        AvailableBrowser.SetDecks(AvailableDecks);
     }
 
     public void AddDeck(FlashCardDeck deck)
@@ -73,7 +61,7 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
         if (AvailableDecks.Remove(deck))
         {
             SelectedDecks.Add(deck);
-            RefreshFilteredAvailableDecks();
+            AvailableBrowser.SetDecks(AvailableDecks);
         }
     }
 
@@ -82,7 +70,7 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
         if (SelectedDecks.Remove(deck))
         {
             AvailableDecks.Add(deck);
-            RefreshFilteredAvailableDecks();
+            AvailableBrowser.SetDecks(AvailableDecks);
         }
     }
 
@@ -110,11 +98,4 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
         return _editingGroup;
     }
 
-    private void RefreshFilteredAvailableDecks()
-    {
-        FilteredAvailableDecks.Clear();
-
-        var fDecks = AvailableDecks.SearchAndSort(DeckSearchText, SelectedSortOption?.Mode ?? SortMode.Relevance);
-        foreach (var d in fDecks) FilteredAvailableDecks.Add(d);
-    }
 }

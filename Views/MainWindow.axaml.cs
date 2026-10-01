@@ -30,7 +30,7 @@ public partial class MainWindow : Window
 
             if (confirmed)
             {
-                await updateClient.DownloadAndApplyUpdateAsync(updateInfo);
+                await new UpdateProgressWindow(updateClient, updateInfo).ShowDialog(this);
             }
         }
     }

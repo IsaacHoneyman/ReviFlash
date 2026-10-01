@@ -13,19 +13,6 @@ public partial class StudyGroupEditorWindow : Window
         InitializeComponent();
     }
 
-    private void AddDeck_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button button || button.DataContext is not FlashCardDeck deck)
-        {
-            throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck");
-        }
-
-        if (DataContext is StudyGroupEditorViewModel vm)
-        {
-            vm.AddDeck(deck);
-        }
-    }
-
     private void RemoveDeck_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not Button button || button.DataContext is not FlashCardDeck deck)

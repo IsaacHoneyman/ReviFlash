@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:models="using:ReviFlash.Models"
+    x:Class="ReviFlash.Views.DeckFolderBrowserView"
+    x:DataType="vm:DeckFolderBrowser">
+
+    <!-- Folder-aware deck picker: search + sort, breadcrumb trail, then folders and sets. -->
+    <Grid RowDefinitions="Auto, Auto, *" RowSpacing="10">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="10">
+            <TextBox Grid.Column="0"
+                Text="{Binding SearchText, Mode=TwoWay}"
+                Watermark="{Binding SearchWatermark}"
+                CornerRadius="8" Padding="10,7" FontSize="14"
+                Background="{DynamicResource AppBackground}"
+                Foreground="{DynamicResource TextPrimary}" />
+
+            <ComboBox Grid.Column="1"
+                IsVisible="{Binding ShowSortOptions}"
+                ItemsSource="{Binding SortOptions}"
+                SelectedItem="{Binding SelectedSortOption}"
+                CornerRadius="8" Width="180"
+                Background="{DynamicResource AppBackground}" />
+        </Grid>
+
+        <!-- Breadcrumb trail, shown only once you are inside a folder. -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, *" IsVisible="{Binding IsInFolder}">
+            <Button Grid.Column="0"
+                Command="{Binding NavigateUpCommand}"
+                Content="← Back"
+                CornerRadius="8" Padding="10,6" FontSize="13" FontWeight="SemiBold"
+                Background="{DynamicResource StatTileBackground}"
+                Foreground="{DynamicResource TextPrimary}"
+                Cursor="Hand" Margin="0,0,12,0"
+                ToolTip.Tip="Back to the parent folder" />
+
+            <ScrollViewer Grid.Column="1"
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <Button Command="{Binding NavigateToCrumbCommand}"
+                        Content="Main Menu"
+                        Background="Transparent"
+                        Foreground="{DynamicResource TextSecondary}"
+                        CornerRadius="6" Padding="8,5" FontSize="13" FontWeight="SemiBold"
+                        Cursor="Hand" />
+
+                    <ItemsControl ItemsSource="{Binding Breadcrumbs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:Folder">
+                                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="/" FontSize="13" VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                    <Button Command="{Binding $parent[UserControl].((vm:DeckFolderBrowser)DataContext).NavigateToCrumbCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="{Binding Name}"
+                                        Background="Transparent"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        CornerRadius="6" Padding="8,5" FontSize="13" FontWeight="SemiBold"
+                                        Cursor="Hand" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <TextBlock Text="{Binding EmptyStateText}"
+                IsVisible="{Binding HasNoItems}"
+                HorizontalAlignment="Center" Margin="0,24,0,0"
+                TextWrapping="Wrap" TextAlignment="Center"
+                Foreground="{DynamicResource TextSecondary}" />
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled"
+                Margin="0,0,-16,0" Padding="0,0,16,0">
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.DataTemplates>
+
+                        <!-- Folder: the whole row opens it. -->
+                        <DataTemplate DataType="models:Folder">
+                            <Button Command="{Binding $parent[UserControl].((vm:DeckFolderBrowser)DataContext).OpenFolderCommand}"
+                                CommandParameter="{Binding}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                Background="#14000000"
+                                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                                CornerRadius="12" Padding="14" Margin="0,0,0,10"
+                                Cursor="Hand" ToolTip.Tip="Open folder">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <Path Grid.Column="0" Classes="icon medium" Data="{StaticResource IconFolder}"
+                                        VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding ContentsSummary}" FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="11"
+                                            IsVisible="{Binding HasFolderPath}" TextTrimming="CharacterEllipsis"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="2" Text="›" FontSize="22"
+                                        VerticalAlignment="Center" Margin="12,0,4,0"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+
+                        <!-- Set: name, cards, location, and the host's action button. -->
+                        <DataTemplate DataType="models:FlashCardDeck">
+                            <Border Background="#14000000"
+                                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                                CornerRadius="12" Padding="14" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}" FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="11"
+                                            IsVisible="{Binding HasFolderPath}" TextTrimming="CharacterEllipsis"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+
+                                    <Button Grid.Column="1"
+                                        Content="{Binding $parent[UserControl].((vm:DeckFolderBrowser)DataContext).ActionText}"
+                                        Command="{Binding $parent[UserControl].((vm:DeckFolderBrowser)DataContext).DeckActionCommand}"
+                                        CommandParameter="{Binding}"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource GradientStart}"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        CornerRadius="8" Padding="14,8" FontWeight="SemiBold" Cursor="Hand" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.DataTemplates>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

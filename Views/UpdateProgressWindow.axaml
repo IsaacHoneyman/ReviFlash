@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ReviFlash.Views.UpdateProgressWindow"
+        Title="Updating ReviFlash"
+        Width="450" Height="200"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent">
+
+    <Border Background="{DynamicResource AppBackground}"
+            Opacity="0.96"
+            BorderBrush="{DynamicResource CardBorder}"
+            BorderThickness="2"
+            CornerRadius="20"
+            Padding="24">
+
+        <Grid RowDefinitions="*, Auto, Auto">
+            <TextBlock x:Name="MessageText"
+                       Text="Downloading update... 0%"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimary}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"/>
+
+            <ProgressBar x:Name="DownloadProgress" Grid.Row="1"
+                         Minimum="0" Maximum="100" Value="0" Height="8" CornerRadius="4"
+                         Foreground="{DynamicResource GradientStart}" Margin="0,16,0,0"/>
+
+            <Button x:Name="CloseButton" Grid.Row="2" Click="Close_Click" Content="Close" IsVisible="False"
+                    HorizontalAlignment="Center" Margin="0,16,0,0"
+                    Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                    CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+        </Grid>
+    </Border>
+</Window>

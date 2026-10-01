@@ -23,6 +23,7 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private bool _checkForUpdatesOnStartup = true;
     [ObservableProperty] private string _databasePath = TextUtility.DatabasePath;
     [ObservableProperty] private string? _supabaseAccessToken;
+    [ObservableProperty] private string? _supabaseRefreshToken;
     [ObservableProperty] private string? _supabaseUserId;
     [ObservableProperty] private string? _supabaseUsername;
     [ObservableProperty] private DateTime _supabaseExpirationTime;
@@ -42,16 +43,19 @@ public partial class AppMetaData : ObservableObject
         ShowAnswerStreakInReview = other.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;
+        CheckForUpdatesOnStartup = other.CheckForUpdatesOnStartup;
         DatabasePath = other.DatabasePath;
         SupabaseAccessToken = other.SupabaseAccessToken;
+        SupabaseRefreshToken = other.SupabaseRefreshToken;
         SupabaseUserId = other.SupabaseUserId;
         SupabaseUsername = other.SupabaseUsername;
         SupabaseExpirationTime = other.SupabaseExpirationTime;
     }
 
-    public void SetSupabase(string? accessToken, string? userID, string? userName, DateTime expiration)
+    public void SetSupabase(string? accessToken, string? refreshToken, string? userID, string? userName, DateTime expiration)
     {
         SupabaseAccessToken = accessToken;
+        SupabaseRefreshToken = refreshToken;
         SupabaseUserId = userID;
         SupabaseUsername = userName;
         SupabaseExpirationTime = expiration;

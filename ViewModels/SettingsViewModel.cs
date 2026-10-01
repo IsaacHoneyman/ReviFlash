@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Styling;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
+using ReviFlash.Data.Online;
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -70,9 +71,11 @@ public partial class SettingsViewModel : ViewModelBase
 
     public IEnumerable<string> AvailableThemes => ThemeMap.Keys;
 
-    public ObservableCollection<FlashCardDeck> AvailableDecks { get; } = [];
+    // --- Account ---
 
-    [ObservableProperty] private FlashCardDeck? _selectedDeckForStatDeletion;
+    public bool IsSignedIn => AuthSession.IsSignedIn;
+    public string AccountText => IsSignedIn ? $"Signed in as {AuthSession.Username}" : "Not signed in";
+
     [ObservableProperty] private string _selectedTheme;
     [ObservableProperty] private bool _showTimer;
     [ObservableProperty] private bool _showProgress;
@@ -85,6 +88,9 @@ public partial class SettingsViewModel : ViewModelBase
 
     public SettingsViewModel()
     {
+        // Sign-ins and sign-outs from anywhere (including this window) show up live.
+        MetaDataManager.Data.PropertyChanged += Metadata_PropertyChanged;
+
         _selectedTheme = MetaDataManager.Data.Theme;
         _showTimer = MetaDataManager.Data.ShowTimer;
         _showProgress = MetaDataManager.Data.ShowProgress;
@@ -94,8 +100,23 @@ public partial class SettingsViewModel : ViewModelBase
         _showAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
         _showBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
         _checkForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
+    }
 
-        LoadDecks();
+    /// <summary> Stops listening to the app-wide metadata; call when the window closes. </summary>
+    public void Detach() => MetaDataManager.Data.PropertyChanged -= Metadata_PropertyChanged;
+
+    private void Metadata_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(AppMetaData.SupabaseRefreshToken):
+            case nameof(AppMetaData.SupabaseAccessToken):
+            case nameof(AppMetaData.SupabaseUsername):
+            case nameof(AppMetaData.SupabaseExpirationTime):
+                OnPropertyChanged(nameof(IsSignedIn));
+                OnPropertyChanged(nameof(AccountText));
+                break;
+        }
     }
 
     partial void OnSelectedThemeChanged(string value)
@@ -166,16 +187,6 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    private void LoadDecks()
-    {
-        AvailableDecks.Clear();
-        var decks = FlashCardRepository.GetAllDecks();
-        foreach (var deck in decks)
-        {
-            AvailableDecks.Add(deck);
-        }
-    }
-
     public void RefreshFromMetadata()
     {
         SelectedTheme = MetaDataManager.Data.Theme;
@@ -187,16 +198,5 @@ public partial class SettingsViewModel : ViewModelBase
         ShowAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
         CheckForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
-
-        LoadDecks();
-    }
-
-    public void DeleteStatsForSelectedDeck()
-    {
-        if (SelectedDeckForStatDeletion != null)
-        {
-            FlashCardRepository.DeleteStatsForDeck(SelectedDeckForStatDeletion.ID);
-            SelectedDeckForStatDeletion = null;
-        }
     }
 }

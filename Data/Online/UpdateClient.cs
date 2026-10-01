@@ -26,13 +26,22 @@ public class UpdateClient
         }
     }
 
-    public async Task DownloadAndApplyUpdateAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null)
+    /// <summary>
+    /// Downloads the update and restarts into it. On success the app exits here, so returning
+    /// at all means it failed (already logged).
+    /// </summary>
+    public async Task<bool> DownloadAndApplyUpdateAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null)
     {
         try
         {
             await manager.DownloadUpdatesAsync(updateInfo, progressCallback);
             manager.ApplyUpdatesAndRestart(updateInfo);
+            return true;
         }
-        catch (Exception ex) { Logger.LogError("Failed to apply update", ex); }
+        catch (Exception ex)
+        {
+            Logger.LogError("Failed to apply update", ex);
+            return false;
+        }
     }
 }

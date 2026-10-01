@@ -70,9 +70,12 @@ public partial class App : Application
 
         Current.Resources["SuccessForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#1D6A42") : Color.Parse("#44CC88"));
         Current.Resources["WarningForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#8A5A00") : Color.Parse("#FFCC66"));
-        Current.Resources["DangerForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#A82435") : Color.Parse("#FF8888"));
+        // #7F1726 is the lightest red that keeps 4.5:1 on every light theme's background (Sepia is the tightest).
+        Current.Resources["DangerForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#7F1726") : Color.Parse("#FF8888"));
         Current.Resources["SuccessBackground"] = new SolidColorBrush(Color.Parse("#2E9E44"));
         Current.Resources["DangerBackground"] = new SolidColorBrush(Color.Parse("#CC3D3D"));
+        // Text on DangerBackground. Theme accents (IconForeground) can be nearly invisible on red.
+        Current.Resources["DangerBackgroundForeground"] = new SolidColorBrush(Colors.White);
         Current.Resources["SurfaceOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#12000000") : Color.Parse("#18000000"));
     }
 }

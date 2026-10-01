@@ -12,43 +12,31 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
+/// <summary>
+/// Cloud Manager: upload local decks, and update, download, list/unlist or delete your own cloud decks.
+/// Only ever opened once signed in (see <see cref="AuthSession"/>).
+/// </summary>
 public partial class OnlineExportViewModel : ViewModelBase
 {
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsNotAuthenticated))] 
-    [NotifyPropertyChangedFor(nameof(WindowWidth))] [NotifyPropertyChangedFor(nameof(WindowHeight))]
-    private bool _isAuthenticated;
+    public string AccountText => $"Signed in as {AuthSession.Username}";
 
-    public double WindowWidth => IsAuthenticated ? 1100 : 450;
-    public double WindowHeight => IsAuthenticated ? 720 : 550;
-    public bool IsNotAuthenticated => !IsAuthenticated;
-
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsSignUpMode))]
-    [NotifyPropertyChangedFor(nameof(HeaderText))] [NotifyPropertyChangedFor(nameof(ToggleModeText))]
-    private bool _isLoginMode = true;
-
-    public bool IsSignUpMode => !IsLoginMode;
-    public string HeaderText => IsLoginMode ? "Welcome Back" : "Create an Account";
-    public string ToggleModeText => IsLoginMode ? "Don't have an account? Sign up" : "Already have an account? Log in";
-    public string WelcomeText => $"Welcome, {MetaDataManager.Data.SupabaseUsername}!";
-
-    [ObservableProperty] private string _email = string.Empty;
-    [ObservableProperty] private string _password = string.Empty;
-    [ObservableProperty] private string _username = string.Empty;
     [ObservableProperty] private string _statusMessage = string.Empty;
 
-    [ObservableProperty] private List<FlashCardDeck> _availableDecks = [];
-    [ObservableProperty] private FlashCardDeck? _selectedDeckToUpload;
+    /// <summary>
+    /// Uploads carry the deck's folder path (shown as the cloud description), and downloads
+    /// rebuild it.
+    /// </summary>
+    [ObservableProperty] private bool _includeFolderInfo;
+
+    /// <summary> New uploads stay out of community search, visible only to their owner. </summary>
+    [ObservableProperty] private bool _uploadAsPrivate;
+
+    /// <summary> Folder your own decks are downloaded into; null for the main menu. </summary>
+    private readonly ulong? _targetFolderID;
 
     [ObservableProperty] private bool _isSelectingUpdateDeck;
     [ObservableProperty] private FlashCardDeckMetadata? _targetCloudDeckToUpdate;
     [ObservableProperty] private FlashCardDeck? _selectedLocalDeckForUpdate;
-
-    private string _localSearchText = string.Empty;
-    public string LocalSearchText
-    {
-        get => _localSearchText;
-        set { SetProperty(ref _localSearchText, value); RefreshLocalDecks(); }
-    }
 
     private string _cloudSearchText = string.Empty;
     public string CloudSearchText
@@ -57,64 +45,32 @@ public partial class OnlineExportViewModel : ViewModelBase
         set { SetProperty(ref _cloudSearchText, value); RefreshCloudDecks(); }
     }
 
-    public ObservableCollection<FlashCardDeck> LocalDecks { get; } = [];
-    public ObservableCollection<FlashCardDeck> FilteredLocalDecks { get; } = [];
+    /// <summary> Local decks to upload, browsed by folder like the main menu. </summary>
+    public DeckFolderBrowser LocalBrowser { get; }
+
+    /// <summary> Local deck picker inside the "update a cloud deck" overlay. </summary>
+    public DeckFolderBrowser UpdateBrowser { get; }
 
     public ObservableCollection<FlashCardDeckMetadata> CloudDecks { get; } = [];
     public ObservableCollection<FlashCardDeckMetadata> FilteredCloudDecks { get; } = [];
 
-    /// <summary> Both panes offer the same orderings as every other list in the app. </summary>
-    public List<SortOption> LocalSortOptions { get; } = SearchUtility.CreateSortOptions();
-    public List<SortOption> CloudSortOptions { get; } = SearchUtility.CreateSortOptions();
-
-    [ObservableProperty] private SortOption? _selectedLocalSortOption;
-    partial void OnSelectedLocalSortOptionChanged(SortOption? value) => RefreshLocalDecks();
+    public List<SortOption> CloudSortOptions { get; } = SearchUtility.CreateCloudSortOptions();
 
     [ObservableProperty] private SortOption? _selectedCloudSortOption;
     partial void OnSelectedCloudSortOptionChanged(SortOption? value) => RefreshCloudDecks();
 
-    public OnlineExportViewModel()
+    /// <summary> Asks the user to confirm a destructive action; supplied by the window. </summary>
+    public Func<string, Task<bool>>? ConfirmAsync { get; set; }
+
+    public OnlineExportViewModel(ulong? targetFolderID = null)
     {
-        SelectedLocalSortOption = LocalSortOptions[0];
+        _targetFolderID = targetFolderID;
+        LocalBrowser = new DeckFolderBrowser("Upload", deck => UploadCommand.Execute(deck));
+        UpdateBrowser = new DeckFolderBrowser("Select", deck => SelectedLocalDeckForUpdate = deck);
         SelectedCloudSortOption = CloudSortOptions[0];
 
-        if (!string.IsNullOrEmpty(MetaDataManager.Data.SupabaseAccessToken) &&  
-            MetaDataManager.Data.SupabaseExpirationTime > DateTime.Now)
-        {
-            IsAuthenticated = true;
-            OnPropertyChanged(nameof(WelcomeText));
-
-            LocalDecks.Clear();
-            var localDecks = FlashCardRepository.GetAllDecks();
-            FolderTree.Load().ApplyPaths(localDecks, []);
-            foreach (var deck in localDecks)
-            {
-                LocalDecks.Add(deck);
-            }
-            RefreshLocalDecks();
-
-            _ = LoadCloudDecksAsync();
-        }
-    }
-
-    [RelayCommand]
-    private void ToggleMode()
-    {
-        IsLoginMode = !IsLoginMode;
-        StatusMessage = string.Empty;
-    }
-
-    [RelayCommand]
-    private void Logout()
-    {
-        IsAuthenticated = false;
-        AvailableDecks = [];
-        SelectedDeckToUpload = null;
-
-        MetaDataManager.Data.SetSupabase(null, null, null, DateTime.MinValue);
-        MetaDataManager.SaveMetaData();
-
-        StatusMessage = "You have been securely logged out.";
+        LocalBrowser.SetDecks(FlashCardRepository.GetAllDecks());
+        _ = LoadCloudDecksAsync();
     }
 
     [RelayCommand]
@@ -123,81 +79,23 @@ public partial class OnlineExportViewModel : ViewModelBase
         IsSelectingUpdateDeck = false;
     }
 
-    [RelayCommand()]
+    [RelayCommand]
     private void SetupUpdate(FlashCardDeckMetadata? deck)
     {
         if (deck == null) return;
         TargetCloudDeckToUpdate = deck;
         SelectedLocalDeckForUpdate = null;
+
+        // Fresh deck objects: the upload pane stamps its own relative "in ..." labels on its copies.
+        UpdateBrowser.NavigateTo(null);
+        UpdateBrowser.SetDecks(FlashCardRepository.GetAllDecks());
         IsSelectingUpdateDeck = true;
-    }
-
-    [RelayCommand]
-    private async Task SignUpAsync()
-    {
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(Username))
-        {
-            StatusMessage = "Username, email, and password are required to create an account.";
-            return;
-        }
-
-        StatusMessage = "Creating account...";
-
-        using var client = new SupabaseConnection();
-        var (success, message, _) = await client.SignUpAsync(Email, Password, Username);
-
-        StatusMessage = message;
-
-        if (success)
-        {
-            Password = string.Empty;
-        }
-    }
-
-    [RelayCommand]
-    private async Task LoginAsync()
-    {
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
-        {
-            StatusMessage = "Email and password are required.";
-            return;
-        }
-
-        StatusMessage = "Logging in...";
-
-        using var client = new SupabaseConnection();
-        var (success, message, token, userId, username, expiration) = await client.SignInAsync(Email, Password);
-
-        StatusMessage = message;
-
-        if (success && !string.IsNullOrEmpty(token))
-        {
-            MetaDataManager.Data.SetSupabase(token, userId, username, expiration);
-            Password = string.Empty;
-            MetaDataManager.SaveMetaData();
-
-            OnPropertyChanged(nameof(WelcomeText));
-
-            LocalDecks.Clear();
-            var localDecks = FlashCardRepository.GetAllDecks();
-            FolderTree.Load().ApplyPaths(localDecks, []);
-            foreach (var deck in localDecks)
-            {
-                LocalDecks.Add(deck);
-            }
-            RefreshLocalDecks();
-
-            await LoadCloudDecksAsync();
-
-            IsAuthenticated = true;
-            StatusMessage = "Successfully logged in. Ready to manage cloud data.";
-        }
     }
 
     [RelayCommand]
     private async Task UploadAsync(FlashCardDeck? deck)
     {
-        if (deck == null || string.IsNullOrEmpty(MetaDataManager.Data.SupabaseUserId)) return;
+        if (deck == null || AuthSession.UserId is not { Length: > 0 } userId) return;
 
         var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
         if (cards.Count == 0)
@@ -211,9 +109,9 @@ public partial class OnlineExportViewModel : ViewModelBase
 
         try
         {
-            string jsonPayload = DeckTransferManager.GenerateCloudExportJson(deck.ID);
-            using var client = new SupabaseConnection();
-            var (success, message) = await client.UploadCloudDeckAsync(MetaDataManager.Data.SupabaseUserId, deck.Name, cards.Count, jsonPayload);
+            var (jsonPayload, description) = BuildCloudPayload(deck);
+            using var client = await SupabaseConnection.CreateAsync();
+            var (success, message) = await client.UploadCloudDeckAsync(userId, deck.Name, description, cards.Count, jsonPayload, UploadAsPrivate);
 
             cts.Cancel();
             StatusMessage = message;
@@ -251,12 +149,13 @@ public partial class OnlineExportViewModel : ViewModelBase
 
         try
         {
-            string jsonPayload = DeckTransferManager.GenerateCloudExportJson(SelectedLocalDeckForUpdate.ID);
-            using var client = new SupabaseConnection();
+            var (jsonPayload, description) = BuildCloudPayload(SelectedLocalDeckForUpdate);
+            using var client = await SupabaseConnection.CreateAsync();
 
             var (success, message) = await client.UpdateCloudDeckAsync(
                 TargetCloudDeckToUpdate.StoragePath,
                 SelectedLocalDeckForUpdate.Name,
+                description,
                 cards.Count,
                 jsonPayload);
 
@@ -272,16 +171,82 @@ public partial class OnlineExportViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task ToggleVisibilityAsync(FlashCardDeckMetadata? deck)
+    {
+        if (deck?.StoragePath == null || AuthSession.UserId is not { Length: > 0 } userId) return;
+
+        bool makePrivate = !deck.IsPrivate;
+        if (makePrivate && ConfirmAsync is not null &&
+            !await ConfirmAsync($"Make \"{deck.Title}\" private? It will disappear from community search. People who already downloaded it keep their copies."))
+        {
+            return;
+        }
+
+        using var cts = new CancellationTokenSource();
+        _ = AnimateStatusAsync(makePrivate ? $"Making '{deck.Title}' private" : $"Making '{deck.Title}' public", cts.Token);
+
+        try
+        {
+            using var client = await SupabaseConnection.CreateAsync();
+            var (success, message) = await client.SetCloudDeckVisibilityAsync(userId, deck.StoragePath, makePrivate);
+
+            cts.Cancel();
+            StatusMessage = message;
+            if (success) await LoadCloudDecksAsync();
+        }
+        catch (Exception ex)
+        {
+            cts.Cancel();
+            StatusMessage = $"Change failed: {ex.Message}";
+        }
+    }
+
+    /// <summary> Brings one of your own cloud decks (public or private) onto this device. </summary>
+    [RelayCommand]
+    private async Task DownloadAsync(FlashCardDeckMetadata? deck)
+    {
+        if (deck?.StoragePath == null) return;
+
+        using var cts = new CancellationTokenSource();
+        _ = AnimateStatusAsync($"Downloading '{deck.Title}'", cts.Token);
+
+        try
+        {
+            using var client = await SupabaseConnection.CreateAsync();
+            string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
+            DeckTransferManager.TryImportCloudDeck(json, _targetFolderID, IncludeFolderInfo);
+
+            // The new copy belongs in the upload pane too.
+            LocalBrowser.SetDecks(FlashCardRepository.GetAllDecks());
+
+            cts.Cancel();
+            StatusMessage = $"Downloaded '{deck.Title}' to this device.";
+        }
+        catch (Exception ex)
+        {
+            cts.Cancel();
+            StatusMessage = $"Download failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     private async Task DeleteAsync(FlashCardDeckMetadata? deck)
     {
         if (deck?.StoragePath == null) return;
+
+        string downloads = deck.DownloadCount > 0 ? $" Its {deck.DownloadCountText} will be lost too." : "";
+        if (ConfirmAsync is not null &&
+            !await ConfirmAsync($"Delete \"{deck.Title}\" from the cloud? Anyone searching for it will no longer find it.{downloads} Your local copy is not affected."))
+        {
+            return;
+        }
 
         using var cts = new CancellationTokenSource();
         _ = AnimateStatusAsync($"Deleting '{deck.Title}'", cts.Token);
 
         try
         {
-            using var client = new SupabaseConnection();
+            using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath);
 
             cts.Cancel();
@@ -295,12 +260,11 @@ public partial class OnlineExportViewModel : ViewModelBase
         }
     }
 
-    private void RefreshLocalDecks()
+    /// <summary> The cloud JSON plus its description: the folder path when included, otherwise empty. </summary>
+    private (string Json, string Description) BuildCloudPayload(FlashCardDeck deck)
     {
-        FilteredLocalDecks.Clear();
-
-        var fDecks = LocalDecks.SearchAndSort(LocalSearchText, SelectedLocalSortOption?.Mode ?? SortMode.Relevance);
-        foreach (var d in fDecks) FilteredLocalDecks.Add(d);
+        List<string> folderPath = IncludeFolderInfo ? DeckTransferManager.GetFolderPathNames(deck.FolderID) : [];
+        return (DeckTransferManager.GenerateCloudExportJson(deck.ID, folderPath), string.Join(FolderTree.PathSeparator, folderPath));
     }
 
     private void RefreshCloudDecks()
@@ -313,11 +277,12 @@ public partial class OnlineExportViewModel : ViewModelBase
 
     private async Task LoadCloudDecksAsync()
     {
-        if (string.IsNullOrEmpty(MetaDataManager.Data.SupabaseUserId)) return;
+        if (AuthSession.UserId is not { Length: > 0 } userId) return;
+
+        using var client = await SupabaseConnection.CreateAsync();
+        var remoteDecks = await client.GetUserCloudDecksAsync(userId);
 
         CloudDecks.Clear();
-        using var client = new SupabaseConnection();
-        var remoteDecks = await client.GetUserCloudDecksAsync(MetaDataManager.Data.SupabaseUserId);
         foreach (var deck in remoteDecks) CloudDecks.Add(deck);
 
         RefreshCloudDecks();

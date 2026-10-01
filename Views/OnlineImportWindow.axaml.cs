@@ -11,6 +11,7 @@ public partial class OnlineImportWindow : Window
     public OnlineImportWindow(ulong? targetFolderID)
     {
         InitializeComponent();
-        DataContext ??= new OnlineImportViewModel(targetFolderID);
+        var vm = new OnlineImportViewModel(targetFolderID);
+        DataContext = vm;
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using ReviFlash.Data.Local;
@@ -12,91 +11,33 @@ namespace ReviFlash.Data.Local;
 
 public static class DeckTransferManager
 {
-    public static void TryCreateDeckExport(string destinationFilePath, IReadOnlyCollection<ulong> deckIds)
-    {
-        if (deckIds.Count == 0) throw new ArgumentException("At least one deck must be selected for export.");
-
-        var exportData = BuildExportPackage(deckIds.Distinct().ToList());
-        if (exportData.Decks.Count == 0) throw new InvalidOperationException("None of the selected decks could be exported.");
-
-        var destinationDirectory = Path.GetDirectoryName(destinationFilePath);
-        if (!string.IsNullOrWhiteSpace(destinationDirectory)) Directory.CreateDirectory(destinationDirectory);
-
-        using var zip = new FileStream(destinationFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-        using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
-        var entry = archive.CreateEntry("flashcards.json");
-        using var entryStream = entry.Open();
-        JsonSerializer.Serialize(entryStream, exportData, new JsonSerializerOptions { WriteIndented = true });
-    }
-
-    /// <param name="targetFolderID"> Folder the imported sets are filed into; null for the main menu. </param>
-    public static int TryImportDeckExport(string zipFilePath, ulong? targetFolderID = null)
-    {
-        if (!File.Exists(zipFilePath)) throw new FileNotFoundException("The specified export file does not exist.");
-
-        using var zip = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
-        using var archive = new ZipArchive(zip, ZipArchiveMode.Read);
-
-        var exportEntry = archive.GetEntry("flashcards.json") ?? throw new InvalidDataException("The selected file is not a valid ReviFlash flashcard export.");
-        using var entryStream = exportEntry.Open();
-        var package = JsonSerializer.Deserialize<FlashCardExportPackage>(entryStream)
-            ?? throw new InvalidDataException("The export file could not be read.");
-
-        if (package.Decks.Count == 0) throw new InvalidDataException("The export file does not contain any decks.");
-
-        DatabaseManager.InitDatabase();
-        using var connection = DatabaseManager.GetConnection();
-        connection.Open();
-        using var transaction = connection.BeginTransaction();
-
-        int importedDeckCount = 0;
-        foreach (var deck in package.Decks)
-        {
-            long deckId = DeckRepository.InsertDeck(connection, transaction, deck.Name, targetFolderID);
-
-            foreach (var card in deck.Cards)
-            {
-                long cardId = DeckRepository.InsertCard(connection, transaction, deckId, card);
-
-                if (card.Options is not null)
-                {
-                    foreach (var (index, option) in card.Options.Select((value, index) => (index, value)))
-                        DeckRepository.InsertMultiChoiceOption(connection, transaction, cardId, index, option);
-                }
-
-                if (card.Pairs is not null)
-                {
-                    foreach (var (index, pair) in card.Pairs.Select((value, index) => (index, value)))
-                        DeckRepository.InsertMatchPair(connection, transaction, cardId, index, pair);
-                }
-            }
-
-            foreach (var stat in deck.Stats) DeckRepository.InsertDeckStat(connection, transaction, deckId, stat);
-            importedDeckCount++;
-        }
-
-        transaction.Commit();
-        return importedDeckCount;
-    }
-
     // --- Online Generation ---
 
-    public static string GenerateCloudExportJson(ulong deckId)
+    /// <summary> Names of the folder and its ancestors, outermost first. Empty for the main menu. </summary>
+    public static List<string> GetFolderPathNames(ulong? folderID) =>
+        FolderTree.Load().AncestorChain(folderID).Select(folder => folder.Name).ToList();
+
+    /// <param name="folderPath"> Folder names (outermost first) to travel with the upload; empty to leave them out. </param>
+    public static string GenerateCloudExportJson(ulong deckId, IReadOnlyList<string> folderPath)
     {
-        var exportData = BuildExportPackage([deckId]);
-        var deckExport = exportData.Decks.FirstOrDefault() ?? throw new InvalidOperationException("Failed to generate export package.");
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var deckName = DeckRepository.GetDeckName(connection, deckId) ?? throw new InvalidOperationException("Failed to generate export package.");
         var payload = new
         {
             ExportVersion = 1,
-            DeckName = deckExport.Name,
-            Cards = deckExport.Cards
+            DeckName = deckName,
+            FolderPath = folderPath,
+            Cards = DeckRepository.LoadDeckCards(connection, deckId)
         };
 
         return JsonSerializer.Serialize(payload, TextUtility.Indented);
     }
 
     /// <param name="targetFolderID"> Folder the downloaded set is filed into; null for the main menu. </param>
-    public static void TryImportCloudDeck(string jsonPayload, ulong? targetFolderID = null)
+    /// <param name="recreateFolders"> Rebuild the uploader's folder path beneath <paramref name="targetFolderID"/>. </param>
+    public static void TryImportCloudDeck(string jsonPayload, ulong? targetFolderID = null, bool recreateFolders = false)
     {
         using var document = JsonDocument.Parse(jsonPayload);
         var root = document.RootElement;
@@ -111,6 +52,17 @@ public static class DeckTransferManager
             throw new InvalidDataException("The downloaded deck does not contain any readable cards.");
 
         DatabaseManager.InitDatabase();
+
+        // Uploads from before 1.1 carry no FolderPath and land directly in the target folder.
+        if (recreateFolders && root.TryGetProperty("FolderPath", out var pathProp) && pathProp.ValueKind == JsonValueKind.Array)
+        {
+            var folderNames = pathProp.EnumerateArray()
+                .Where(name => name.ValueKind == JsonValueKind.String)
+                .Select(name => name.GetString()!.Trim())
+                .Where(name => name.Length > 0);
+            targetFolderID = EnsureFolderPath(targetFolderID, folderNames);
+        }
+
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction();
@@ -135,21 +87,22 @@ public static class DeckTransferManager
 
     // --- Helper ---
 
-    private static FlashCardExportPackage BuildExportPackage(IReadOnlyCollection<ulong> deckIds)
+    /// <summary> Walks down from <paramref name="parentFolderID"/>, reusing same-named folders and creating the rest. </summary>
+    private static ulong? EnsureFolderPath(ulong? parentFolderID, IEnumerable<string> folderNames)
     {
-        List<DeckExportEntry> decks = [];
+        var tree = FolderTree.Load();
+        bool creating = false;
 
-        using var connection = DatabaseManager.GetConnection();
-        connection.Open();
-
-        foreach (var deckId in deckIds)
+        foreach (var name in folderNames)
         {
-            var deckName = DeckRepository.GetDeckName(connection, deckId);
-            if (deckName is null) continue;
-            decks.Add(new DeckExportEntry(deckName, DeckRepository.LoadDeckCards(connection, deckId), []));
+            var existing = creating ? null : tree.ChildrenOf(parentFolderID)
+                .FirstOrDefault(folder => string.Equals(folder.Name, name, StringComparison.OrdinalIgnoreCase));
+
+            if (existing is null) creating = true;
+            parentFolderID = existing?.ID ?? FolderRepository.CreateFolder(name, parentFolderID).ID;
         }
 
-        return new FlashCardExportPackage(decks);
+        return parentFolderID;
     }
 
     public static object BuildExportAnswerPayload(CardExportEntry card)

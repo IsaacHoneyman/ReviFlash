@@ -38,7 +38,7 @@ public static class MathDelimiterHelper
             {
                 var textPart = input[currentIndex..match.Index];
                 if (textPart.Length > 0)
-                    segments.Add(new MixedMathSegment(textPart, isMath: false));
+                    segments.Add(new MixedMathSegment(Unescape(textPart), isMath: false));
             }
 
             var mathPart = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
@@ -50,14 +50,16 @@ public static class MathDelimiterHelper
         {
             var tailText = input[currentIndex..];
             if (tailText.Length > 0)
-                segments.Add(new MixedMathSegment(tailText, isMath: false));
+                segments.Add(new MixedMathSegment(Unescape(tailText), isMath: false));
         }
 
         if (segments.Count == 0)
-            segments.Add(new MixedMathSegment(input, isMath: false));
+            segments.Add(new MixedMathSegment(Unescape(input), isMath: false));
 
         return segments;
     }
+
+    private static string Unescape(string text) => text.Replace(@"\$", "$");
 }
 
 public sealed class MixedMathSegment(string content, bool isMath)

@@ -3,155 +3,128 @@
         xmlns:vm="using:ReviFlash.ViewModels"
         xmlns:models="using:ReviFlash.Models"
         xmlns:onlineData="using:ReviFlash.Data.Online"
+        xmlns:views="using:ReviFlash.Views"
         x:Class="ReviFlash.Views.OnlineExportWindow"
         x:DataType="vm:OnlineExportViewModel"
         Title="Cloud Manager"
-        Width="{Binding WindowWidth}" Height="{Binding WindowHeight}"
+        Width="1100" Height="720" MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource AppBackground}">
 
   <Grid Margin="32">
-    
-    <!-- ========================================== -->
-    <!-- STATE 1: UNAUTHENTICATED (LOGIN/SIGNUP)    -->
-    <!-- ========================================== -->
-    <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="350" 
-                IsVisible="{Binding IsNotAuthenticated}">
-      
-      <Border Background="#33FFA500" BorderBrush="Orange" BorderThickness="1" CornerRadius="4" Padding="8">
-        <TextBlock Text="WORK IN PROGRESS: Online sync features are currently in active development." 
-                   Foreground="Orange" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
-      </Border>
 
-      <TextBlock Text="{Binding HeaderText}" 
-                 Foreground="{DynamicResource TextPrimary}" 
-                 FontSize="28" FontWeight="Bold" 
-                 HorizontalAlignment="Center" Margin="0,8,0,8"/>
+    <Grid RowDefinitions="Auto, *, Auto">
 
-      <TextBox Text="{Binding Username}" Watermark="Choose a Username" IsVisible="{Binding IsSignUpMode}" />
-      <TextBox Text="{Binding Email}" Watermark="Email address" />
-      <TextBox Text="{Binding Password}" Watermark="Password" PasswordChar="•" />
-
-      <Button Content="Log In" Command="{Binding LoginCommand}" IsVisible="{Binding IsLoginMode}"
-              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="accent" Padding="12"/>
-              
-      <Button Content="Create Account" Command="{Binding SignUpCommand}" IsVisible="{Binding IsSignUpMode}"
-              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="accent" Padding="12"/>
-
-      <Button Content="{Binding ToggleModeText}" Command="{Binding ToggleModeCommand}"
-              Background="Transparent" Foreground="DodgerBlue" HorizontalAlignment="Center"
-              BorderThickness="0" Cursor="Hand" />
-
-      <TextBlock Text="{Binding StatusMessage}" Foreground="Orange" TextWrapping="Wrap" HorizontalAlignment="Center" />
-                 
-      <TextBlock Text="Authentication is required to modify or delete uploaded flashcard decks. All credentials are cryptographically secured." 
-                 Foreground="{DynamicResource TextSecondary}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0,16,0,0"/>
-    </StackPanel>
-
-    <!-- ========================================== -->
-    <!-- STATE 2: AUTHENTICATED (CLOUD DASHBOARD)   -->
-    <!-- ========================================== -->
-    <Grid RowDefinitions="Auto, *" IsVisible="{Binding IsAuthenticated}">
-        
-        <!-- Header -->
+        <!-- Header: title on the left, account on the right. -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,24">
             <StackPanel Grid.Column="0" Spacing="4">
-                <TextBlock Text="{Binding WelcomeText}" Foreground="{DynamicResource TextPrimary}" FontSize="32" FontWeight="Bold"/>
-                <TextBlock Text="Manage your cloud backups and synchronize your local flashcards." Foreground="{DynamicResource TextSecondary}" FontSize="16"/>
+                <TextBlock Text="Cloud Manager" Foreground="{DynamicResource TextPrimary}" FontSize="32" FontWeight="Bold"/>
+                <TextBlock Text="Upload your sets, and manage the ones you've shared or kept private." Foreground="{DynamicResource TextSecondary}" FontSize="16"/>
             </StackPanel>
-            
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <TextBlock Text="{Binding StatusMessage}" Foreground="Orange" VerticalAlignment="Center" MaxWidth="300" TextWrapping="Wrap"/>
-                <Button Content="Log Out" Command="{Binding LogoutCommand}"
-                        Background="#90FF4444" Foreground="{DynamicResource IconForeground}"
-                        CornerRadius="8" Padding="16,10" FontWeight="SemiBold" Cursor="Hand"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Text="{Binding AccountText}" Foreground="{DynamicResource TextSecondary}" FontSize="14" VerticalAlignment="Center"
+                           ToolTip.Tip="Sign out from Settings."/>
             </StackPanel>
         </Grid>
 
-        <!-- Dual Pane Workspace -->
+        <!-- Dual pane workspace. Both panes share one layout (title, then search, then list)
+             so the two search bars line up. -->
         <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
-            
+
             <!-- LEFT PANE: LOCAL DECKS -->
             <Border Grid.Column="0" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" CornerRadius="20" Padding="20">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Local Decks (On this device)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0" Text="{Binding LocalSearchText, Mode=TwoWay}" Watermark="Search local decks..."
-                                     CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding LocalSortOptions}" SelectedItem="{Binding SelectedLocalSortOption}"
-                                      CornerRadius="8" Width="180" Background="{DynamicResource AppBackground}" />
-                        </Grid>
-                    </StackPanel>
-
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
-                        <ItemsControl ItemsSource="{Binding FilteredLocalDecks}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:FlashCardDeck">
-                                    <Border Background="#14000000" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,10">
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
-                                                <TextBlock Text="{Binding CardCount, StringFormat='{} {0} cards'}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                                <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="11"
-                                                           IsVisible="{Binding HasFolderPath}" TextTrimming="CharacterEllipsis"
-                                                           Foreground="{DynamicResource TextSecondary}" />
-                                            </StackPanel>
-
-                                            <Button Grid.Column="1" Content="Upload" 
-                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).UploadCommand}" CommandParameter="{Binding}"
-                                                    Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                                                    CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                    <TextBlock Text="On this device" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <views:DeckFolderBrowserView Grid.Row="1" DataContext="{Binding LocalBrowser}" />
                 </Grid>
             </Border>
 
             <!-- RIGHT PANE: CLOUD DECKS -->
             <Border Grid.Column="1" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" CornerRadius="20" Padding="20">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Cloud Decks (Backed up securely)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="In the cloud" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+
+                    <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="10">
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0" Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search cloud decks..."
+                            <TextBox Grid.Column="0" Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search your cloud decks..."
                                      CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
                             <ComboBox Grid.Column="1" ItemsSource="{Binding CloudSortOptions}" SelectedItem="{Binding SelectedCloudSortOption}"
                                       CornerRadius="8" Width="180" Background="{DynamicResource AppBackground}" />
                         </Grid>
-                    </StackPanel>
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
-                        <ItemsControl ItemsSource="{Binding FilteredCloudDecks}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="onlineData:FlashCardDeckMetadata">
-                                    <Border Background="#14000000" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,10">
-                                        <Grid ColumnDefinitions="*, Auto, Auto">
-                                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
-                                                <TextBlock Text="{Binding CardCount, StringFormat='{} {0} cards'}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                            </StackPanel>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
+                            <ItemsControl ItemsSource="{Binding FilteredCloudDecks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="onlineData:FlashCardDeckMetadata">
+                                        <Border Background="#14000000" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,10">
+                                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <Border IsVisible="{Binding IsPrivate}" Background="{DynamicResource StatTileBackground}" CornerRadius="6" Padding="6,1"
+                                                                ToolTip.Tip="Only you can see this deck. It isn't listed in community search.">
+                                                            <TextBlock Text="Private" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding DownloadCountText}" IsVisible="{Binding !IsPrivate}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Description, StringFormat='in {0}'}" FontSize="11"
+                                                               IsVisible="{Binding HasDescription}" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextSecondary}" />
+                                                </StackPanel>
 
-                                            <Button Grid.Column="1" Content="Update" Margin="0,0,8,0"
-                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).SetupUpdateCommand}" CommandParameter="{Binding}"
-                                                    Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
-                                                    CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
-
-                                            <Button Grid.Column="2" Content="Delete" 
-                                                    Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).DeleteCommand}" CommandParameter="{Binding}"
-                                                    Background="Transparent" Foreground="{DynamicResource DangerForeground}"
-                                                    CornerRadius="8" Padding="16,8" FontWeight="SemiBold" Cursor="Hand" />
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                                                <!-- Same compact icon buttons as the set cards on the main menu. -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <Button Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).DownloadCommand}" CommandParameter="{Binding}"
+                                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                                            Padding="10,6" Height="30" MinHeight="30" VerticalContentAlignment="Center"
+                                                            Cursor="Hand" ToolTip.Tip="Download to this device">
+                                                        <Path Classes="icon" Data="{StaticResource IconDownload}" />
+                                                    </Button>
+                                                    <Button Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).SetupUpdateCommand}" CommandParameter="{Binding}"
+                                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                                            Padding="10,6" Height="30" MinHeight="30" VerticalContentAlignment="Center"
+                                                            Cursor="Hand" ToolTip.Tip="Update from a deck on this device">
+                                                        <Path Classes="icon" Data="{StaticResource IconUpload}" />
+                                                    </Button>
+                                                    <Button Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).ToggleVisibilityCommand}" CommandParameter="{Binding}"
+                                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                                            Padding="10,6" Height="30" MinHeight="30" VerticalContentAlignment="Center"
+                                                            Cursor="Hand" ToolTip.Tip="{Binding VisibilityToggleText}">
+                                                        <Panel>
+                                                            <Path Classes="icon" Data="{StaticResource IconLock}" IsVisible="{Binding !IsPrivate}" />
+                                                            <Path Classes="icon" Data="{StaticResource IconGlobe}" IsVisible="{Binding IsPrivate}" />
+                                                        </Panel>
+                                                    </Button>
+                                                    <Button Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).DeleteCommand}" CommandParameter="{Binding}"
+                                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                                            Padding="10,6" Height="30" MinHeight="30" VerticalContentAlignment="Center"
+                                                            Cursor="Hand" ToolTip.Tip="Delete from the cloud">
+                                                        <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
                 </Grid>
             </Border>
+        </Grid>
+
+        <!-- Footer: options on the left, status on the right. -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="20" Margin="0,16,0,0">
+            <CheckBox Grid.Column="0" IsChecked="{Binding IncludeFolderInfo}" Content="Include folder information"
+                      Foreground="{DynamicResource TextSecondary}" FontSize="13"
+                      ToolTip.Tip="Uploads carry the deck's folder path, and downloads rebuild it." />
+            <CheckBox Grid.Column="1" IsChecked="{Binding UploadAsPrivate}" Content="Upload as private"
+                      Foreground="{DynamicResource TextSecondary}" FontSize="13"
+                      ToolTip.Tip="Private decks don't appear in community search. Use them to move decks between your own devices." />
+            <TextBlock Grid.Column="2" Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="16,0,0,0" />
         </Grid>
     </Grid>
     <!-- ========================================== -->
@@ -162,27 +135,23 @@
                 BorderBrush="{DynamicResource CardBorder}"
                 BorderThickness="1.5" CornerRadius="20" Padding="32"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                Width="450">
-            <StackPanel Spacing="16">
-                
-                <TextBlock Text="Select Local Deck" FontSize="24" FontWeight="Bold" 
+                Width="600" Height="560">
+            <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" RowSpacing="12">
+
+                <TextBlock Grid.Row="0" Text="Select Local Deck" FontSize="24" FontWeight="Bold"
                            Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
-                           
-                <TextBlock Text="Choose which local flashcard set you want to push to the cloud to overwrite this backup."
-                           Foreground="{DynamicResource TextSecondary}" FontSize="14" 
-                           TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,8" />
-                           
-                <ComboBox ItemsSource="{Binding LocalDecks}"
-                          SelectedItem="{Binding SelectedLocalDeckForUpdate}"
-                          HorizontalAlignment="Stretch" CornerRadius="8" Padding="12,10">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                
-                <Grid ColumnDefinitions="*, *" ColumnSpacing="16" Margin="0,16,0,0">
+
+                <TextBlock Grid.Row="1" Text="Choose which local flashcard set you want to push to the cloud to overwrite this backup."
+                           Foreground="{DynamicResource TextSecondary}" FontSize="14"
+                           TextWrapping="Wrap" TextAlignment="Center" />
+
+                <views:DeckFolderBrowserView Grid.Row="2" DataContext="{Binding UpdateBrowser}" />
+
+                <TextBlock Grid.Row="3" Text="{Binding SelectedLocalDeckForUpdate.Name, StringFormat='Selected: {0}', FallbackValue='No deck selected'}"
+                           Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+                <Grid Grid.Row="4" ColumnDefinitions="*, *" ColumnSpacing="16">
                     <Button Grid.Column="0" Content="Cancel" Command="{Binding CancelUpdateCommand}"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                             Background="#70FFFFFF" Foreground="{DynamicResource TextPrimary}" 
@@ -194,7 +163,7 @@
                             CornerRadius="8" Padding="12,10" FontWeight="Bold" Cursor="Hand" />
                 </Grid>
                 
-            </StackPanel>
+            </Grid>
         </Border>
     </Grid>
   </Grid>

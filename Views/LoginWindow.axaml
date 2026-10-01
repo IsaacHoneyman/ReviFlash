@@ -1,0 +1,153 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.LoginWindow"
+    x:DataType="vm:LoginViewModel"
+    Title="ReviFlash Online"
+    Width="440" SizeToContent="Height"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource AppBackground}">
+
+    <Window.Styles>
+        <!-- Field captions. -->
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+
+        <!-- The reset code is typed big and spaced out; its watermark stays ordinary field text. -->
+        <Style Selector="TextBox.code">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="LetterSpacing" Value="4" />
+        </Style>
+        <Style Selector="TextBox.code /template/ TextBlock#PART_Watermark">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="LetterSpacing" Value="0" />
+        </Style>
+
+        <!-- Segmented Sign in / Create account switch. -->
+        <Style Selector="Button.tab">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="0,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.tab.selected">
+            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+
+        <!-- Text-only buttons. -->
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource GradientStart}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+
+        <Style Selector="TextBlock.status">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+        <Style Selector="TextBlock.status.error">
+            <Setter Property="Foreground" Value="{DynamicResource DangerForeground}" />
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="40,36,40,32" Spacing="20">
+
+        <!-- Heading -->
+        <StackPanel Spacing="6">
+            <TextBlock Text="{Binding Title}" FontSize="26" FontWeight="Bold"
+                Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
+            <TextBlock Text="{Binding Subtitle}" FontSize="14"
+                Foreground="{DynamicResource TextSecondary}"
+                TextWrapping="Wrap" TextAlignment="Center" />
+        </StackPanel>
+
+        <!-- Sign in / Create account -->
+        <Border IsVisible="{Binding ShowTabs}"
+            Background="{DynamicResource CardBackground}"
+            BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+            CornerRadius="10" Padding="4">
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="4">
+                <Button Grid.Column="0" Classes="tab" Classes.selected="{Binding IsSignIn}"
+                    Content="Sign In" Command="{Binding ShowSignInCommand}" />
+                <Button Grid.Column="1" Classes="tab" Classes.selected="{Binding IsSignUp}"
+                    Content="Create Account" Command="{Binding ShowSignUpCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Fields -->
+        <StackPanel Spacing="14">
+            <StackPanel Spacing="6" IsVisible="{Binding IsSignUp}">
+                <TextBlock Classes="label" Text="Username" />
+                <TextBox Classes="field" Text="{Binding Username}" Watermark="Shown on the sets you share" MaxLength="24" />
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding ShowEmail}">
+                <TextBlock Classes="label" Text="Email" />
+                <TextBox Classes="field" Text="{Binding Email}" Watermark="you@example.com" />
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding IsResetting}">
+                <TextBlock Classes="label" Text="Reset code" />
+                <TextBox Classes="field code" Text="{Binding ResetCode}" Watermark="From the email we sent you"
+                    MaxLength="10" />
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding ShowPassword}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Grid.Column="0" Classes="label" Text="{Binding PasswordLabel}" />
+                    <Button Grid.Column="1" Classes="link" Content="Forgot password?"
+                        IsVisible="{Binding IsSignIn}" Command="{Binding ShowForgotPasswordCommand}" />
+                </Grid>
+                <TextBox Classes="field revealPasswordButton" Text="{Binding Password}" PasswordChar="•" />
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding ShowConfirmPassword}">
+                <TextBlock Classes="label" Text="Confirm password" />
+                <TextBox Classes="field revealPasswordButton" Text="{Binding ConfirmPassword}" PasswordChar="•" />
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock Classes="status" Classes.error="{Binding IsStatusError}"
+            Text="{Binding StatusMessage}" IsVisible="{Binding HasStatus}"
+            FontSize="13" TextWrapping="Wrap" TextAlignment="Center" />
+
+        <!-- Enter submits whichever form is showing. -->
+        <Button Content="{Binding PrimaryActionText}" Command="{Binding SubmitCommand}" IsDefault="True"
+            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+            Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
+            CornerRadius="8" Padding="12" FontSize="15" FontWeight="Bold" Cursor="Hand" />
+
+        <!-- Recovery footer -->
+        <StackPanel IsVisible="{Binding IsRecovering}" Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
+            <Button Classes="link" Content="Back to sign in" Command="{Binding ShowSignInCommand}" />
+            <Button Classes="link" Content="Resend code" IsVisible="{Binding IsResetting}" Command="{Binding ResendCodeCommand}" />
+        </StackPanel>
+
+        <TextBlock Text="Your local sets stay on this device. You only need an account to share or download sets."
+            FontSize="12" Foreground="{DynamicResource TextSecondary}" Opacity="0.8"
+            TextWrapping="Wrap" TextAlignment="Center" IsVisible="{Binding ShowTabs}" />
+    </StackPanel>
+</Window>

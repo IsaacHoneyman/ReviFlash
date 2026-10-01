@@ -8,6 +8,7 @@ using ReviFlash.Models;
 using ReviFlash.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
 
@@ -428,90 +429,23 @@ public partial class DashboardView : UserControl
         StartReviewSession(vm.GetSelectedDecks());
     }
 
-    private async void ExportFlashCards_Click(object sender, RoutedEventArgs e)
+    /// <summary> True once there is a ReviFlash Online session, asking the user to sign in if needed. </summary>
+    private async Task<bool> EnsureSignedInAsync()
     {
-        if (DataContext is not DashboardViewModel vm)
-        {
-            return;
-        }
-
-        if (!vm.IsExportSelectionMode)
-        {
-            vm.BeginExportSelection();
-            return;
-        }
-
-        if (!vm.HasSelectedDecks)
-        {
-            vm.CancelSelectionMode();
-            return;
-        }
-
-        var saveFile = await TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Export selected flashcard sets",
-            SuggestedFileName = $"ReviFlashSets_{DateTime.Now:yyyyMMdd_HHmmss}.zip",
-            DefaultExtension = "zip",
-            FileTypeChoices =
-            [
-                new FilePickerFileType("ReviFlash Export") { Patterns = ["*.zip"] }
-            ]
-        });
-
-        if (saveFile is null)
-        {
-            return;
-        }
-
-        try
-        {
-            DeckTransferManager.TryCreateDeckExport(saveFile.Path.LocalPath, vm.GetSelectedDecks().Select(deck => deck.ID).ToList());
-            vm.CancelSelectionMode();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Export failed", ex);
-        }
+        if (await AuthSession.TryRestoreAsync()) return true;
+        return await new LoginWindow().ShowDialog<bool>(OwnerWindow);
     }
 
-    private async void ImportFlashCards_Click(object sender, RoutedEventArgs e)
+    private async void SignIn_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not DashboardViewModel vm)
-        {
-            return;
-        }
-
-        var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Import flashcard sets",
-            AllowMultiple = false,
-            FileTypeFilter =
-            [
-                new FilePickerFileType("ReviFlash Export") { Patterns = ["*.zip"] }
-            ]
-        });
-
-        if (files.Count == 0)
-        {
-            return;
-        }
-
-        try
-        {
-            DeckTransferManager.TryImportDeckExport(files[0].Path.LocalPath, vm.CurrentFolderID);
-            vm.CancelSelectionMode();
-            vm.ReloadLibrary();
-            vm.RefreshStats();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Import failed", ex);
-        }
+        // The account text updates itself from the stored session; nothing else to do.
+        await EnsureSignedInAsync();
     }
 
     private async void OpenOnlineImport_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
+        if (!await EnsureSignedInAsync()) return;
 
         var window = new OnlineImportWindow(vm.CurrentFolderID);
         await window.ShowDialog(OwnerWindow);
@@ -522,8 +456,15 @@ public partial class DashboardView : UserControl
 
     private async void OpenOnlineExport_Click(object sender, RoutedEventArgs e)
     {
-        var window = new OnlineExportWindow();
+        if (DataContext is not DashboardViewModel vm) return;
+        if (!await EnsureSignedInAsync()) return;
+
+        // Your own decks can be downloaded from here, into the folder you're in.
+        var window = new OnlineExportWindow(vm.CurrentFolderID);
         await window.ShowDialog(OwnerWindow);
+
+        vm.ReloadLibrary();
+        vm.RefreshStats();
     }
 
     private void StartReviewSession(FlashCardDeck deck)

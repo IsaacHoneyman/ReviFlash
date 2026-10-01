@@ -1,0 +1,29 @@
+Folders system now supported in online imports and exports
+Folder system now used for picking sets in the group editor, uploads, and deleting deck stats
+Online Import and Online Export are now Import and Export, shown as download and upload icons on the main menu
+Private decks: upload a deck as private, or switch any of your decks between public and private, to keep it out of community search
+Your own decks, public or private, can now be downloaded from Export, so private decks are the way to move sets between your devices
+Your cloud decks in Export now have icon buttons to download, update, make private or public, and delete, like the sets on the main menu, and community decks in Import have a download icon
+File-based import and export have been removed, use private decks to move sets and Settings backups to keep them safe
+One sign-in for all online features, and you now stay signed in until you sign out instead of for only an hour
+The main menu shows "Welcome, {username}", or "Guest" with a Sign In button, so you can always tell if you're signed in
+New Account section at the top of Settings to sign in or out and change your username, and Import and Export show who you're signed in as
+Deleting one deck's stats now has its own window, browsed by folder, to keep Settings tidy
+Forgotten passwords can now be reset with a code sent by email
+Community decks now show who uploaded them, and you can search by uploader name
+Download counts on community decks, with a new "Most downloaded" sort
+Community search now shows the most downloaded decks first
+Deleting a deck from the cloud now asks for confirmation
+Restoring a backup now asks for confirmation, as it replaces your whole library
+Backups no longer contain your sign-in details, and restoring one keeps you signed in
+Backups are now checked before restoring, so a damaged backup can't overwrite your library
+Typing \$ in a text box now shows a $ instead of starting LaTeX
+The ✕, ✓, + and ↔ symbols in the card editor and review screen are now proper icons, so they look the same on every system
+Updates accepted at startup now show their download progress, like updating from Settings
+A failed update now says so instead of appearing stuck
+Fixed the Danger Zone buttons in Settings being hard or impossible to read on many themes
+Fixed restoring a backup not bringing back its settings
+Fixed restoring a backup made without stats failing if you had stats for a deck not in the backup
+Fixed public search failing after being signed in for a long time
+Fixed signing out not fully clearing your account details
+Fixed re-sorting import results losing the original search

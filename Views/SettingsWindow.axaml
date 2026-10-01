@@ -17,7 +17,49 @@
             <TextBlock Text="Settings" FontSize="28" FontWeight="Bold"
                 Foreground="{DynamicResource TextPrimary}" />
 
-            <!-- Application Theme moved into Appearance section -->
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Account"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
+
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                        <TextBlock Grid.Column="0" Text="{Binding AccountText}"
+                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <Button Grid.Column="1" Content="Sign Out" Click="SignOut_Click"
+                            IsVisible="{Binding IsSignedIn}"
+                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
+                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+                        <Button Grid.Column="1" Content="Sign In" Click="SignIn_Click"
+                            IsVisible="{Binding !IsSignedIn}"
+                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
+                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+                    </Grid>
+
+                    <Button Content="Change Username" Click="ChangeUsername_Click"
+                        IsVisible="{Binding IsSignedIn}"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8" Padding="12,8" FontWeight="SemiBold"
+                        Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                        Cursor="Hand" />
+
+                    <TextBlock Text="Sign in to share decks, keep private copies, and download community decks."
+                        IsVisible="{Binding !IsSignedIn}" FontSize="12" TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+
+                    <TextBlock x:Name="AccountStatusText"
+                        IsVisible="False"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </Border>
 
             <Border Background="{DynamicResource CardBackground}"
                 BorderBrush="{DynamicResource CardBorder}"
@@ -228,7 +270,7 @@
                         Foreground="{DynamicResource DangerForeground}" />
 
                     <TextBlock
-                        Text="Delete all flashcard stats across every deck. This cannot be undone."
+                        Text="Delete flashcard stats, for every deck or just one. This cannot be undone."
                         TextWrapping="Wrap"
                         Foreground="{DynamicResource TextPrimary}" />
 
@@ -239,47 +281,23 @@
                         Padding="12,10"
                         FontWeight="Bold"
                         Background="{DynamicResource DangerBackground}"
-                        Foreground="{DynamicResource IconForeground}"
+                        Foreground="{DynamicResource DangerBackgroundForeground}"
+                        Cursor="Hand" />
+
+                    <Button Content="Delete Flashcard Deck Stats"
+                        Click="OpenDeleteDeckStats_Click"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8"
+                        Padding="12,10"
+                        FontWeight="Bold"
+                        Background="{DynamicResource DangerBackground}"
+                        Foreground="{DynamicResource DangerBackgroundForeground}"
                         Cursor="Hand" />
 
                     <TextBlock x:Name="DeleteStatsStatusText"
                         IsVisible="False"
                         TextWrapping="Wrap"
                         Foreground="{DynamicResource TextSecondary}" />
-
-                    <Separator Background="{DynamicResource CardBorder}" Opacity="0.3" Margin="0,8" />
-
-                    <TextBlock Text="Delete Individual Deck Stats"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource DangerForeground}" />
-
-                    <TextBlock Text="Delete stats for a specific flashcard set."
-                        TextWrapping="Wrap"
-                        FontSize="12"
-                        Foreground="{DynamicResource TextSecondary}" />
-
-                    <ComboBox ItemsSource="{Binding AvailableDecks}"
-                        SelectedItem="{Binding SelectedDeckForStatDeletion}"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8"
-                        Padding="12,8">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <Button Content="Delete This Deck's Stats"
-                        Click="DeleteDeckStats_Click"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8"
-                        Padding="12,10"
-                        FontWeight="Bold"
-                        IsEnabled="{Binding SelectedDeckForStatDeletion, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        Background="{DynamicResource DangerBackground}"
-                        Foreground="{DynamicResource IconForeground}"
-                        Cursor="Hand" />
                 </StackPanel>
             </Border>
         </StackPanel>

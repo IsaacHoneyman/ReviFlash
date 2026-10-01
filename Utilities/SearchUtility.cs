@@ -25,6 +25,9 @@ public interface ISearchable
 
     /// <summary> When the item was last touched, for the recency sort. Null sorts last. </summary>
     DateTime? SortLastActivity => null;
+
+    /// <summary> Download count, for the popularity sort on cloud decks. </summary>
+    int SortDownloads => 0;
 }
 
 /// <summary> The orderings every searchable list in the app offers. </summary>
@@ -38,6 +41,7 @@ public enum SortMode
     StudyTimeDescending,
     StudyTimeAscending,
     RecentlyStudied,
+    DownloadsDescending,
 }
 
 /// <summary> A sort choice bound to a ComboBox. </summary>
@@ -85,6 +89,21 @@ public static class SearchUtility
 
     /// <summary> A fresh bindable copy of the shared sort options, one per view. </summary>
     public static List<SortOption> CreateSortOptions() => [.. SortOptions];
+
+    /// <summary>
+    /// Orderings for cloud decks: popularity first, and no study-time sorts, since cloud
+    /// decks carry no study history (their "recent" means recently updated).
+    /// </summary>
+    public static List<SortOption> CreateCloudSortOptions() =>
+    [
+        new("Most downloaded", SortMode.DownloadsDescending),
+        new("Best match", SortMode.Relevance),
+        new("Name A-Z", SortMode.NameAscending),
+        new("Name Z-A", SortMode.NameDescending),
+        new("Cards (high → low)", SortMode.CardsDescending),
+        new("Cards (low → high)", SortMode.CardsAscending),
+        new("Recently updated", SortMode.RecentlyStudied),
+    ];
 
     public static bool IsEmptyQuery(string? query) => string.IsNullOrWhiteSpace(query);
 
@@ -208,6 +227,7 @@ public static class SearchUtility
                 SortMode.StudyTimeAscending => grouped.ThenBy(e => e.Item.SortStudySeconds),
                 // Never-studied items have no date at all; park them at the end rather
                 // than letting DateTime.MinValue interleave with real timestamps.
+                SortMode.DownloadsDescending => grouped.ThenByDescending(e => e.Item.SortDownloads),
                 SortMode.RecentlyStudied => grouped
                     .ThenBy(e => e.Item.SortLastActivity.HasValue ? 0 : 1)
                     .ThenByDescending(e => e.Item.SortLastActivity ?? DateTime.MinValue),
