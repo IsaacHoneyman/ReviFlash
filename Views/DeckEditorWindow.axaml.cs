@@ -1,16 +1,18 @@
+using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using ReviFlash.ViewModels;
 using ReviFlash.Models;
-using ReviFlash.Data;
-using System;
+using ReviFlash.ViewModels;
 
 namespace ReviFlash.Views;
 
 public partial class DeckEditorWindow : Window
 {
     private bool _cardLoadScheduled;
+
+    private DeckEditorViewModel? ViewModel => DataContext as DeckEditorViewModel;
 
     public DeckEditorWindow()
     {
@@ -21,20 +23,11 @@ public partial class DeckEditorWindow : Window
 
     private void DeckEditorWindow_Opened(object? sender, EventArgs e)
     {
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            vm.PrepareForCardLoad();
-            ScheduleCardLoad(vm);
-        }
-    }
+        if (ViewModel is not { } vm || _cardLoadScheduled) return;
 
-    private void ScheduleCardLoad(DeckEditorViewModel vm)
-    {
-        if (_cardLoadScheduled)
-        {
-            return;
-        }
+        vm.PrepareForCardLoad();
 
+        // Let the window draw before the card list starts filling.
         _cardLoadScheduled = true;
         DispatcherTimer.RunOnce(() =>
         {
@@ -45,116 +38,58 @@ public partial class DeckEditorWindow : Window
 
     private void DeckEditorWindow_Closed(object? sender, EventArgs e)
     {
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            vm.CancelCardLoad();
-            vm.Dispose();
-        }
-
+        ViewModel?.CancelCardLoad();
+        ViewModel?.Dispose();
         _cardLoadScheduled = false;
     }
 
-    private void AddCard_Click(object sender, RoutedEventArgs e)
+    /// <summary> The card a button in the card list belongs to. </summary>
+    private static FlashCard? CardOf(object? sender) => (sender as Button)?.DataContext as FlashCard;
+
+    /// <summary> True if the editor has nothing unsaved, or the user agrees to lose it. </summary>
+    private async Task<bool> ConfirmDiscardEditorAsync(string message)
     {
-        if (DataContext is DeckEditorViewModel vm) vm.AddNewCard();
+        if (ViewModel is not { } vm || vm.EditorIsBlank()) return true;
+        return await new ConfirmDialogWindow(message).ShowDialog<bool>(this);
     }
+
+    private void AddCard_Click(object sender, RoutedEventArgs e) => ViewModel?.AddNewCard();
 
     private async void DeleteCard_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.DataContext is not FlashCard card)
-        {
-            return;
-        }
+        if (CardOf(sender) is not { } card) return;
 
-        var dialog = new ConfirmDialogWindow("Are you sure you want to delete this flashcard?");
-        bool confirmed = await dialog.ShowDialog<bool>(this);
-
-        if (confirmed && DataContext is DeckEditorViewModel vm)
-        {
-            vm.DeleteCard(card);
-        }
+        bool confirmed = await new ConfirmDialogWindow("Are you sure you want to delete this flashcard?").ShowDialog<bool>(this);
+        if (confirmed) ViewModel?.DeleteCard(card);
     }
 
     private async void EditCard_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.DataContext is not FlashCard card)
-        {
-            return;
-        }
+        if (CardOf(sender) is not { } card) return;
 
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            // If editor has content (i.e. differs from the last loaded/copied state), confirm overwrite
-            if (!vm.EditorIsBlank())
-            {
-                var dialog = new ConfirmDialogWindow("Current editor contains unsaved content. Overwrite and edit this card?");
-                bool confirmed = await dialog.ShowDialog<bool>(this);
-                if (!confirmed) return;
-            }
-
-            vm.BeginEditCard(card);
-        }
+        if (await ConfirmDiscardEditorAsync("Current editor contains unsaved content. Overwrite and edit this card?"))
+            ViewModel?.BeginEditCard(card);
     }
 
     private async void CopyCard_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.DataContext is not FlashCard card)
-        {
-            return;
-        }
+        if (CardOf(sender) is not { } card) return;
 
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            if (!vm.EditorIsBlank())
-            {
-                var dialog = new ConfirmDialogWindow("Current editor contains unsaved content. Overwrite with copied card?");
-                bool confirmed = await dialog.ShowDialog<bool>(this);
-                if (!confirmed) return;
-            }
-
-            vm.CopyCardToEditor(card);
-        }
+        if (await ConfirmDiscardEditorAsync("Current editor contains unsaved content. Overwrite with copied card?"))
+            ViewModel?.CopyCardToEditor(card);
     }
 
-    private void AddOption_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            vm.AddOptionRow();
-        }
-    }
+    private void AddOption_Click(object? sender, RoutedEventArgs e) => ViewModel?.AddOptionRow();
 
     private void RemoveOption_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.DataContext is not MultiChoiceOptionEditor option)
-        {
-            return;
-        }
-
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            vm.RemoveOptionRow(option);
-        }
+        if ((sender as Button)?.DataContext is MultiChoiceOptionEditor option) ViewModel?.RemoveOptionRow(option);
     }
 
-    private void AddMatchPair_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            vm.AddMatchPairRow();
-        }
-    }
+    private void AddMatchPair_Click(object? sender, RoutedEventArgs e) => ViewModel?.AddMatchPairRow();
 
     private void RemoveMatchPair_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.DataContext is not MatchPairEditor pair)
-        {
-            return;
-        }
-
-        if (DataContext is DeckEditorViewModel vm)
-        {
-            vm.RemoveMatchPairRow(pair);
-        }
+        if ((sender as Button)?.DataContext is MatchPairEditor pair) ViewModel?.RemoveMatchPairRow(pair);
     }
 }

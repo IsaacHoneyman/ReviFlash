@@ -1,0 +1,5 @@
+Flip cards can be asked both ways: tick "Also ask in reverse" and reviews ask back to front as well, as a separate question marked "Reversed"
+Reversed flip cards keep their setting in backups and in decks shared online
+Fixed the "Card X of Y" counter on the review screen not showing
+Fixed changing a Type to Answer card into another card type asking for a typed answer
+The card list in the editor shows "True/False" consistently with the card type menu

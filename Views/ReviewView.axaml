@@ -54,10 +54,19 @@
             <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
                 Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
-                <TextBlock Text="{Binding CurrentNumber, StringFormat='Card {0} of {1}'}"
-                    HorizontalAlignment="Center"
-                    FontSize="16"
-                    Foreground="{DynamicResource TextSecondary}" />
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding CardCountText}"
+                        FontSize="16"
+                        Foreground="{DynamicResource TextSecondary}" />
+
+                    <!-- The back-to-front question from a reversible flip card -->
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
+                        IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front">
+                        <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}" />
+                        <TextBlock Text="Reversed" FontSize="13" VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </StackPanel>
 
                 <views:MathText Text="{Binding CurrentCard.Front}" HorizontalAlignment="Center" FontSize="18" Foreground="{DynamicResource TextPrimary}" IsCentered="True" />
 

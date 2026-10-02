@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Avalonia.Media;
-using HarfBuzzSharp;
 using ReviFlash.Models;
 
 namespace ReviFlash.Data.Local;
@@ -10,12 +8,12 @@ namespace ReviFlash.Data.Local;
 public static class FlashCardFactory
 {
     public static FlashCard CreateCard(string cardType, string front, string back, string? answer, ulong id,
-    List<(string optionText, bool isCorrect)> options, List<(string leftText, string rightText)> pairs)
+    List<(string optionText, bool isCorrect)> options, List<(string leftText, string rightText)> pairs, bool isReversible = false)
     {
         return cardType switch
         {
             nameof(TypeFlashCard) => new TypeFlashCard(front, back, answer, id),
-            nameof(FlipFlashCard) => new FlipFlashCard(front, back, id),
+            nameof(FlipFlashCard) => new FlipFlashCard(front, back, id, isReversible),
             nameof(MultiFlashCard) => new MultiFlashCard(front, back, options, id),
             nameof(MatchFlashCard) => new MatchFlashCard(front, back, pairs, id),
             nameof(TrueFalseFlashCard) => BuildTrueFalseCard(front, back, answer, id),

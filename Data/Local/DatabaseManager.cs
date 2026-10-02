@@ -64,6 +64,7 @@ public static class DatabaseManager
                     Front TEXT NOT NULL,
                     Back TEXT NOT NULL,
                     Answer TEXT,
+                    IsReversible INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY(DeckID) REFERENCES Decks(ID) ON DELETE CASCADE
                 );
 
@@ -126,6 +127,9 @@ public static class DatabaseManager
         // Folders: added after release, so existing Decks/StudyGroups tables predate the column.
         AddColumnIfMissing(connection, "Decks", "FolderID", "INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL");
         AddColumnIfMissing(connection, "StudyGroups", "FolderID", "INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL");
+
+        // Reversed flip cards: 1.2.
+        AddColumnIfMissing(connection, "Cards", "IsReversible", "INTEGER NOT NULL DEFAULT 0");
     }
 
     private static void CreateIndexes(SqliteConnection connection)

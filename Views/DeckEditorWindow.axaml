@@ -15,6 +15,58 @@
         <converters:BoolToOptionMarkerConverter x:Key="BoolToOptionMarkerConverter" />
     </Window.Resources>
 
+    <Window.Styles>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Margin" Value="4,4,0,0" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}" />
+        </Style>
+        <Style Selector="TextBox.multiline">
+            <Setter Property="Height" Value="60" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- LaTeX preview under a field: "small" for options, pairs and labels -->
+        <Style Selector="Border.preview">
+            <Setter Property="Background" Value="#15000000" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="MinHeight" Value="60" />
+        </Style>
+        <Style Selector="Border.preview.small">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="MinHeight" Value="32" />
+        </Style>
+        <Style Selector="Button.addRow">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Background" Value="#7044AAFF" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        </Style>
+        <Style Selector="Button.removeRow">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="#60FF4444" />
+        </Style>
+        <Style Selector="views|MathText">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+    </Window.Styles>
+
     <Grid RowDefinitions="Auto, *" Margin="32">
 
         <TextBox Grid.Row="0"
@@ -44,73 +96,52 @@
                             HorizontalAlignment="Stretch"
                             CornerRadius="8" />
 
-                        <TextBlock Text="Front (Question)" FontSize="12"
-                            Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
-                        <TextBox Text="{Binding NewFront, Mode=TwoWay}" Height="60"
-                            AcceptsReturn="True" TextWrapping="Wrap"
-                            Background="{DynamicResource AppBackground}" />
-
-                        <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                            BorderThickness="1" CornerRadius="8" Padding="12" MinHeight="60">
-                            <views:MathText Text="{Binding NewFront}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                        <TextBlock Classes="fieldLabel" Text="Front (Question)" />
+                        <TextBox Classes="field multiline" Text="{Binding NewFront, Mode=TwoWay}" />
+                        <Border Classes="preview">
+                            <views:MathText Text="{Binding NewFront}" ShowErrors="True" />
                         </Border>
 
-
-                        <TextBlock Text="Back (Answer)" FontSize="12"
-                            Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
-                        <TextBox Text="{Binding NewBack, Mode=TwoWay}" Height="60"
-                            AcceptsReturn="True" TextWrapping="Wrap"
-                            Background="{DynamicResource AppBackground}" />
-
-                        <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                            BorderThickness="1" CornerRadius="8" Padding="12" MinHeight="60">
-                            <views:MathText Text="{Binding NewBack}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                        <TextBlock Classes="fieldLabel" Text="Back (Answer)" />
+                        <TextBox Classes="field multiline" Text="{Binding NewBack, Mode=TwoWay}" />
+                        <Border Classes="preview">
+                            <views:MathText Text="{Binding NewBack}" ShowErrors="True" />
                         </Border>
+
+                        <CheckBox IsVisible="{Binding IsFlipCardType}" IsChecked="{Binding NewIsReversible, Mode=TwoWay}"
+                            Content="Also ask in reverse (back → front)"
+                            ToolTip.Tip="Reviews ask this card both ways, as two separate questions." />
 
                         <StackPanel Spacing="6" IsVisible="{Binding IsTypeCardType}">
-                            <TextBlock Text="Typed Answer (Accepted Input)" FontSize="12"
-                                Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
-                            <TextBox Text="{Binding NewTypeAnswer, Mode=TwoWay}" Height="40"
-                                Watermark="What the user must type"
-                                Background="{DynamicResource AppBackground}" />
-
-                            <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="40"
-                                IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
-                                <views:MathText Text="{Binding NewTypeAnswer}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                            <TextBlock Classes="fieldLabel" Text="Typed Answer (Accepted Input)" />
+                            <TextBox Classes="field" Text="{Binding NewTypeAnswer, Mode=TwoWay}" Height="40"
+                                Watermark="What the user must type" />
+                            <Border Classes="preview small" IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
+                                <views:MathText Text="{Binding NewTypeAnswer}" ShowErrors="True" />
                             </Border>
                         </StackPanel>
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsTrueFalseCardType}">
-                            <TextBlock Text="True/False labels" FontSize="12"
-                                Foreground="{DynamicResource TextSecondary}" Margin="4,4,0,0" />
+                            <TextBlock Classes="fieldLabel" Text="True/False labels" />
 
                             <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
                                 <TextBlock Grid.Column="0" Text="True:" VerticalAlignment="Center"
                                     Foreground="{DynamicResource TextSecondary}" />
-                                <TextBox Grid.Column="1" Text="{Binding NewTrueOptionText, Mode=TwoWay}"
-                                    Watermark="Label for true option"
-                                    Background="{DynamicResource AppBackground}" />
+                                <TextBox Grid.Column="1" Classes="field" Text="{Binding NewTrueOptionText, Mode=TwoWay}"
+                                    Watermark="Label for true option" />
                             </Grid>
-
-                            <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="46"
-                                IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
-                                <views:MathText Text="{Binding NewTrueOptionText}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                            <Border Classes="preview small" IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
+                                <views:MathText Text="{Binding NewTrueOptionText}" ShowErrors="True" />
                             </Border>
 
                             <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
                                 <TextBlock Grid.Column="0" Text="False:" VerticalAlignment="Center"
                                     Foreground="{DynamicResource TextSecondary}" />
-                                <TextBox Grid.Column="1" Text="{Binding NewFalseOptionText, Mode=TwoWay}"
-                                    Watermark="Label for false option"
-                                    Background="{DynamicResource AppBackground}" />
+                                <TextBox Grid.Column="1" Classes="field" Text="{Binding NewFalseOptionText, Mode=TwoWay}"
+                                    Watermark="Label for false option" />
                             </Grid>
-
-                            <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                BorderThickness="1" CornerRadius="8" Padding="10" MinHeight="46"
-                                IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
-                                <views:MathText Text="{Binding NewFalseOptionText}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                            <Border Classes="preview small" IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
+                                <views:MathText Text="{Binding NewFalseOptionText}" ShowErrors="True" />
                             </Border>
 
                             <CheckBox IsChecked="{Binding NewTrueFalseAnswerIsTrue, Mode=TwoWay}"
@@ -119,11 +150,8 @@
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsMultiChoiceCardType}">
                             <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
-                                <TextBlock Grid.Column="0" Text="Options (max 8)" FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}" Margin="4,0,0,0" />
-                                <Button Grid.Column="1" Click="AddOption_Click"
-                                    CornerRadius="8" Padding="10,6"
-                                    Background="#7044AAFF" Foreground="{DynamicResource PrimaryButtonForeground}">
+                                <TextBlock Grid.Column="0" Classes="fieldLabel" Text="Options (max 8)" Margin="4,0,0,0" />
+                                <Button Grid.Column="1" Classes="addRow" Click="AddOption_Click">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <Path Classes="icon" Data="{StaticResource IconPlus}" Stroke="{Binding $parent[Button].Foreground}" />
                                         <TextBlock Text="Add Option" VerticalAlignment="Center" />
@@ -138,40 +166,31 @@
                                             <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,2">
                                                 <CheckBox Grid.Column="0" IsChecked="{Binding IsCorrect, Mode=TwoWay}"
                                                     VerticalAlignment="Center" Margin="0,0,8,0" />
-                                                <TextBox Grid.Column="1" Text="{Binding OptionText, Mode=TwoWay}"
-                                                    Watermark="Option text"
-                                                    Background="{DynamicResource AppBackground}" />
-                                                <Button Grid.Column="2" Click="RemoveOption_Click"
-                                                    CornerRadius="6" Padding="8,6" Margin="8,0,0,0" VerticalAlignment="Center"
-                                                    Background="#60FF4444" ToolTip.Tip="Remove option">
+                                                <TextBox Grid.Column="1" Classes="field" Text="{Binding OptionText, Mode=TwoWay}"
+                                                    Watermark="Option text" />
+                                                <Button Grid.Column="2" Classes="removeRow" Click="RemoveOption_Click" ToolTip.Tip="Remove option">
                                                     <Path Classes="icon" Width="12" Data="{StaticResource IconClose}" />
                                                 </Button>
                                             </Grid>
 
-                                            <Border Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                                BorderThickness="1" CornerRadius="6" Padding="8" MinHeight="32"
+                                            <Border Classes="preview small"
                                                 IsVisible="{Binding $parent[Window].DataContext.ShowAdditionalFieldLatexPreviews}">
-                                                <views:MathText Text="{Binding OptionText}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                                                <views:MathText Text="{Binding OptionText}" ShowErrors="True" />
                                             </Border>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="Tick each correct option. Users can select multiple answers during review."
-                                FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                            <TextBlock Classes="hint" Text="Tick each correct option. Users can select multiple answers during review." />
                         </StackPanel>
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsMatchCardType}">
-                            <TextBlock Text="Match cards use fixed question text: Match The Cards"
-                                FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Classes="fieldLabel" Text="Match cards use fixed question text: Match The Cards" Margin="0" />
 
                             <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
-                                <TextBlock Grid.Column="0" Text="Match pairs (max 8)" FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}" Margin="4,0,0,0" />
-                                <Button Grid.Column="1" Click="AddMatchPair_Click"
-                                    CornerRadius="8" Padding="10,6"
-                                    Background="#7044AAFF" Foreground="{DynamicResource PrimaryButtonForeground}">
+                                <TextBlock Grid.Column="0" Classes="fieldLabel" Text="Match pairs (max 8)" Margin="4,0,0,0" />
+                                <Button Grid.Column="1" Classes="addRow" Click="AddMatchPair_Click">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <Path Classes="icon" Data="{StaticResource IconPlus}" Stroke="{Binding $parent[Button].Foreground}" />
                                         <TextBlock Text="Add Pair" VerticalAlignment="Center" />
@@ -184,31 +203,25 @@
                                     <DataTemplate x:DataType="vm:MatchPairEditor">
                                         <StackPanel Spacing="4" Margin="0,4,0,4">
                                             <Grid ColumnDefinitions="*, Auto, *, Auto" Margin="0,0,0,2">
-                                                <TextBox Grid.Column="0" Text="{Binding LeftText, Mode=TwoWay}"
-                                                    Watermark="Left text" Background="{DynamicResource AppBackground}" />
+                                                <TextBox Grid.Column="0" Classes="field" Text="{Binding LeftText, Mode=TwoWay}" Watermark="Left text" />
                                                 <Path Grid.Column="1" Classes="icon" Data="{StaticResource IconLeftRight}" Margin="8,0"
                                                     Stroke="{DynamicResource TextSecondary}" />
-                                                <TextBox Grid.Column="2" Text="{Binding RightText, Mode=TwoWay}"
-                                                    Watermark="Right text" Background="{DynamicResource AppBackground}" />
-                                                <Button Grid.Column="3" Click="RemoveMatchPair_Click"
-                                                    CornerRadius="6" Padding="8,6" Margin="8,0,0,0" VerticalAlignment="Center"
-                                                    Background="#60FF4444" ToolTip.Tip="Remove pair">
+                                                <TextBox Grid.Column="2" Classes="field" Text="{Binding RightText, Mode=TwoWay}" Watermark="Right text" />
+                                                <Button Grid.Column="3" Classes="removeRow" Click="RemoveMatchPair_Click" ToolTip.Tip="Remove pair">
                                                     <Path Classes="icon" Width="12" Data="{StaticResource IconClose}" />
                                                 </Button>
                                             </Grid>
 
                                             <Grid ColumnDefinitions="*, Auto, *" ColumnSpacing="8" IsVisible="{Binding $parent[Window].DataContext.ShowAdditionalFieldLatexPreviews}">
-                                                <Border Grid.Column="0" Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                                    BorderThickness="1" CornerRadius="6" Padding="8" MinHeight="32">
-                                                    <views:MathText Text="{Binding LeftText}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                                                <Border Grid.Column="0" Classes="preview small">
+                                                    <views:MathText Text="{Binding LeftText}" ShowErrors="True" />
                                                 </Border>
 
-                                                <TextBlock Grid.Column="1" Text="→" VerticalAlignment="Center" Margin="0,0,0,0"
+                                                <TextBlock Grid.Column="1" Text="→" VerticalAlignment="Center"
                                                     Foreground="{DynamicResource TextSecondary}" />
 
-                                                <Border Grid.Column="2" Background="#15000000" BorderBrush="{DynamicResource CardBorder}"
-                                                    BorderThickness="1" CornerRadius="6" Padding="8" MinHeight="32">
-                                                    <views:MathText Text="{Binding RightText}" FontSize="14" Foreground="{DynamicResource TextPrimary}" ShowErrors="True" />
+                                                <Border Grid.Column="2" Classes="preview small">
+                                                    <views:MathText Text="{Binding RightText}" ShowErrors="True" />
                                                 </Border>
                                             </Grid>
                                         </StackPanel>
@@ -216,8 +229,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="In review, left and right sides are shuffled and the user matches them."
-                                FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                            <TextBlock Classes="hint" Text="In review, left and right sides are shuffled and the user matches them." />
                         </StackPanel>
 
                         <TextBlock Text="{Binding ValidationMessage}" Foreground="#FF6666"
@@ -256,12 +268,12 @@
                                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,8" />
 
                                     <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12" IsVisible="{Binding !IsMatchCard}">
-                                        <views:MathText Text="{Binding Front}" FontSize="14" Foreground="{DynamicResource TextPrimary}" />
+                                        <views:MathText Text="{Binding Front}" />
 
                                         <Rectangle Height="1" Fill="{DynamicResource CardBorder}"
                                             Opacity="0.3" />
 
-                                        <views:MathText Text="{Binding Back}" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                                        <views:MathText Text="{Binding Back}" Foreground="{DynamicResource TextSecondary}" />
 
                                         <StackPanel Spacing="6" IsVisible="{Binding IsMultiChoiceCard}">
                                             <TextBlock Text="Options Preview" FontSize="12" FontWeight="SemiBold"
@@ -276,7 +288,7 @@
                                                                     Text="{Binding IsCorrect, Converter={StaticResource BoolToOptionMarkerConverter}}"
                                                                     FontSize="11" Foreground="#88CC88"
                                                                     VerticalAlignment="Top" Margin="0,0,8,0" />
-                                                                <views:MathText Text="{Binding Text}" Grid.Column="1" FontSize="14" Foreground="{DynamicResource TextPrimary}" />
+                                                                <views:MathText Text="{Binding Text}" Grid.Column="1" />
                                                             </Grid>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
@@ -286,7 +298,7 @@
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="8" IsVisible="{Binding IsMatchCard}">
-                                        <views:MathText Text="{Binding Front}" FontSize="14" Foreground="{DynamicResource TextPrimary}" />
+                                        <views:MathText Text="{Binding Front}" />
 
                                         <TextBlock Text="Match pairs preview" FontSize="12"
                                             Foreground="{DynamicResource TextSecondary}" />
@@ -297,12 +309,12 @@
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate x:DataType="models:MatchPreviewPair">
                                                         <Grid ColumnDefinitions="2*, Auto, *" Margin="0,0,0,8">
-                                                            <views:MathText Text="{Binding LeftText}" Grid.Column="0" FontSize="14" Foreground="{DynamicResource TextPrimary}" />
+                                                            <views:MathText Text="{Binding LeftText}" Grid.Column="0" />
 
                                                             <TextBlock Grid.Column="1" Text="→" Margin="8,0"
                                                                 Foreground="{DynamicResource TextSecondary}" />
 
-                                                            <views:MathText Text="{Binding RightText}" Grid.Column="2" FontSize="14" Foreground="{DynamicResource TextPrimary}" />
+                                                            <views:MathText Text="{Binding RightText}" Grid.Column="2" />
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

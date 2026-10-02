@@ -25,7 +25,7 @@ public static class DeckRepository
 
         using var command = connection.CreateCommand();
         command.CommandText = @"
-            SELECT ID, CardType, Front, Back, Answer
+            SELECT ID, CardType, Front, Back, Answer, IsReversible
             FROM Cards
             WHERE DeckID = $deckId
             ORDER BY ID ASC;";
@@ -39,11 +39,12 @@ public static class DeckRepository
             string front = reader.GetString(2);
             string back = reader.GetString(3);
             string? answer = reader.IsDBNull(4) ? null : reader.GetString(4);
+            bool isReversible = reader.GetInt64(5) != 0;
 
             cards.Add(cardType switch
             {
                 nameof(TypeFlashCard) => new CardExportEntry(cardType, front, back, answer, null, null, null, null, null),
-                nameof(FlipFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, null),
+                nameof(FlipFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, null, isReversible ? true : null),
                 nameof(MultiFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, LoadMultiOptions(connection, cardId), null),
                 nameof(MatchFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, LoadMatchPairs(connection, cardId)),
                 nameof(TrueFalseFlashCard) => DeckTransferManager.BuildTrueFalseExportEntry(front, back, answer),
@@ -101,14 +102,15 @@ public static class DeckRepository
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = @"
-            INSERT INTO Cards (DeckID, CardType, Front, Back, Answer)
-            VALUES ($deckId, $cardType, $front, $back, $answer);
+            INSERT INTO Cards (DeckID, CardType, Front, Back, Answer, IsReversible)
+            VALUES ($deckId, $cardType, $front, $back, $answer, $isReversible);
             SELECT last_insert_rowid();";
         command.Parameters.AddWithValue("$deckId", deckId);
         command.Parameters.AddWithValue("$cardType", card.CardType);
         command.Parameters.AddWithValue("$front", card.Front);
         command.Parameters.AddWithValue("$back", card.Back);
         command.Parameters.AddWithValue("$answer", DeckTransferManager.BuildExportAnswerPayload(card));
+        command.Parameters.AddWithValue("$isReversible", card.IsReversible == true ? 1 : 0);
         return (long)(command.ExecuteScalar() ?? throw new InvalidOperationException("Failed to insert card."));
     }
 

@@ -63,6 +63,7 @@ public partial class ReviewViewModel : ViewModelBase
 
     public bool IsTypeCard => CurrentCard is TypeFlashCard;
     public bool IsFlipCard => CurrentCard is FlipFlashCard;
+    public bool IsReversedCard => CurrentCard is FlipFlashCard { IsReversedCopy: true };
     public bool IsMultiChoiceCard => CurrentCard is MultiFlashCard;
     public bool IsMatchCard => CurrentCard is MatchFlashCard;
     public bool IsTrueFalseCard => CurrentCard is TrueFalseFlashCard;
@@ -107,12 +108,16 @@ public partial class ReviewViewModel : ViewModelBase
 
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
+    public string CardCountText => $"Card {CurrentNumber} of {TotalCards}";
 
     public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, Dictionary<ulong, ulong>? cardDeckMap = null, ulong? reviewGroupId = null)
     {
         ArgumentNullException.ThrowIfNull(cards);
 
-        _sessionCards = [.. cards.OrderBy(_ => Guid.NewGuid()).ToList()]; // Shuffle cards
+        // Reversible flip cards are also asked back to front, as a question of their own.
+        _sessionCards = [.. cards
+            .SelectMany(card => card is FlipFlashCard { IsReversible: true } flip ? [card, flip.CreateReversedCopy()] : new[] { card })
+            .OrderBy(_ => Guid.NewGuid())]; // Shuffle cards
         if (_sessionCards.Count == 0)
         {
             throw new ArgumentException("Cannot start a review session with no cards.", nameof(cards));
@@ -522,8 +527,10 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrentNumber));
         OnPropertyChanged(nameof(ProgressPercentage));
         OnPropertyChanged(nameof(ProgressCardCount));
+        OnPropertyChanged(nameof(CardCountText));
         OnPropertyChanged(nameof(IsTypeCard));
         OnPropertyChanged(nameof(IsFlipCard));
+        OnPropertyChanged(nameof(IsReversedCard));
         OnPropertyChanged(nameof(IsMultiChoiceCard));
         OnPropertyChanged(nameof(IsMatchCard));
         OnPropertyChanged(nameof(IsTrueFalseCard));

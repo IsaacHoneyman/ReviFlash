@@ -60,8 +60,8 @@ public static class FlashCardRepository
         var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = @"
-            INSERT INTO Cards (DeckID, CardType, Front, Back, Answer) 
-            VALUES ($deckId, $cardType, $front, $back, $answer);
+            INSERT INTO Cards (DeckID, CardType, Front, Back, Answer, IsReversible) 
+            VALUES ($deckId, $cardType, $front, $back, $answer, $isReversible);
             SELECT last_insert_rowid();
         ";
 
@@ -72,6 +72,7 @@ public static class FlashCardRepository
         command.Parameters.AddWithValue("$front", card.Front);
         command.Parameters.AddWithValue("$back", card.Back);
         command.Parameters.AddWithValue("$answer", FlashCardFactory.BuildAnswerPayload(card));
+        command.Parameters.AddWithValue("$isReversible", IsReversible(card) ? 1 : 0);
 
         long newID = (long)(command.ExecuteScalar() ?? long.MaxValue);
         card.AssignDatabaseID((ulong)newID);
@@ -81,6 +82,8 @@ public static class FlashCardRepository
 
         transaction.Commit();
     }
+
+    private static bool IsReversible(FlashCard card) => card is FlipFlashCard { IsReversible: true };
 
     private static void SaveCardOptions(ulong cardID, List<(string optionText, bool isCorrect)> options, Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
     {
@@ -287,11 +290,11 @@ public static class FlashCardRepository
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
 
-        var rawCards = new List<(ulong Id, string CardType, string Front, string Back, string? Answer)>();
+        var rawCards = new List<(ulong Id, string CardType, string Front, string Back, string? Answer, bool IsReversible)>();
 
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT ID, CardType, Front, Back, Answer FROM Cards WHERE DeckID = $deckId ORDER BY ID ASC;";
+            command.CommandText = "SELECT ID, CardType, Front, Back, Answer, IsReversible FROM Cards WHERE DeckID = $deckId ORDER BY ID ASC;";
             command.Parameters.AddWithValue("$deckId", deckID);
 
             using var reader = command.ExecuteReader();
@@ -302,7 +305,8 @@ public static class FlashCardRepository
                     reader.GetString(1),
                     reader.GetString(2),
                     reader.GetString(3),
-                    reader.IsDBNull(4) ? null : reader.GetString(4)
+                    reader.IsDBNull(4) ? null : reader.GetString(4),
+                    reader.GetInt64(5) != 0
                 ));
             }
         }
@@ -313,7 +317,7 @@ public static class FlashCardRepository
         var optionsMap = BatchGetCardOptions(cardIds, connection);
         var pairsMap = BatchGetMatchPairs(cardIds, connection);
 
-        foreach (var (Id, CardType, Front, Back, Answer) in rawCards)
+        foreach (var (Id, CardType, Front, Back, Answer, IsReversible) in rawCards)
         {
             optionsMap.TryGetValue(Id, out var options);
             pairsMap.TryGetValue(Id, out var pairs);
@@ -322,7 +326,7 @@ public static class FlashCardRepository
             var safePairs = pairs ?? [];
 
             FlashCard card = FlashCardFactory.CreateCard(
-                CardType, Front, Back, Answer, Id, safeOptions, safePairs);
+                CardType, Front, Back, Answer, Id, safeOptions, safePairs, IsReversible);
             cards.Add(card);
         }
 
@@ -515,12 +519,13 @@ public static class FlashCardRepository
 
         var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = "UPDATE Cards SET CardType = $cardType, Front = $front, Back = $back, Answer = $answer WHERE ID = $id;";
+        command.CommandText = "UPDATE Cards SET CardType = $cardType, Front = $front, Back = $back, Answer = $answer, IsReversible = $isReversible WHERE ID = $id;";
 
         command.Parameters.AddWithValue("$cardType", card.GetType().Name);
         command.Parameters.AddWithValue("$front", card.Front);
         command.Parameters.AddWithValue("$back", card.Back);
         command.Parameters.AddWithValue("$answer", FlashCardFactory.BuildAnswerPayload(card));
+        command.Parameters.AddWithValue("$isReversible", IsReversible(card) ? 1 : 0);
         command.Parameters.AddWithValue("$id", card.ID);
         command.ExecuteNonQuery();
 
