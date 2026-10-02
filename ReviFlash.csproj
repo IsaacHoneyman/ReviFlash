@@ -7,7 +7,7 @@
     <ApplicationIcon>Assets\ReviFlashLogo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <EnableDefaultAvaloniaXamlItems>false</EnableDefaultAvaloniaXamlItems>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
@@ -28,7 +28,7 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="AvaloniaMath" Version="2.1.0" />
+    <PackageReference Include="CSharpMath.Avalonia" Version="1.0.0-pre.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5" />
     <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />

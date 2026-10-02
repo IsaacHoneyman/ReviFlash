@@ -1,0 +1,8 @@
+LaTeX now flows inline with the text around it and wraps with it, instead of jumping onto its own line
+LaTeX looks the same in the card editor previews and the review screen, at the same size as the text around it
+$$...$$ now shows maths centred on its own line, like in LaTeX, while $...$ stays inline
+Many more LaTeX commands work, including \mathbb, \mathbf, \operatorname, \mapsto, \iff, \implies, \notin, \quad, \dots and \overline
+New matrix and layout environments: bmatrix, vmatrix, Bmatrix, Vmatrix, cases, aligned and array, alongside pmatrix and matrix
+Bold and italic text with \B{...} and \I{...}, which can be combined and also work inside maths
+Cards with LaTeX that can't be shown now show the text as typed in reviews, and the error in the editor preview
+New "LaTeX Font for Card Text" option in Settings → Appearance shows card text in the LaTeX font, to match the maths (off by default)

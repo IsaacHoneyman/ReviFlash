@@ -1,0 +1,97 @@
+name: macOS build
+
+# Builds, packs and smoke-tests the macOS (Apple Silicon) release on a GitHub-hosted Mac.
+# No Apple Developer account: the app is ad-hoc signed, so users must use "Open Anyway" once.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "release-*macsupport*" ]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest   # Apple Silicon runner, matches osx-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk --version 1.2.0
+
+      - name: Read version from csproj
+        run: echo "VERSION=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' ReviFlash.csproj)" >> "$GITHUB_ENV"
+
+      - name: Convert icon to .icns
+        run: |
+          sips -s format png Assets/ReviFlashLogo.ico --out icon.png
+          mkdir ReviFlash.iconset
+          for size in 16 32 128 256 512; do
+            sips -z $size $size icon.png --out ReviFlash.iconset/icon_${size}x${size}.png
+            sips -z $((size*2)) $((size*2)) icon.png --out ReviFlash.iconset/icon_${size}x${size}@2x.png
+          done
+          iconutil -c icns ReviFlash.iconset -o ReviFlash.icns
+
+      - name: Publish osx-arm64
+        run: |
+          dotnet publish ReviFlash.csproj \
+            -c Release \
+            -r osx-arm64 \
+            --self-contained true \
+            -o publish/osx-arm64
+
+      - name: Pack with Velopack
+        run: |
+          # Earlier macOS packages (if any) let vpk build delta updates; none exist on the first release.
+          vpk download github --repoUrl https://github.com/${{ github.repository }} -o releases || true
+          vpk pack \
+            -u ReviFlash \
+            -v "$VERSION" \
+            -p publish/osx-arm64 \
+            -e ReviFlash \
+            -i ReviFlash.icns \
+            --packTitle ReviFlash \
+            -o releases
+          ls -la releases
+
+      - name: Smoke test
+        run: |
+          mkdir smoke
+          ditto -x -k releases/*-Portable.zip smoke
+          APP=$(find smoke -maxdepth 2 -name "*.app" | head -1)
+          echo "App bundle: $APP"
+          codesign -dv "$APP" 2>&1 || true
+
+          "$APP/Contents/MacOS/ReviFlash" > app-output.log 2>&1 &
+          PID=$!
+          sleep 30
+          screencapture -x screenshot.png || true
+
+          if kill -0 $PID 2>/dev/null; then
+            echo "ReviFlash is still running after 30s"
+            kill $PID
+          else
+            echo "ReviFlash exited early:"
+            cat app-output.log
+            exit 1
+          fi
+
+      - name: Collect app data folder
+        if: always()
+        run: cp -R "$HOME/Library/Application Support/ReviFlash" app-data 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviflash-macos-${{ env.VERSION }}
+          path: |
+            releases/*osx*
+            releases/*.pkg
+            releases/*.zip
+            screenshot.png
+            app-output.log
+            app-data/
+          if-no-files-found: warn

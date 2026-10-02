@@ -1,6 +1,8 @@
 # ReviFlash
 
-ReviFlash is a powerful, open-source flashcard tool designed as a more modern desktop Anki alternative, ditching the tedious due flashcards and trusting the user. Built with C# and Avalonia, it offers LaTeX support, flexible flashcard types, folders, local backups, and online flashcard sharing.
+ReviFlash is a free, open-source flashcard app for exam revision, built for maths and science. There are no due cards and no review backlog: you choose what to study and when, whether that's one topic the night before or a whole course in the weeks before your exams. Maths renders properly, inline with your text, and cards can be flip, type-the-answer, multiple choice, match-the-pairs or true/false.
+
+Spaced-repetition apps like Anki are built for remembering things over months. ReviFlash is built for the run-up to an exam: drill a topic now, see your grade for it, and come back to the cards you got wrong.
 
 ## Download ReviFlash
 Get the latest release for your platform from the [GitHub Releases Page](https://github.com/IsaacHoneyman/ReviFlash/releases/latest):
@@ -9,6 +11,8 @@ Get the latest release for your platform from the [GitHub Releases Page](https:/
 | :--- | :--- | :--- |
 | **Windows** | [📥 **ReviFlash-win-Setup.exe**](https://github.com/IsaacHoneyman/ReviFlash/releases/latest) | Automated installer & updater |
 | **Windows (portable)** | [📥 **ReviFlash-win-Portable.zip**](https://github.com/IsaacHoneyman/ReviFlash/releases/latest) | No installer, unzip and run |
+| **macOS (Apple Silicon)** | [📥 **ReviFlash-osx-Setup.pkg**](https://github.com/IsaacHoneyman/ReviFlash/releases/latest) | Installer & updater, see the note below |
+| **macOS (portable)** | [📥 **ReviFlash-osx-Portable.zip**](https://github.com/IsaacHoneyman/ReviFlash/releases/latest) | No installer, unzip and run |
 | **Linux** | [📥 **ReviFlash.AppImage**](https://github.com/IsaacHoneyman/ReviFlash/releases/latest) | Standalone file |
 
 > **Linux Users Note:** After downloading the `.AppImage`, make it executable before running:
@@ -17,51 +21,48 @@ Get the latest release for your platform from the [GitHub Releases Page](https:/
 > ./ReviFlash.AppImage
 > ```
 
+> **macOS Users Note:** ReviFlash isn't signed with a paid Apple Developer account, so the first time you open it macOS will say it can't be verified. Close that message, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. You only need to do this once. If macOS instead says the app is damaged, run this in Terminal and open it again:
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/ReviFlash.app
+> ```
+
 ## Updates
 Updates are handled automatically within ReviFlash! On startup the app checks whether a new version has been released and offers to update, showing the download progress before restarting into the new version. You can also check at any time from **Settings → Updates**, or turn the startup check off there.
 
-## New in 1.1
+## New in 1.1.1
 
-**Accounts**
-- One sign-in for all online features, which now lasts until you sign out instead of for an hour.
-- The main menu shows who you're signed in as, or "Guest" with a Sign In button.
-- A new Account section in Settings to sign in, sign out, and change your username.
-- Forgotten passwords can be reset with a code sent by email.
+**macOS**
+- ReviFlash now runs on Macs with Apple Silicon (M1 and later), with the same automatic updates as Windows and Linux.
 
-**Sharing**
-- Import and Export (previously Online Import and Online Export) are now download and upload icons on the main menu.
-- Private decks: upload a deck as private, or switch any of your decks between public and private, to keep it out of community search. Download your own decks, public or private, from Export to move sets between your devices.
-- Community decks show who uploaded them and how many times they've been downloaded. Search matches uploader names as well as titles, and the most downloaded decks come first.
-- Uploads can carry their folder path, so downloads can rebuild the same folders.
-- File-based import and export have been removed: use private decks to move sets, and backups to keep them safe.
+**LaTeX**
+- Maths now flows inline with the text around it and wraps with it, instead of jumping onto its own line.
+- Maths looks the same in the card editor previews and the review screen, at the same size as the text around it.
+- `$$...$$` shows maths centred on its own line, like in LaTeX, while `$...$` stays inline.
+- Many more LaTeX commands work, including `\mathbb`, `\mathbf`, `\operatorname`, `\mapsto`, `\iff`, `\implies`, `\notin`, `\quad`, `\dots` and `\overline`.
+- New matrix and layout environments: `bmatrix`, `vmatrix`, `Bmatrix`, `Vmatrix`, `cases`, `aligned` and `array`, alongside `pmatrix` and `matrix`.
+- Bold and italic text with `\B{...}` and `\I{...}`, which can be combined and also work inside maths.
+- Cards with LaTeX that can't be shown now show the text as typed in reviews, and the error in the editor preview.
 
-**Backups and settings**
-- Backups no longer contain your sign-in details, are checked before restoring, and restoring asks for confirmation first.
-- Fixed restoring a backup not bringing back its settings, and restoring a backup made without stats failing in some cases.
-- Deleting one deck's stats now has its own window, browsed by folder.
-- The Danger Zone buttons are now readable on every theme.
-
-**Everywhere else**
-- Folders are used when picking sets in the group editor, for uploads, and when deleting deck stats.
-- The ✕, ✓, + and ↔ symbols in the card editor and review screen are now proper icons.
-- Typing `\$` in a text box shows a literal `$` instead of starting LaTeX.
+**Settings**
+- New **LaTeX Font for Card Text** option under Appearance shows card text in the LaTeX font, to match the maths (off by default).
 
 ## Key Features
 
 - **Folders & Study Groups**: Organise decks into folders, and group multiple decks into Study Groups for targeted, multi-deck review sessions.
 - **Comprehensive Card Types**: Support for Flip, Type-to-Answer, Multiple Choice, Match Pair, and True/False questions.
-- **Native Math Rendering**: Full inline and block LaTeX rendering support within previews and active review modes.
+- **Revise on Your Terms**: No due cards or review backlog. Study any deck, folder or study group whenever you like, and use Retry Later to bring back the cards you got wrong.
+- **Maths That Renders Properly**: Inline `$...$` and display `$$...$$` LaTeX, including fractions, sums, integrals, matrices and `cases`, in the editor previews and while reviewing. Use `\B{...}` and `\I{...}` for bold and italic text.
 - **Export**: Upload your decks to the cloud as public or private, then update, download, or delete them from any device, protected by Row-Level Security.
 - **Import**: Browse and search public flashcard sets from other users, by title or uploader, and download them straight into your library.
 - **Backups**: Create and restore full local backups of your library and settings, with or without your stats.
-- **In-Depth Analytics**: Track your progress with detailed statistics, grade calculations, session timing, and visual performance charts.
+- **In-Depth Analytics**: Track your progress with detailed statistics, a grade for each deck, session timing, and visual performance charts, so you can see which topics need more work before the exam.
 
 ## Tech Stack
 
 - C# / .NET 10
 - Avalonia UI (Cross-platform Desktop Framework)
 - SQLite (`Microsoft.Data.Sqlite`) for local storage
-- AvaloniaMath for formula rendering
+- CSharpMath for formula rendering
 - Supabase (Database, Authentication & Storage, via its REST API)
 - AWS (Cloud Infrastructure, hosting Supabase)
 - Resend (Email Delivery Services)

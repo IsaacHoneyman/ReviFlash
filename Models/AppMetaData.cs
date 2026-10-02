@@ -20,6 +20,7 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private bool _showAnswerStreakInReview = true;
     [ObservableProperty] private bool _showAdditionalFieldLatexPreviews = true;
     [ObservableProperty] private bool _showBackgroundSwirl = true;
+    [ObservableProperty] private bool _useLatexFontForCards;
     [ObservableProperty] private bool _checkForUpdatesOnStartup = true;
     [ObservableProperty] private string _databasePath = TextUtility.DatabasePath;
     [ObservableProperty] private string? _supabaseAccessToken;
@@ -43,6 +44,7 @@ public partial class AppMetaData : ObservableObject
         ShowAnswerStreakInReview = other.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;
+        UseLatexFontForCards = other.UseLatexFontForCards;
         CheckForUpdatesOnStartup = other.CheckForUpdatesOnStartup;
         DatabasePath = other.DatabasePath;
         SupabaseAccessToken = other.SupabaseAccessToken;

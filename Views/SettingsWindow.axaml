@@ -87,6 +87,14 @@
                         <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Grid>
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="LaTeX Font for Card Text"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding UseLatexFontForCards}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
                 </StackPanel>
             </Border>
 
