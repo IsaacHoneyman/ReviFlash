@@ -61,6 +61,33 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Background" Value="#60FF4444" />
         </Style>
+        <Style Selector="Border.toolbar">
+            <Setter Property="Background" Value="#15000000" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <!-- Not focusable, so clicking keeps the cursor in the field being formatted -->
+        <Style Selector="Button.format">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.format TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="Rectangle.separator">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Margin" Value="4,4" />
+            <Setter Property="Fill" Value="{DynamicResource CardBorder}" />
+        </Style>
         <Style Selector="views|MathText">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
@@ -87,7 +114,7 @@
                     <Border Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top">
-                        <StackPanel Spacing="12">
+                        <StackPanel Spacing="12" x:Name="EditorPanel">
                         <TextBlock Text="Add New Card" FontSize="20" FontWeight="Bold"
                             Foreground="{DynamicResource TextPrimary}" />
 
@@ -96,13 +123,40 @@
                             HorizontalAlignment="Stretch"
                             CornerRadius="8" />
 
-                        <TextBlock Classes="fieldLabel" Text="Front (Question)" />
-                        <TextBox Classes="field multiline" Text="{Binding NewFront, Mode=TwoWay}" />
+                        <!-- Formatting toolbar: acts on the card field last clicked into -->
+                        <Border Classes="toolbar">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Classes="format" Click="Bold_Click" ToolTip.Tip="Bold: \B{...}  (Ctrl+B)">
+                                    <TextBlock Text="B" FontWeight="Bold" />
+                                </Button>
+                                <Button Classes="format" Click="Italic_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
+                                    <TextBlock Text="I" FontStyle="Italic" />
+                                </Button>
+                                <Rectangle Classes="separator" />
+                                <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
+                                    <views:MathText Text="$x^2$" />
+                                </Button>
+                                <Button Classes="format" Click="DisplayMath_Click" ToolTip.Tip="Maths on its own line: $$...$$  (Ctrl+Shift+M)">
+                                    <views:MathText Text="$\Sigma$" />
+                                </Button>
+                                <Button Classes="format" Click="Blank_Click" IsVisible="{Binding IsClozeCardType}"
+                                    ToolTip.Tip="Cloze blank: \C{...}  (Ctrl+Shift+C)">
+                                    <TextBlock Text="[...]" />
+                                </Button>
+                                <Rectangle Classes="separator" />
+                                <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
+                                    <TextBlock Text="?" FontWeight="Bold" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Classes="fieldLabel" Text="{Binding FrontLabel}" />
+                        <TextBox Classes="field multiline" x:Name="FrontBox" Text="{Binding NewFront, Mode=TwoWay}" />
                         <Border Classes="preview">
                             <views:MathText Text="{Binding NewFront}" ShowErrors="True" />
                         </Border>
 
-                        <TextBlock Classes="fieldLabel" Text="Back (Answer)" />
+                        <TextBlock Classes="fieldLabel" Text="{Binding BackLabel}" />
                         <TextBox Classes="field multiline" Text="{Binding NewBack, Mode=TwoWay}" />
                         <Border Classes="preview">
                             <views:MathText Text="{Binding NewBack}" ShowErrors="True" />
@@ -111,6 +165,13 @@
                         <CheckBox IsVisible="{Binding IsFlipCardType}" IsChecked="{Binding NewIsReversible, Mode=TwoWay}"
                             Content="Also ask in reverse (back → front)"
                             ToolTip.Tip="Reviews ask this card both ways, as two separate questions." />
+
+                        <StackPanel Spacing="6" IsVisible="{Binding IsClozeCardType}">
+                            <CheckBox IsChecked="{Binding NewClozeTypeAnswer, Mode=TwoWay}"
+                                Content="Answer by typing the hidden text" />
+                            <TextBlock Classes="hint"
+                                Text="Each \C{...} blank becomes its own question. Give blanks the same number, like \C1{...}, to hide them together." />
+                        </StackPanel>
 
                         <StackPanel Spacing="6" IsVisible="{Binding IsTypeCardType}">
                             <TextBlock Classes="fieldLabel" Text="Typed Answer (Accepted Input)" />

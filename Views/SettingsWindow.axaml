@@ -167,6 +167,16 @@
                             IsChecked="{Binding ShowAdditionalFieldLatexPreviews}"
                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Grid>
+
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                        <TextBlock Grid.Column="0" Text="Bold, italic, maths and cloze blanks, with examples"
+                            VerticalAlignment="Center" TextWrapping="Wrap"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <Button Grid.Column="1" Content="Formatting Guide" Click="FormattingGuide_Click"
+                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
+                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+                    </Grid>
                 </StackPanel>
             </Border>
 

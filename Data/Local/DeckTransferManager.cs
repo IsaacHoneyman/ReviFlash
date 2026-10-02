@@ -110,6 +110,7 @@ public static class DeckTransferManager
         return card.CardType switch
         {
             nameof(TypeFlashCard) => card.Answer ?? card.Back,
+            nameof(ClozeFlashCard) => card.Answer ?? (object)DBNull.Value,
             nameof(TrueFalseFlashCard) => JsonSerializer.Serialize(new TrueFalseAnswerPayload(
                 card.CorrectAnswerIsTrue ?? true,
                 string.IsNullOrWhiteSpace(card.TrueLabel) ? "True" : card.TrueLabel!,

@@ -31,6 +31,7 @@ public abstract class FlashCard(string front, string back)
         TypeFlashCard => CARD_TYPE_TYPE,
         FlipFlashCard { IsReversible: true } => $"{CARD_TYPE_FLIP} ↔",
         FlipFlashCard => CARD_TYPE_FLIP,
+        ClozeFlashCard => CARD_TYPE_CLOZE,
         MultiFlashCard => CARD_TYPE_MULTI_CHOICE,
         MatchFlashCard => CARD_TYPE_MATCH,
         TrueFalseFlashCard => CARD_TYPE_TRUE_FALSE,

@@ -7,6 +7,9 @@ namespace ReviFlash.Data.Local;
 
 public static class FlashCardFactory
 {
+    /// <summary> Stored in a cloze card's Answer column when its blanks are typed rather than revealed. </summary>
+    public const string ClozeTypeAnswerPayload = "type";
+
     public static FlashCard CreateCard(string cardType, string front, string back, string? answer, ulong id,
     List<(string optionText, bool isCorrect)> options, List<(string leftText, string rightText)> pairs, bool isReversible = false)
     {
@@ -14,6 +17,7 @@ public static class FlashCardFactory
         {
             nameof(TypeFlashCard) => new TypeFlashCard(front, back, answer, id),
             nameof(FlipFlashCard) => new FlipFlashCard(front, back, id, isReversible),
+            nameof(ClozeFlashCard) => new ClozeFlashCard(front, back, answer == ClozeTypeAnswerPayload, id),
             nameof(MultiFlashCard) => new MultiFlashCard(front, back, options, id),
             nameof(MatchFlashCard) => new MatchFlashCard(front, back, pairs, id),
             nameof(TrueFalseFlashCard) => BuildTrueFalseCard(front, back, answer, id),
@@ -26,6 +30,7 @@ public static class FlashCardFactory
         return card switch
         {
             TypeFlashCard typeCard => typeCard.Answer ?? (object)DBNull.Value,
+            ClozeFlashCard { TypeAnswer: true } => ClozeTypeAnswerPayload,
             TrueFalseFlashCard trueFalseCard => JsonSerializer.Serialize(
                 new TrueFalseAnswerPayload(trueFalseCard.CorrectAnswerIsTrue, trueFalseCard.TrueLabel, trueFalseCard.FalseLabel)),
             _ => DBNull.Value,

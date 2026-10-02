@@ -17,7 +17,7 @@ public sealed record LineBreakSegment : CardSegment;
 
 /// <summary>
 /// Turns card text into segments for rendering, or the single LaTeX string CSharpMath's TextView takes.
-/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...} and \$;
+/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \$ and cloze blanks \C{...} (shown bold);
 /// inside, the maths is passed through with rewrites for commands CSharpMath lacks.
 /// </summary>
 public static partial class LatexUtility
@@ -26,6 +26,9 @@ public static partial class LatexUtility
 
     [GeneratedRegex(@"\\(?:big|Big|bigg|Bigg)[lrm]?(?![a-zA-Z])")]
     private static partial Regex SizedDelimiterRegex();
+
+    [GeneratedRegex(@"\\C\d*\{")]
+    private static partial Regex ClozeOpeningRegex();
 
     [GeneratedRegex(@"\\pmod\s*\{([^{}]*)\}")]
     private static partial Regex PmodRegex();
@@ -138,6 +141,15 @@ public static partial class LatexUtility
                     continue;
                 }
 
+                // A cloze blank's text shows in bold wherever the whole card is shown (editor, card list).
+                if (ClozeUtility.TryReadOpening(input, i, out _, out var blankStart))
+                {
+                    FlushText();
+                    braces.Push('B');
+                    i = blankStart;
+                    continue;
+                }
+
                 if (TryReadFormatCommand(input, i, out var command))
                 {
                     FlushText();
@@ -225,6 +237,7 @@ public static partial class LatexUtility
     public static string ToMathLatex(string math)
     {
         var result = math.Replace("\r", "").Replace('\n', ' ').Replace(@"\/", "");
+        result = ClozeOpeningRegex().Replace(result, @"\mathbf{");
         result = SizedDelimiterRegex().Replace(result, "");
         result = PmodRegex().Replace(result, @"\;(\mathrm{mod}\;$1)");
         result = NegationRegex().Replace(result, match => match.Groups[1].Value == "=" ? @"\neq" : @"\notin");

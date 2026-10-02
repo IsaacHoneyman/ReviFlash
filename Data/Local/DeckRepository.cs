@@ -45,6 +45,7 @@ public static class DeckRepository
             {
                 nameof(TypeFlashCard) => new CardExportEntry(cardType, front, back, answer, null, null, null, null, null),
                 nameof(FlipFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, null, isReversible ? true : null),
+                nameof(ClozeFlashCard) => new CardExportEntry(cardType, front, back, answer, null, null, null, null, null),
                 nameof(MultiFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, LoadMultiOptions(connection, cardId), null),
                 nameof(MatchFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, LoadMatchPairs(connection, cardId)),
                 nameof(TrueFalseFlashCard) => DeckTransferManager.BuildTrueFalseExportEntry(front, back, answer),

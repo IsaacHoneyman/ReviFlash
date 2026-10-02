@@ -20,6 +20,7 @@ public static class CardUtility
     public const string GRADE_UNGRADED = "-";
 
     public const string CARD_TYPE_FLIP = "Flip";
+    public const string CARD_TYPE_CLOZE = "Cloze";
     public const string CARD_TYPE_TYPE = "Type to Answer";
     public const string CARD_TYPE_MULTI_CHOICE = "Multi Choice";
     public const string CARD_TYPE_MATCH = "Match";

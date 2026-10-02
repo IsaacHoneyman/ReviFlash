@@ -114,9 +114,15 @@ public partial class ReviewViewModel : ViewModelBase
     {
         ArgumentNullException.ThrowIfNull(cards);
 
-        // Reversible flip cards are also asked back to front, as a question of their own.
+        // Reversible flip cards are also asked back to front, and cloze cards once per blank group:
+        // each is a question of its own.
         _sessionCards = [.. cards
-            .SelectMany(card => card is FlipFlashCard { IsReversible: true } flip ? [card, flip.CreateReversedCopy()] : new[] { card })
+            .SelectMany(card => card switch
+            {
+                FlipFlashCard { IsReversible: true } flip => [card, flip.CreateReversedCopy()],
+                ClozeFlashCard cloze => cloze.CreateQuestions(),
+                _ => [card],
+            })
             .OrderBy(_ => Guid.NewGuid())]; // Shuffle cards
         if (_sessionCards.Count == 0)
         {

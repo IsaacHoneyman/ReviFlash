@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Data.Local;
 using ReviFlash.Models;
+using ReviFlash.Utilities;
 
 using static ReviFlash.Utilities.CardUtility;
 
@@ -61,6 +62,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string _newBack = "";
     [ObservableProperty] private string _newTypeAnswer = "";
     [ObservableProperty] private bool _newIsReversible;
+    [ObservableProperty] private bool _newClozeTypeAnswer;
     [ObservableProperty] private bool _newTrueFalseAnswerIsTrue = true;
     [ObservableProperty] private string _newTrueOptionText = TRUE_LABEL;
     [ObservableProperty] private string _newFalseOptionText = FALSE_LABEL;
@@ -68,6 +70,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     public List<string> AvailableCardTypes { get; } =
     [
         CARD_TYPE_FLIP,
+        CARD_TYPE_CLOZE,
         CARD_TYPE_TYPE,
         CARD_TYPE_MULTI_CHOICE,
         CARD_TYPE_MATCH,
@@ -75,6 +78,9 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     ];
 
     [NotifyPropertyChangedFor(nameof(IsFlipCardType))]
+    [NotifyPropertyChangedFor(nameof(IsClozeCardType))]
+    [NotifyPropertyChangedFor(nameof(FrontLabel))]
+    [NotifyPropertyChangedFor(nameof(BackLabel))]
     [NotifyPropertyChangedFor(nameof(IsTypeCardType))]
     [NotifyPropertyChangedFor(nameof(IsMultiChoiceCardType))]
     [NotifyPropertyChangedFor(nameof(IsMatchCardType))]
@@ -86,10 +92,14 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     }
 
     public bool IsFlipCardType => SelectedCardType == CARD_TYPE_FLIP;
+    public bool IsClozeCardType => SelectedCardType == CARD_TYPE_CLOZE;
     public bool IsTypeCardType => SelectedCardType == CARD_TYPE_TYPE;
     public bool IsMultiChoiceCardType => SelectedCardType == CARD_TYPE_MULTI_CHOICE;
     public bool IsMatchCardType => SelectedCardType == CARD_TYPE_MATCH;
     public bool IsTrueFalseCardType => SelectedCardType == CARD_TYPE_TRUE_FALSE;
+
+    public string FrontLabel => IsClozeCardType ? "Text (wrap each blank in \\C{...})" : "Front (Question)";
+    public string BackLabel => IsClozeCardType ? "Extra (optional, shown with the answer)" : "Back (Answer)";
 
     public bool ShowAdditionalFieldLatexPreviews => MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
     public string SaveButtonText => _editingCard is null ? "Save Card" : "Update Card";
@@ -230,8 +240,14 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     /// <summary> The first problem with the editor's contents, or null when it can be saved. </summary>
     private string? Validate()
     {
-        if (string.IsNullOrWhiteSpace(NewFront) || string.IsNullOrWhiteSpace(NewBack))
+        if (IsClozeCardType)
+        {
+            if (!ClozeUtility.HasBlanks(NewFront)) return @"Mark at least one blank with \C{...}.";
+        }
+        else if (string.IsNullOrWhiteSpace(NewFront) || string.IsNullOrWhiteSpace(NewBack))
+        {
             return "Front and back cannot be empty.";
+        }
 
         if (IsTypeCardType && string.IsNullOrWhiteSpace(NewTypeAnswer))
             return "Type answer cannot be empty.";
@@ -272,6 +288,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
         FlashCard card = SelectedCardType switch
         {
+            CARD_TYPE_CLOZE => new ClozeFlashCard(front, back, NewClozeTypeAnswer, cardId),
             CARD_TYPE_TYPE => new TypeFlashCard(front, back, NewTypeAnswer.Trim(), cardId),
             CARD_TYPE_MULTI_CHOICE => new MultiFlashCard(front, back, FilledOptions(), cardId),
             CARD_TYPE_MATCH => new MatchFlashCard(front, back, CompletePairs(), cardId),
@@ -311,6 +328,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
         SelectedCardType = card switch
         {
+            ClozeFlashCard => CARD_TYPE_CLOZE,
             TypeFlashCard => CARD_TYPE_TYPE,
             MultiFlashCard => CARD_TYPE_MULTI_CHOICE,
             MatchFlashCard => CARD_TYPE_MATCH,
@@ -321,6 +339,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         NewBack = card.Back;
         NewTypeAnswer = (card as TypeFlashCard)?.Answer ?? "";
         NewIsReversible = card is FlipFlashCard { IsReversible: true };
+        NewClozeTypeAnswer = card is ClozeFlashCard { TypeAnswer: true };
 
         var trueFalse = card as TrueFalseFlashCard;
         NewTrueFalseAnswerIsTrue = trueFalse?.CorrectAnswerIsTrue ?? true;
@@ -348,6 +367,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         NewBack = isMatch ? CARD_TYPE_MATCH_PLACEHOLDER : "";
         NewTypeAnswer = "";
         NewIsReversible = false;
+        NewClozeTypeAnswer = false;
         NewTrueFalseAnswerIsTrue = true;
         NewTrueOptionText = TRUE_LABEL;
         NewFalseOptionText = FALSE_LABEL;
@@ -428,7 +448,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
     /// <summary> The editor's contents in a form records can compare (blank option and pair rows ignored). </summary>
     private sealed record EditorState(
-        string CardType, string Front, string Back, string TypeAnswer, bool IsReversible,
+        string CardType, string Front, string Back, string TypeAnswer, bool IsReversible, bool ClozeTypeAnswer,
         bool TrueFalseAnswerIsTrue, string TrueOptionText, string FalseOptionText,
         string Options, string Pairs);
 
@@ -443,7 +463,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
             .Select(p => $"{p.LeftText.Trim()}\u001F{p.RightText.Trim()}");
 
         return new EditorState(
-            SelectedCardType, NewFront, NewBack, NewTypeAnswer, NewIsReversible,
+            SelectedCardType, NewFront, NewBack, NewTypeAnswer, NewIsReversible, NewClozeTypeAnswer,
             NewTrueFalseAnswerIsTrue, NewTrueOptionText, NewFalseOptionText,
             string.Join('\u001E', options), string.Join('\u001E', pairs));
     }

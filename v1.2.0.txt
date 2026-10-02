@@ -3,3 +3,9 @@ Reversed flip cards keep their setting in backups and in decks shared online
 Fixed the "Card X of Y" counter on the review screen not showing
 Fixed changing a Type to Answer card into another card type asking for a typed answer
 The card list in the editor shows "True/False" consistently with the card type menu
+New Cloze card type: write a sentence and wrap the parts to hide in \C{...}; each blank becomes its own question, shown as [...] with the full text revealed after
+Cloze blanks with the same number, like \C1{...}, are hidden together, and blanks work inside maths too
+Cloze cards have an optional Extra field shown with the answer, and can be answered by revealing or by typing the hidden text
+Formatting toolbar above the card fields: bold, italic, inline maths, display maths and cloze blanks, applied to the selected text
+Keyboard shortcuts in card fields: Ctrl+B bold, Ctrl+I italic, Ctrl+M maths, Ctrl+Shift+M maths on its own line, Ctrl+Shift+C cloze blank (Cmd on macOS); pressing one again removes it
+New Formatting Guide, from the ? button in the card editor or Settings → Editor, with examples of formatting, cloze blanks and LaTeX next to how they look, and a copy button for each
