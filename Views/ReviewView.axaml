@@ -63,14 +63,16 @@
                         Foreground="{DynamicResource TextSecondary}" />
                 </StackPanel>
 
-                <views:MathText Text="{Binding CurrentCard.Front}" HorizontalAlignment="Center" FontSize="18" Foreground="{DynamicResource TextPrimary}" IsCentered="True" />
+                <!-- Centred while they fit on one line; anything longer reads better left-aligned -->
+                <views:MathText Text="{Binding CurrentCard.Front}" HorizontalAlignment="Center" FontSize="22" Foreground="{DynamicResource TextPrimary}" IsCentered="True" />
 
+                <!-- Only once there's an answer to show, so unanswered cards have no empty band -->
                 <Separator Background="{DynamicResource CardBorder}" Opacity="0.3"
-                    Margin="0,20" />
+                    IsVisible="{Binding ShowBackSection}" />
 
-                <views:MathText Text="{Binding CurrentCard.Back}" IsVisible="{Binding ShowBackAnswer}" HorizontalAlignment="Center" FontSize="18" Foreground="{DynamicResource TextSecondary}" IsCentered="True" />
+                <views:MathText Text="{Binding CurrentCard.Back}" IsVisible="{Binding ShowBackSection}" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource TextSecondary}" IsCentered="True" />
 
-                <StackPanel Spacing="15" Margin="0,20,0,0">
+                <StackPanel Spacing="15" Margin="0,8,0,0">
                     <!-- Flip Card: Show Answer Button -->
                     <Button Content="Show Answer" Click="ShowAnswer_Click"
                         IsVisible="{Binding ShowAnswerButtonVisible}"
@@ -347,14 +349,17 @@
                                 Foreground="{DynamicResource TextSecondary}" />
 
                             <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                                <!-- Neutral until answered, so the colours don't hint at the answer -->
                                 <Button Grid.Column="0" Content="{Binding CurrentTrueFalseTrueOptionText}"
-                                    Click="TrueAnswer_Click" FontSize="16"
+                                    Click="TrueAnswer_Click" FontSize="16" Padding="12,10" CornerRadius="8"
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                    Background="{DynamicResource SuccessBackground}" Foreground="#FFFFFF" />
+                                    Background="{DynamicResource SurfaceOverlayBackground}" Foreground="{DynamicResource TextPrimary}"
+                                    BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" />
                                 <Button Grid.Column="1" Content="{Binding CurrentTrueFalseFalseOptionText}"
-                                    Click="FalseAnswer_Click" FontSize="16"
+                                    Click="FalseAnswer_Click" FontSize="16" Padding="12,10" CornerRadius="8"
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                    Background="{DynamicResource DangerBackground}" Foreground="#FFFFFF" />
+                                    Background="{DynamicResource SurfaceOverlayBackground}" Foreground="{DynamicResource TextPrimary}"
+                                    BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" />
                             </Grid>
                         </StackPanel>
 

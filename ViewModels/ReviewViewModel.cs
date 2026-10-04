@@ -60,6 +60,7 @@ public partial class ReviewViewModel : ViewModelBase
     [ObservableProperty] private int _bestAnswerStreak = 0;
     [NotifyPropertyChangedFor(nameof(ShowAnswerButtonVisible))]
     [NotifyPropertyChangedFor(nameof(ShowBackAnswer))]
+    [NotifyPropertyChangedFor(nameof(ShowBackSection))]
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerRevealed = false;
@@ -83,6 +84,8 @@ public partial class ReviewViewModel : ViewModelBase
         ? (trueFalseCard.CorrectAnswerIsTrue ? trueFalseCard.TrueLabel : trueFalseCard.FalseLabel)
         : "";
     public bool ShowBackAnswer => IsAnswerRevealed;
+    /// <summary> The back once answered, unless there's nothing to show (blank, or a match card's placeholder). </summary>
+    public bool ShowBackSection => IsAnswerRevealed && !IsMatchCard && !string.IsNullOrWhiteSpace(CurrentCard.Back);
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerChecked = false;

@@ -76,6 +76,21 @@ public class MathText : Decorator
         if (e.PropertyName == nameof(MetaDataManager.Data.UseLatexFontForCards)) Rebuild();
     }
 
+    /// <summary>
+    /// With <see cref="IsCentered"/>, text is centred only while every paragraph fits on one line: wrapped,
+    /// it reads better left-aligned. Alignment doesn't change where lines break, so one measure decides.
+    /// </summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var size = base.MeasureOverride(availableSize);
+        if (!IsCentered || Child is not Panel panel) return size;
+
+        var paragraphs = panel.Children.OfType<TextBlock>().ToList();
+        var alignment = paragraphs.Any(p => p.TextLayout.TextLines.Count > 1) ? TextAlignment.Left : TextAlignment.Center;
+        foreach (var paragraph in paragraphs) paragraph.TextAlignment = alignment;
+        return size;
+    }
+
     private void Rebuild()
     {
         _builtWithLatexFont = MetaDataManager.Data.UseLatexFontForCards;

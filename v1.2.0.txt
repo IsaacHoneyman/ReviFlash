@@ -17,3 +17,7 @@ Type to Answer questions put the cursor in the answer box, so you can start typi
 The top of each review card shows the card type (Flip, Cloze, Flip · Reversed and so on) instead of repeating the progress count, and in study group reviews which deck the card is from
 The "LaTeX Font for Card Text" option now uses the Latin Modern text font with the normal layout, so underline, bold and italic together, and maths on its own line all work the same as with the app font
 Maths is sized to match the text around it (it was a third larger than intended)
+Bigger question and answer text in reviews
+Questions and answers stay centred when they fit on one line, and longer ones are left-aligned so they're easier to read
+No more empty gap and divider under the question before the answer is shown
+True/False buttons stay neutral until you answer, instead of being green and red from the start
