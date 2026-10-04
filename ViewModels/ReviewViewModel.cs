@@ -16,18 +16,37 @@ namespace ReviFlash.ViewModels;
 public partial class ReviewOptionItem : ViewModelBase
 {
     public string OptionText { get; set; } = "";
+    /// <summary> Its key, 1-9, or blank past nine. </summary>
+    public string NumberText { get; init; } = "";
     public bool IsCorrect { get; set; }
 
     [ObservableProperty] private bool _isSelected;
+}
+
+/// <summary> A right-hand item of a match card, placed against a left item by clicking it or pressing its number. </summary>
+public partial class ReviewMatchChip : ViewModelBase
+{
+    public string Text { get; init; } = "";
+    /// <summary> Its key, 1-9, or blank past nine. </summary>
+    public string NumberText { get; init; } = "";
+
+    [ObservableProperty] private bool _isUsed;
 }
 
 public partial class ReviewMatchRow : ViewModelBase
 {
     public string LeftText { get; set; } = "";
     public string CorrectRightText { get; set; } = "";
-    public List<string> RightChoices { get; set; } = [];
 
-    [ObservableProperty] private string? _selectedRightText;
+    /// <summary> The row the next chip goes in. </summary>
+    [ObservableProperty] private bool _isCurrent;
+    [NotifyPropertyChangedFor(nameof(SelectedRightText))]
+    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [ObservableProperty] private ReviewMatchChip? _selectedChip;
+    [ObservableProperty] private bool _isCorrect;
+
+    public string? SelectedRightText => SelectedChip?.Text;
+    public bool HasSelection => SelectedChip is not null;
 }
 
 public partial class ReviewViewModel : ViewModelBase
@@ -93,15 +112,13 @@ public partial class ReviewViewModel : ViewModelBase
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
     public ObservableCollection<ReviewMatchRow> MatchRows { get; } = new();
-    public ObservableCollection<string> MatchRightChoices { get; } = new();
+    public ObservableCollection<ReviewMatchChip> MatchChips { get; } = new();
 
     public bool HasSelectedWrongOptions => SelectedWrongOptions.Count > 0;
     public bool HasMissedCorrectOptions => MissedCorrectOptions.Count > 0;
-    public bool HasWrongMatches => WrongMatches.Count > 0;
 
     public ObservableCollection<string> SelectedWrongOptions { get; } = new();
     public ObservableCollection<string> MissedCorrectOptions { get; } = new();
-    public ObservableCollection<string> WrongMatches { get; } = new();
     
     [ObservableProperty] private bool _isAnswerCorrect = false;
 
@@ -153,7 +170,8 @@ public partial class ReviewViewModel : ViewModelBase
                 { IsFlipCard: true, IsAnswerRevealed: false } => "Space: show answer",
                 { IsFlipCard: true } => $"←  Incorrect{gap}→  Correct" + (CanRetryLater ? $"{gap}R: retry later" : ""),
                 { IsTrueFalseCard: true } => $"←  {CurrentTrueFalseTrueOptionText}{gap}→  {CurrentTrueFalseFalseOptionText}",
-                { IsMultiChoiceCard: true } => $"1–{MultiChoiceAnswerOptions.Count}: tick an option{gap}Enter: submit",
+                { IsMultiChoiceCard: true } => $"1–{Math.Min(MultiChoiceAnswerOptions.Count, 9)}: tick an option{gap}Enter: submit",
+                { IsMatchCard: true } => $"1–{Math.Min(MatchChips.Count, 9)}: place an answer{gap}↑ ↓: move{gap}Backspace: undo{gap}Enter: submit",
                 _ => "Enter: submit",
             };
 
@@ -324,19 +342,14 @@ public partial class ReviewViewModel : ViewModelBase
         IsAnswerCorrect = CurrentCard.VerifyAnswer(selectedPairs);
         RecordCurrentCardResult(IsAnswerCorrect);
 
-        WrongMatches.Clear();
         foreach (var row in MatchRows)
         {
-            if (!string.Equals(row.SelectedRightText, row.CorrectRightText, StringComparison.Ordinal))
-            {
-                var selected = string.IsNullOrWhiteSpace(row.SelectedRightText) ? "(no selection)" : row.SelectedRightText;
-                WrongMatches.Add($"{row.LeftText} -> {selected} (correct: {row.CorrectRightText})");
-            }
+            row.IsCorrect = string.Equals(row.SelectedRightText, row.CorrectRightText, StringComparison.Ordinal);
+            row.IsCurrent = false;
         }
 
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(HasWrongMatches));
     }
 
     public void CheckTrueFalseAnswer(bool selectedAnswerIsTrue)
@@ -519,9 +532,11 @@ public partial class ReviewViewModel : ViewModelBase
 
         foreach (var (optionText, isCorrect) in multiCard.Options.OrderBy(_ => Guid.NewGuid()))
         {
+            var number = MultiChoiceAnswerOptions.Count + 1;
             MultiChoiceAnswerOptions.Add(new ReviewOptionItem
             {
                 OptionText = optionText,
+                NumberText = number <= 9 ? $"{number}" : "",
                 IsCorrect = isCorrect,
                 IsSelected = false,
             });
@@ -531,7 +546,7 @@ public partial class ReviewViewModel : ViewModelBase
     private void LoadMatchRowsForCurrentCard()
     {
         MatchRows.Clear();
-        MatchRightChoices.Clear();
+        MatchChips.Clear();
 
         if (CurrentCard is not MatchFlashCard matchCard)
         {
@@ -544,21 +559,82 @@ public partial class ReviewViewModel : ViewModelBase
             .OrderBy(_ => Guid.NewGuid())
             .ToList();
 
-        foreach (var choice in randomizedRightChoices)
+        for (var i = 0; i < randomizedRightChoices.Count; i++)
         {
-            MatchRightChoices.Add(choice);
+            MatchChips.Add(new ReviewMatchChip { Text = randomizedRightChoices[i], NumberText = i < 9 ? $"{i + 1}" : "" });
         }
 
         foreach (var (leftText, rightText) in randomizedPairs)
         {
-            MatchRows.Add(new ReviewMatchRow
-            {
-                LeftText = leftText,
-                CorrectRightText = rightText,
-                RightChoices = [.. randomizedRightChoices],
-                SelectedRightText = null,
-            });
+            MatchRows.Add(new ReviewMatchRow { LeftText = leftText, CorrectRightText = rightText });
         }
+
+        if (MatchRows.Count > 0) MatchRows[0].IsCurrent = true;
+    }
+
+    // --- Match cards: chips go into the current row, which then moves to the next empty one ---
+
+    private ReviewMatchRow? CurrentMatchRow => MatchRows.FirstOrDefault(row => row.IsCurrent);
+
+    /// <summary> Puts the chip at <paramref name="index"/> (0-based) in the current row. </summary>
+    public void PlaceMatchChip(int index)
+    {
+        if (index >= 0 && index < MatchChips.Count) PlaceMatchChip(MatchChips[index]);
+    }
+
+    public void PlaceMatchChip(ReviewMatchChip chip)
+    {
+        if (!IsMatchCard || IsAnswerChecked || chip.IsUsed || CurrentMatchRow is not { } row) return;
+
+        row.SelectedChip?.IsUsed = false;
+        row.SelectedChip = chip;
+        chip.IsUsed = true;
+
+        // On to the next empty row after this one, wrapping round; stay put once every row is filled.
+        var start = MatchRows.IndexOf(row);
+        var next = Enumerable.Range(1, MatchRows.Count)
+            .Select(offset => MatchRows[(start + offset) % MatchRows.Count])
+            .FirstOrDefault(candidate => !candidate.HasSelection);
+        if (next is not null) SetCurrentMatchRow(next);
+    }
+
+    /// <summary> Makes <paramref name="row"/> current, taking out the chip it had so another can go in. </summary>
+    public void SelectMatchRow(ReviewMatchRow row)
+    {
+        if (!IsMatchCard || IsAnswerChecked) return;
+        ClearMatchRow(row);
+        SetCurrentMatchRow(row);
+    }
+
+    /// <summary> Moves the current row up (-1) or down (+1). </summary>
+    public void MoveMatchRow(int delta)
+    {
+        if (!IsMatchCard || IsAnswerChecked || CurrentMatchRow is not { } row) return;
+        var index = Math.Clamp(MatchRows.IndexOf(row) + delta, 0, MatchRows.Count - 1);
+        SetCurrentMatchRow(MatchRows[index]);
+    }
+
+    /// <summary> Takes the chip out of the current row, or if that's empty, out of the row above and moves there. </summary>
+    public void UndoMatchChip()
+    {
+        if (!IsMatchCard || IsAnswerChecked || CurrentMatchRow is not { } row) return;
+        if (!row.HasSelection && MatchRows.IndexOf(row) > 0)
+        {
+            row = MatchRows[MatchRows.IndexOf(row) - 1];
+            SetCurrentMatchRow(row);
+        }
+        ClearMatchRow(row);
+    }
+
+    private static void ClearMatchRow(ReviewMatchRow row)
+    {
+        row.SelectedChip?.IsUsed = false;
+        row.SelectedChip = null;
+    }
+
+    private void SetCurrentMatchRow(ReviewMatchRow current)
+    {
+        foreach (var row in MatchRows) row.IsCurrent = row == current;
     }
 
     private void MoveCurrentCardToEnd()
@@ -587,7 +663,6 @@ public partial class ReviewViewModel : ViewModelBase
         _currentCardHasBeenScored = false;
         SelectedWrongOptions.Clear();
         MissedCorrectOptions.Clear();
-        WrongMatches.Clear();
         LoadMultiChoiceOptionsForCurrentCard();
         LoadMatchRowsForCurrentCard();
         RefreshBestAnswerStreak();
@@ -611,7 +686,6 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowAnswerButtonVisible));
         OnPropertyChanged(nameof(HasSelectedWrongOptions));
         OnPropertyChanged(nameof(HasMissedCorrectOptions));
-        OnPropertyChanged(nameof(HasWrongMatches));
     }
 
 }

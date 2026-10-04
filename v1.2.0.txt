@@ -12,13 +12,18 @@ Fixed changing a Type to Answer card into another card type asking for a typed a
 The card list in the editor shows "True/False" consistently with the card type menu
 The review card grows with the window (up to about a third wider than before), so questions and answers wrap less
 Fixed a crash when maths CSharpMath can't lay out (such as spacing between two operators) was shown, for example in the Formatting Guide with the LaTeX font on; it now shows as typed, with a note in the editor preview
-Keyboard shortcuts in reviews: Space shows the answer, ← / → (or 1 / 2) mark it incorrect / correct or pick True / False, 1–8 tick multiple choice options, Enter submits and then goes to the next card, S skips and R retries later; a hint under the card shows the ones that work right now
+Keyboard shortcuts in reviews: Space shows the answer, ← / → (or 1 / 2) mark it incorrect / correct or pick True / False, 1–9 tick multiple choice options, Enter submits and then goes to the next card, S skips, R retries later and Esc quits; a hint under the card shows the ones that work right now
 Type to Answer questions put the cursor in the answer box, so you can start typing straight away
 The top of each review card shows the card type (Flip, Cloze, Flip · Reversed and so on) instead of repeating the progress count, and in study group reviews which deck the card is from
 The "LaTeX Font for Card Text" option now uses the Latin Modern text font with the normal layout, so underline, bold and italic together, and maths on its own line all work the same as with the app font
 Maths is sized to match the text around it (it was a third larger than intended)
-Bigger question and answer text in reviews
+Slightly bigger question and answer text in reviews
 Questions and answers stay centred when they fit on one line, and longer ones are left-aligned so they're easier to read
 No more empty gap and divider under the question before the answer is shown
 True/False buttons stay neutral until you answer, instead of being green and red from the start
 Flip cards have a Retry Later button too, under Incorrect and Correct
+All review buttons share one style, matching the rest of the app: theme-coloured for the main action, plain for the others, with Retry Later beside Next
+Match cards are answered by picking answer chips (click, or press their number) instead of drop-down menus; ↑ / ↓ move between items and Backspace undoes, and the result shows each pair with the right answer under any you got wrong
+Multiple choice options can be ticked by clicking anywhere on the option, and show their number key
+Press Enter on the Session Complete screen to finish
+Confirmation dialogs: Enter proceeds and Esc cancels

@@ -58,13 +58,21 @@ public partial class ReviewView : UserControl
     }
 
     /// <summary>
-    /// Space reveals, Left/Right (or 1/2) mark incorrect/correct or pick True/False, 1-8 tick options,
-    /// Enter submits and then moves on, S skips and R retries later. While typing an answer only Enter counts.
+    /// Space reveals, Left/Right (or 1/2) mark incorrect/correct or pick True/False, 1-9 tick options or place
+    /// match answers, Enter submits and then moves on, S skips, R retries later and Esc quits.
+    /// While typing an answer only Enter and Esc count.
     /// </summary>
     private void Review_KeyDown(object? sender, KeyEventArgs e)
     {
         if (!IsEffectivelyVisible || GetReviewVM() is not { } vm) return;
         if (e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift)) return;
+
+        if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            ConfirmQuit();
+            return;
+        }
 
         var typing = _topLevel?.FocusManager?.GetFocusedElement() is TextBox;
         if (typing && e.Key != Key.Enter) return;
@@ -119,10 +127,20 @@ public partial class ReviewView : UserControl
             return true;
         }
 
+        if (vm.IsMatchCard)
+        {
+            if (OptionNumber(key) is { } chip) vm.PlaceMatchChip(chip - 1);
+            else if (key == Key.Up) vm.MoveMatchRow(-1);
+            else if (key == Key.Down) vm.MoveMatchRow(1);
+            else if (key is Key.Back or Key.Delete) vm.UndoMatchChip();
+            else if (key == Key.Enter) vm.CheckMatchAnswer();
+            else return false;
+            return true;
+        }
+
         if (key != Key.Enter && !(confirm && !vm.IsTypeCard)) return false;
 
         if (vm.IsMultiChoiceCard) vm.CheckMultiChoiceAnswer();
-        else if (vm.IsMatchCard) vm.CheckMatchAnswer();
         else if (vm.IsTypeCard) vm.CheckTypedAnswer();
         else return false;
         return true;
@@ -189,13 +207,33 @@ public partial class ReviewView : UserControl
     private void Correct_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkCorrect();
     private void Incorrect_Click(object sender, RoutedEventArgs e) => GetReviewVM()?.MarkIncorrect();
 
-    private async void QuitSession_Click(object sender, RoutedEventArgs e)
+    private void MatchRow_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new ConfirmDialogWindow("Quit this session and save your progress so far?");
-        bool confirmed = await dialog.ShowDialog<bool>((Window)TopLevel.GetTopLevel(this)!);
-        if (confirmed)
+        if ((sender as Control)?.DataContext is ReviewMatchRow row) GetReviewVM()?.SelectMatchRow(row);
+    }
+
+    private void MatchChip_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.DataContext is ReviewMatchChip chip) GetReviewVM()?.PlaceMatchChip(chip);
+    }
+
+    private void QuitSession_Click(object sender, RoutedEventArgs e) => ConfirmQuit();
+
+    private bool _confirmingQuit;
+
+    private async void ConfirmQuit()
+    {
+        if (_confirmingQuit || TopLevel.GetTopLevel(this) is not Window window) return;
+
+        _confirmingQuit = true;
+        try
         {
-            GetReviewVM()?.QuitSession();
+            var dialog = new ConfirmDialogWindow("Quit this session and save your progress so far?");
+            if (await dialog.ShowDialog<bool>(window)) GetReviewVM()?.QuitSession();
+        }
+        finally
+        {
+            _confirmingQuit = false;
         }
     }
 

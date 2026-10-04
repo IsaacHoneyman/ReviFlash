@@ -29,8 +29,8 @@
                        TextAlignment="Center"/>
             
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
-                <Button Click="Cancel_Click" Content="Cancel" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
-                <Button Click="Confirm_Click" Content="Proceed" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+                <Button Click="Cancel_Click" Content="Cancel" IsCancel="True" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+                <Button Click="Confirm_Click" Content="Proceed" IsDefault="True" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
             </StackPanel>
         </Grid>
     </Border>
