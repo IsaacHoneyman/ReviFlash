@@ -16,7 +16,7 @@ public sealed record MathSegment(string Latex, string Source, bool Display) : Ca
 public sealed record LineBreakSegment : CardSegment;
 
 /// <summary>
-/// Turns card text into segments for rendering, or the single LaTeX string CSharpMath's TextView takes.
+/// Turns card text into segments for rendering: styled text, line breaks, and maths ready for CSharpMath.
 /// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, \$ and cloze blanks \C{...} (shown bold);
 /// inside, the maths is passed through with rewrites for commands CSharpMath lacks.
 /// </summary>
@@ -74,19 +74,6 @@ public static partial class LatexUtility
         ["cosec"] = @"\operatorname{cosec}",
         ["lbrack"] = "[",
         ["rbrack"] = "]",
-    };
-
-    /// <summary> Text-mode replacements for characters LaTeX treats as special. The {} keeps a following space. </summary>
-    private static readonly Dictionary<char, string> TextEscapes = new()
-    {
-        ['%'] = @"\%{}",
-        ['#'] = @"\#{}",
-        ['&'] = @"\&{}",
-        ['_'] = @"\_{}",
-        ['^'] = @"\textasciicircum{}",
-        ['~'] = @"\textasciitilde{}",
-        ['{'] = @"\{{}",
-        ['}'] = @"\}{}",
     };
 
     /// <summary> Splits card text into styled text, maths and line breaks. </summary>
@@ -186,54 +173,6 @@ public static partial class LatexUtility
         // Any \B{ / \I{ the user left open just runs to the end of the card.
         FlushText();
         return segments;
-    }
-
-    /// <summary> The whole card as one LaTeX string for CSharpMath's TextView (the LaTeX font option). </summary>
-    public static string ToTextLatex(string? input) => ToTextLatex(Parse(input));
-
-    public static string ToTextLatex(IReadOnlyList<CardSegment> segments)
-    {
-        var output = new StringBuilder();
-
-        for (var s = 0; s < segments.Count; s++)
-        {
-            switch (segments[s])
-            {
-                case TextSegment text:
-                    var escaped = EscapeText(text.Text);
-                    // CSharpMath's text mode has no underline, so \U{...} is plain in the LaTeX font view.
-                    if (text.Italic) escaped = $@"\textit{{{escaped}}}";
-                    if (text.Bold) escaped = $@"\textbf{{{escaped}}}";
-                    output.Append(escaped);
-                    break;
-
-                case MathSegment math:
-                    // Keep $a$$b$ as two inline formulas rather than letting the $$ read as display maths.
-                    if (s > 0 && segments[s - 1] is MathSegment) output.Append("{}");
-                    var delimiter = math.Display ? "$$" : "$";
-                    output.Append(delimiter).Append(math.Latex).Append(delimiter);
-                    break;
-
-                case LineBreakSegment:
-                    output.Append(@"\\");
-                    break;
-            }
-        }
-
-        return output.ToString();
-    }
-
-    private static string EscapeText(string text)
-    {
-        var output = new StringBuilder(text.Length * 2);
-        foreach (var c in text)
-        {
-            if (c == '\\') output.Append(@"\textbackslash{}");
-            else if (c == '$') output.Append(@"\$");
-            else if (TextEscapes.TryGetValue(c, out var escaped)) output.Append(escaped);
-            else output.Append(c);
-        }
-        return output.ToString();
     }
 
     public static string ToMathLatex(string math)

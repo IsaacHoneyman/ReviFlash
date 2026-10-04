@@ -15,3 +15,5 @@ Fixed a crash when maths CSharpMath can't lay out (such as spacing between two o
 Keyboard shortcuts in reviews: Space shows the answer, ← / → (or 1 / 2) mark it incorrect / correct or pick True / False, 1–8 tick multiple choice options, Enter submits and then goes to the next card, S skips and R retries later; a hint under the card shows the ones that work right now
 Type to Answer questions put the cursor in the answer box, so you can start typing straight away
 The top of each review card shows the card type (Flip, Cloze, Flip · Reversed and so on) instead of repeating the progress count, and in study group reviews which deck the card is from
+The "LaTeX Font for Card Text" option now uses the Latin Modern text font with the normal layout, so underline, bold and italic together, and maths on its own line all work the same as with the app font
+Maths is sized to match the text around it (it was a third larger than intended)

@@ -10,17 +10,15 @@ using Avalonia.Media;
 using CSharpMath.Avalonia;
 using ReviFlash.Data.Local;
 using ReviFlash.Utilities;
-using LaTeXParser = CSharpMath.Atom.LaTeXParser;
 using LineStyle = CSharpMath.Atom.LineStyle;
-using MathAlignment = CSharpMath.Rendering.FrontEnd.TextAlignment;
 
 namespace ReviFlash.Views;
 
 /// <summary>
-/// Card text with inline $...$ and display $$...$$ maths, plus \B{...} and \I{...}.
+/// Card text with inline $...$ and display $$...$$ maths, plus \B{...}, \I{...} and \U{...}.
 /// Used everywhere card content is shown so the editor previews and review screen match.
-/// Text is in the app font with each formula placed inline, unless the LaTeX font setting is on,
-/// in which case CSharpMath lays out the whole card.
+/// Text is laid out by Avalonia (in the app font, or Latin Modern with the LaTeX font setting) and each
+/// formula is typeset by CSharpMath and placed inline on the text baseline.
 /// </summary>
 public class MathText : Decorator
 {
@@ -80,43 +78,32 @@ public class MathText : Decorator
 
     private void Rebuild()
     {
-        var segments = LatexUtility.Parse(Text);
-        var useLatexFont = MetaDataManager.Data.UseLatexFontForCards;
-        _builtWithLatexFont = useLatexFont;
-        Child = useLatexFont ? BuildLatexView(segments) : BuildAppFontView(segments);
+        _builtWithLatexFont = MetaDataManager.Data.UseLatexFontForCards;
+        Child = BuildView(LatexUtility.Parse(Text));
     }
 
-    // --- LaTeX font: CSharpMath lays out text and maths together ---
+    /// <summary>
+    /// Text faces for the "LaTeX Font for Card Text" setting (maths is always in CSharpMath's Latin Modern Math).
+    /// One file each: given the whole folder, Avalonia picks the first file (bold) for every weight.
+    /// </summary>
+    private static readonly FontFamily[] LatinModernFaces =
+    [
+        LatinModernFace("regular"), LatinModernFace("bold"), LatinModernFace("italic"), LatinModernFace("bolditalic"),
+    ];
 
-    private TextView BuildLatexView(IReadOnlyList<CardSegment> segments)
-    {
-        // Maths CSharpMath would crash on always shows as typed. In a review, so does maths that doesn't
-        // parse; the editor preview shows that error instead.
-        segments = [.. segments.SelectMany(IEnumerable<CardSegment> (segment) => segment switch
-        {
-            MathSegment math when CrashesTypesetter(math.Latex) => FallbackWithNote(math),
-            MathSegment math when !ShowErrors && LaTeXParser.MathListFromLaTeX(math.Latex).Error is not null => [Fallback(math)],
-            _ => [segment],
-        })];
+    private static FontFamily LatinModernFace(string style) =>
+        new($"avares://ReviFlash/Assets/Fonts/LatinModern/lmroman10-{style}.otf#Latin Modern Roman");
 
-        var view = new SafeTextView
-        {
-            FontSize = (float)FontSize,
-            TextColor = TextColor,
-            TextAlignment = IsCentered ? MathAlignment.Top : MathAlignment.TopLeft,
-            LaTeX = LatexUtility.ToTextLatex(segments),
-        };
+    /// <summary>
+    /// CSharpMath sizes in points and Avalonia in pixels (4/3 of a point), so maths at the same number is a third
+    /// bigger than the text. 0.75 matches Latin Modern text exactly; next to Inter, whose letters are taller than
+    /// Latin Modern's, 0.9 looks the same size.
+    /// </summary>
+    private double MathScale => _builtWithLatexFont == true ? 0.75 : 0.9;
 
-        // Unrenderable maths in a review: show what was typed rather than an error.
-        if (view.ErrorMessage is not null && !ShowErrors)
-            view.LaTeX = LatexUtility.ToTextLatex(Text?.Replace("$", @"\$"));
+    // --- Text blocks with each formula placed inline ---
 
-        return view;
-    }
-
-    // --- App font: text blocks with each formula placed inline ---
-
-    private StackPanel BuildAppFontView(IReadOnlyList<CardSegment> segments)
+    private StackPanel BuildView(IReadOnlyList<CardSegment> segments)
     {
         var panel = new StackPanel();
         TextBlock? paragraph = null;
@@ -162,16 +149,22 @@ public class MathText : Decorator
             TextAlignment = IsCentered ? TextAlignment.Center : TextAlignment.Left,
             Inlines = [],
         };
+        if (_builtWithLatexFont == true) paragraph.FontFamily = LatinModernFaces[0];
         if (text is not null) paragraph.Inlines!.AddRange(text.Select(CreateRun));
         return paragraph;
     }
 
-    private static Run CreateRun(TextSegment text) => new(text.Text)
+    private Run CreateRun(TextSegment text)
     {
-        FontWeight = text.Bold ? FontWeight.Bold : FontWeight.Normal,
-        FontStyle = text.Italic ? FontStyle.Italic : FontStyle.Normal,
-        TextDecorations = text.Underline ? Avalonia.Media.TextDecorations.Underline : null,
-    };
+        var run = new Run(text.Text)
+        {
+            FontWeight = text.Bold ? FontWeight.Bold : FontWeight.Normal,
+            FontStyle = text.Italic ? FontStyle.Italic : FontStyle.Normal,
+            TextDecorations = text.Underline ? Avalonia.Media.TextDecorations.Underline : null,
+        };
+        if (_builtWithLatexFont == true) run.FontFamily = LatinModernFaces[(text.Bold ? 1 : 0) + (text.Italic ? 2 : 0)];
+        return run;
+    }
 
     private static TextSegment Fallback(MathSegment math)
     {
@@ -219,7 +212,7 @@ public class MathText : Decorator
 
         var view = new InlineMathView
         {
-            FontSize = (float)FontSize,
+            FontSize = (float)(FontSize * MathScale),
             TextColor = TextColor,
             // Inline maths is set smaller (fractions, limits) so it fits the line, as in LaTeX.
             LineStyle = isInline ? LineStyle.Text : LineStyle.Display,
@@ -240,16 +233,6 @@ public class MathText : Decorator
         }
         return view;
     }
-}
-
-/// <summary> Whole-card LaTeX layout that can't take the app down if CSharpMath throws. </summary>
-public class SafeTextView : TextView
-{
-    protected override Size MeasureOverride(Size availableSize) =>
-        SafeTypesetting.Run(() => base.MeasureOverride(availableSize), LaTeX);
-
-    public override void Render(DrawingContext context) =>
-        SafeTypesetting.Run(() => { base.Render(context); return Size.Infinity; }, LaTeX);
 }
 
 /// <summary>
