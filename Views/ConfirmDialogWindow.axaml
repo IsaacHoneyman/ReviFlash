@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="ReviFlash.Views.ConfirmDialogWindow"
         Title="Confirm Action" 
-        Width="450" Height="200"
+        Width="450" MinHeight="200" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         SystemDecorations="None"
         ExtendClientAreaToDecorationsHint="True"
@@ -17,7 +17,7 @@
             CornerRadius="20" 
             Padding="24">
         
-        <Grid RowDefinitions="*, Auto">
+        <Grid RowDefinitions="*, Auto, Auto">
             <TextBlock x:Name="MessageText" 
                        Text="Are you sure you want to proceed?" 
                        FontSize="18" 
@@ -28,9 +28,13 @@
                        HorizontalAlignment="Center" 
                        TextAlignment="Center"/>
             
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
+            <!-- An optional extra choice, e.g. also deleting a folder's contents -->
+            <CheckBox Grid.Row="1" x:Name="OptionCheckBox" IsVisible="False" HorizontalAlignment="Center" Margin="0,16,0,0"
+                Foreground="{DynamicResource TextPrimary}" IsCheckedChanged="Option_Changed" />
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
                 <Button Click="Cancel_Click" Content="Cancel" IsCancel="True" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
-                <Button Click="Confirm_Click" Content="Proceed" IsDefault="True" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+                <Button x:Name="ConfirmButton" Click="Confirm_Click" Content="Proceed" IsDefault="True" Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
             </StackPanel>
         </Grid>
     </Border>

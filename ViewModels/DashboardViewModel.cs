@@ -596,12 +596,15 @@ public partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary> Deletes the folder only: its contents move up to the folder's parent. </summary>
-    public void DeleteFolder(Folder folder)
+    /// <param name="withContents"> Delete everything inside too, instead of moving it up a level. </param>
+    public void DeleteFolder(Folder folder, bool withContents = false)
     {
-        FolderRepository.DeleteFolder(folder.ID);
+        if (withContents) FolderRepository.DeleteFolderAndContents(FolderTree.SubtreeIds(folder.ID));
+        else FolderRepository.DeleteFolder(folder.ID);
 
-        // Standing inside the folder that just went away, step up to where its contents went.
-        if (CurrentFolderID == folder.ID) CurrentFolderID = folder.ParentFolderID;
+        // Standing inside the folder that just went away (or, with its contents, anywhere under it), step up out of it.
+        if (CurrentFolderID is { } current && (current == folder.ID || (withContents && FolderTree.IsInSubtree(current, folder.ID))))
+            CurrentFolderID = folder.ParentFolderID;
 
         ReloadLibrary();
     }

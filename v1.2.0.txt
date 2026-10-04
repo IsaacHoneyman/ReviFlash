@@ -31,3 +31,4 @@ Confirmation dialogs: Enter proceeds and Esc cancels
 Import decks from Anki (Settings → Import from Anki): .apkg files from any Anki version, including the newer compressed format
 Anki formatting, MathJax maths, older [latex] blocks, cloze deletions (including inside maths), "type in the answer" cards and reversed cards come across, and sub-decks become folders
 Anki cards with images keep their text and are marked [image] (images aren't supported yet), and image occlusion notes are left out; the import says how many and which decks
+Deleting a folder has an "Also delete everything inside" option, which deletes its subfolders, groups and sets (with their cards and stats) instead of moving them up; the confirmation says how much will go, and Enter alone won't confirm it

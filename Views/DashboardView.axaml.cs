@@ -112,11 +112,26 @@ public partial class DashboardView : UserControl
             ? $"Delete the empty folder '{folder.Name}'?"
             : $"Delete the folder '{folder.Name}'? Its {folder.ContentsSummary.ToLowerInvariant()} will be moved to {destination}. No flashcards are deleted.";
 
-        var dialog = new ConfirmDialogWindow(message);
-        bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
+        if (folder.ItemCount == 0)
+        {
+            if (await new ConfirmDialogWindow(message).ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder);
+            return;
+        }
 
-        if (confirmed) vm.DeleteFolder(folder);
+        var (folders, sets, groups, cards) = FolderRepository.CountContents(vm.FolderTree.SubtreeIds(folder.ID));
+        var everything = string.Join(", ", new[] { Count(folders, "folder"), Count(sets, "set"), Count(groups, "group") }.Where(part => part.Length > 0));
+        var deleteMessage = $"Delete the folder '{folder.Name}' and everything in it ({everything}, {Count(cards, "card")})? This can't be undone.";
+
+        var dialog = new ConfirmDialogWindow(message, "Also delete everything inside", deleteMessage);
+        if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder, withContents: dialog.IsOptionChecked);
     }
+
+    private static string Count(int count, string noun) => count switch
+    {
+        0 when noun != "card" => "",
+        1 => $"1 {noun}",
+        _ => $"{count} {noun}s",
+    };
 
     public async void MoveItem_Click(object sender, RoutedEventArgs e)
     {

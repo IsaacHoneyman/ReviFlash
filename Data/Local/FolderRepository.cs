@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using ReviFlash.Models;
 
 namespace ReviFlash.Data.Local;
 
 /// <summary>
 /// Folder storage. Folders only ever record where a set or group is filed; deleting or
-/// moving one never touches the cards, stats or group memberships underneath it.
+/// moving one never touches the cards, stats or group memberships underneath it, unless
+/// <see cref="DeleteFolderAndContents"/> is asked to take them too.
 /// </summary>
 public static class FolderRepository
 {
@@ -117,6 +119,47 @@ public static class FolderRepository
 
         transaction.Commit();
     }
+
+    /// <summary> How much <see cref="DeleteFolderAndContents"/> would delete, for the confirmation. </summary>
+    public static (int Folders, int Sets, int Groups, int Cards) CountContents(ICollection<ulong> subtreeIDs)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+        using var command = connection.CreateCommand();
+        var ids = IdList(subtreeIDs);
+        command.CommandText = $@"
+            SELECT
+                (SELECT COUNT(*) FROM Decks WHERE FolderID IN ({ids})),
+                (SELECT COUNT(*) FROM StudyGroups WHERE FolderID IN ({ids})),
+                (SELECT COUNT(*) FROM Cards WHERE DeckID IN (SELECT ID FROM Decks WHERE FolderID IN ({ids})));";
+        using var reader = command.ExecuteReader();
+        reader.Read();
+        return (subtreeIDs.Count - 1, reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2));
+    }
+
+    /// <summary>
+    /// Deletes a folder with everything beneath it: subfolders, groups, and sets with their cards and stats
+    /// (which go with their set). <paramref name="subtreeIDs"/> is the folder and all its descendants.
+    /// </summary>
+    public static void DeleteFolderAndContents(ICollection<ulong> subtreeIDs)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        var ids = IdList(subtreeIDs);
+        command.CommandText = $@"
+            DELETE FROM Decks WHERE FolderID IN ({ids});
+            DELETE FROM StudyGroups WHERE FolderID IN ({ids});
+            DELETE FROM Folders WHERE ID IN ({ids});";
+        command.ExecuteNonQuery();
+        transaction.Commit();
+    }
+
+    /// <summary> IDs for an IN (...) list; they're numbers, so they can go in the SQL directly. </summary>
+    private static string IdList(IEnumerable<ulong> ids) =>
+        string.Join(", ", ids.Select(id => id.ToString(CultureInfo.InvariantCulture)));
 
     /// <summary> Refiles a folder. Rejects moves that would make a folder its own ancestor. </summary>
     public static void MoveFolder(ulong folderID, ulong? newParentFolderID)
