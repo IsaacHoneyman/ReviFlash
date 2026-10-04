@@ -55,18 +55,12 @@
             <Border MaxWidth="880" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
                 Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
-                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding CardCountText}"
-                        FontSize="16"
+                <!-- Card type (and deck, in a study group); progress is already in the top bar -->
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
+                        IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
+                    <TextBlock Text="{Binding CardLabel}" FontSize="14"
                         Foreground="{DynamicResource TextSecondary}" />
-
-                    <!-- The back-to-front question from a reversible flip card -->
-                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
-                        IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front">
-                        <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}" />
-                        <TextBlock Text="Reversed" FontSize="13" VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextSecondary}" />
-                    </StackPanel>
                 </StackPanel>
 
                 <views:MathText Text="{Binding CurrentCard.Front}" HorizontalAlignment="Center" FontSize="18" Foreground="{DynamicResource TextPrimary}" IsCentered="True" />
@@ -89,7 +83,7 @@
                     <StackPanel Spacing="10" IsVisible="{Binding IsTypeCard}">
                         <!-- Input Phase -->
                         <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
-                            <TextBox Text="{Binding UserTypedAnswer, Mode=TwoWay}"
+                            <TextBox x:Name="TypedAnswerBox" Text="{Binding UserTypedAnswer, Mode=TwoWay}"
                                 Watermark="Type your answer..."
                                 CornerRadius="8" Padding="12, 10" FontSize="16"
                                 Background="{DynamicResource CardBackground}"
@@ -422,6 +416,9 @@
                             </Button>
                     </StackPanel>
                 </StackPanel>
+
+                <TextBlock Text="{Binding KeyboardHint}" HorizontalAlignment="Center" FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}" Opacity="0.75" />
                 </StackPanel>
             </Border>
             </ScrollViewer>

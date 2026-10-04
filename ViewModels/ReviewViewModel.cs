@@ -9,6 +9,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
 
+using static ReviFlash.Utilities.CardUtility;
+
 namespace ReviFlash.ViewModels;
 
 public partial class ReviewOptionItem : ViewModelBase
@@ -34,6 +36,8 @@ public partial class ReviewViewModel : ViewModelBase
     private readonly List<FlashCard> _sessionCards;
     private readonly Dictionary<ulong, ulong>? _cardDeckMap;
     private readonly ulong? _reviewGroupId;
+    /// <summary> Deck names by ID, for labelling questions in a study group review. </summary>
+    private readonly Dictionary<ulong, string>? _deckNames;
     private readonly Dictionary<ulong, int> _attemptsByDeck = [];
     private readonly Dictionary<ulong, int> _correctByDeck = [];
     private int _currentIndex = 0;
@@ -57,6 +61,7 @@ public partial class ReviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowAnswerButtonVisible))]
     [NotifyPropertyChangedFor(nameof(ShowBackAnswer))]
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerRevealed = false;
     [ObservableProperty] private string _userTypedAnswer = "";
     public Action<int, int, TimeSpan, bool> OnSessionComplete = delegate { };
@@ -79,6 +84,7 @@ public partial class ReviewViewModel : ViewModelBase
         : "";
     public bool ShowBackAnswer => IsAnswerRevealed;
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerChecked = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
@@ -108,7 +114,55 @@ public partial class ReviewViewModel : ViewModelBase
 
     public int ProgressPercentage => TotalCards > 0 ? (CurrentNumber * 100) / TotalCards : 0;
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
-    public string CardCountText => $"Card {CurrentNumber} of {TotalCards}";
+
+    /// <summary> The question's type, after its deck's name in a study group review. </summary>
+    public string CardLabel
+    {
+        get
+        {
+            var type = CurrentCard switch
+            {
+                { ReviewLabel: { } label } => label,
+                FlipFlashCard { IsReversedCopy: true } => $"{CARD_TYPE_FLIP} · Reversed",
+                FlipFlashCard => CARD_TYPE_FLIP,
+                _ => CurrentCard.CardType,
+            };
+
+            return _deckNames is not null && _cardDeckMap!.TryGetValue(CurrentCard.ID, out var deckId)
+                && _deckNames.TryGetValue(deckId, out var deckName)
+                ? $"{deckName} · {type}"
+                : type;
+        }
+    }
+
+    /// <summary> The keyboard shortcuts that do something right now, shown under the card. </summary>
+    public string KeyboardHint
+    {
+        get
+        {
+            const string gap = "      ";
+            if (IsAnswerChecked) return CanRetryLater ? $"Enter: next card{gap}R: retry later" : "Enter: next card";
+
+            var hint = this switch
+            {
+                { IsFlipCard: true, IsAnswerRevealed: false } => "Space: show answer",
+                { IsFlipCard: true } => $"←  Incorrect{gap}→  Correct" + (CanRetryLater ? $"{gap}R: retry later" : ""),
+                { IsTrueFalseCard: true } => $"←  {CurrentTrueFalseTrueOptionText}{gap}→  {CurrentTrueFalseFalseOptionText}",
+                { IsMultiChoiceCard: true } => $"1–{MultiChoiceAnswerOptions.Count}: tick an option{gap}Enter: submit",
+                _ => "Enter: submit",
+            };
+
+            var canSkip = ShouldShowSkipButton && TotalCards > 1 && _currentIndex < TotalCards - 1;
+            return canSkip && !(IsFlipCard && IsAnswerRevealed) ? $"{hint}{gap}S: skip" : hint;
+        }
+    }
+
+    /// <summary> Ticks or unticks the multiple choice option at <paramref name="index"/> (0-based). </summary>
+    public void ToggleMultiChoiceOption(int index)
+    {
+        if (!IsMultiChoiceCard || IsAnswerChecked || index < 0 || index >= MultiChoiceAnswerOptions.Count) return;
+        MultiChoiceAnswerOptions[index].IsSelected = !MultiChoiceAnswerOptions[index].IsSelected;
+    }
 
     public ReviewViewModel(IEnumerable<FlashCard> cards, ulong deckID, Dictionary<ulong, ulong>? cardDeckMap = null, ulong? reviewGroupId = null)
     {
@@ -132,6 +186,8 @@ public partial class ReviewViewModel : ViewModelBase
         _timer.Start();
         this.deckID = deckID;
         _cardDeckMap = cardDeckMap;
+        if (cardDeckMap is not null)
+            _deckNames = FlashCardRepository.GetAllDecks().ToDictionary(deck => deck.ID, deck => deck.Name);
         _reviewGroupId = reviewGroupId;
 
         MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
@@ -533,7 +589,8 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrentNumber));
         OnPropertyChanged(nameof(ProgressPercentage));
         OnPropertyChanged(nameof(ProgressCardCount));
-        OnPropertyChanged(nameof(CardCountText));
+        OnPropertyChanged(nameof(CardLabel));
+        OnPropertyChanged(nameof(KeyboardHint));
         OnPropertyChanged(nameof(IsTypeCard));
         OnPropertyChanged(nameof(IsFlipCard));
         OnPropertyChanged(nameof(IsReversedCard));

@@ -11,6 +11,9 @@ public abstract class FlashCard(string front, string back)
     public string Front { get; private set; } = front;
     public string Back { get; private set; } = back;
 
+    /// <summary> What a review calls a question made from another card (e.g. a cloze blank), instead of its own type. </summary>
+    public string? ReviewLabel { get; init; }
+
     public void AssignDatabaseID(ulong id)
     {
         if (ID == ulong.MaxValue) ID = id;

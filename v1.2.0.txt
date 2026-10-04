@@ -8,8 +8,10 @@ Underlined text with \U{...}, which also works inside maths
 Formatting toolbar above the card fields with Bold, Italic, Underline, Maths, Maths Block and (on Cloze cards) Blank buttons, applied to the selected text or the cursor
 Keyboard shortcuts in card fields: Ctrl+B bold, Ctrl+I italic, Ctrl+U underline, Ctrl+M maths, Ctrl+Shift+M maths on its own line, Ctrl+Shift+C cloze blank (Cmd on macOS); using one again on wrapped text removes it
 New Formatting Guide, from the ? button in the card editor or Settings → Editor, with examples of formatting, cloze blanks and LaTeX next to how they look, and a copy button for each
-Fixed the "Card X of Y" counter on the review screen not showing
 Fixed changing a Type to Answer card into another card type asking for a typed answer
 The card list in the editor shows "True/False" consistently with the card type menu
 The review card grows with the window (up to about twice as wide as before), so questions and answers wrap far less
 Fixed a crash when maths CSharpMath can't lay out (such as spacing between two operators) was shown, for example in the Formatting Guide with the LaTeX font on; it now shows as typed, with a note in the editor preview
+Keyboard shortcuts in reviews: Space shows the answer, ← / → (or 1 / 2) mark it incorrect / correct or pick True / False, 1–8 tick multiple choice options, Enter submits and then goes to the next card, S skips and R retries later; a hint under the card shows the ones that work right now
+Type to Answer questions put the cursor in the answer box, so you can start typing straight away
+The top of each review card shows the card type (Flip, Cloze, Flip · Reversed and so on) instead of repeating the progress count, and in study group reviews which deck the card is from
