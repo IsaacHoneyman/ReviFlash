@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -43,6 +44,67 @@ public partial class SettingsWindow : Window
         {
             SetBackupStatus($"Backup failed: {ex.Message}");
         }
+    }
+
+    private async void ImportAnki_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose an Anki deck",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Anki Decks") { Patterns = ["*.apkg", "*.colpkg"] }
+            ]
+        });
+
+        if (files.Count == 0)
+        {
+            return;
+        }
+
+        AnkiImportButton.IsEnabled = false;
+        SetAnkiImportStatus("Importing...");
+
+        try
+        {
+            var path = files[0].Path.LocalPath;
+            var result = await Task.Run(() => AnkiImporter.Import(path));
+
+            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
+            {
+                mainVm.ReloadLibrary();
+            }
+
+            SetAnkiImportStatus(DescribeAnkiImport(result));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Anki import failed", ex);
+            SetAnkiImportStatus($"Import failed: {ex.Message}");
+        }
+        finally
+        {
+            AnkiImportButton.IsEnabled = true;
+        }
+    }
+
+    private static string DescribeAnkiImport(AnkiImportResult result)
+    {
+        var message = $"Imported {Plural(result.Cards, "card")} into {Plural(result.Decks, "deck")}.";
+        if (result.CardsWithImages > 0)
+            message += $" {Plural(result.CardsWithImages, "card")} had images, which aren't supported yet; they're marked [image] in {string.Join(", ", result.DecksWithImages)}.";
+        if (result.Skipped > 0)
+            message += $" {Plural(result.Skipped, "note")} with only images (or image occlusion) {(result.Skipped == 1 ? "was" : "were")} left out.";
+        return message;
+    }
+
+    private static string Plural(int count, string noun) => $"{count} {noun}{(count == 1 ? "" : "s")}";
+
+    private void SetAnkiImportStatus(string message)
+    {
+        AnkiImportStatusText.Text = message;
+        AnkiImportStatusText.IsVisible = true;
     }
 
     private async void RestoreBackup_Click(object? sender, RoutedEventArgs e)

@@ -212,6 +212,7 @@
                             Content="Create Backup"
                             Click="CreateBackup_Click"
                             HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
                             CornerRadius="8"
                             Padding="12,10"
                             FontWeight="Bold"
@@ -223,6 +224,7 @@
                             Content="Restore Backup"
                             Click="RestoreBackup_Click"
                             HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
                             CornerRadius="8"
                             Padding="12,10"
                             FontWeight="Bold"
@@ -232,6 +234,40 @@
                     </Grid>
 
                     <TextBlock x:Name="BackupStatusText"
+                        IsVisible="False"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Import from Anki"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
+
+                    <TextBlock
+                        Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, cloze, type-in and reversed cards all come across, and sub-decks become folders. Images and sounds aren't supported yet: cards with images are marked [image]."
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+
+                    <Button x:Name="AnkiImportButton"
+                        Content="Import Anki Deck"
+                        Click="ImportAnki_Click"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        CornerRadius="8"
+                        Padding="12,10"
+                        FontWeight="Bold"
+                        Background="{DynamicResource CardBorder}"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Cursor="Hand" />
+
+                    <TextBlock x:Name="AnkiImportStatusText"
                         IsVisible="False"
                         TextWrapping="Wrap"
                         Foreground="{DynamicResource TextSecondary}" />

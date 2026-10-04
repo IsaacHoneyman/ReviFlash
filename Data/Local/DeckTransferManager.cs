@@ -88,7 +88,7 @@ public static class DeckTransferManager
     // --- Helper ---
 
     /// <summary> Walks down from <paramref name="parentFolderID"/>, reusing same-named folders and creating the rest. </summary>
-    private static ulong? EnsureFolderPath(ulong? parentFolderID, IEnumerable<string> folderNames)
+    internal static ulong? EnsureFolderPath(ulong? parentFolderID, IEnumerable<string> folderNames)
     {
         var tree = FolderTree.Load();
         bool creating = false;
