@@ -52,7 +52,7 @@
                 Margin="0,0,-16,0"
                 Padding="0,0,16,0">
             <!-- Grows with the window up to a comfortable reading width, keeping a margin either side -->
-            <Border MaxWidth="880" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
+            <Border MaxWidth="720" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
                 Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
                 <!-- Card type (and deck, in a study group); progress is already in the top bar -->
@@ -420,6 +420,14 @@
                                 </StackPanel>
                             </Button>
                     </StackPanel>
+
+                    <!-- Flip Card: put it back in the queue instead of marking it -->
+                    <Button Content="Retry Later" Click="RetryLater_Click"
+                        IsVisible="{Binding ShowFlipRetryLater}"
+                        FontSize="14" Width="380" Height="38" CornerRadius="8"
+                        HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Background="{DynamicResource SurfaceOverlayBackground}" Foreground="{DynamicResource TextPrimary}"
+                        BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" />
                 </StackPanel>
 
                 <TextBlock Text="{Binding KeyboardHint}" HorizontalAlignment="Center" FontSize="12"

@@ -62,6 +62,7 @@ public partial class ReviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowBackAnswer))]
     [NotifyPropertyChangedFor(nameof(ShowBackSection))]
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [NotifyPropertyChangedFor(nameof(ShowFlipRetryLater))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerRevealed = false;
     [ObservableProperty] private string _userTypedAnswer = "";
@@ -111,6 +112,7 @@ public partial class ReviewViewModel : ViewModelBase
     public bool ShouldShowSkipButton => MetaDataManager.Data.ShowSkipButton;
     public bool ShouldShowRetryLaterButton => MetaDataManager.Data.ShowRetryLaterButton;
     public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
+    public bool ShowFlipRetryLater => IsFlipCard && CanRetryLater;
     public bool ShouldShowAnswerStreak => MetaDataManager.Data.ShowAnswerStreakInReview;
     public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
     public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";
@@ -231,6 +233,7 @@ public partial class ReviewViewModel : ViewModelBase
             case nameof(AppMetaData.ShowRetryLaterButton):
                 OnPropertyChanged(nameof(ShouldShowRetryLaterButton));
                 OnPropertyChanged(nameof(CanRetryLater));
+                OnPropertyChanged(nameof(ShowFlipRetryLater));
                 break;
             case nameof(AppMetaData.ShowAnswerStreakInReview):
                 OnPropertyChanged(nameof(ShouldShowAnswerStreak));
@@ -596,6 +599,7 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(KeyboardHint));
         OnPropertyChanged(nameof(IsTypeCard));
         OnPropertyChanged(nameof(IsFlipCard));
+        OnPropertyChanged(nameof(ShowFlipRetryLater));
         OnPropertyChanged(nameof(IsReversedCard));
         OnPropertyChanged(nameof(IsMultiChoiceCard));
         OnPropertyChanged(nameof(IsMatchCard));

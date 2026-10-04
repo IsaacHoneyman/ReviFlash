@@ -10,7 +10,7 @@ Keyboard shortcuts in card fields: Ctrl+B bold, Ctrl+I italic, Ctrl+U underline,
 New Formatting Guide, from the ? button in the card editor or Settings → Editor, with examples of formatting, cloze blanks and LaTeX next to how they look, and a copy button for each
 Fixed changing a Type to Answer card into another card type asking for a typed answer
 The card list in the editor shows "True/False" consistently with the card type menu
-The review card grows with the window (up to about twice as wide as before), so questions and answers wrap far less
+The review card grows with the window (up to about a third wider than before), so questions and answers wrap less
 Fixed a crash when maths CSharpMath can't lay out (such as spacing between two operators) was shown, for example in the Formatting Guide with the LaTeX font on; it now shows as typed, with a note in the editor preview
 Keyboard shortcuts in reviews: Space shows the answer, ← / → (or 1 / 2) mark it incorrect / correct or pick True / False, 1–8 tick multiple choice options, Enter submits and then goes to the next card, S skips and R retries later; a hint under the card shows the ones that work right now
 Type to Answer questions put the cursor in the answer box, so you can start typing straight away
@@ -21,3 +21,4 @@ Bigger question and answer text in reviews
 Questions and answers stay centred when they fit on one line, and longer ones are left-aligned so they're easier to read
 No more empty gap and divider under the question before the answer is shown
 True/False buttons stay neutral until you answer, instead of being green and red from the start
+Flip cards have a Retry Later button too, under Incorrect and Correct
