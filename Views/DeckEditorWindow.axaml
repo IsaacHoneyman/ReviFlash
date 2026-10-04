@@ -73,14 +73,15 @@
             <Setter Property="Focusable" Value="False" />
             <Setter Property="MinWidth" Value="34" />
             <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Padding" Value="10,0" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.format TextBlock">
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
         <Style Selector="Rectangle.separator">
@@ -130,18 +131,19 @@
                                     <TextBlock Text="B" FontWeight="Bold" />
                                 </Button>
                                 <Button Classes="format" Click="Italic_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
-                                    <TextBlock Text="I" FontStyle="Italic" />
+                                    <!-- Italic glyphs lean past their box; the margin stops the button cropping it -->
+                                    <TextBlock Text="I" FontStyle="Italic" Margin="0,0,2,0" />
                                 </Button>
                                 <Rectangle Classes="separator" />
                                 <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
-                                    <views:MathText Text="$x^2$" />
+                                    <TextBlock Text="Maths" />
                                 </Button>
                                 <Button Classes="format" Click="DisplayMath_Click" ToolTip.Tip="Maths on its own line: $$...$$  (Ctrl+Shift+M)">
-                                    <views:MathText Text="$\Sigma$" />
+                                    <TextBlock Text="Maths Block" />
                                 </Button>
                                 <Button Classes="format" Click="Blank_Click" IsVisible="{Binding IsClozeCardType}"
                                     ToolTip.Tip="Cloze blank: \C{...}  (Ctrl+Shift+C)">
-                                    <TextBlock Text="[...]" />
+                                    <TextBlock Text="Blank" />
                                 </Button>
                                 <Rectangle Classes="separator" />
                                 <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
