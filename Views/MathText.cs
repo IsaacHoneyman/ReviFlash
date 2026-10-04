@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -89,12 +90,16 @@ public class MathText : Decorator
 
     private TextView BuildLatexView(IReadOnlyList<CardSegment> segments)
     {
-        // In a review, a formula that can't be rendered shows as typed, like in the app font view.
-        if (!ShowErrors)
-            segments = [.. segments.Select(segment => segment is MathSegment math
-                && LaTeXParser.MathListFromLaTeX(math.Latex).Error is not null ? Fallback(math) : segment)];
+        // Maths CSharpMath would crash on always shows as typed. In a review, so does maths that doesn't
+        // parse; the editor preview shows that error instead.
+        segments = [.. segments.SelectMany(IEnumerable<CardSegment> (segment) => segment switch
+        {
+            MathSegment math when CrashesTypesetter(math.Latex) => FallbackWithNote(math),
+            MathSegment math when !ShowErrors && LaTeXParser.MathListFromLaTeX(math.Latex).Error is not null => [Fallback(math)],
+            _ => [segment],
+        })];
 
-        var view = new TextView
+        var view = new SafeTextView
         {
             FontSize = (float)FontSize,
             TextColor = TextColor,
@@ -121,17 +126,20 @@ public class MathText : Decorator
             if (segment is MathSegment { Display: true } display)
             {
                 paragraph = null;
-                panel.Children.Add(CreateMath(display, isInline: false) ?? (Control)CreateParagraph(Fallback(display)));
+                panel.Children.Add(CreateMath(display, isInline: false) ?? (Control)CreateParagraph(FallbackWithNote(display)));
                 continue;
             }
 
             paragraph ??= AddParagraph(panel);
-            paragraph.Inlines!.Add(segment switch
+            if (segment is MathSegment inline)
             {
-                TextSegment text => CreateRun(text),
-                MathSegment math => CreateMath(math, isInline: true) is { } view ? new InlineUIContainer(view) : CreateRun(Fallback(math)),
-                _ => new LineBreak(),
-            });
+                if (CreateMath(inline, isInline: true) is { } view) paragraph.Inlines!.Add(new InlineUIContainer(view));
+                else paragraph.Inlines!.AddRange(FallbackWithNote(inline).Select(CreateRun));
+            }
+            else
+            {
+                paragraph.Inlines!.Add(segment is TextSegment text ? CreateRun(text) : new LineBreak());
+            }
         }
 
         return panel;
@@ -144,7 +152,7 @@ public class MathText : Decorator
         return paragraph;
     }
 
-    private TextBlock CreateParagraph(TextSegment? text)
+    private TextBlock CreateParagraph(IEnumerable<TextSegment>? text)
     {
         var paragraph = new TextBlock
         {
@@ -154,7 +162,7 @@ public class MathText : Decorator
             TextAlignment = IsCentered ? TextAlignment.Center : TextAlignment.Left,
             Inlines = [],
         };
-        if (text is not null) paragraph.Inlines!.Add(CreateRun(text));
+        if (text is not null) paragraph.Inlines!.AddRange(text.Select(CreateRun));
         return paragraph;
     }
 
@@ -171,9 +179,44 @@ public class MathText : Decorator
         return new TextSegment(delimiter + math.Source + delimiter, false, false);
     }
 
-    /// <summary> The formula, or null when it can't be rendered and errors aren't wanted here. </summary>
+    /// <summary> The maths as typed, and in the editor a note saying why it isn't rendered. </summary>
+    private IEnumerable<TextSegment> FallbackWithNote(MathSegment math)
+    {
+        yield return Fallback(math);
+        if (ShowErrors && CrashesTypesetter(math.Latex))
+            yield return new TextSegment(" (this maths can't be displayed; try removing spacing such as \\; between symbols)", false, false);
+    }
+
+    private static readonly Dictionary<string, bool> TypesetterCrashes = new();
+
+    /// <summary>
+    /// CSharpMath throws on some maths it parses fine, e.g. spacing between two operators ($a \times \; \div b$),
+    /// and a throw while the window lays out crashes the app. Typesetting once here, cached, finds those up front.
+    /// </summary>
+    private static bool CrashesTypesetter(string latex)
+    {
+        if (TypesetterCrashes.TryGetValue(latex, out var crashes)) return crashes;
+
+        try
+        {
+            var painter = new CSharpMath.Avalonia.MathPainter { LaTeX = latex };
+            if (painter.ErrorMessage is null) painter.Measure(float.NaN);
+            crashes = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"CSharpMath can't typeset: {latex}", ex);
+            crashes = true;
+        }
+
+        return TypesetterCrashes[latex] = crashes;
+    }
+
+    /// <summary> The formula, or null when it can't be rendered (and, for maths that doesn't parse, errors aren't wanted here). </summary>
     private InlineMathView? CreateMath(MathSegment math, bool isInline)
     {
+        if (CrashesTypesetter(math.Latex)) return null;
+
         var view = new InlineMathView
         {
             FontSize = (float)FontSize,
@@ -199,16 +242,49 @@ public class MathText : Decorator
     }
 }
 
+/// <summary> Whole-card LaTeX layout that can't take the app down if CSharpMath throws. </summary>
+public class SafeTextView : TextView
+{
+    protected override Size MeasureOverride(Size availableSize) =>
+        SafeTypesetting.Run(() => base.MeasureOverride(availableSize), LaTeX);
+
+    public override void Render(DrawingContext context) =>
+        SafeTypesetting.Run(() => { base.Render(context); return Size.Infinity; }, LaTeX);
+}
+
+/// <summary>
+/// The last line of defence for CSharpMath throwing during layout or drawing (MathText checks maths before
+/// using it, but this keeps anything it misses from crashing the app): logs it and draws nothing.
+/// </summary>
+internal static class SafeTypesetting
+{
+    public static Size Run(Func<Size> typeset, string? latex)
+    {
+        try { return typeset(); }
+        catch (Exception ex)
+        {
+            Logger.LogError($"CSharpMath failed while laying out: {latex}", ex);
+            return default;
+        }
+    }
+}
+
 /// <summary> A formula that sits on the text baseline when placed inside a TextBlock. </summary>
 public class InlineMathView : MathView
 {
+    protected override Size MeasureOverride(Size availableSize) =>
+        SafeTypesetting.Run(() => base.MeasureOverride(availableSize), LaTeX);
+
+    public override void Render(DrawingContext context) =>
+        SafeTypesetting.Run(() => { base.Render(context); return Size.Infinity; }, LaTeX);
+
     /// <summary>
     /// Sets TextBlock.BaselineOffset from the typeset formula. Call once the LaTeX, size, style and margin are set:
     /// the TextBlock reads it when laying out its line, which can be before this control is measured.
     /// </summary>
     public void UpdateBaseline()
     {
-        var height = Painter.Measure(float.NaN).Height;
+        var height = SafeTypesetting.Run(() => { var rect = Painter.Measure(float.NaN); return new Size(rect.Width, rect.Height); }, LaTeX).Height;
         if (Painter.Display is not { } display) return;
 
         // MathView centres the formula vertically, so its baseline is the ascent below that centred box's top.

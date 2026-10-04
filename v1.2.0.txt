@@ -12,3 +12,4 @@ Fixed the "Card X of Y" counter on the review screen not showing
 Fixed changing a Type to Answer card into another card type asking for a typed answer
 The card list in the editor shows "True/False" consistently with the card type menu
 The review card grows with the window (up to about twice as wide as before), so questions and answers wrap far less
+Fixed a crash when maths CSharpMath can't lay out (such as spacing between two operators) was shown, for example in the Formatting Guide with the LaTeX font on; it now shows as typed, with a note in the editor preview

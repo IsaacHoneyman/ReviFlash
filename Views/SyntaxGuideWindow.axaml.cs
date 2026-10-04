@@ -46,11 +46,11 @@ public partial class SyntaxGuideWindow : Window
         ]),
         new("Symbols", null,
         [
-            new("Comparisons", @"$\le \; \ge \; \ne \; \approx \; \equiv \; \propto$"),
-            new("Operations", @"$\times \; \div \; \pm \; \cdot \; \circ$"),
-            new("Sets", @"$\in \; \notin \; \subset \; \subseteq \; \cup \; \cap \; \emptyset$"),
-            new("Arrows and logic", @"$\to \; \Rightarrow \; \iff \; \mapsto \; \forall \; \exists \; \neg$"),
-            new("Calculus", @"$\infty \; \partial \; \nabla \; \dot{x} \; f'(x)$"),
+            new("Comparisons", @"$\le, \ge, \ne, \approx, \equiv, \propto$"),
+            new("Operations", @"$a \times b$, $a \div b$, $a \pm b$, $a \cdot b$, $f \circ g$"),
+            new("Sets", @"$x \in A$, $x \notin A$, $A \subseteq B$, $A \cup B$, $A \cap B$, $\emptyset$"),
+            new("Arrows and logic", @"$\to, \Rightarrow, \iff, \mapsto, \forall, \exists, \neg$"),
+            new("Calculus", @"$\infty, \partial, \nabla, \dot{x}, f'(x)$"),
         ]),
         new("Layouts", null,
         [
