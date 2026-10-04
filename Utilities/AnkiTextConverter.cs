@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace ReviFlash.Utilities;
 
 /// <summary>
-/// Turns an Anki field (HTML, MathJax \(...\) / \[...\], {{c1::...}} clozes) into ReviFlash card text
+/// Turns an Anki field (HTML, MathJax \(...\) / \[...\], [latex]...[/latex], {{c1::...}} clozes) into ReviFlash card text
 /// ($...$ / $$...$$, \B / \I / \U, \C1{...}). Images can't come across yet and are left as "[image]".
 /// </summary>
 public static partial class AnkiTextConverter
@@ -19,6 +19,7 @@ public static partial class AnkiTextConverter
     {
         var maths = new List<string>();
         var text = ConvertClozes(field);
+        text = ExtractLatexBlocks(text, maths);
         text = ExtractMaths(text, maths);
         text = ConvertHtml(text, out hadImage);
         text = RestoreMaths(text, maths);
@@ -117,6 +118,107 @@ public static partial class AnkiTextConverter
         text = WebUtility.HtmlDecode(text).Replace('\u00A0', ' ');
         return text.Trim();
     }
+
+    // --- [latex]...[/latex]: a LaTeX document fragment, text with $...$ maths inside ---
+
+    /// <summary> Converts each [latex] block whole and sets it aside like maths, so the HTML pass leaves it alone. </summary>
+    private static string ExtractLatexBlocks(string text, List<string> converted) =>
+        LatexBlockRegex().Replace(text, match =>
+        {
+            converted.Add(ConvertLatexBlock(match.Groups[1].Value));
+            return $"{MathStart}{converted.Count - 1}{MathEnd}";
+        });
+
+    private const char InnerMathStart = '\u0004';
+    private const char InnerMathEnd = '\u0005';
+
+    private static string ConvertLatexBlock(string source)
+    {
+        // Anki strips the editor's HTML before running LaTeX; line breaks in it are just spaces to LaTeX.
+        var text = BreakTagRegex().Replace(source, "\n");
+        text = TagRegex().Replace(text, "");
+        text = WebUtility.HtmlDecode(text).Replace('\u00A0', ' ');
+
+        var maths = new List<string>();
+        text = LatexMathRegex().Replace(text, match =>
+        {
+            var display = match.Groups["display"].Success || match.Groups["display2"].Success;
+            var latex = new[] { "display", "display2", "inline", "inline2" }
+                .Select(name => match.Groups[name]).First(group => group.Success).Value.Trim();
+            var delimiter = display ? "$$" : "$";
+            maths.Add(delimiter + latex + delimiter);
+            return $"{InnerMathStart}{maths.Count - 1}{InnerMathEnd}";
+        });
+
+        text = LatexCommentRegex().Replace(text, "");
+        // A blank line is a new paragraph; any other line break is a space.
+        text = BlankLineRegex().Replace(text, "\u0001");
+        text = text.Replace('\n', ' ').Replace("\u0001", "\n\n");
+        text = LatexLineBreakRegex().Replace(text, "\n");
+        text = LatexListRegex().Replace(text, "\n");
+        text = LatexItemRegex().Replace(text, "\n• ");
+
+        foreach (var (command, replacement) in LatexTextCommands)
+            text = ReplaceCommand(text, command, replacement);
+
+        foreach (var (escaped, literal) in LatexEscapes)
+            text = text.Replace(escaped, literal);
+
+        // Any other command (\large, \centering...) is dropped, and so are braces that only grouped text
+        // (literal \{ and \} are kept out of the way meanwhile).
+        text = text.Replace(@"\{", "\u0006").Replace(@"\}", "\u0007");
+        text = UnknownCommandRegex().Replace(text, "");
+        text = RemoveGroupingBraces(text).Replace('\u0006', '{').Replace('\u0007', '}');
+
+        return InnerMathRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
+    }
+
+    /// <summary> Text commands and what they become: \B{ / \I{ / \U{ for styling, or a plain group to unwrap. </summary>
+    private static readonly (string Command, string Replacement)[] LatexTextCommands =
+    [
+        ("textbf", @"\B{"), ("textit", @"\I{"), ("emph", @"\I{"), ("textsl", @"\I{"), ("underline", @"\U{"),
+        ("texttt", "{"), ("textrm", "{"), ("textsf", "{"), ("textup", "{"), ("textnormal", "{"), ("text", "{"), ("mbox", "{"),
+    ];
+
+    private static readonly (string Escaped, string Literal)[] LatexEscapes =
+    [
+        ("---", "—"), ("--", "–"), ("``", "“"), ("''", "”"), ("~", " "),
+        (@"\%", "%"), (@"\&", "&"), (@"\_", "_"), (@"\#", "#"), (@"\ldots", "…"), (@"\dots", "…"),
+    ];
+
+    private static string ReplaceCommand(string text, string command, string replacement) =>
+        Regex.Replace(text, $@"\\{command}\s*\{{", replacement.Replace("$", "$$"));
+
+    /// <summary> Removes {...} pairs that aren't the brace of \B{, \I{, \U{ or a cloze \C1{. </summary>
+    private static string RemoveGroupingBraces(string text)
+    {
+        var output = new StringBuilder();
+        var kept = new Stack<bool>();
+
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '{')
+            {
+                var keep = OurCommandBefore(text, i);
+                kept.Push(keep);
+                if (keep) output.Append(c);
+            }
+            else if (c == '}')
+            {
+                if (kept.Count == 0 || kept.Pop()) output.Append(c);
+            }
+            else
+            {
+                output.Append(c);
+            }
+        }
+
+        return output.ToString();
+    }
+
+    private static bool OurCommandBefore(string text, int brace) =>
+        OurCommandRegex().IsMatch(text[Math.Max(0, brace - 8)..brace]);
 
     private static string RestoreMaths(string text, List<string> maths) =>
         MathPlaceholderRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
@@ -258,6 +360,38 @@ public static partial class AnkiTextConverter
     // MathJax as Anki writes it (\(...\) and \[...\]) and its older [$]...[/$] and [$$]...[/$$] tags.
     [GeneratedRegex(@"\\\((?<inline>.+?)\\\)|\\\[(?<display>.+?)\\\]|\[\$\$\](?<display2>.+?)\[/\$\$\]|\[\$\](?<inline2>.+?)\[/\$\]", RegexOptions.Singleline)]
     private static partial Regex MathRegex();
+
+    [GeneratedRegex(@"\[latex\](.+?)\[/latex\]", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex LatexBlockRegex();
+
+    // Inside [latex]: $$...$$, \[...\], $...$ and \(...\), but not an escaped \$.
+    [GeneratedRegex(@"\$\$(?<display>.+?)\$\$|\\\[(?<display2>.+?)\\\]|(?<!\\)\$(?<inline>.+?)(?<!\\)\$|\\\((?<inline2>.+?)\\\)", RegexOptions.Singleline)]
+    private static partial Regex LatexMathRegex();
+
+    [GeneratedRegex("\u0004(\\d+)\u0005")]
+    private static partial Regex InnerMathRegex();
+
+    [GeneratedRegex(@"(?<!\\)%[^\n]*")]
+    private static partial Regex LatexCommentRegex();
+
+    [GeneratedRegex(@"\n[ \t]*\n\s*")]
+    private static partial Regex BlankLineRegex();
+
+    [GeneratedRegex(@"\\\\(\[[^\]]*\])?\s*")]
+    private static partial Regex LatexLineBreakRegex();
+
+    [GeneratedRegex(@"\\(begin|end)\{(itemize|enumerate|description|center|flushleft|flushright)\}\s*")]
+    private static partial Regex LatexListRegex();
+
+    [GeneratedRegex(@"\s*\\item\b\s*")]
+    private static partial Regex LatexItemRegex();
+
+    // Commands other than ours (\B, \I, \U, \C1) and the $ escape.
+    [GeneratedRegex(@"\\(?![BIU]\{|C\d*\{)[a-zA-Z]+\*?\s*")]
+    private static partial Regex UnknownCommandRegex();
+
+    [GeneratedRegex(@"\\(?:[BIU]|C\d*)$")]
+    private static partial Regex OurCommandRegex();
 
     [GeneratedRegex("\u0002(\\d+)\u0003")]
     private static partial Regex MathPlaceholderRegex();
