@@ -59,7 +59,7 @@ public partial class ReviewView : UserControl
 
     /// <summary>
     /// Space reveals, Left/Right (or 1/2) mark incorrect/correct or pick True/False, 1-9 tick options or place
-    /// match answers, Enter submits and then moves on, S skips, R retries later and Esc quits.
+    /// match answers, Enter submits and then moves on, S skips (ending the review on the last card), R retries later and Esc quits.
     /// While typing an answer only Enter and Esc count.
     /// </summary>
     private void Review_KeyDown(object? sender, KeyEventArgs e)
@@ -130,8 +130,10 @@ public partial class ReviewView : UserControl
         if (vm.IsMatchCard)
         {
             if (OptionNumber(key) is { } chip) vm.PlaceMatchChip(chip - 1);
-            else if (key == Key.Up) vm.MoveMatchRow(-1);
-            else if (key == Key.Down) vm.MoveMatchRow(1);
+            else if (key == Key.Up) vm.MoveMatchRow(-vm.MatchColumns);
+            else if (key == Key.Down) vm.MoveMatchRow(vm.MatchColumns);
+            else if (key == Key.Left) vm.MoveMatchRow(-1);
+            else if (key == Key.Right) vm.MoveMatchRow(1);
             else if (key is Key.Back or Key.Delete) vm.UndoMatchChip();
             else if (key == Key.Enter) vm.CheckMatchAnswer();
             else return false;

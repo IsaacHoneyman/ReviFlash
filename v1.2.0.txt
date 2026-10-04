@@ -23,7 +23,8 @@ No more empty gap and divider under the question before the answer is shown
 True/False buttons stay neutral until you answer, instead of being green and red from the start
 Flip cards have a Retry Later button too, under Incorrect and Correct
 All review buttons share one style, matching the rest of the app: theme-coloured for the main action, plain for the others, with Retry Later beside Next
-Match cards are answered by picking answer chips (click, or press their number) instead of drop-down menus; ↑ / ↓ move between items and Backspace undoes, and the result shows each pair with the right answer under any you got wrong
+Match cards are answered by picking answer chips on a wider card with the pairs in two columns (click, or press their number) instead of drop-down menus, the arrow keys move between items and Backspace undoes, and the result shows each pair with the right answer under any you got wrong
 Multiple choice options can be ticked by clicking anywhere on the option, and show their number key
-Press Enter on the Session Complete screen to finish
+Press Enter on the Session Complete screen to finish, and its text is centred
+Skipping the last card ends the review and goes to the results, instead of Skip doing nothing
 Confirmation dialogs: Enter proceeds and Esc cancels

@@ -142,7 +142,7 @@
                 Margin="0,0,-16,0"
                 Padding="0,0,16,0">
             <!-- Grows with the window up to a comfortable reading width, keeping a margin either side -->
-            <Border MaxWidth="720" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
+            <Border MaxWidth="{Binding CardMaxWidth}" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
                 Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
                 <!-- Card type (and deck, in a study group); progress is already in the top bar -->
@@ -298,6 +298,11 @@
                             <TextBlock Classes="prompt" Text="Pick an answer below for the highlighted item. Click an item to change its answer." TextWrapping="Wrap" />
 
                             <ItemsControl ItemsSource="{Binding MatchRows}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="{Binding MatchColumns}" ColumnSpacing="10" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ReviewMatchRow">
                                         <Button Classes="matchRow" Classes.current="{Binding IsCurrent}" Margin="0,3" Click="MatchRow_Click">
@@ -343,6 +348,11 @@
 
                         <!-- Each pair as answered, with the right answer under any that were wrong -->
                         <ItemsControl ItemsSource="{Binding MatchRows}" IsVisible="{Binding IsAnswerChecked}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="{Binding MatchColumns}" ColumnSpacing="10" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:ReviewMatchRow">
                                     <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"

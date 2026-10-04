@@ -130,6 +130,9 @@ public partial class ReviewViewModel : ViewModelBase
     public bool ShouldShowRetryLaterButton => MetaDataManager.Data.ShowRetryLaterButton;
     public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
     public bool ShowFlipRetryLater => IsFlipCard && CanRetryLater;
+    /// <summary> Match cards get a wider card, so their pairs can sit in two columns. </summary>
+    public double CardMaxWidth => IsMatchCard ? 960 : 720;
+    public int MatchColumns => MatchRows.Count >= 4 ? 2 : 1;
     public bool ShouldShowAnswerStreak => MetaDataManager.Data.ShowAnswerStreakInReview;
     public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
     public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";
@@ -171,12 +174,11 @@ public partial class ReviewViewModel : ViewModelBase
                 { IsFlipCard: true } => $"←  Incorrect{gap}→  Correct" + (CanRetryLater ? $"{gap}R: retry later" : ""),
                 { IsTrueFalseCard: true } => $"←  {CurrentTrueFalseTrueOptionText}{gap}→  {CurrentTrueFalseFalseOptionText}",
                 { IsMultiChoiceCard: true } => $"1–{Math.Min(MultiChoiceAnswerOptions.Count, 9)}: tick an option{gap}Enter: submit",
-                { IsMatchCard: true } => $"1–{Math.Min(MatchChips.Count, 9)}: place an answer{gap}↑ ↓: move{gap}Backspace: undo{gap}Enter: submit",
+                { IsMatchCard: true } => $"1–{Math.Min(MatchChips.Count, 9)}: place an answer{gap}Arrows: move{gap}Backspace: undo{gap}Enter: submit",
                 _ => "Enter: submit",
             };
 
-            var canSkip = ShouldShowSkipButton && TotalCards > 1 && _currentIndex < TotalCards - 1;
-            return canSkip && !(IsFlipCard && IsAnswerRevealed) ? $"{hint}{gap}S: skip" : hint;
+            return ShouldShowSkipButton && !(IsFlipCard && IsAnswerRevealed) ? $"{hint}{gap}S: skip" : hint;
         }
     }
 
@@ -380,10 +382,17 @@ public partial class ReviewViewModel : ViewModelBase
         }
     }
 
+    /// <summary> Moves on without scoring this card; skipping the last one ends the review. </summary>
     public void SkipCard()
     {
-        if (!MetaDataManager.Data.ShowSkipButton || _sessionCards.Count <= 1 || _currentIndex >= _sessionCards.Count - 1)
+        if (!MetaDataManager.Data.ShowSkipButton)
         {
+            return;
+        }
+
+        if (_currentIndex >= _sessionCards.Count - 1)
+        {
+            CompleteSession();
             return;
         }
 
@@ -606,7 +615,7 @@ public partial class ReviewViewModel : ViewModelBase
         SetCurrentMatchRow(row);
     }
 
-    /// <summary> Moves the current row up (-1) or down (+1). </summary>
+    /// <summary> Moves the current row by <paramref name="delta"/> places in reading order. </summary>
     public void MoveMatchRow(int delta)
     {
         if (!IsMatchCard || IsAnswerChecked || CurrentMatchRow is not { } row) return;
@@ -678,6 +687,8 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsReversedCard));
         OnPropertyChanged(nameof(IsMultiChoiceCard));
         OnPropertyChanged(nameof(IsMatchCard));
+        OnPropertyChanged(nameof(CardMaxWidth));
+        OnPropertyChanged(nameof(MatchColumns));
         OnPropertyChanged(nameof(IsTrueFalseCard));
         OnPropertyChanged(nameof(CurrentTypeCardAnswer));
         OnPropertyChanged(nameof(CurrentTrueFalseTrueOptionText));
