@@ -51,8 +51,9 @@
                 VerticalAlignment="Center"
                 Margin="0,0,-16,0"
                 Padding="0,0,16,0">
-            <Border Width="560" Background="{DynamicResource CardBackground}" CornerRadius="26"
-                Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Grows with the window up to a comfortable reading width, keeping a margin either side -->
+            <Border MaxWidth="880" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
+                Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
                     <TextBlock Text="{Binding CardCountText}"
@@ -243,7 +244,7 @@
                                     <DataTemplate x:DataType="vm:ReviewMatchRow">
                                         <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"
                                             BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,2,0,2">
-                                            <Grid ColumnDefinitions="2*, Auto, *" VerticalAlignment="Center">
+                                            <Grid ColumnDefinitions="*, Auto, *" VerticalAlignment="Center">
                                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                                     <views:MathText Text="{Binding LeftText}" FontSize="16" Foreground="{DynamicResource TextPrimary}" />
                                                 </StackPanel>
