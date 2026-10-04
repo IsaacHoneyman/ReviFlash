@@ -11,3 +11,4 @@ New Formatting Guide, from the ? button in the card editor or Settings → Edito
 Fixed the "Card X of Y" counter on the review screen not showing
 Fixed changing a Type to Answer card into another card type asking for a typed answer
 The card list in the editor shows "True/False" consistently with the card type menu
+The review card grows with the window (up to about twice as wide as before), so questions and answers wrap far less
