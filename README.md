@@ -1,6 +1,8 @@
 # ReviFlash
 
-ReviFlash is a free, open-source flashcard app for exam revision, built for maths and science. There are no due cards and no review backlog: you choose what to study and when, whether that's one topic the night before or a whole course in the weeks before your exams. Maths renders properly, inline with your text, and cards can be flip, type-the-answer, multiple choice, match-the-pairs or true/false.
+ReviFlash is a free, open-source flashcard app built for exam revision in maths, science, engineering and computer science. Maths renders properly, inline with your text, from fractions and integrals to matrices and aligned working. There are no due cards and no review backlog: you choose what to study and when, whether that's one topic the night before or a whole course in the weeks before your exams.
+
+**Coming from Anki?** Import your `.apkg` decks straight in. Formatting, MathJax and `[latex]` maths, cloze deletions, type-in answers and reversed cards all come across, and sub-decks become folders.
 
 Spaced-repetition apps like Anki are built for remembering things over months. ReviFlash is built for the run-up to an exam: drill a topic now, see your grade for it, and come back to the cards you got wrong.
 
@@ -29,40 +31,54 @@ Get the latest release for your platform from the [GitHub Releases Page](https:/
 ## Updates
 Updates are handled automatically within ReviFlash! On startup the app checks whether a new version has been released and offers to update, showing the download progress before restarting into the new version. You can also check at any time from **Settings → Updates**, or turn the startup check off there.
 
-## New in 1.1.1
+## New in 1.2
 
-**macOS**
-- ReviFlash now runs on Macs with Apple Silicon (M1 and later), with the same automatic updates as Windows and Linux.
+**Import from Anki**
+- Bring your Anki decks across from **Settings → Import from Anki**. It works with `.apkg` files from any Anki version, including the newer compressed format.
+- Formatting, MathJax and `[latex]` maths, cloze deletions (including inside maths), "type in the answer" cards and reversed cards all come across, and sub-decks become folders.
+- Images aren't supported yet: cards with images keep their text and are marked `[image]`, and the import tells you which decks they're in.
 
-**LaTeX**
-- Maths now flows inline with the text around it and wraps with it, instead of jumping onto its own line.
-- Maths looks the same in the card editor previews and the review screen, at the same size as the text around it.
-- `$$...$$` shows maths centred on its own line, like in LaTeX, while `$...$` stays inline.
-- Many more LaTeX commands work, including `\mathbb`, `\mathbf`, `\operatorname`, `\mapsto`, `\iff`, `\implies`, `\notin`, `\quad`, `\dots` and `\overline`.
-- New matrix and layout environments: `bmatrix`, `vmatrix`, `Bmatrix`, `Vmatrix`, `cases`, `aligned` and `array`, alongside `pmatrix` and `matrix`.
-- Bold and italic text with `\B{...}` and `\I{...}`, which can be combined and also work inside maths.
-- Cards with LaTeX that can't be shown now show the text as typed in reviews, and the error in the editor preview.
+**New card options**
+- **Cloze** cards: wrap the parts to hide in `\C{...}` and each blank becomes its own question. Blanks with the same number (`\C1{...}`) are hidden together, blanks work inside maths, and you can reveal the answer or type it.
+- Flip cards can be **asked both ways**: tick "Also ask in reverse" and reviews ask back to front as well.
+- Underlined text with `\U{...}`, alongside `\B{...}` and `\I{...}`.
 
-**Settings**
-- New **LaTeX Font for Card Text** option under Appearance shows card text in the LaTeX font, to match the maths (off by default).
+**Card editor**
+- A formatting toolbar above the card fields: Bold, Italic, Underline, Maths, Maths Block and (on Cloze cards) Blank, with keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+M, Ctrl+Shift+M, Ctrl+Shift+C; Cmd on macOS).
+- A new **Formatting Guide** (the **?** button, or Settings → Editor) with examples of formatting, cloze blanks and LaTeX next to how they look, each with a copy button.
+
+**Reviews**
+- Fully keyboard driven: Space shows the answer, ← / → mark it, number keys pick options, Enter submits and moves on, S skips, R retries later and Esc quits. A hint under the card shows the keys that work right now.
+- Match cards are answered by picking answer chips (click them or press their number) instead of drop-down menus, and show the right answer under any pair you got wrong.
+- A wider card with bigger text: short questions stay centred, longer ones are left-aligned, and maths is sized to match the text around it.
+- One consistent button style, True/False buttons that don't hint at the answer, Retry Later on flip cards, and the card type (and deck, in study groups) shown at the top.
+- Skipping the last card ends the review, and Enter finishes from the results screen.
+
+**Everywhere else**
+- Deleting a folder can also delete everything inside it, with a confirmation saying exactly how much will go.
+- The LaTeX font option now uses Latin Modern for card text, with bold, italic and underline all working.
+- Confirmation dialogs: Enter proceeds and Esc cancels.
+- Fixed a crash from maths that can't be laid out, and changing a Type to Answer card to another type.
 
 ## Key Features
 
-- **Folders & Study Groups**: Organise decks into folders, and group multiple decks into Study Groups for targeted, multi-deck review sessions.
-- **Comprehensive Card Types**: Support for Flip, Type-to-Answer, Multiple Choice, Match Pair, and True/False questions.
-- **Revise on Your Terms**: No due cards or review backlog. Study any deck, folder or study group whenever you like, and use Retry Later to bring back the cards you got wrong.
-- **Maths That Renders Properly**: Inline `$...$` and display `$$...$$` LaTeX, including fractions, sums, integrals, matrices and `cases`, in the editor previews and while reviewing. Use `\B{...}` and `\I{...}` for bold and italic text.
-- **Export**: Upload your decks to the cloud as public or private, then update, download, or delete them from any device, protected by Row-Level Security.
-- **Import**: Browse and search public flashcard sets from other users, by title or uploader, and download them straight into your library.
+- **Built for Exams**: No due cards or review backlog. Study any deck, folder or study group whenever you like, see your grade for it, and use Retry Later to bring back the cards you got wrong.
+- **Maths That Renders Properly**: Inline `$...$` and display `$$...$$` LaTeX, including fractions, sums, integrals, matrices, `cases` and aligned working, in the editor previews and while reviewing, with a built-in Formatting Guide.
+- **Card Types for STEM**: Flip (optionally asked both ways), Cloze, Type-to-Answer, Multiple Choice, Match, and True/False.
+- **Anki Import**: Bring in `.apkg` decks with their maths, clozes and sub-decks intact.
+- **Keyboard-Driven Reviews**: Answer, mark, skip and move on without touching the mouse.
+- **Folders & Study Groups**: Organise decks into folders, and group decks from different topics into Study Groups for multi-deck review sessions.
+- **Share Decks Online**: Upload your decks as public or private, then update, download or delete them from any device, protected by Row-Level Security. Browse and search other users' public decks and download them straight into your library.
 - **Backups**: Create and restore full local backups of your library and settings, with or without your stats.
-- **In-Depth Analytics**: Track your progress with detailed statistics, a grade for each deck, session timing, and visual performance charts, so you can see which topics need more work before the exam.
+- **In-Depth Analytics**: Detailed statistics, a grade for each deck, session timing and performance charts, so you can see which topics need more work before the exam.
 
 ## Tech Stack
 
 - C# / .NET 10
 - Avalonia UI (Cross-platform Desktop Framework)
 - SQLite (`Microsoft.Data.Sqlite`) for local storage
-- CSharpMath for formula rendering
+- CSharpMath for formula rendering, with Latin Modern fonts
+- ZstdSharp for reading newer Anki packages
 - Supabase (Database, Authentication & Storage, via its REST API)
 - AWS (Cloud Infrastructure, hosting Supabase)
 - Resend (Email Delivery Services)
