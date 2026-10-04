@@ -17,6 +17,7 @@
         Linux systems.
     -->
 
+    <StreamGeometry x:Key="IconItalic">M10 4 L 19 4 M5 20 L 14 20 M14.5 4 L 9.5 20</StreamGeometry>
     <StreamGeometry x:Key="IconEdit">M17.96 3.56 A 1.75 1.75 0 0 1 20.44 6.04 L 8.04 18.44 L 3.5 20.5 L 5.56 15.96 Z M14.96 6.56 L 17.44 9.04</StreamGeometry>
 
     <StreamGeometry x:Key="IconStats">M3.5 20.5 L 20.5 20.5 M7.5 20.5 L 7.5 13 M12 20.5 L 12 8 M16.5 20.5 L 16.5 3.5</StreamGeometry>

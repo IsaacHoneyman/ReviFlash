@@ -131,8 +131,8 @@
                                     <TextBlock Text="B" FontWeight="Bold" />
                                 </Button>
                                 <Button Classes="format" Click="Italic_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
-                                    <!-- Italic glyphs lean past their box; the margin stops the button cropping it -->
-                                    <TextBlock Text="I" FontStyle="Italic" Margin="0,0,2,0" />
+                                    <!-- An icon, as the app's Inter has no italic face: a slanted plain "I" reads as "/" -->
+                                    <Path Classes="icon" Data="{StaticResource IconItalic}" Width="11" StrokeThickness="1.8" />
                                 </Button>
                                 <Rectangle Classes="separator" />
                                 <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
