@@ -132,7 +132,10 @@
                                 </Button>
                                 <Button Classes="format" Click="Italic_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
                                     <!-- An icon, as the app's Inter has no italic face: a slanted plain "I" reads as "/" -->
-                                    <Path Classes="icon" Data="{StaticResource IconItalic}" Width="11" StrokeThickness="1.8" />
+                                    <Path Classes="icon" Data="{StaticResource IconItalic}" Width="9" StrokeThickness="1.7" />
+                                </Button>
+                                <Button Classes="format" Click="Underline_Click" ToolTip.Tip="Underline: \U{...}  (Ctrl+U)">
+                                    <TextBlock Text="U" TextDecorations="Underline" />
                                 </Button>
                                 <Rectangle Classes="separator" />
                                 <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">

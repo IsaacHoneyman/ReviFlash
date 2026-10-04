@@ -70,12 +70,13 @@ public partial class DeckEditorWindow : Window
 
     private void Bold_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\B{", "}");
     private void Italic_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\I{", "}");
+    private void Underline_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\U{", "}");
     private void InlineMath_Click(object? sender, RoutedEventArgs e) => WrapActiveField("$", "$");
     private void DisplayMath_Click(object? sender, RoutedEventArgs e) => WrapActiveField("$$", "$$");
     private void Blank_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\C{", "}");
     private void Help_Click(object? sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(this);
 
-    /// <summary> Ctrl (Cmd on macOS) + B / I / M, Shift+M for display maths, Shift+C for a cloze blank. </summary>
+    /// <summary> Ctrl (Cmd on macOS) + B / I / U / M, Shift+M for display maths, Shift+C for a cloze blank. </summary>
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
     {
         if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;
@@ -88,6 +89,7 @@ public partial class DeckEditorWindow : Window
         {
             (Key.B, false) => (@"\B{", "}"),
             (Key.I, false) => (@"\I{", "}"),
+            (Key.U, false) => (@"\U{", "}"),
             (Key.M, false) => ("$", "$"),
             (Key.M, true) => ("$$", "$$"),
             (Key.C, true) when ViewModel?.IsClozeCardType == true => (@"\C{", "}"),

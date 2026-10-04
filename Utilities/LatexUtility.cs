@@ -7,8 +7,8 @@ namespace ReviFlash.Utilities;
 
 public abstract record CardSegment;
 
-/// <summary> Literal text, bold and/or italic from \B{...} / \I{...}. </summary>
-public sealed record TextSegment(string Text, bool Bold, bool Italic) : CardSegment;
+/// <summary> Literal text, styled by any \B{...} / \I{...} / \U{...} it sits in. </summary>
+public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false) : CardSegment;
 
 /// <summary> Maths ready for CSharpMath, plus what the user typed for falling back to. </summary>
 public sealed record MathSegment(string Latex, string Source, bool Display) : CardSegment;
@@ -17,7 +17,7 @@ public sealed record LineBreakSegment : CardSegment;
 
 /// <summary>
 /// Turns card text into segments for rendering, or the single LaTeX string CSharpMath's TextView takes.
-/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \$ and cloze blanks \C{...} (shown bold);
+/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, \$ and cloze blanks \C{...} (shown bold);
 /// inside, the maths is passed through with rewrites for commands CSharpMath lacks.
 /// </summary>
 public static partial class LatexUtility
@@ -53,6 +53,7 @@ public static partial class LatexUtility
     {
         ["B"] = @"\mathbf",
         ["I"] = @"\mathit",
+        ["U"] = @"\underline",
         ["dfrac"] = @"\frac",
         ["tfrac"] = @"\frac",
         ["textbf"] = @"\mathbf",
@@ -102,7 +103,7 @@ public static partial class LatexUtility
         void FlushText()
         {
             if (text.Length == 0) return;
-            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I')));
+            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I'), braces.Contains('U')));
             text.Clear();
         }
 
@@ -200,6 +201,7 @@ public static partial class LatexUtility
             {
                 case TextSegment text:
                     var escaped = EscapeText(text.Text);
+                    // CSharpMath's text mode has no underline, so \U{...} is plain in the LaTeX font view.
                     if (text.Italic) escaped = $@"\textit{{{escaped}}}";
                     if (text.Bold) escaped = $@"\textbf{{{escaped}}}";
                     output.Append(escaped);
@@ -405,13 +407,13 @@ public static partial class LatexUtility
         return -1;
     }
 
-    /// <summary> \B{ or \I{, with the B/I not part of a longer command name. </summary>
+    /// <summary> \B{, \I{ or \U{, with the letter not part of a longer command name. </summary>
     private static bool TryReadFormatCommand(string input, int index, out char command)
     {
         command = default;
         if (index + 2 >= input.Length) return false;
         var name = input[index + 1];
-        if ((name != 'B' && name != 'I') || input[index + 2] != '{') return false;
+        if ((name != 'B' && name != 'I' && name != 'U') || input[index + 2] != '{') return false;
         command = name;
         return true;
     }

@@ -19,6 +19,7 @@ public partial class SyntaxGuideWindow : Window
         [
             new("Bold", @"\B{bold text}"),
             new("Italic", @"\I{italic text}"),
+            new("Underline", @"\U{underlined text}"),
             new("Bold and italic", @"\B{\I{both at once}}"),
             new("Maths in the line", @"The area is $\pi r^2$."),
             new("Maths on its own line", @"$$E = mc^2$$"),

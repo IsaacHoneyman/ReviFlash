@@ -162,6 +162,7 @@ public class MathText : Decorator
     {
         FontWeight = text.Bold ? FontWeight.Bold : FontWeight.Normal,
         FontStyle = text.Italic ? FontStyle.Italic : FontStyle.Normal,
+        TextDecorations = text.Underline ? Avalonia.Media.TextDecorations.Underline : null,
     };
 
     private static TextSegment Fallback(MathSegment math)
