@@ -130,9 +130,8 @@ public partial class ReviewViewModel : ViewModelBase
     public bool ShouldShowRetryLaterButton => MetaDataManager.Data.ShowRetryLaterButton;
     public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
     public bool ShowFlipRetryLater => IsFlipCard && CanRetryLater;
-    /// <summary> Match cards get a wider card, so their pairs can sit in two columns. </summary>
-    public double CardMaxWidth => IsMatchCard ? 960 : 720;
-    public int MatchColumns => MatchRows.Count >= 4 ? 2 : 1;
+    /// <summary> Match cards get a wider card, so the items and answers can sit side by side. </summary>
+    public double CardMaxWidth => IsMatchCard ? 1040 : 720;
     public bool ShouldShowAnswerStreak => MetaDataManager.Data.ShowAnswerStreakInReview;
     public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
     public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";
@@ -688,7 +687,6 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsMultiChoiceCard));
         OnPropertyChanged(nameof(IsMatchCard));
         OnPropertyChanged(nameof(CardMaxWidth));
-        OnPropertyChanged(nameof(MatchColumns));
         OnPropertyChanged(nameof(IsTrueFalseCard));
         OnPropertyChanged(nameof(CurrentTypeCardAnswer));
         OnPropertyChanged(nameof(CurrentTrueFalseTrueOptionText));

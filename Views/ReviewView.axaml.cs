@@ -130,10 +130,8 @@ public partial class ReviewView : UserControl
         if (vm.IsMatchCard)
         {
             if (OptionNumber(key) is { } chip) vm.PlaceMatchChip(chip - 1);
-            else if (key == Key.Up) vm.MoveMatchRow(-vm.MatchColumns);
-            else if (key == Key.Down) vm.MoveMatchRow(vm.MatchColumns);
-            else if (key == Key.Left) vm.MoveMatchRow(-1);
-            else if (key == Key.Right) vm.MoveMatchRow(1);
+            else if (key is Key.Up or Key.Left) vm.MoveMatchRow(-1);
+            else if (key is Key.Down or Key.Right) vm.MoveMatchRow(1);
             else if (key is Key.Back or Key.Delete) vm.UndoMatchChip();
             else if (key == Key.Enter) vm.CheckMatchAnswer();
             else return false;

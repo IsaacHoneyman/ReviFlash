@@ -38,11 +38,16 @@ public class MathText : Decorator
     public static readonly StyledProperty<bool> ShowErrorsProperty =
         AvaloniaProperty.Register<MathText, bool>(nameof(ShowErrors));
 
+    /// <summary> Cuts the text off with an ellipsis after this many lines (0 for no limit). </summary>
+    public static readonly StyledProperty<int> MaxLinesProperty =
+        AvaloniaProperty.Register<MathText, int>(nameof(MaxLines));
+
     public string? Text { get => GetValue(TextProperty); set => SetValue(TextProperty, value); }
     public IBrush? Foreground { get => GetValue(ForegroundProperty); set => SetValue(ForegroundProperty, value); }
     public double FontSize { get => GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
     public bool IsCentered { get => GetValue(IsCenteredProperty); set => SetValue(IsCenteredProperty, value); }
     public bool ShowErrors { get => GetValue(ShowErrorsProperty); set => SetValue(ShowErrorsProperty, value); }
+    public int MaxLines { get => GetValue(MaxLinesProperty); set => SetValue(MaxLinesProperty, value); }
 
     private bool? _builtWithLatexFont;
 
@@ -53,7 +58,7 @@ public class MathText : Decorator
         base.OnPropertyChanged(change);
 
         if (change.Property == TextProperty || change.Property == ForegroundProperty || change.Property == FontSizeProperty
-            || change.Property == IsCenteredProperty || change.Property == ShowErrorsProperty)
+            || change.Property == IsCenteredProperty || change.Property == ShowErrorsProperty || change.Property == MaxLinesProperty)
             Rebuild();
     }
 
@@ -125,6 +130,9 @@ public class MathText : Decorator
 
         foreach (var segment in segments)
         {
+            // With a line limit only the first paragraph is shown, cut off within it.
+            if (MaxLines > 0 && panel.Children.Count > 0 && paragraph is null) break;
+
             if (segment is MathSegment { Display: true } display)
             {
                 paragraph = null;
@@ -162,6 +170,8 @@ public class MathText : Decorator
             FontSize = FontSize,
             Foreground = Foreground,
             TextAlignment = IsCentered ? TextAlignment.Center : TextAlignment.Left,
+            MaxLines = MaxLines,
+            TextTrimming = MaxLines > 0 ? TextTrimming.CharacterEllipsis : TextTrimming.None,
             Inlines = [],
         };
         if (_builtWithLatexFont == true) paragraph.FontFamily = LatinModernFaces[0];

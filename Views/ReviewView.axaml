@@ -64,7 +64,18 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
-        <!-- Match cards: a row per left item, filled from the chips underneath -->
+        <!-- Match cards: items on the left, each filled from the answers in the pane on the right -->
+        <Style Selector="Border.matchPane">
+            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="14,12" />
+        </Style>
+        <Style Selector="TextBlock.paneTitle">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
         <Style Selector="Button.matchRow">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Cursor" Value="Hand" />
@@ -72,23 +83,40 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.matchRow.current">
             <Setter Property="BorderBrush" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="BorderThickness" Value="2" />
         </Style>
         <Style Selector="Button.matchRow:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
             <Setter Property="BorderBrush" Value="{Binding $parent[Button].BorderBrush}" />
         </Style>
+        <!-- Where an item's answer goes: outlined while empty, filled once placed -->
+        <Style Selector="Border.slot">
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.slot.filled">
+            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
         <Style Selector="Button.chip">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="0,0,8,8" />
-            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Margin" Value="0,4" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Padding" Value="10,8" />
             <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
         </Style>
         <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -97,12 +125,22 @@
         <Style Selector="Button.chip:pointerover">
             <Setter Property="Opacity" Value="0.88" />
         </Style>
-        <!-- Placed chips stay where they are (so their numbers don't shift), faded -->
         <Style Selector="Button.chip:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
         </Style>
         <Style Selector="Button.chip:disabled">
             <Setter Property="Opacity" Value="0.3" />
+        </Style>
+        <Style Selector="Border.matchResult">
+            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessForeground}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Margin" Value="0,4" />
+        </Style>
+        <Style Selector="Border.matchResult.wrong">
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerForeground}" />
         </Style>
     </UserControl.Styles>
 
@@ -292,91 +330,93 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Match Card -->
+                    <!-- Match Card: the items to match on the left, the answers to place on the right -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsMatchCard}">
-                        <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
-                            <TextBlock Classes="prompt" Text="Pick an answer below for the highlighted item. Click an item to change its answer." TextWrapping="Wrap" />
+                        <StackPanel Spacing="14" IsVisible="{Binding !IsAnswerChecked}">
+                            <TextBlock Classes="prompt" Text="Pick an answer for the highlighted item. Click an item to change its answer."
+                                TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
 
-                            <ItemsControl ItemsSource="{Binding MatchRows}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="{Binding MatchColumns}" ColumnSpacing="10" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ReviewMatchRow">
-                                        <Button Classes="matchRow" Classes.current="{Binding IsCurrent}" Margin="0,3" Click="MatchRow_Click">
-                                            <Grid ColumnDefinitions="*, Auto, *">
-                                                <views:MathText Text="{Binding LeftText}" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource TextPrimary}" />
-                                                <TextBlock Grid.Column="1" Text="→" Margin="12,0"
-                                                    VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                                <Border Grid.Column="2" MinHeight="34" CornerRadius="6" Padding="10,6"
-                                                    Background="{DynamicResource StatTileBackground}" IsVisible="{Binding HasSelection}">
-                                                    <views:MathText Text="{Binding SelectedRightText}" VerticalAlignment="Center" FontSize="15" Foreground="{DynamicResource TextPrimary}" />
-                                                </Border>
-                                                <Border Grid.Column="2" MinHeight="34" CornerRadius="6" Padding="10,6"
-                                                    BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
-                                                    IsVisible="{Binding !HasSelection}">
-                                                    <TextBlock Text="…" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                                </Border>
-                                            </Grid>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <Grid ColumnDefinitions="3*, 20, 2*">
+                                <Border Classes="matchPane">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Classes="paneTitle" Text="Items" />
+                                        <ItemsControl ItemsSource="{Binding MatchRows}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ReviewMatchRow">
+                                                    <Button Classes="matchRow" Classes.current="{Binding IsCurrent}" Margin="0,4" Click="MatchRow_Click">
+                                                        <Grid ColumnDefinitions="*, Auto, *">
+                                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                                FontSize="16" Foreground="{DynamicResource TextPrimary}" />
+                                                            <TextBlock Grid.Column="1" Text="→" Margin="10,0"
+                                                                VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                                            <Border Grid.Column="2" Classes="slot filled" IsVisible="{Binding HasSelection}">
+                                                                <!-- Shown in full in the Answers pane, so kept short here -->
+                                                                <views:MathText Text="{Binding SelectedRightText}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                                    MaxLines="2" FontSize="15" Foreground="{DynamicResource TextPrimary}" />
+                                                            </Border>
+                                                            <Border Grid.Column="2" Classes="slot" IsVisible="{Binding !HasSelection}">
+                                                                <TextBlock Text="…" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                                            </Border>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
 
-                            <ItemsControl ItemsSource="{Binding MatchChips}" Margin="0,6,0,0">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel HorizontalAlignment="Center" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ReviewMatchChip">
-                                        <Button Classes="chip" IsEnabled="{Binding !IsUsed}" Click="MatchChip_Click">
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Classes="key" Text="{Binding NumberText}" />
-                                                <views:MathText Text="{Binding Text}" VerticalAlignment="Center" FontSize="15" Foreground="{DynamicResource TextPrimary}" />
-                                            </StackPanel>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                <Border Grid.Column="2" Classes="matchPane">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Classes="paneTitle" Text="Answers" />
+                                        <ItemsControl ItemsSource="{Binding MatchChips}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ReviewMatchChip">
+                                                    <!-- Placed answers stay where they are (so their numbers don't shift), faded -->
+                                                    <Button Classes="chip" IsEnabled="{Binding !IsUsed}" Click="MatchChip_Click">
+                                                        <Grid ColumnDefinitions="22, *, 22">
+                                                            <TextBlock Classes="key" Text="{Binding NumberText}" />
+                                                            <views:MathText Grid.Column="1" Text="{Binding Text}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                                FontSize="15" Foreground="{DynamicResource TextPrimary}" />
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
                             <Button Classes="action primary" Content="Submit Answer" Click="SubmitAnswer_Click" />
                         </StackPanel>
 
                         <!-- Each pair as answered, with the right answer under any that were wrong -->
                         <ItemsControl ItemsSource="{Binding MatchRows}" IsVisible="{Binding IsAnswerChecked}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="{Binding MatchColumns}" ColumnSpacing="10" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:ReviewMatchRow">
-                                    <Border Background="{DynamicResource SurfaceOverlayBackground}" BorderBrush="{DynamicResource CardBorder}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,3">
+                                    <Border Classes="matchResult" Classes.wrong="{Binding !IsCorrect}">
                                         <Grid ColumnDefinitions="*, Auto, *">
-                                            <views:MathText Text="{Binding LeftText}" VerticalAlignment="Center" FontSize="15" Foreground="{DynamicResource TextPrimary}" />
-                                            <TextBlock Grid.Column="1" Text="→" Margin="12,0"
+                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                FontSize="16" Foreground="{DynamicResource TextPrimary}" />
+                                            <TextBlock Grid.Column="1" Text="→" Margin="16,0"
                                                 VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                            <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
-                                                <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsCorrect}">
-                                                    <TextBlock Text="✓" FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
-                                                    <views:MathText Text="{Binding SelectedRightText}" FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
-                                                </StackPanel>
-                                                <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsCorrect}">
-                                                    <TextBlock Text="✕" FontSize="15" Foreground="{DynamicResource DangerForeground}" />
-                                                    <views:MathText Text="{Binding SelectedRightText}" FontSize="15" Foreground="{DynamicResource DangerForeground}"
-                                                        IsVisible="{Binding HasSelection}" />
-                                                    <TextBlock Text="Nothing chosen" FontSize="15" Foreground="{DynamicResource DangerForeground}"
-                                                        IsVisible="{Binding !HasSelection}" />
-                                                </StackPanel>
-                                                <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsCorrect}">
-                                                    <TextBlock Text="Answer:" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
-                                                    <views:MathText Text="{Binding CorrectRightText}" FontSize="14" Foreground="{DynamicResource SuccessForeground}" />
-                                                </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Grid ColumnDefinitions="Auto, *" HorizontalAlignment="Center" IsVisible="{Binding IsCorrect}">
+                                                    <TextBlock Text="✓" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SuccessForeground}" />
+                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" VerticalAlignment="Center" IsCentered="True"
+                                                        FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
+                                                </Grid>
+                                                <Grid ColumnDefinitions="Auto, *" HorizontalAlignment="Center" IsVisible="{Binding !IsCorrect}">
+                                                    <TextBlock Text="✕" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource DangerForeground}" />
+                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" VerticalAlignment="Center" IsCentered="True"
+                                                        FontSize="15" Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding HasSelection}" />
+                                                    <TextBlock Grid.Column="1" Text="Nothing chosen" FontSize="15" VerticalAlignment="Center"
+                                                        Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding !HasSelection}" />
+                                                </Grid>
+                                                <Grid ColumnDefinitions="Auto, *" HorizontalAlignment="Center" IsVisible="{Binding !IsCorrect}">
+                                                    <TextBlock Text="✓" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SuccessForeground}" />
+                                                    <views:MathText Grid.Column="1" Text="{Binding CorrectRightText}" VerticalAlignment="Center" IsCentered="True"
+                                                        FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
+                                                </Grid>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
