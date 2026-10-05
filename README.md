@@ -33,6 +33,8 @@ Updates are handled automatically within ReviFlash! On startup the app checks wh
 
 ## New in 1.2
 
+**1.2.1**: match cards in reviews have a cleaner layout. The items sit on the left with the answers to place on the right, and the results list each pair on its own line, so long answers no longer overlap.
+
 **Import from Anki**
 - Bring your Anki decks across from **Settings → Import from Anki**. It works with `.apkg` files from any Anki version, including the newer compressed format.
 - Formatting, MathJax and `[latex]` maths, cloze deletions (including inside maths), "type in the answer" cards and reversed cards all come across, and sub-decks become folders.
