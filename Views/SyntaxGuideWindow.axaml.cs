@@ -15,12 +15,15 @@ public partial class SyntaxGuideWindow : Window
 
     public IReadOnlyList<GuideSection> Sections { get; } =
     [
-        new("Formatting", "Press Enter in a card field for a new line.",
+        new("Formatting", "Press Enter in a card field for a new line. Headings always sit on a line of their own.",
         [
             new("Bold", @"\B{bold text}"),
             new("Italic", @"\I{italic text}"),
             new("Underline", @"\U{underlined text}"),
             new("Bold and italic", @"\B{\I{both at once}}"),
+            new("Heading", @"\H1{Big heading}"),
+            new("Subheading", @"\H2{Smaller heading}"),
+            new("Small heading", @"\H3{Smallest heading}"),
             new("Maths in the line", @"The area is $\pi r^2$."),
             new("Maths on its own line", @"$$E = mc^2$$"),
             new("A dollar sign", @"It costs \$5."),

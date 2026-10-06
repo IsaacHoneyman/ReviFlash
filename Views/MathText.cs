@@ -15,7 +15,7 @@ using LineStyle = CSharpMath.Atom.LineStyle;
 namespace ReviFlash.Views;
 
 /// <summary>
-/// Card text with inline $...$ and display $$...$$ maths, plus \B{...}, \I{...} and \U{...}.
+/// Card text with inline $...$ and display $$...$$ maths, plus \B{...}, \I{...}, \U{...} and headings \H1{...} to \H3{...}.
 /// Used everywhere card content is shown so the editor previews and review screen match.
 /// Text is laid out by Avalonia (in the app font, or Latin Modern with the LaTeX font setting) and each
 /// formula is typeset by CSharpMath and placed inline on the text baseline.
@@ -121,12 +121,18 @@ public class MathText : Decorator
     /// </summary>
     private double MathScale => _builtWithLatexFont == true ? 0.75 : 0.9;
 
+    /// <summary> Text size of \H1, \H2 and \H3 relative to the body text. </summary>
+    private static readonly double[] HeadingScales = [1, 1.5, 1.3, 1.15];
+
+    private double SizeFor(int heading) => FontSize * HeadingScales[heading];
+
     // --- Text blocks with each formula placed inline ---
 
     private StackPanel BuildView(IReadOnlyList<CardSegment> segments)
     {
         var panel = new StackPanel();
         TextBlock? paragraph = null;
+        var paragraphHeading = 0;
 
         foreach (var segment in segments)
         {
@@ -136,11 +142,37 @@ public class MathText : Decorator
             if (segment is MathSegment { Display: true } display)
             {
                 paragraph = null;
-                panel.Children.Add(CreateMath(display, isInline: false) ?? (Control)CreateParagraph(FallbackWithNote(display)));
+                panel.Children.Add(CreateMath(display, isInline: false) ?? (Control)CreateParagraph(FallbackWithNote(display), display.Heading));
                 continue;
             }
 
-            paragraph ??= AddParagraph(panel);
+            if (segment is LineBreakSegment && paragraphHeading > 0)
+            {
+                // A heading is a line of its own, so the line break after it just ends it.
+                paragraph = null;
+                paragraphHeading = 0;
+                continue;
+            }
+
+            // Headings are their own paragraph, larger than the text around them.
+            var heading = segment switch { TextSegment t => t.Heading, MathSegment m => m.Heading, _ => paragraphHeading };
+            if (paragraph is not null && heading != paragraphHeading)
+            {
+                // The heading starts its own line, so a line break just before it would leave a gap.
+                if (heading > 0 && paragraph.Inlines!.Count > 0 && paragraph.Inlines[^1] is LineBreak)
+                    paragraph.Inlines.RemoveAt(paragraph.Inlines.Count - 1);
+                paragraph = null;
+            }
+
+            if (paragraph is null)
+            {
+                paragraph = CreateParagraph(null, heading);
+                paragraphHeading = heading;
+                // Room above a heading, separating it from what came before.
+                if (heading > 0 && panel.Children.Count > 0) paragraph.Margin = new Thickness(0, FontSize * 0.6, 0, 0);
+                panel.Children.Add(paragraph);
+            }
+
             if (segment is MathSegment inline)
             {
                 if (CreateMath(inline, isInline: true) is { } view) paragraph.Inlines!.Add(new InlineUIContainer(view));
@@ -155,19 +187,12 @@ public class MathText : Decorator
         return panel;
     }
 
-    private TextBlock AddParagraph(Panel panel)
-    {
-        var paragraph = CreateParagraph(null);
-        panel.Children.Add(paragraph);
-        return paragraph;
-    }
-
-    private TextBlock CreateParagraph(IEnumerable<TextSegment>? text)
+    private TextBlock CreateParagraph(IEnumerable<TextSegment>? text, int heading = 0)
     {
         var paragraph = new TextBlock
         {
             TextWrapping = TextWrapping.Wrap,
-            FontSize = FontSize,
+            FontSize = SizeFor(heading),
             Foreground = Foreground,
             TextAlignment = IsCentered ? TextAlignment.Center : TextAlignment.Left,
             MaxLines = MaxLines,
@@ -184,20 +209,21 @@ public class MathText : Decorator
 
     private Run CreateRun(TextSegment text)
     {
+        var bold = text.Bold || text.Heading > 0;
         var run = new Run(text.Text)
         {
-            FontWeight = text.Bold ? FontWeight.Bold : FontWeight.Normal,
+            FontWeight = bold ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = text.Italic ? FontStyle.Italic : FontStyle.Normal,
             TextDecorations = text.Underline ? Avalonia.Media.TextDecorations.Underline : null,
         };
-        if (_builtWithLatexFont == true) run.FontFamily = LatinModernFaces[(text.Bold ? 1 : 0) + (text.Italic ? 2 : 0)];
+        if (_builtWithLatexFont == true) run.FontFamily = LatinModernFaces[(bold ? 1 : 0) + (text.Italic ? 2 : 0)];
         return run;
     }
 
     private static TextSegment Fallback(MathSegment math)
     {
         var delimiter = math.Display ? "$$" : "$";
-        return new TextSegment(delimiter + math.Source + delimiter, false, false);
+        return new TextSegment(delimiter + math.Source + delimiter, false, false, Heading: math.Heading);
     }
 
     /// <summary> The maths as typed, and in the editor a note saying why it isn't rendered. </summary>
@@ -205,7 +231,7 @@ public class MathText : Decorator
     {
         yield return Fallback(math);
         if (ShowErrors && CrashesTypesetter(math.Latex))
-            yield return new TextSegment(" (this maths can't be displayed; try removing spacing such as \\; between symbols)", false, false);
+            yield return new TextSegment(" (this maths can't be displayed; try removing spacing such as \\; between symbols)", false, false, Heading: math.Heading);
     }
 
     private static readonly Dictionary<string, bool> TypesetterCrashes = new();
@@ -238,9 +264,10 @@ public class MathText : Decorator
     {
         if (CrashesTypesetter(math.Latex)) return null;
 
+        var size = SizeFor(math.Heading);
         var view = new InlineMathView
         {
-            FontSize = (float)(FontSize * MathScale),
+            FontSize = (float)(size * MathScale),
             TextColor = TextColor,
             // Inline maths is set smaller (fractions, limits) so it fits the line, as in LaTeX.
             LineStyle = isInline ? LineStyle.Text : LineStyle.Display,
@@ -251,13 +278,13 @@ public class MathText : Decorator
         if (isInline)
         {
             // Breathing room so tall formulas (matrices, fractions) on neighbouring lines don't touch.
-            view.Margin = new Thickness(0, FontSize / 6);
+            view.Margin = new Thickness(0, size / 6);
             view.UpdateBaseline();
         }
         else
         {
             view.HorizontalAlignment = IsCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left;
-            view.Margin = new Thickness(0, FontSize / 2);
+            view.Margin = new Thickness(0, size / 2);
         }
         return view;
     }

@@ -7,17 +7,20 @@ namespace ReviFlash.Utilities;
 
 public abstract record CardSegment;
 
-/// <summary> Literal text, styled by any \B{...} / \I{...} / \U{...} it sits in. </summary>
-public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false) : CardSegment;
+/// <summary>
+/// Literal text, styled by any \B{...} / \I{...} / \U{...} it sits in, and in a heading (1 to 3) when inside \H1{...} to \H3{...}.
+/// </summary>
+public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false, int Heading = 0) : CardSegment;
 
 /// <summary> Maths ready for CSharpMath, plus what the user typed for falling back to. </summary>
-public sealed record MathSegment(string Latex, string Source, bool Display) : CardSegment;
+public sealed record MathSegment(string Latex, string Source, bool Display, int Heading = 0) : CardSegment;
 
 public sealed record LineBreakSegment : CardSegment;
 
 /// <summary>
 /// Turns card text into segments for rendering: styled text, line breaks, and maths ready for CSharpMath.
-/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, \$ and cloze blanks \C{...} (shown bold);
+/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, headings \H1{...} to \H3{...}, \$
+/// and cloze blanks \C{...} (shown bold);
 /// inside, the maths is passed through with rewrites for commands CSharpMath lacks.
 /// </summary>
 public static partial class LatexUtility
@@ -83,14 +86,18 @@ public static partial class LatexUtility
         if (string.IsNullOrEmpty(input)) return segments;
 
         var text = new StringBuilder();
-        // One entry per open brace in the text: 'B' / 'I' for a \B{ / \I{ group, '{' for a literal brace.
+        // One entry per open brace in the text: 'B' / 'I' / 'U' for a \B{ / \I{ / \U{ group, '1' to '3' for a
+        // heading, '{' for a literal brace.
         var braces = new Stack<char>();
         var i = 0;
+
+        // The innermost heading wins (a stack enumerates from the top).
+        int Heading() => braces.FirstOrDefault(char.IsAsciiDigit) is var level and not '\0' ? level - '0' : 0;
 
         void FlushText()
         {
             if (text.Length == 0) return;
-            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I'), braces.Contains('U')));
+            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I'), braces.Contains('U'), Heading()));
             text.Clear();
         }
 
@@ -109,7 +116,7 @@ public static partial class LatexUtility
                 {
                     FlushText();
                     var source = input[start..end];
-                    segments.Add(new MathSegment(ToMathLatex(source), source, display));
+                    segments.Add(new MathSegment(ToMathLatex(source), source, display, Heading()));
                     i = end + delimiter.Length;
                     continue;
                 }
@@ -143,6 +150,14 @@ public static partial class LatexUtility
                     FlushText();
                     braces.Push(command);
                     i += 3;
+                    continue;
+                }
+
+                if (TryReadHeading(input, i, out var level))
+                {
+                    FlushText();
+                    braces.Push(level);
+                    i += 4;
                     continue;
                 }
             }
@@ -354,6 +369,16 @@ public static partial class LatexUtility
         var name = input[index + 1];
         if ((name != 'B' && name != 'I' && name != 'U') || input[index + 2] != '{') return false;
         command = name;
+        return true;
+    }
+
+    /// <summary> \H1{, \H2{ or \H3{, giving the level as its digit. </summary>
+    private static bool TryReadHeading(string input, int index, out char level)
+    {
+        level = default;
+        if (index + 3 >= input.Length || input[index + 1] != 'H' || input[index + 3] != '{') return false;
+        if (input[index + 2] is not ('1' or '2' or '3')) return false;
+        level = input[index + 2];
         return true;
     }
 

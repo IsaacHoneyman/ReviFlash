@@ -4,3 +4,6 @@ The stats panel on the main menu scrolls when the window is too short to show ev
 In a smaller window the main menu's sort box narrows and the new folder, group and set buttons shorten to "+ Folder", "+ Group" and "+ Set", so the search box stays usable
 The window can't be resized smaller than the main menu can lay out
 Search boxes, sort menus and buttons that sit in a row are the same height, on the main menu, the deck pickers and the online windows
+Headings: \H1{...}, \H2{...} and \H3{...} make a large, medium or small bold heading on a line of its own, with maths, bold, italic and cloze blanks working inside
+H1, H2 and H3 buttons in the card editor toolbar, with shortcuts Ctrl+1, Ctrl+2 and Ctrl+3 (Cmd on macOS), and headings in the Formatting Guide
+Importing from Anki turns <h1> to <h3> headings, and \section, \subsection and \subsubsection in [latex] blocks, into ReviFlash headings

@@ -9,7 +9,7 @@ namespace ReviFlash.Utilities;
 
 /// <summary>
 /// Turns an Anki field (HTML, MathJax \(...\) / \[...\], [latex]...[/latex], {{c1::...}} clozes) into ReviFlash card text
-/// ($...$ / $$...$$, \B / \I / \U, \C1{...}). Images can't come across yet and are left as "[image]".
+/// ($...$ / $$...$$, \B / \I / \U, \H1 to \H3, \C1{...}). Images can't come across yet and are left as "[image]".
 /// </summary>
 public static partial class AnkiTextConverter
 {
@@ -173,9 +173,10 @@ public static partial class AnkiTextConverter
         return InnerMathRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
     }
 
-    /// <summary> Text commands and what they become: \B{ / \I{ / \U{ for styling, or a plain group to unwrap. </summary>
+    /// <summary> Text commands and what they become: \B{ / \I{ / \U{ / \H1{ for styling, or a plain group to unwrap. </summary>
     private static readonly (string Command, string Replacement)[] LatexTextCommands =
     [
+        ("section", @"\H1{"), ("subsection", @"\H2{"), ("subsubsection", @"\H3{"),
         ("textbf", @"\B{"), ("textit", @"\I{"), ("emph", @"\I{"), ("textsl", @"\I{"), ("underline", @"\U{"),
         ("texttt", "{"), ("textrm", "{"), ("textsf", "{"), ("textup", "{"), ("textnormal", "{"), ("text", "{"), ("mbox", "{"),
     ];
@@ -189,7 +190,7 @@ public static partial class AnkiTextConverter
     private static string ReplaceCommand(string text, string command, string replacement) =>
         Regex.Replace(text, $@"\\{command}\s*\{{", replacement.Replace("$", "$$"));
 
-    /// <summary> Removes {...} pairs that aren't the brace of \B{, \I{, \U{ or a cloze \C1{. </summary>
+    /// <summary> Removes {...} pairs that aren't the brace of \B{, \I{, \U{, \H1{ or a cloze \C1{. </summary>
     private static string RemoveGroupingBraces(string text)
     {
         var output = new StringBuilder();
@@ -301,7 +302,7 @@ public static partial class AnkiTextConverter
         tag is "div" or "p" or "li" or "ul" or "ol" or "tr" or "table" or "blockquote" or "pre"
             or "h1" or "h2" or "h3" or "h4" or "h5" or "h6";
 
-    /// <summary> What a tag opens and closes in card text: \B{ \I{ \U{ for styling, $^{...}$ / $_{...}$ for sup and sub. </summary>
+    /// <summary> What a tag opens and closes in card text: \B{ \I{ \U{ for styling, \H1{ to \H3{ for headings, $^{...}$ / $_{...}$ for sup and sub. </summary>
     private static (string Opening, string Closing) Formatting(string tag, string attributes)
     {
         switch (tag)
@@ -310,7 +311,8 @@ public static partial class AnkiTextConverter
             case "sub": return (@"$_{\text{", "}}$");
         }
 
-        var bold = tag is "b" or "strong" or "h1" or "h2" or "h3" or "h4" or "h5" or "h6";
+        var heading = tag is "h1" or "h2" or "h3" ? $@"\H{tag[1]}{{" : "";
+        var bold = tag is "b" or "strong" or "h4" or "h5" or "h6";
         var italic = tag is "i" or "em";
         var underline = tag == "u";
 
@@ -322,8 +324,8 @@ public static partial class AnkiTextConverter
             underline |= UnderlineStyleRegex().IsMatch(css);
         }
 
-        var opening = (bold ? @"\B{" : "") + (italic ? @"\I{" : "") + (underline ? @"\U{" : "");
-        return (opening, new string('}', opening.Length / 3));
+        var opening = heading + (bold ? @"\B{" : "") + (italic ? @"\I{" : "") + (underline ? @"\U{" : "");
+        return (opening, new string('}', opening.Count(c => c == '{')));
     }
 
     /// <summary> Text between tags: entities decoded, $ escaped (MathJax was already taken out), and [sound:...] dropped. </summary>
@@ -386,11 +388,11 @@ public static partial class AnkiTextConverter
     [GeneratedRegex(@"\s*\\item\b\s*")]
     private static partial Regex LatexItemRegex();
 
-    // Commands other than ours (\B, \I, \U, \C1) and the $ escape.
-    [GeneratedRegex(@"\\(?![BIU]\{|C\d*\{)[a-zA-Z]+\*?\s*")]
+    // Commands other than ours (\B, \I, \U, \H1, \C1) and the $ escape.
+    [GeneratedRegex(@"\\(?![BIU]\{|H[1-3]\{|C\d*\{)[a-zA-Z]+\*?\s*")]
     private static partial Regex UnknownCommandRegex();
 
-    [GeneratedRegex(@"\\(?:[BIU]|C\d*)$")]
+    [GeneratedRegex(@"\\(?:[BIU]|H[1-3]|C\d*)$")]
     private static partial Regex OurCommandRegex();
 
     [GeneratedRegex("\u0002(\\d+)\u0003")]
@@ -426,6 +428,6 @@ public static partial class AnkiTextConverter
     [GeneratedRegex(@"\n{3,}")]
     private static partial Regex ManyNewLinesRegex();
 
-    [GeneratedRegex(@"\\[BIU]\{\s*\}")]
+    [GeneratedRegex(@"\\(?:[BIU]|H[1-3])\{\s*\}")]
     private static partial Regex EmptyFormatRegex();
 }
