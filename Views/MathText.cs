@@ -172,6 +172,9 @@ public class MathText : Decorator
             TextAlignment = IsCentered ? TextAlignment.Center : TextAlignment.Left,
             MaxLines = MaxLines,
             TextTrimming = MaxLines > 0 ? TextTrimming.CharacterEllipsis : TextTrimming.None,
+            // A TextBlock is only as wide as its letters' advances and clips to that by default, which cuts off
+            // the overhang of an italic letter at the end of a line.
+            ClipToBounds = false,
             Inlines = [],
         };
         if (_builtWithLatexFont == true) paragraph.FontFamily = LatinModernFaces[0];
