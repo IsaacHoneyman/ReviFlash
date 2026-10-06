@@ -378,43 +378,80 @@
 
             <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *" Margin="0, 0, 24, 0">
 
-                <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto, Auto" Margin="0, 0, 0, 14">
+                <!-- "compact" is set from code-behind when the row is too narrow for the full labels,
+                     so the search box keeps a usable width in a small window. -->
+                <Grid Grid.Row="0" x:Name="SearchRow" ColumnDefinitions="*, Auto, Auto, Auto, Auto" Margin="0, 0, 0, 14">
+                    <Grid.Styles>
+                        <Style Selector="Grid#SearchRow > :is(Control)">
+                            <Setter Property="Height" Value="36" />
+                        </Style>
+                        <Style Selector="ComboBox#SortBox">
+                            <Setter Property="Width" Value="200" />
+                        </Style>
+                        <Style Selector="Grid#SearchRow.compact ComboBox#SortBox">
+                            <Setter Property="Width" Value="140" />
+                        </Style>
+                        <Style Selector="Grid#SearchRow TextBlock.short">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                        <Style Selector="Grid#SearchRow.compact TextBlock.short">
+                            <Setter Property="IsVisible" Value="True" />
+                        </Style>
+                        <Style Selector="Grid#SearchRow.compact TextBlock.long">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                    </Grid.Styles>
+
                     <TextBox Grid.Column="0"
                         Text="{Binding SearchText, Mode=TwoWay}"
                         Watermark="{Binding SearchWatermark}"
-                        CornerRadius="8" Padding="10, 7" FontSize="14" Margin="0, 0, 12, 0"
+                        VerticalContentAlignment="Center"
+                        CornerRadius="8" Padding="10, 0" FontSize="14" Margin="0, 0, 12, 0"
                         Background="{DynamicResource CardBackground}"
                         Foreground="{DynamicResource TextPrimary}" />
 
-                    <ComboBox Grid.Column="1"
+                    <ComboBox Grid.Column="1" x:Name="SortBox"
                         ItemsSource="{Binding SortOptions}"
                         SelectedItem="{Binding SelectedSortOption}"
-                        CornerRadius="8" Width="200" Margin="0,0,12,0"
+                        VerticalContentAlignment="Center"
+                        CornerRadius="8" Margin="0,0,12,0"
                         Background="{DynamicResource CardBackground}" />
 
                     <Button Grid.Column="2"
                         Click="CreateFolder_Click"
-                        Content="+ New Folder"
-                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                        CornerRadius="8" Padding="12, 0" FontSize="14" FontWeight="SemiBold"
                         Background="{DynamicResource StatTileBackground}"
                         Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" Margin="0,0,12,0" />
+                        Cursor="Hand" Margin="0,0,12,0">
+                        <Panel VerticalAlignment="Center">
+                            <TextBlock Classes="long" Text="+ New Folder" />
+                            <TextBlock Classes="short" Text="+ Folder" />
+                        </Panel>
+                    </Button>
 
                     <Button Grid.Column="3"
                         Click="CreateGroup_Click"
-                        Content="+ New Group"
-                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
+                        CornerRadius="8" Padding="12, 0" FontSize="14" FontWeight="SemiBold"
                         Background="{DynamicResource StatTileBackground}"
                         Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" Margin="0,0,12,0" />
+                        Cursor="Hand" Margin="0,0,12,0">
+                        <Panel VerticalAlignment="Center">
+                            <TextBlock Classes="long" Text="+ New Group" />
+                            <TextBlock Classes="short" Text="+ Group" />
+                        </Panel>
+                    </Button>
 
                     <Button Grid.Column="4"
                         Click="CreateDeck_Click"
-                        Content="+ New Set"
-                        CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="Bold"
+                        CornerRadius="8" Padding="12, 0" FontSize="14" FontWeight="Bold"
                         Background="{DynamicResource StatTileBackground}"
                         Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" />
+                        Cursor="Hand">
+                        <Panel VerticalAlignment="Center">
+                            <TextBlock Classes="long" Text="+ New Set" />
+                            <TextBlock Classes="short" Text="+ Set" />
+                        </Panel>
+                    </Button>
                 </Grid>
 
                 <!-- Breadcrumb trail, shown only once you are inside a folder. -->

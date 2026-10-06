@@ -48,9 +48,10 @@
                     <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="10">
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
                             <TextBox Grid.Column="0" Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search your cloud decks..."
-                                     CornerRadius="8" Padding="10,7" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
+                                     Height="36" VerticalContentAlignment="Center"
+                                     CornerRadius="8" Padding="10,0" FontSize="14" Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}" />
                             <ComboBox Grid.Column="1" ItemsSource="{Binding CloudSortOptions}" SelectedItem="{Binding SelectedCloudSortOption}"
-                                      CornerRadius="8" Width="180" Background="{DynamicResource AppBackground}" />
+                                      CornerRadius="8" Width="180" Height="36" VerticalContentAlignment="Center" Background="{DynamicResource AppBackground}" />
                         </Grid>
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">

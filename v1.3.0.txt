@@ -1,3 +1,6 @@
 The background swirl uses about a tenth of the CPU it did: it turns at a lower frame rate that looks the same, and pauses while ReviFlash is minimised or another window is focused
 The background swirl is off by default for new installs (Settings → Appearance to turn it on)
 The stats panel on the main menu scrolls when the window is too short to show every tile, such as after pressing F11, instead of cutting off the bottom
+In a smaller window the main menu's sort box narrows and the new folder, group and set buttons shorten to "+ Folder", "+ Group" and "+ Set", so the search box stays usable
+The window can't be resized smaller than the main menu can lay out
+Search boxes, sort menus and buttons that sit in a row are the same height, on the main menu, the deck pickers and the online windows

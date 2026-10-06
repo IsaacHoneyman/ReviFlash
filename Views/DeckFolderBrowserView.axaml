@@ -12,7 +12,8 @@
             <TextBox Grid.Column="0"
                 Text="{Binding SearchText, Mode=TwoWay}"
                 Watermark="{Binding SearchWatermark}"
-                CornerRadius="8" Padding="10,7" FontSize="14"
+                Height="36" VerticalContentAlignment="Center"
+                CornerRadius="8" Padding="10,0" FontSize="14"
                 Background="{DynamicResource AppBackground}"
                 Foreground="{DynamicResource TextPrimary}" />
 
@@ -20,7 +21,7 @@
                 IsVisible="{Binding ShowSortOptions}"
                 ItemsSource="{Binding SortOptions}"
                 SelectedItem="{Binding SelectedSortOption}"
-                CornerRadius="8" Width="180"
+                CornerRadius="8" Width="180" Height="36" VerticalContentAlignment="Center"
                 Background="{DynamicResource AppBackground}" />
         </Grid>
 

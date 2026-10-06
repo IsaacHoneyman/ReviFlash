@@ -31,7 +31,8 @@
                 <TextBox Grid.Column="0" 
                          Text="{Binding SearchText}"
                          Watermark="Search by title, subject, or keywords..."
-                         CornerRadius="8" Padding="12,10" FontSize="14"
+                         Height="40" VerticalContentAlignment="Center"
+                         CornerRadius="8" Padding="12,0" FontSize="14"
                          Background="{DynamicResource CardBackground}"
                          Foreground="{DynamicResource TextPrimary}"
                          Margin="0,0,12,0">
@@ -43,13 +44,14 @@
                 <ComboBox Grid.Column="1"
                           ItemsSource="{Binding SortOptions}"
                           SelectedItem="{Binding SelectedSortOption}"
-                          CornerRadius="8" Width="180" Margin="0,0,12,0"
+                          CornerRadius="8" Width="180" Height="40" VerticalContentAlignment="Center" Margin="0,0,12,0"
                           Background="{DynamicResource CardBackground}" />
 
                 <Button Grid.Column="2" 
                         Content="Search" 
                         Command="{Binding SearchCommand}"
-                        CornerRadius="8" Padding="16,10" FontSize="14" FontWeight="SemiBold"
+                        CornerRadius="8" Padding="16,0" Height="40" FontSize="14" FontWeight="SemiBold"
+                        VerticalContentAlignment="Center"
                         Background="{DynamicResource GradientStart}"
                         Foreground="{DynamicResource PrimaryButtonForeground}"
                         Cursor="Hand"/>

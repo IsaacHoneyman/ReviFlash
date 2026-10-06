@@ -16,9 +16,13 @@ namespace ReviFlash.Views;
 
 public partial class DashboardView : UserControl
 {
+    /// <summary> Below this width the search row uses short button labels and a narrower sort box. </summary>
+    private const double CompactSearchRowWidth = 790;
+
     public DashboardView()
     {
         InitializeComponent();
+        SearchRow.SizeChanged += (_, e) => SearchRow.Classes.Set("compact", e.NewSize.Width < CompactSearchRowWidth);
     }
 
     private Window OwnerWindow => (Window)TopLevel.GetTopLevel(this)!;
