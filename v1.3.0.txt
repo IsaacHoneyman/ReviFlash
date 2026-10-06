@@ -10,3 +10,5 @@ Importing from Anki turns <h1> to <h3> headings, and \section, \subsection and \
 In a smaller window the main menu's Show Folders, Show Groups and Show Sets toggles shorten to Folders, Groups and Sets, so the bottom bar stays inside its card
 The card editor's formatting toolbar wraps onto a second row when the editor is narrow, instead of cutting off buttons
 The deck editor can't be resized smaller than its layout fits
+New Help button next to Settings on the main menu, with the Formatting Guide and a new Keyboard Shortcuts list of every shortcut in the app
+Settings are tidied: Appearance first (now spelled right, and with the LaTeX previews option that was under Editor), Backup and Import from Anki in one section, and Account further down

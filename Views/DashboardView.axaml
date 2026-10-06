@@ -366,12 +366,18 @@
                     VerticalAlignment="Center" />
             </StackPanel>
 
-            <Button Grid.Column="1" Click="SettingsButton_Click" Background="Transparent"
-                CornerRadius="18" Width="56" Height="56" Cursor="Hand"
-                VerticalAlignment="Center"
-                ToolTip.Tip="Settings">
-                <Path Classes="icon large" Data="{StaticResource IconSettings}" />
-            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Click="HelpButton_Click" Background="Transparent"
+                    CornerRadius="18" Width="56" Height="56" Cursor="Hand"
+                    ToolTip.Tip="Help: formatting guide and keyboard shortcuts">
+                    <Path Classes="icon large" Data="{StaticResource IconHelp}" />
+                </Button>
+                <Button Click="SettingsButton_Click" Background="Transparent"
+                    CornerRadius="18" Width="56" Height="56" Cursor="Hand"
+                    ToolTip.Tip="Settings">
+                    <Path Classes="icon large" Data="{StaticResource IconSettings}" />
+                </Button>
+            </StackPanel>
         </Grid>
 
             <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 0">

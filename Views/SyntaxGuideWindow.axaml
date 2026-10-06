@@ -3,12 +3,28 @@
     xmlns:views="using:ReviFlash.Views"
     x:Class="ReviFlash.Views.SyntaxGuideWindow"
     x:DataType="views:SyntaxGuideWindow"
-    Title="Formatting Guide"
+    Title="Help"
     Width="860" Height="720" MinWidth="560" MinHeight="400"
     WindowStartupLocation="CenterOwner"
     Background="{DynamicResource AppBackground}">
 
     <Window.Styles>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Border.key">
+            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
+        <Style Selector="Border.key TextBlock">
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
         <Style Selector="SelectableTextBlock.source">
             <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
             <Setter Property="FontSize" Value="13" />
@@ -18,8 +34,10 @@
         </Style>
     </Window.Styles>
 
+    <TabControl x:Name="Tabs" Margin="16,8,16,0">
+    <TabItem Header="Formatting">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
                 <TextBlock Text="Formatting Guide" FontSize="28" FontWeight="Bold"
                     Foreground="{DynamicResource TextPrimary}" />
@@ -70,4 +88,61 @@
             </ItemsControl>
         </StackPanel>
     </ScrollViewer>
+    </TabItem>
+
+    <TabItem Header="Keyboard Shortcuts">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16,16,16,32" Spacing="20">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Keyboard Shortcuts" FontSize="28" FontWeight="Bold"
+                    Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                    Text="Where a row shows more than one key, either works. On macOS, use Cmd wherever Ctrl is shown." />
+            </StackPanel>
+
+            <ItemsControl ItemsSource="{Binding ShortcutSections}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="views:ShortcutSection">
+                        <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="views:ShortcutRow">
+                                            <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="0,8">
+                                                <Grid ColumnDefinitions="220, *" ColumnSpacing="16">
+                                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding Keys}" VerticalAlignment="Center">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel ItemSpacing="6" LineSpacing="4" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="x:String">
+                                                                <Border Classes="key">
+                                                                    <TextBlock Text="{Binding}" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Action}" TextWrapping="Wrap"
+                                                        VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+    </TabItem>
+    </TabControl>
 </Window>

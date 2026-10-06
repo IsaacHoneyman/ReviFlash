@@ -8,7 +8,16 @@ public sealed record GuideRow(string Description, string Source);
 
 public sealed record GuideSection(string Title, string? Note, IReadOnlyList<GuideRow> Rows);
 
-/// <summary> What can be typed into a card, each example shown next to how it renders. </summary>
+/// <summary> A shortcut: any one of <paramref name="Keys"/> does <paramref name="Action"/>. </summary>
+public sealed record ShortcutRow(IReadOnlyList<string> Keys, string Action);
+
+public sealed record ShortcutSection(string Title, string? Note, IReadOnlyList<ShortcutRow> Rows);
+
+public enum HelpTab { Formatting, KeyboardShortcuts }
+
+/// <summary>
+/// Help: what can be typed into a card, each example shown next to how it renders, and every keyboard shortcut.
+/// </summary>
 public partial class SyntaxGuideWindow : Window
 {
     private static SyntaxGuideWindow? _open;
@@ -65,22 +74,73 @@ public partial class SyntaxGuideWindow : Window
         ]),
     ];
 
+    public IReadOnlyList<ShortcutSection> ShortcutSections { get; } =
+    [
+        new("Anywhere", null,
+        [
+            new(["F11"], "Switch between fullscreen and a window"),
+        ]),
+        new("Main menu", null,
+        [
+            new(["Tab"], "Move between folders, sets and groups"),
+            new(["Enter", "Space"], "Open the selected folder, or start reviewing the selected set or group"),
+        ]),
+        new("Card editor", "In a card field. Using a formatting shortcut again on text that already has it removes it.",
+        [
+            new(["Ctrl+B"], "Bold"),
+            new(["Ctrl+I"], "Italic"),
+            new(["Ctrl+U"], "Underline"),
+            new(["Ctrl+1"], "Heading"),
+            new(["Ctrl+2"], "Subheading"),
+            new(["Ctrl+3"], "Small heading"),
+            new(["Ctrl+M"], "Maths in the line"),
+            new(["Ctrl+Shift+M"], "Maths on its own line"),
+            new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),
+        ]),
+        new("Reviews", "A hint under each card shows the keys that work right now. While typing an answer, only Enter and Esc work.",
+        [
+            new(["Space", "Enter"], "Show the answer on a Flip card"),
+            new(["←", "1"], "Mark incorrect, or answer False"),
+            new(["→", "2"], "Mark correct, or answer True"),
+            new(["1–9"], "Tick a multiple choice option"),
+            new(["Enter"], "Check a typed or multiple choice answer"),
+            new(["Enter", "Space", "→"], "Go to the next card once answered"),
+            new(["R"], "Retry the card later"),
+            new(["S"], "Skip the card"),
+            new(["Esc"], "Quit the review"),
+        ]),
+        new("Match cards", null,
+        [
+            new(["1–9"], "Give the selected item that answer"),
+            new(["↑", "↓", "←", "→"], "Move between items"),
+            new(["Backspace", "Delete"], "Undo the last answer given"),
+            new(["Enter"], "Check the answers"),
+        ]),
+        new("Dialogs", null,
+        [
+            new(["Enter"], "Proceed, or Finish on the Session Complete screen"),
+            new(["Esc"], "Cancel"),
+        ]),
+    ];
+
     public SyntaxGuideWindow()
     {
         InitializeComponent();
         DataContext = this;
     }
 
-    /// <summary> Opens the guide beside <paramref name="owner"/>, or brings the open one to the front. </summary>
-    public static void ShowFor(Window owner)
+    /// <summary> Opens help on <paramref name="tab"/> beside <paramref name="owner"/>, or brings the open one to the front. </summary>
+    public static void ShowFor(Window owner, HelpTab tab = HelpTab.Formatting)
     {
         if (_open is not null)
         {
+            _open.Tabs.SelectedIndex = (int)tab;
             _open.Activate();
             return;
         }
 
         _open = new SyntaxGuideWindow();
+        _open.Tabs.SelectedIndex = (int)tab;
         _open.Closed += (_, _) => _open = null;
         _open.Show(owner);
     }

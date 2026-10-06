@@ -23,51 +23,7 @@
                 CornerRadius="10"
                 Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Account"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
-
-                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
-                        <TextBlock Grid.Column="0" Text="{Binding AccountText}"
-                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <Button Grid.Column="1" Content="Sign Out" Click="SignOut_Click"
-                            IsVisible="{Binding IsSignedIn}"
-                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
-                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
-                        <Button Grid.Column="1" Content="Sign In" Click="SignIn_Click"
-                            IsVisible="{Binding !IsSignedIn}"
-                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
-                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
-                    </Grid>
-
-                    <Button Content="Change Username" Click="ChangeUsername_Click"
-                        IsVisible="{Binding IsSignedIn}"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8" Padding="12,8" FontWeight="SemiBold"
-                        Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" />
-
-                    <TextBlock Text="Sign in to share decks, keep private copies, and download community decks."
-                        IsVisible="{Binding !IsSignedIn}" FontSize="12" TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
-
-                    <TextBlock x:Name="AccountStatusText"
-                        IsVisible="False"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
-                </StackPanel>
-            </Border>
-
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Apperance"
+                    <TextBlock Text="Appearance"
                         FontWeight="SemiBold"
                         Foreground="{DynamicResource TextPrimary}" />
 
@@ -93,6 +49,15 @@
                             VerticalAlignment="Center"
                             Foreground="{DynamicResource TextPrimary}" />
                         <CheckBox Grid.Column="1" IsChecked="{Binding UseLatexFontForCards}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Show LaTeX Previews for Additional Fields"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <CheckBox Grid.Column="1"
+                            IsChecked="{Binding ShowAdditionalFieldLatexPreviews}"
                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Grid>
                 </StackPanel>
@@ -154,39 +119,8 @@
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Editor"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
-
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show LaTeX Previews for Additional Fields"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1"
-                            IsChecked="{Binding ShowAdditionalFieldLatexPreviews}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
-
-                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
-                        <TextBlock Grid.Column="0" Text="Bold, italic, maths and cloze blanks, with examples"
-                            VerticalAlignment="Center" TextWrapping="Wrap"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <Button Grid.Column="1" Content="Formatting Guide" Click="FormattingGuide_Click"
-                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
-                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Backup"
+                    <TextBlock Text="Backup and Import"
                         FontWeight="SemiBold"
                         Foreground="{DynamicResource TextPrimary}" />
 
@@ -237,17 +171,11 @@
                         IsVisible="False"
                         TextWrapping="Wrap"
                         Foreground="{DynamicResource TextSecondary}" />
-                </StackPanel>
-            </Border>
 
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
-                <StackPanel Spacing="10">
+                    <Rectangle Height="1" Margin="0,6" Fill="{DynamicResource CardBorder}" />
+
                     <TextBlock Text="Import from Anki"
-                        FontWeight="SemiBold"
+                        FontSize="13" FontWeight="SemiBold"
                         Foreground="{DynamicResource TextPrimary}" />
 
                     <TextBlock
@@ -306,6 +234,50 @@
                         Cursor="Hand" />
 
                     <TextBlock x:Name="UpdateStatusText"
+                        IsVisible="False"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Account"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
+
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                        <TextBlock Grid.Column="0" Text="{Binding AccountText}"
+                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <Button Grid.Column="1" Content="Sign Out" Click="SignOut_Click"
+                            IsVisible="{Binding IsSignedIn}"
+                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
+                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+                        <Button Grid.Column="1" Content="Sign In" Click="SignIn_Click"
+                            IsVisible="{Binding !IsSignedIn}"
+                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
+                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                            Cursor="Hand" />
+                    </Grid>
+
+                    <Button Content="Change Username" Click="ChangeUsername_Click"
+                        IsVisible="{Binding IsSignedIn}"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8" Padding="12,8" FontWeight="SemiBold"
+                        Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
+                        Cursor="Hand" />
+
+                    <TextBlock Text="Sign in to share decks, keep private copies, and download community decks."
+                        IsVisible="{Binding !IsSignedIn}" FontSize="12" TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextSecondary}" />
+
+                    <TextBlock x:Name="AccountStatusText"
                         IsVisible="False"
                         TextWrapping="Wrap"
                         Foreground="{DynamicResource TextSecondary}" />

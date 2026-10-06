@@ -18,7 +18,6 @@ public partial class SettingsWindow : Window
         Closed += (_, _) => (DataContext as SettingsViewModel)?.Detach();
     }
 
-    private void FormattingGuide_Click(object? sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(this);
 
     private async void CreateBackup_Click(object? sender, RoutedEventArgs e)
     {

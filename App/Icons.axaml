@@ -44,6 +44,9 @@
 
     <StreamGeometry x:Key="IconPlus">M12 3.5 L 12 20.5 M3.5 12 L 20.5 12</StreamGeometry>
 
+    <!-- Help: a question mark in a circle. -->
+    <StreamGeometry x:Key="IconHelp">M3.5 12 A 8.5 8.5 0 1 0 20.5 12 A 8.5 8.5 0 1 0 3.5 12 Z M9.6 9.7 A 2.5 2.5 0 1 1 13.1 12 C 12.4 12.4 12 12.9 12 13.8 M12 16.8 L 12 16.9</StreamGeometry>
+
     <StreamGeometry x:Key="IconCheck">M3.5 12.5 L 9 18 L 20.5 6</StreamGeometry>
 
     <StreamGeometry x:Key="IconLeftRight">M3.5 12 L 20.5 12 M7.5 8 L 3.5 12 L 7.5 16 M16.5 8 L 20.5 12 L 16.5 16</StreamGeometry>

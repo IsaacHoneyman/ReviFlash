@@ -27,6 +27,8 @@ public partial class DashboardView : UserControl
 
     private Window OwnerWindow => (Window)TopLevel.GetTopLevel(this)!;
 
+    private void HelpButton_Click(object sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(OwnerWindow);
+
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         var settingsWindow = new SettingsWindow
