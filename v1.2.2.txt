@@ -1,1 +1,0 @@
-Fixed italic text at the end of a line being cut off.
