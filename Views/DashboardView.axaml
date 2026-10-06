@@ -553,6 +553,8 @@
                 CornerRadius="20"
                 Padding="20"
                 Margin="0,0,0,24">
+                <!-- Scrolls when the window is too short for every tile, such as after F11. -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12">
                     <Grid ColumnDefinitions="*">
                         <TextBlock Grid.Column="0" Text="Overall Stats" FontSize="18" FontWeight="Bold"
@@ -692,6 +694,7 @@
                         Foreground="{DynamicResource TextPrimary}"
                         Cursor="Hand" />
                 </StackPanel>
+                </ScrollViewer>
             </Border>
 
         </Grid>
