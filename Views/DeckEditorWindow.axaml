@@ -8,6 +8,7 @@
     x:DataType="vm:DeckEditorViewModel"
     Title="Deck Editor"
     Width="1000" Height="700"
+    MinWidth="760" MinHeight="520"
     WindowStartupLocation="CenterOwner"
     Background="{DynamicResource AppBackground}">
 
@@ -86,6 +87,7 @@
         </Style>
         <Style Selector="Rectangle.separator">
             <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="22" />
             <Setter Property="Margin" Value="4,4" />
             <Setter Property="Fill" Value="{DynamicResource CardBorder}" />
         </Style>
@@ -126,7 +128,8 @@
 
                         <!-- Formatting toolbar: acts on the card field last clicked into -->
                         <Border Classes="toolbar">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
+                            <!-- Wraps onto a second row when the editor is too narrow for every button. -->
+                            <WrapPanel Orientation="Horizontal" ItemSpacing="4" LineSpacing="4">
                                 <Button Classes="format" Click="Bold_Click" ToolTip.Tip="Bold: \B{...}  (Ctrl+B)">
                                     <TextBlock Text="B" FontWeight="Bold" />
                                 </Button>
@@ -162,7 +165,7 @@
                                 <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
                                     <TextBlock Text="?" FontWeight="Bold" />
                                 </Button>
-                            </StackPanel>
+                            </WrapPanel>
                         </Border>
 
                         <TextBlock Classes="fieldLabel" Text="{Binding FrontLabel}" />

@@ -376,10 +376,21 @@
 
             <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 0">
 
-            <Grid Grid.Column="0" RowDefinitions="Auto, Auto, *" Margin="0, 0, 24, 0">
+            <!-- "compact" is set from code-behind when the column is too narrow for the full labels, so the search
+                 box keeps a usable width and the bottom bar stays inside its card in a small window. -->
+            <Grid Grid.Column="0" x:Name="LibraryColumn" RowDefinitions="Auto, Auto, *" Margin="0, 0, 24, 0">
+                <Grid.Styles>
+                    <Style Selector="Grid#LibraryColumn TextBlock.short">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                    <Style Selector="Grid#LibraryColumn.compact TextBlock.short">
+                        <Setter Property="IsVisible" Value="True" />
+                    </Style>
+                    <Style Selector="Grid#LibraryColumn.compact TextBlock.long">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                </Grid.Styles>
 
-                <!-- "compact" is set from code-behind when the row is too narrow for the full labels,
-                     so the search box keeps a usable width in a small window. -->
                 <Grid Grid.Row="0" x:Name="SearchRow" ColumnDefinitions="*, Auto, Auto, Auto, Auto" Margin="0, 0, 0, 14">
                     <Grid.Styles>
                         <Style Selector="Grid#SearchRow > :is(Control)">
@@ -388,17 +399,8 @@
                         <Style Selector="ComboBox#SortBox">
                             <Setter Property="Width" Value="200" />
                         </Style>
-                        <Style Selector="Grid#SearchRow.compact ComboBox#SortBox">
+                        <Style Selector="Grid#LibraryColumn.compact ComboBox#SortBox">
                             <Setter Property="Width" Value="140" />
-                        </Style>
-                        <Style Selector="Grid#SearchRow TextBlock.short">
-                            <Setter Property="IsVisible" Value="False" />
-                        </Style>
-                        <Style Selector="Grid#SearchRow.compact TextBlock.short">
-                            <Setter Property="IsVisible" Value="True" />
-                        </Style>
-                        <Style Selector="Grid#SearchRow.compact TextBlock.long">
-                            <Setter Property="IsVisible" Value="False" />
                         </Style>
                     </Grid.Styles>
 
@@ -540,17 +542,32 @@
                         <StackPanel Orientation="Horizontal"
                             Spacing="12"
                             VerticalAlignment="Center">
-                            <ToggleButton Content="Show Folders"
+                            <ToggleButton
                                 IsChecked="{Binding ShowFolders, Mode=TwoWay}"
-                                Classes="dashboardToggle" />
+                                Classes="dashboardToggle">
+                                <Panel>
+                                    <TextBlock Classes="long" Text="Show Folders" />
+                                    <TextBlock Classes="short" Text="Folders" />
+                                </Panel>
+                            </ToggleButton>
 
-                            <ToggleButton Content="Show Groups"
+                            <ToggleButton
                                 IsChecked="{Binding ShowGroups, Mode=TwoWay}"
-                                Classes="dashboardToggle" />
+                                Classes="dashboardToggle">
+                                <Panel>
+                                    <TextBlock Classes="long" Text="Show Groups" />
+                                    <TextBlock Classes="short" Text="Groups" />
+                                </Panel>
+                            </ToggleButton>
 
-                            <ToggleButton Content="Show Sets"
+                            <ToggleButton
                                 IsChecked="{Binding ShowSets, Mode=TwoWay}"
-                                Classes="dashboardToggle" />
+                                Classes="dashboardToggle">
+                                <Panel>
+                                    <TextBlock Classes="long" Text="Show Sets" />
+                                    <TextBlock Classes="short" Text="Sets" />
+                                </Panel>
+                            </ToggleButton>
 
 
                             <Button Grid.Column="0" Click="MultiSelectDecks_Click"

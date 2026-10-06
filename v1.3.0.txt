@@ -7,3 +7,6 @@ Search boxes, sort menus and buttons that sit in a row are the same height, on t
 Headings: \H1{...}, \H2{...} and \H3{...} make a large, medium or small bold heading on a line of its own, with maths, bold, italic and cloze blanks working inside
 H1, H2 and H3 buttons in the card editor toolbar, with shortcuts Ctrl+1, Ctrl+2 and Ctrl+3 (Cmd on macOS), and headings in the Formatting Guide
 Importing from Anki turns <h1> to <h3> headings, and \section, \subsection and \subsubsection in [latex] blocks, into ReviFlash headings
+In a smaller window the main menu's Show Folders, Show Groups and Show Sets toggles shorten to Folders, Groups and Sets, so the bottom bar stays inside its card
+The card editor's formatting toolbar wraps onto a second row when the editor is narrow, instead of cutting off buttons
+The deck editor can't be resized smaller than its layout fits
