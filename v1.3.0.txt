@@ -1,0 +1,2 @@
+The background swirl uses about a tenth of the CPU it did: it turns at a lower frame rate that looks the same, and pauses while ReviFlash is minimised or another window is focused
+The background swirl is off by default for new installs (Settings → Appearance to turn it on)

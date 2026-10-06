@@ -36,7 +36,6 @@ public partial class DashboardViewModel : ViewModelBase
     partial void OnSearchTextChanged(string value) => RefreshLibraryView();
     [ObservableProperty] private string _streakText = "0 Day Streak";
     [ObservableProperty] private string _bestEverStreakText = "0 Day Streak";
-    public static bool ShowBackgroundSwirl => MetaDataManager.Data.ShowBackgroundSwirl;
 
     // --- Account ---
 
@@ -200,9 +199,6 @@ public partial class DashboardViewModel : ViewModelBase
     {
         switch (e.PropertyName)
         {
-            case nameof(AppMetaData.ShowBackgroundSwirl):
-                OnPropertyChanged(nameof(ShowBackgroundSwirl));
-                break;
             case nameof(AppMetaData.LaunchStreak):
             case nameof(AppMetaData.BestLaunchStreak):
                 RefreshStreakTexts();

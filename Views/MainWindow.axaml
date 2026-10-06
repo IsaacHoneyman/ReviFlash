@@ -12,46 +12,9 @@
     KeyDown="Window_KeyDown"
     Background="{DynamicResource AppBackground}">
 
-    <Window.Styles>
-        <Style Selector="Rectangle.animatedGradient">
-            <Style.Animations>
-                <Animation Duration="0:0:14" IterationCount="Infinite">
-                    <KeyFrame Cue="0%">
-                        <Setter Property="RotateTransform.Angle" Value="0" />
-                    </KeyFrame>
-                    <KeyFrame Cue="25%">
-                        <Setter Property="RotateTransform.Angle" Value="105" />
-                    </KeyFrame>
-                    <KeyFrame Cue="50%">
-                        <Setter Property="RotateTransform.Angle" Value="190" />
-                    </KeyFrame>
-                    <KeyFrame Cue="75%">
-                        <Setter Property="RotateTransform.Angle" Value="282" />
-                    </KeyFrame>
-                    <KeyFrame Cue="100%">
-                        <Setter Property="RotateTransform.Angle" Value="360" />
-                    </KeyFrame>
-                </Animation>
-            </Style.Animations>
-        </Style>
-
-        <Style Selector="Rectangle.animatedGradientReverse">
-            <Style.Animations>
-                <Animation Duration="0:0:11" IterationCount="Infinite">
-                    <KeyFrame Cue="0%">
-                        <Setter Property="RotateTransform.Angle" Value="360" />
-                    </KeyFrame>
-                    <KeyFrame Cue="100%">
-                        <Setter Property="RotateTransform.Angle" Value="0" />
-                    </KeyFrame>
-                </Animation>
-            </Style.Animations>
-        </Style>
-    </Window.Styles>
-
     <Grid>
         <Grid>
-            <Rectangle Classes.animatedGradient="{Binding ShowBackgroundSwirl}" Width="2800" Height="2800"
+            <Rectangle x:Name="OuterSwirl" Width="2800" Height="2800"
                 HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="50%,50%">
                 <Rectangle.RenderTransform>
                     <RotateTransform Angle="0" />
@@ -65,7 +28,7 @@
                 </Rectangle.Fill>
             </Rectangle>
 
-            <Rectangle Classes.animatedGradientReverse="{Binding ShowBackgroundSwirl}" Width="2400" Height="2400"
+            <Rectangle x:Name="InnerSwirl" Width="2400" Height="2400"
                 HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.66" RenderTransformOrigin="50%,50%">
                 <Rectangle.RenderTransform>
                     <RotateTransform Angle="360" />
