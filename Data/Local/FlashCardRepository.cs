@@ -418,6 +418,27 @@ public static class FlashCardRepository
         return stats;
     }
 
+    /// <summary> Seconds of review per set within the time period, for "Where your time went". </summary>
+    public static List<(ulong deckID, int seconds)> GetStudyTimeByDeck(string? timeModifier = null)
+    {
+        using var connection = DatabaseManager.GetConnection();
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        string sql = "SELECT DeckId, COALESCE(SUM(TimeTakenSeconds), 0) FROM DeckStats WHERE 1=1";
+        if (!string.IsNullOrEmpty(timeModifier))
+        {
+            sql += " AND DateChecked >= DATE('now', @timeModifier)";
+            command.Parameters.AddWithValue("@timeModifier", timeModifier);
+        }
+        command.CommandText = sql + " GROUP BY DeckId;";
+
+        var rows = new List<(ulong, int)>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read()) rows.Add(((ulong)reader.GetInt64(0), reader.GetInt32(1)));
+        return rows;
+    }
+
     public static int GetBestAnswerStreak(string targetType, ulong targetId)
     {
         using var connection = DatabaseManager.GetConnection();

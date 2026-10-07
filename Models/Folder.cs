@@ -6,7 +6,7 @@ using ReviFlash.Utilities;
 namespace ReviFlash.Models;
 
 /// <summary>
-/// A container on the main menu. Folders hold flashcard sets, study groups and other
+/// A container on the main menu. Folders hold flashcard sets, notes, study groups and other
 /// folders; they are purely organisational and never change how cards are reviewed.
 /// </summary>
 public partial class Folder(string name) : ObservableObject, ISearchable
@@ -28,6 +28,9 @@ public partial class Folder(string name) : ObservableObject, ISearchable
     [NotifyPropertyChangedFor(nameof(ItemCount))]
     [NotifyPropertyChangedFor(nameof(ContentsSummary))]
     [ObservableProperty] private int _groupCount;
+    [NotifyPropertyChangedFor(nameof(ItemCount))]
+    [NotifyPropertyChangedFor(nameof(ContentsSummary))]
+    [ObservableProperty] private int _noteCount;
 
     /// <summary> Cards across the whole subtree, so a folder of folders still reads usefully. </summary>
     [ObservableProperty] private int _cardCount;
@@ -44,7 +47,7 @@ public partial class Folder(string name) : ObservableObject, ISearchable
     /// <summary> Most recent day anything in the subtree was studied. </summary>
     public DateTime? LastStudied { get; set; }
 
-    public int ItemCount => SubFolderCount + SetCount + GroupCount;
+    public int ItemCount => SubFolderCount + SetCount + GroupCount + NoteCount;
 
     public string ContentsSummary
     {
@@ -54,6 +57,7 @@ public partial class Folder(string name) : ObservableObject, ISearchable
             if (SubFolderCount > 0) parts.Add(SubFolderCount == 1 ? "1 folder" : $"{SubFolderCount} folders");
             if (SetCount > 0) parts.Add(SetCount == 1 ? "1 set" : $"{SetCount} sets");
             if (GroupCount > 0) parts.Add(GroupCount == 1 ? "1 group" : $"{GroupCount} groups");
+            if (NoteCount > 0) parts.Add(NoteCount == 1 ? "1 note" : $"{NoteCount} notes");
 
             return parts.Count == 0 ? "Empty folder" : string.Join(" · ", parts);
         }

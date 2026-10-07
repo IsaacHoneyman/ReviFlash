@@ -12,3 +12,22 @@ The card editor's formatting toolbar wraps onto a second row when the editor is 
 The deck editor can't be resized smaller than its layout fits
 New Help button next to Settings on the main menu, with the Formatting Guide and a new Keyboard Shortcuts list of every shortcut in the app
 Settings are tidied: Appearance first (now spelled right, and with the LaTeX previews option that was under Editor), Backup and Import from Anki in one section, and Account further down
+Notes: write lecture notes next to your flashcards, with the same formatting, headings and LaTeX maths as cards; create one from + New on the main menu
+Notes open as a full page; click any paragraph to edit it as typed text, and it shows formatted again when you're done (Esc or click elsewhere); a blank line finishes the paragraph straight away and carries on in a new one
+Notes save themselves a moment after you stop typing, and when you leave the note or close ReviFlash
+A Contents panel lists a note's headings; click one to jump to it
+Make Card turns selected note text (or a whole paragraph, from its right-click menu) into a Flip or Cloze card in any set: the selection becomes the answer and the nearest heading starts off as the question
+Notes live in folders like sets and groups: they can be moved, renamed and deleted, show in folder counts, can be found by name in search, and have a Show Notes toggle
+Notes are included in backups
+The main menu's create buttons are now one + New menu: Flashcard Set, Note, Folder and Study Group
+The deck editor opens maximized; drag or restore it to get the smaller window back
+Time spent in notes is recorded: it counts while a note is open and ReviFlash is the focused window, and stops after 2 minutes without typing, clicking or scrolling
+Overall stats show Total Time (flashcards and notes together) with Flashcards and Notes time underneath; Time per Card is gone
+Notes have their own stats, from the new button on each note card: time spent in the chosen period, last studied, words and headings
+The graph view's Study Time Chart shows note time stacked under flashcard time
+New Study Calendar in the graph view: the last year, a square per day shaded by how long you studied
+New Where Your Time Went list in the graph view: the sets and notes you spent the most time on in the chosen period
+Notes can be sorted by study time on the main menu
+Overall stats update straight away after deleting a set, group, note or folder of things, and stats for something deleted go back to overall
+Changing the time period in the graph view of a set or group keeps showing that set or group, instead of switching to overall figures
+ReviFlash opens about 2.5 times faster: it now ships precompiled (ReadyToRun), so it no longer compiles itself on every launch

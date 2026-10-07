@@ -55,6 +55,7 @@ public partial class MoveToFolderViewModel : ViewModelBase
             Folder folder => (folder.Name, "Folder"),
             StudyGroup group => (group.Name, "Group"),
             FlashCardDeck deck => (deck.Name, "Set"),
+            Note note => (note.Name, "Note"),
             _ => ("item", "Item"),
         };
 

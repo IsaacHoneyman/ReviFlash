@@ -102,6 +102,26 @@ public static class DatabaseManager
                     BestStreak INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (TargetType, TargetId)
                 );
+
+                -- Lecture notes: 1.3. Local only for now; SyncID is a stable GUID so they can sync later.
+                CREATE TABLE IF NOT EXISTS Notes (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    SyncID TEXT NOT NULL UNIQUE,
+                    Name TEXT NOT NULL,
+                    FolderID INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL,
+                    Content TEXT NOT NULL DEFAULT '',
+                    CreatedAt TEXT NOT NULL,
+                    UpdatedAt TEXT NOT NULL
+                );
+
+                -- Time spent in each note per day, like DeckStats for sets.
+                CREATE TABLE IF NOT EXISTS NoteStats (
+                    NoteID INTEGER NOT NULL,
+                    DateStudied DATE NOT NULL DEFAULT (CURRENT_DATE),
+                    Seconds INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (NoteID, DateStudied),
+                    FOREIGN KEY (NoteID) REFERENCES Notes(ID) ON DELETE CASCADE
+                );
             ";
             
             command.ExecuteNonQuery();
@@ -140,6 +160,7 @@ public static class DatabaseManager
             CREATE INDEX IF NOT EXISTS IX_Decks_Folder ON Decks(FolderID);
             CREATE INDEX IF NOT EXISTS IX_StudyGroups_Folder ON StudyGroups(FolderID);
             CREATE INDEX IF NOT EXISTS IX_Cards_Deck ON Cards(DeckID);
+            CREATE INDEX IF NOT EXISTS IX_Notes_Folder ON Notes(FolderID);
         ";
         command.ExecuteNonQuery();
     }

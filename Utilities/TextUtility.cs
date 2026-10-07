@@ -71,4 +71,17 @@ public static partial class TextUtility
         (time.TotalHours >= 1) ? time.ToString(@"h\:mm\:ss") :
         time.ToString(@"m\:ss");
     }
+
+    /// <summary> A local time as "just now", "5 min ago", "today at 14:05", "yesterday", "3 Oct" or "3 Oct 2025". </summary>
+    public static string FormatWhen(DateTime local)
+    {
+        var now = DateTime.Now;
+        var ago = now - local;
+
+        if (ago < TimeSpan.FromMinutes(1)) return "just now";
+        if (ago < TimeSpan.FromHours(1)) return $"{(int)ago.TotalMinutes} min ago";
+        if (local.Date == now.Date) return $"today at {local:HH:mm}";
+        if (local.Date == now.Date.AddDays(-1)) return "yesterday";
+        return local.Year == now.Year ? local.ToString("d MMM") : local.ToString("d MMM yyyy");
+    }
 }

@@ -1,0 +1,109 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:views="using:ReviFlash.Views"
+    x:Class="ReviFlash.Views.MakeCardWindow"
+    x:DataType="vm:MakeCardViewModel"
+    Title="Make Card"
+    Width="960" Height="680" MinWidth="760" MinHeight="520"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource AppBackground}">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Margin" Value="4,4,0,0" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MinHeight" Value="64" />
+            <Setter Property="MaxHeight" Value="180" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Border.preview">
+            <Setter Property="Background" Value="#15000000" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,8" />
+        </Style>
+        <Style Selector="views|MathText">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="24">
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Text="Make Card" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Text="From your note. Edit anything before adding it: the previews show how the card will look."
+                TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="3*, 2*" ColumnSpacing="20">
+
+            <!-- The card. -->
+            <Border Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="10" x:Name="FieldsPanel">
+                        <ComboBox ItemsSource="{Binding CardTypes}" SelectedItem="{Binding SelectedCardType}"
+                            HorizontalAlignment="Stretch" CornerRadius="8" />
+
+                        <StackPanel Spacing="8" IsVisible="{Binding IsFlip}">
+                            <TextBlock Classes="fieldLabel" Text="Front (the question)" />
+                            <TextBox Classes="field" Text="{Binding Front, Mode=TwoWay}" />
+                            <Border Classes="preview"><views:MathText Text="{Binding Front}" ShowErrors="True" /></Border>
+
+                            <TextBlock Classes="fieldLabel" Text="Back (the answer)" />
+                            <TextBox Classes="field" Text="{Binding Back, Mode=TwoWay}" />
+                            <Border Classes="preview"><views:MathText Text="{Binding Back}" ShowErrors="True" /></Border>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8" IsVisible="{Binding IsCloze}">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Grid.Column="0" Classes="fieldLabel" VerticalAlignment="Center"
+                                    Text="Text: select what to hide and press Blank (Ctrl+Shift+C)" />
+                                <Button Grid.Column="1" Click="Blank_Click" Focusable="False"
+                                    CornerRadius="6" Padding="10,4" FontSize="13"
+                                    Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
+                                    ToolTip.Tip="Cloze blank: \C{...}  (Ctrl+Shift+C)">
+                                    <TextBlock Text="Blank" />
+                                </Button>
+                            </Grid>
+                            <TextBox Classes="field" x:Name="ClozeBox" Text="{Binding ClozeText, Mode=TwoWay}" />
+                            <Border Classes="preview"><views:MathText Text="{Binding ClozeText}" ShowErrors="True" /></Border>
+
+                            <TextBlock Classes="fieldLabel" Text="Extra (optional, shown with the answer)" />
+                            <TextBox Classes="field" Text="{Binding Extra, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Where it goes. -->
+            <Border Grid.Column="1" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
+                <Grid RowDefinitions="Auto, Auto, *" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Text="Add to set" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <Border Grid.Row="1" Background="{DynamicResource BadgeBackground}" CornerRadius="8" Padding="12,8">
+                        <TextBlock Text="{Binding SelectedDeckText}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                            Foreground="{DynamicResource TextPrimary}" />
+                    </Border>
+                    <views:DeckFolderBrowserView Grid.Row="2" DataContext="{Binding DeckBrowser}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" ColumnSpacing="10" Margin="0,16,0,0">
+            <TextBlock Grid.Column="0" Text="{Binding ErrorText}" IsVisible="{Binding HasError}"
+                TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource DangerForeground}" />
+            <Button Grid.Column="1" Content="Cancel" Click="Cancel_Click" IsCancel="True"
+                CornerRadius="8" Padding="16,10" FontWeight="SemiBold"
+                Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}" Cursor="Hand" />
+            <Button Grid.Column="2" Content="Add Card" Click="Add_Click"
+                CornerRadius="8" Padding="16,10" FontWeight="Bold"
+                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" Cursor="Hand" />
+        </Grid>
+    </Grid>
+</Window>

@@ -120,7 +120,7 @@ public sealed class FolderTree
     /// through the whole subtree; sets, groups and subfolders are counted directly so the
     /// card describes what you will actually see when you open it.
     /// </summary>
-    public void ApplyCounts(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups)
+    public void ApplyCounts(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, IEnumerable<Note>? notes = null)
     {
         var deckList = decks as IReadOnlyList<FlashCardDeck> ?? [.. decks];
         var groupList = groups as IReadOnlyList<StudyGroup> ?? [.. groups];
@@ -130,6 +130,7 @@ public sealed class FolderTree
             folder.SubFolderCount = ChildrenOf(folder.ID).Count;
             folder.SetCount = 0;
             folder.GroupCount = 0;
+            folder.NoteCount = 0;
             folder.CardCount = 0;
             folder.StudySeconds = 0;
             folder.LastStudied = null;
@@ -143,6 +144,11 @@ public sealed class FolderTree
         foreach (var group in groupList)
         {
             if (Get(group.FolderID) is Folder folder) folder.GroupCount++;
+        }
+
+        foreach (var note in notes ?? [])
+        {
+            if (Get(note.FolderID) is Folder folder) folder.NoteCount++;
         }
 
         // Cards and study time roll up from sets only: a group's cards live in decks that
@@ -171,12 +177,13 @@ public sealed class FolderTree
     /// Stamps each item with the folder it lives in, so search results found deeper down
     /// can show where they came from. Items at <paramref name="relativeTo"/> get no path.
     /// </summary>
-    public void ApplyPaths(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, ulong? relativeTo = null)
+    public void ApplyPaths(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, ulong? relativeTo = null, IEnumerable<Note>? notes = null)
     {
         string basePath = PathOf(relativeTo);
 
         foreach (var deck in decks) deck.FolderPath = RelativePath(deck.FolderID, relativeTo, basePath);
         foreach (var group in groups) group.FolderPath = RelativePath(group.FolderID, relativeTo, basePath);
+        foreach (var note in notes ?? []) note.FolderPath = RelativePath(note.FolderID, relativeTo, basePath);
 
         foreach (var folder in AllFolders)
         {

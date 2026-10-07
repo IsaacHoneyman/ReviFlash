@@ -79,71 +79,20 @@ public partial class DeckEditorWindow : Window
     private void Blank_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\C{", "}");
     private void Help_Click(object? sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(this);
 
-    /// <summary> Ctrl (Cmd on macOS) + B / I / U / M / 1–3, Shift+M for display maths, Shift+C for a cloze blank. </summary>
+    /// <summary> The formatting shortcuts (see <see cref="TextFormatting.ShortcutFor"/>), in the card fields. </summary>
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
     {
         if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;
-
-        var command = PlatformSettings?.HotkeyConfiguration.CommandModifiers ?? KeyModifiers.Control;
-        if (!e.KeyModifiers.HasFlag(command)) return;
-        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-
-        (string Open, string Close)? wrap = (e.Key, shift) switch
-        {
-            (Key.B, false) => (@"\B{", "}"),
-            (Key.I, false) => (@"\I{", "}"),
-            (Key.U, false) => (@"\U{", "}"),
-            (Key.D1 or Key.NumPad1, false) => (@"\H1{", "}"),
-            (Key.D2 or Key.NumPad2, false) => (@"\H2{", "}"),
-            (Key.D3 or Key.NumPad3, false) => (@"\H3{", "}"),
-            (Key.M, false) => ("$", "$"),
-            (Key.M, true) => ("$$", "$$"),
-            (Key.C, true) when ViewModel?.IsClozeCardType == true => (@"\C{", "}"),
-            _ => null,
-        };
-        if (wrap is not { } pair) return;
+        if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsClozeCardType == true) is not { } pair) return;
 
         _activeField = box;
         WrapActiveField(pair.Open, pair.Close);
         e.Handled = true;
     }
 
-    /// <summary>
-    /// Wraps the selection (or puts an empty pair at the cursor, cursor inside) in <paramref name="open"/> and
-    /// <paramref name="close"/>. If the selection is already wrapped in them, the wrapping is removed instead.
-    /// </summary>
     private void WrapActiveField(string open, string close)
     {
-        if (_activeField is not { } box) return;
-
-        var text = box.Text ?? "";
-        var start = Math.Min(box.SelectionStart, box.SelectionEnd);
-        var end = Math.Max(box.SelectionStart, box.SelectionEnd);
-
-        var alreadyWrapped = start >= open.Length && end + close.Length <= text.Length
-            && string.CompareOrdinal(text, start - open.Length, open, 0, open.Length) == 0
-            && string.CompareOrdinal(text, end, close, 0, close.Length) == 0;
-
-        if (alreadyWrapped)
-        {
-            box.Text = text.Remove(end, close.Length).Remove(start - open.Length, open.Length);
-            Select(box, start - open.Length, end - open.Length);
-        }
-        else
-        {
-            box.Text = text[..start] + open + text[start..end] + close + text[end..];
-            Select(box, start + open.Length, end + open.Length);
-        }
-
-        box.Focus();
-    }
-
-    private static void Select(TextBox box, int start, int end)
-    {
-        // Caret first: moving it collapses any selection.
-        box.CaretIndex = end;
-        box.SelectionStart = start;
-        box.SelectionEnd = end;
+        if (_activeField is { } box) TextFormatting.Wrap(box, open, close);
     }
 
     // --- Cards ---

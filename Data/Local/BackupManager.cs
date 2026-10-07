@@ -222,6 +222,9 @@ public static class BackupManager
 
         command.CommandText = "DROP TABLE IF EXISTS AnswerStreaks;";
         command.ExecuteNonQuery();
+
+        command.CommandText = "DROP TABLE IF EXISTS NoteStats;";
+        command.ExecuteNonQuery();
     }
 
     // --- Restore Helpers ---
@@ -320,6 +323,8 @@ public static class BackupManager
         RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "DeckStats", ["DeckId", "CorrectCount", "TotalAttempts", "TimeTakenSeconds", "DateChecked"],
             where: "DeckId IN (SELECT ID FROM main.Decks)");
         RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "AnswerStreaks", ["TargetType", "TargetId", "BestStreak"]);
+        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "NoteStats", ["NoteID", "DateStudied", "Seconds"],
+            where: "NoteID IN (SELECT ID FROM main.Notes)");
     }
 
     private static void RestoreTableFromBackup(string sourceDatabasePath, string targetDatabasePath, string tableName, IReadOnlyList<string> columns, string? where = null)

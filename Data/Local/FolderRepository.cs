@@ -7,8 +7,8 @@ using ReviFlash.Models;
 namespace ReviFlash.Data.Local;
 
 /// <summary>
-/// Folder storage. Folders only ever record where a set or group is filed; deleting or
-/// moving one never touches the cards, stats or group memberships underneath it, unless
+/// Folder storage. Folders only ever record where a set, note or group is filed; deleting or
+/// moving one never touches the cards, notes, stats or group memberships underneath it, unless
 /// <see cref="DeleteFolderAndContents"/> is asked to take them too.
 /// </summary>
 public static class FolderRepository
@@ -95,7 +95,7 @@ public static class FolderRepository
     }
 
     /// <summary>
-    /// Removes a folder and lifts everything inside it (subfolders, sets and groups) up to
+    /// Removes a folder and lifts everything inside it (subfolders, sets, notes and groups) up to
     /// the deleted folder's own parent. Nothing is ever deleted along with the folder.
     /// </summary>
     public static void DeleteFolder(ulong folderID)
@@ -110,6 +110,7 @@ public static class FolderRepository
         PromoteChildren(connection, transaction, "Folders", "ParentFolderID", folderID, parentID);
         PromoteChildren(connection, transaction, "Decks", "FolderID", folderID, parentID);
         PromoteChildren(connection, transaction, "StudyGroups", "FolderID", folderID, parentID);
+        PromoteChildren(connection, transaction, "Notes", "FolderID", folderID, parentID);
 
         using var deleteCommand = connection.CreateCommand();
         deleteCommand.Transaction = transaction;
@@ -121,7 +122,7 @@ public static class FolderRepository
     }
 
     /// <summary> How much <see cref="DeleteFolderAndContents"/> would delete, for the confirmation. </summary>
-    public static (int Folders, int Sets, int Groups, int Cards) CountContents(ICollection<ulong> subtreeIDs)
+    public static (int Folders, int Sets, int Groups, int Notes, int Cards) CountContents(ICollection<ulong> subtreeIDs)
     {
         using var connection = DatabaseManager.GetConnection();
         connection.Open();
@@ -131,14 +132,15 @@ public static class FolderRepository
             SELECT
                 (SELECT COUNT(*) FROM Decks WHERE FolderID IN ({ids})),
                 (SELECT COUNT(*) FROM StudyGroups WHERE FolderID IN ({ids})),
+                (SELECT COUNT(*) FROM Notes WHERE FolderID IN ({ids})),
                 (SELECT COUNT(*) FROM Cards WHERE DeckID IN (SELECT ID FROM Decks WHERE FolderID IN ({ids})));";
         using var reader = command.ExecuteReader();
         reader.Read();
-        return (subtreeIDs.Count - 1, reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2));
+        return (subtreeIDs.Count - 1, reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetInt32(3));
     }
 
     /// <summary>
-    /// Deletes a folder with everything beneath it: subfolders, groups, and sets with their cards and stats
+    /// Deletes a folder with everything beneath it: subfolders, groups, notes, and sets with their cards and stats
     /// (which go with their set). <paramref name="subtreeIDs"/> is the folder and all its descendants.
     /// </summary>
     public static void DeleteFolderAndContents(ICollection<ulong> subtreeIDs)
@@ -152,6 +154,8 @@ public static class FolderRepository
         command.CommandText = $@"
             DELETE FROM Decks WHERE FolderID IN ({ids});
             DELETE FROM StudyGroups WHERE FolderID IN ({ids});
+            DELETE FROM NoteStats WHERE NoteID IN (SELECT ID FROM Notes WHERE FolderID IN ({ids}));
+            DELETE FROM Notes WHERE FolderID IN ({ids});
             DELETE FROM Folders WHERE ID IN ({ids});";
         command.ExecuteNonQuery();
         transaction.Commit();
@@ -182,6 +186,9 @@ public static class FolderRepository
 
     public static void MoveStudyGroup(ulong groupID, ulong? folderID) =>
         UpdateFolderColumn("StudyGroups", "ID", "FolderID", groupID, folderID);
+
+    public static void MoveNote(ulong noteID, ulong? folderID) =>
+        UpdateFolderColumn("Notes", "ID", "FolderID", noteID, folderID);
 
     /// <summary> True when <paramref name="candidateID"/> sits anywhere below <paramref name="ancestorID"/>. </summary>
     public static bool IsDescendantOf(ulong candidateID, ulong ancestorID)

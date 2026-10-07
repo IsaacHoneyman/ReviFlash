@@ -1,0 +1,247 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:views="using:ReviFlash.Views"
+    x:Class="ReviFlash.Views.NoteView"
+    x:DataType="vm:NoteViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="ToggleButton.dashboardToggle">
+            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ToggleButton.dashboardToggle:checked">
+            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        </Style>
+        <Style Selector="Border.toolbar">
+            <Setter Property="Background" Value="#15000000" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <!-- Not focusable, so clicking keeps the cursor in the paragraph being formatted -->
+        <Style Selector="Button.format">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.format TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="Border.toolbar.idle">
+            <Setter Property="Opacity" Value="0.45" />
+        </Style>
+        <Style Selector="Rectangle.separator">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Margin" Value="4,4" />
+            <Setter Property="Fill" Value="{DynamicResource CardBorder}" />
+        </Style>
+
+        <Style Selector="Border.rendered">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Cursor" Value="Ibeam" />
+        </Style>
+        <Style Selector="Border.rendered:pointerover">
+            <Setter Property="Background" Value="#10FFFFFF" />
+        </Style>
+        <Style Selector="TextBox.blockEditor">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource AppBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <!-- Not focusable, so the next paragraph clicked gets the keyboard (and Space can't press the entry again). -->
+        <Style Selector="Button.contentsEntry">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, Auto, *" Margin="24, 16, 24, 0">
+
+        <!-- Header: back, the note's name, save status, contents toggle and make card. -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto, Auto, Auto" ColumnSpacing="12" Margin="0,0,0,12">
+            <Button Grid.Column="0" Click="Back_Click"
+                CornerRadius="8" Padding="12,0" Height="36" FontSize="14" FontWeight="SemiBold"
+                VerticalContentAlignment="Center"
+                Background="{DynamicResource StatTileBackground}"
+                Foreground="{DynamicResource TextPrimary}"
+                Cursor="Hand" ToolTip.Tip="Save and go back to the main menu">
+                <TextBlock Text="← Back" />
+            </Button>
+
+            <TextBox Grid.Column="1" x:Name="NameBox"
+                Text="{Binding Name, Mode=TwoWay}"
+                FontSize="28" FontWeight="Bold"
+                Background="Transparent" BorderThickness="0,0,0,2"
+                Foreground="{DynamicResource TextPrimary}"
+                VerticalContentAlignment="Center"
+                LostFocus="NameBox_LostFocus"
+                KeyDown="NameBox_KeyDown" />
+
+            <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="13"
+                VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis"
+                Foreground="{DynamicResource TextSecondary}" />
+
+            <ToggleButton Grid.Column="3" IsChecked="{Binding ShowContents, Mode=TwoWay}" Focusable="False"
+                Classes="dashboardToggle" Height="36" VerticalAlignment="Center"
+                ToolTip.Tip="Show or hide the contents, made from the note's headings">
+                <TextBlock Text="Contents" />
+            </ToggleButton>
+
+            <Button Grid.Column="4" Click="MakeCard_Click" Focusable="False"
+                CornerRadius="8" Padding="14,0" Height="36" FontSize="14" FontWeight="Bold"
+                VerticalContentAlignment="Center"
+                Background="{DynamicResource GradientStart}"
+                Foreground="{DynamicResource PrimaryButtonForeground}"
+                Cursor="Hand"
+                ToolTip.Tip="Make a flashcard from the selected text (or the paragraph you're editing)">
+                <TextBlock Text="Make Card" />
+            </Button>
+        </Grid>
+
+        <!-- Formatting toolbar: acts on the paragraph being edited. -->
+        <!-- Dimmed until a paragraph is being edited (disabled buttons would take on the theme's disabled colours). -->
+        <Border Grid.Row="1" Classes="toolbar" Classes.idle="{Binding !IsEditingBlock}" Margin="0,0,0,12" HorizontalAlignment="Left">
+            <WrapPanel Orientation="Horizontal" ItemSpacing="4" LineSpacing="4">
+                <Button Classes="format" Click="Bold_Click" ToolTip.Tip="Bold: \B{...}  (Ctrl+B)">
+                    <TextBlock Text="B" FontWeight="Bold" />
+                </Button>
+                <Button Classes="format" Click="Italic_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
+                    <Path Classes="icon" Data="{StaticResource IconItalic}" Width="9" StrokeThickness="1.7" />
+                </Button>
+                <Button Classes="format" Click="Underline_Click" ToolTip.Tip="Underline: \U{...}  (Ctrl+U)">
+                    <TextBlock Text="U" TextDecorations="Underline" />
+                </Button>
+                <Rectangle Classes="separator" />
+                <Button Classes="format" Click="Heading1_Click" ToolTip.Tip="Heading: \H1{...}  (Ctrl+1)">
+                    <TextBlock Text="H1" FontWeight="Bold" />
+                </Button>
+                <Button Classes="format" Click="Heading2_Click" ToolTip.Tip="Subheading: \H2{...}  (Ctrl+2)">
+                    <TextBlock Text="H2" FontWeight="Bold" />
+                </Button>
+                <Button Classes="format" Click="Heading3_Click" ToolTip.Tip="Small heading: \H3{...}  (Ctrl+3)">
+                    <TextBlock Text="H3" FontWeight="Bold" />
+                </Button>
+                <Rectangle Classes="separator" />
+                <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
+                    <TextBlock Text="Maths" />
+                </Button>
+                <Button Classes="format" Click="DisplayMath_Click" ToolTip.Tip="Maths on its own line: $$...$$  (Ctrl+Shift+M)">
+                    <TextBlock Text="Maths Block" />
+                </Button>
+                <Rectangle Classes="separator" />
+                <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
+                    <TextBlock Text="?" FontWeight="Bold" />
+                </Button>
+            </WrapPanel>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *">
+
+            <!-- Contents: the note's headings; clicking one scrolls to it. -->
+            <Border Grid.Column="0" Width="240" Margin="0,0,16,24"
+                IsVisible="{Binding ShowContents}"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5"
+                CornerRadius="20" Padding="12,16">
+                <Grid RowDefinitions="Auto, *">
+                    <TextBlock Grid.Row="0" Text="Contents" FontSize="16" FontWeight="Bold" Margin="8,0,0,8"
+                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Grid.Row="1" IsVisible="{Binding !HasContents}" TextWrapping="Wrap" Margin="8,0"
+                        FontSize="12" Foreground="{DynamicResource TextSecondary}"
+                        Text="Headings you add with \H1{...}, \H2{...} or \H3{...} (or the H1–H3 buttons) appear here." />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Contents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ContentsEntry">
+                                    <Button Classes="contentsEntry" Click="ContentsEntry_Click" Margin="{Binding Indent}">
+                                        <views:MathText Text="{Binding Source}" FontSize="{Binding FontSize}" MaxLines="2"
+                                            Foreground="{DynamicResource TextPrimary}" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- The note: each paragraph shows rendered until clicked, then edits as typed text. -->
+            <Border Grid.Column="1" Margin="0,0,0,24"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5"
+                CornerRadius="20" Padding="6,6,0,6">
+                <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <!-- Margin, not the ScrollViewer's Padding: padding there isn't taken off the width the paragraphs get. -->
+                    <StackPanel HorizontalAlignment="Stretch" Margin="18,12,24,12">
+                        <ItemsControl x:Name="BlockList" ItemsSource="{Binding Blocks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:NoteBlock">
+                                    <Panel Margin="0,0,0,6">
+                                        <Border Classes="rendered" IsVisible="{Binding !IsEditing}"
+                                            PointerPressed="Block_PointerPressed">
+                                            <Border.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Make card from this paragraph" Click="MakeCardFromBlock_Click" />
+                                                    <MenuItem Header="Delete paragraph" Click="DeleteBlock_Click" />
+                                                </ContextMenu>
+                                            </Border.ContextMenu>
+                                            <Panel>
+                                                <views:MathText Text="{Binding RenderedText}" FontSize="16"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    IsVisible="{Binding !IsEmpty}" />
+                                                <TextBlock Text="Empty paragraph: click to write" FontSize="15" FontStyle="Italic"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    IsVisible="{Binding IsEmpty}" />
+                                            </Panel>
+                                        </Border>
+                                        <TextBox Classes="blockEditor" IsVisible="{Binding IsEditing}"
+                                            Text="{Binding Text, Mode=TwoWay}"
+                                            PropertyChanged="BlockEditor_PropertyChanged"
+                                            AttachedToVisualTree="BlockEditor_AttachedToVisualTree"
+                                            GotFocus="BlockEditor_GotFocus"
+                                            LostFocus="BlockEditor_LostFocus" />
+                                    </Panel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Clicking below the last paragraph writes at the end of the note. -->
+                        <Border Background="Transparent" MinHeight="160" Cursor="Ibeam"
+                            PointerPressed="PageEnd_PointerPressed">
+                            <TextBlock Text="Click here to keep writing. Leave a blank line to start a new paragraph."
+                                Margin="10,8" FontSize="13" VerticalAlignment="Top"
+                                Foreground="{DynamicResource TextSecondary}" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

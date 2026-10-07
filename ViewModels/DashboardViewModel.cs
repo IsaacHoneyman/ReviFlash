@@ -14,13 +14,14 @@ namespace ReviFlash.ViewModels;
 
 public partial class DashboardViewModel : ViewModelBase
 {
-    private enum StatsScope { Overall, Deck, Group, }
+    private enum StatsScope { Overall, Deck, Group, Note, }
     public enum DeckSelectionMode { None, Review, }
 
-    // Ordering within a mixed list: folders, then groups, then sets.
+    // Ordering within a mixed list: folders, then groups, then sets, then notes.
     private const int FolderPriority = 0;
     private const int GroupPriority = 1;
     private const int SetPriority = 2;
+    private const int NotePriority = 3;
 
     public class TimePeriodOption(string label, string timeModifier)
     {
@@ -66,6 +67,8 @@ public partial class DashboardViewModel : ViewModelBase
     partial void OnShowSetsChanged(bool value) => RefreshLibraryView();
     [ObservableProperty] private bool _showFolders = true;
     partial void OnShowFoldersChanged(bool value) => RefreshLibraryView();
+    [ObservableProperty] private bool _showNotes = true;
+    partial void OnShowNotesChanged(bool value) => RefreshLibraryView();
 
     // --- Folders ---
 
@@ -89,7 +92,7 @@ public partial class DashboardViewModel : ViewModelBase
 
     public string SearchWatermark => IsInFolder
         ? $"Search in {CurrentFolderName} and its folders..."
-        : "Search sets, groups and folders...";
+        : "Search sets, notes, groups and folders...";
 
     [NotifyPropertyChangedFor(nameof(HasNoItems))]
     [ObservableProperty] private string _emptyStateText = "";
@@ -98,9 +101,10 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private TimePeriodOption _selectedTimePeriod = null!;
     partial void OnSelectedTimePeriodChanged(TimePeriodOption value)
     {
-        if (IsViewingDeckStats && !IsGraphView && SelectedDeckForStats != null) { ShowDeckStats(SelectedDeckForStats); }
-        else if (IsViewingGroupStats && !IsGraphView && SelectedGroupForStats != null) { ShowGroupStats(SelectedGroupForStats); }
-        else { LoadStats(); }
+        // Reload whatever is being viewed for the new period, staying in the graph view if that's where it changed.
+        var inGraphView = IsGraphView;
+        RefreshStats();
+        IsGraphView = inGraphView;
     }
 
     public ObservableCollection<string> GraphGroupingOptions { get; } = ["Daily", "Weekly", "Monthly"];
@@ -112,31 +116,52 @@ public partial class DashboardViewModel : ViewModelBase
     partial void OnSelectedTimeGroupingChanged(string value) { if (IsGraphView) RefreshGraphStats(); }
 
     [ObservableProperty] private int _totalQuestions = 0;
-    [NotifyPropertyChangedFor(nameof(AverageTimePerCardText))]
     [ObservableProperty] private int _totalCardCount = 0;
 
     [ObservableProperty] private int _totalCorrect = 0;
     [ObservableProperty] private double _percentage = 0;
     [ObservableProperty] private string _grade = "U";
 
+    /// <summary> Time spent reviewing flashcards (in the set, group or everything being viewed). </summary>
     [NotifyPropertyChangedFor(nameof(TotalTimeFormatted))]
-    [NotifyPropertyChangedFor(nameof(AverageTimePerCardText))]
+    [NotifyPropertyChangedFor(nameof(FlashcardTimeFormatted))]
     [ObservableProperty] private int _totalTimeSeconds = 0;
 
-    public string TotalTimeFormatted => TextUtility.FormatTime(TimeSpan.FromSeconds(TotalTimeSeconds));
-    public string AverageTimePerCardText => TotalCardCount <= 0 ? "0.00" :
-        TextUtility.FormatTime(TimeSpan.FromSeconds((int)Math.Round((double)TotalTimeSeconds / TotalCardCount)));
+    /// <summary> Time spent in notes (in the note, or all notes, being viewed). </summary>
+    [NotifyPropertyChangedFor(nameof(TotalTimeFormatted))]
+    [NotifyPropertyChangedFor(nameof(NoteTimeFormatted))]
+    [ObservableProperty] private int _noteTimeSeconds = 0;
 
+    public string TotalTimeFormatted => TextUtility.FormatTime(TimeSpan.FromSeconds(TotalTimeSeconds + NoteTimeSeconds));
+    public string FlashcardTimeFormatted => TextUtility.FormatTime(TimeSpan.FromSeconds(TotalTimeSeconds));
+    public string NoteTimeFormatted => TextUtility.FormatTime(TimeSpan.FromSeconds(NoteTimeSeconds));
 
     [NotifyPropertyChangedFor(nameof(IsViewingStats))]
+    [NotifyPropertyChangedFor(nameof(IsViewingCardStats))]
+    [NotifyPropertyChangedFor(nameof(ShowTimeSplit))]
     [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
     [ObservableProperty] private bool _isViewingDeckStats = false;
     [NotifyPropertyChangedFor(nameof(IsViewingStats))]
+    [NotifyPropertyChangedFor(nameof(IsViewingCardStats))]
+    [NotifyPropertyChangedFor(nameof(ShowTimeSplit))]
     [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
     [ObservableProperty] private bool _isViewingGroupStats = false;
-    public bool IsViewingStats => IsViewingDeckStats || IsViewingGroupStats;
+    [NotifyPropertyChangedFor(nameof(IsViewingStats))]
+    [NotifyPropertyChangedFor(nameof(ShowTimeSplit))]
+    [NotifyPropertyChangedFor(nameof(ShowCardStats))]
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private bool _isViewingNoteStats = false;
+
+    public bool IsViewingStats => IsViewingDeckStats || IsViewingGroupStats || IsViewingNoteStats;
+    /// <summary> A set or group: the stats that only flashcards have, like the best answer streak. </summary>
+    public bool IsViewingCardStats => IsViewingDeckStats || IsViewingGroupStats;
+    /// <summary> Questions, accuracy and grade: everywhere except a note's stats. </summary>
+    public bool ShowCardStats => !IsViewingNoteStats;
+    /// <summary> Flashcard and notes time shown separately: only in the overall stats. </summary>
+    public bool ShowTimeSplit => !IsViewingStats;
 
     [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
@@ -144,10 +169,19 @@ public partial class DashboardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
     [ObservableProperty] private StudyGroup? _selectedGroupForStats = null;
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private Note? _selectedNoteForStats = null;
+
+    // A note's own stats.
+    [ObservableProperty] private string _noteWordsText = "";
+    [ObservableProperty] private string _noteHeadingsText = "";
+    [ObservableProperty] private string _noteLastStudiedText = "";
 
     public string CurrentStatsTitle =>
         IsViewingDeckStats ? SelectedDeckForStats?.Name ?? "Overall" :
-        IsViewingGroupStats ? SelectedGroupForStats?.Name ?? "Overal" :
+        IsViewingGroupStats ? SelectedGroupForStats?.Name ?? "Overall" :
+        IsViewingNoteStats ? SelectedNoteForStats?.Name ?? "Overall" :
         "Overall";
 
     public string GraphViewTitle => $"{CurrentStatsTitle} Graph View";
@@ -155,11 +189,19 @@ public partial class DashboardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
     [ObservableProperty] private string _graphDateRangeText = "";
 
-    public string GraphViewSubtitle => AttemptsGraphPoints.Count == 0
+    public string GraphViewSubtitle => !HasGraphData
         ? ""
         : string.IsNullOrWhiteSpace(GraphDateRangeText)
             ? SelectedTimePeriod?.Label ?? "All Time"
             : GraphDateRangeText;
+
+    // --- Study calendar and where the time went (graph view) ---
+
+    public ObservableCollection<HeatmapWeek> HeatmapWeeks { get; } = [];
+    [ObservableProperty] private string _heatmapSummary = "";
+
+    public ObservableCollection<TimeSpentItem> TimeBreakdown { get; } = [];
+    public bool HasTimeBreakdown => TimeBreakdown.Count > 0;
 
     public ObservableCollection<TimePeriodOption> TimePeriods { get; } = [
         new("All Time", null!), new("Last 6 Months", "-6 months"), new("Last 3 Months", "-3 months"),
@@ -170,13 +212,20 @@ public partial class DashboardViewModel : ViewModelBase
     public ObservableCollection<SortOption> SortOptions { get; } = [.. SearchUtility.SortOptions];
 
     [NotifyPropertyChangedFor(nameof(HasGraphData))]
+    [NotifyPropertyChangedFor(nameof(HasAttemptsData))]
     [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
     [ObservableProperty] private ObservableCollection<GraphStatPointViewModel> _attemptsGraphPoints = [];
+    [NotifyPropertyChangedFor(nameof(HasGraphData))]
+    [NotifyPropertyChangedFor(nameof(HasTimeData))]
+    [NotifyPropertyChangedFor(nameof(GraphViewSubtitle))]
     [ObservableProperty] private ObservableCollection<GraphStatPointViewModel> _timeGraphPoints = [];
     public ObservableCollection<FlashCardDeck> Decks { get; } = [];
     public ObservableCollection<StudyGroup> StudyGroups { get; } = [];
+    public ObservableCollection<Note> Notes { get; } = [];
     public ObservableCollection<object> DashboardItems { get; } = [];
-    public bool HasGraphData => AttemptsGraphPoints.Count > 0;
+    public bool HasAttemptsData => AttemptsGraphPoints.Count > 0;
+    public bool HasTimeData => TimeGraphPoints.Count > 0;
+    public bool HasGraphData => HasAttemptsData || HasTimeData;
 
     [ObservableProperty] private SortOption? _selectedSortOption = null;
     partial void OnSelectedSortOptionChanged(SortOption? value) => RefreshLibraryView();
@@ -228,6 +277,7 @@ public partial class DashboardViewModel : ViewModelBase
         TotalQuestions = total;
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
+        NoteTimeSeconds = NoteRepository.GetStudySeconds(null, timeModifier);
         TotalCardCount = FlashCardRepository.GetCardCount();
         BestAnswerStreakText = "0";
         Percentage = total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
@@ -245,10 +295,44 @@ public partial class DashboardViewModel : ViewModelBase
         {
             ShowGroupStats(SelectedGroupForStats);
         }
+        else if (IsViewingNoteStats && SelectedNoteForStats != null)
+        {
+            ShowNoteStats(SelectedNoteForStats);
+        }
         else
         {
             LoadStats();
         }
+    }
+
+    /// <summary> A note's stats: time spent in it over the chosen period, its length, and when it was last studied. </summary>
+    public void ShowNoteStats(Note note)
+    {
+        IsGraphView = false;
+        SelectedNoteForStats = note;
+        IsViewingNoteStats = true;
+        IsViewingDeckStats = false;
+        IsViewingGroupStats = false;
+
+        var content = NoteRepository.GetContent(note.ID);
+        TotalQuestions = 0;
+        TotalCorrect = 0;
+        Percentage = 0;
+        Grade = "-";
+        TotalTimeSeconds = 0;
+        NoteTimeSeconds = NoteRepository.GetStudySeconds(note.ID, SelectedTimePeriod?.TimeModifier);
+        NoteWordsText = NoteText.WordCount(content).ToString("N0");
+        NoteHeadingsText = NoteText.Headings(content).Count.ToString();
+        NoteLastStudiedText = NoteRepository.GetLastStudied(note.ID) is { } day ? FormatDay(day) : "Never";
+        RefreshGraphStats();
+    }
+
+    private static string FormatDay(DateOnly day)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        if (day == today) return "Today";
+        if (day == today.AddDays(-1)) return "Yesterday";
+        return day.Year == today.Year ? day.ToString("d MMM") : day.ToString("d MMM yyyy");
     }
 
     public void ShowDeckStats(FlashCardDeck deck)
@@ -257,12 +341,14 @@ public partial class DashboardViewModel : ViewModelBase
         SelectedDeckForStats = deck;
         IsViewingDeckStats = true;
         IsViewingGroupStats = false;
+        IsViewingNoteStats = false;
 
         var timeModifier = SelectedTimePeriod?.TimeModifier;
         var (correct, total, timeTakenSeconds, percentage, grade) = GetDeckStats(deck.ID, timeModifier);
         TotalQuestions = total;
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
+        NoteTimeSeconds = 0;
         TotalCardCount = deck.CardCount;
         BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Deck", deck.ID).ToString();
         Percentage = percentage;
@@ -276,6 +362,8 @@ public partial class DashboardViewModel : ViewModelBase
         SelectedGroupForStats = group;
         IsViewingGroupStats = true;
         IsViewingDeckStats = false;
+        IsViewingNoteStats = false;
+        NoteTimeSeconds = 0;
 
         var timeModifier = SelectedTimePeriod?.TimeModifier;
 
@@ -309,13 +397,26 @@ public partial class DashboardViewModel : ViewModelBase
         RefreshGraphStats();
     }
 
+    /// <summary> After a delete: stats for a set, group or note that's gone go back to overall, and the rest reload. </summary>
+    private void RefreshStatsAfterDelete()
+    {
+        if ((IsViewingDeckStats && SelectedDeckForStats is { } deck && Decks.All(d => d.ID != deck.ID))
+            || (IsViewingGroupStats && SelectedGroupForStats is { } group && StudyGroups.All(g => g.ID != group.ID))
+            || (IsViewingNoteStats && SelectedNoteForStats is { } note && Notes.All(n => n.ID != note.ID)))
+            ShowOverallStats();
+        else
+            RefreshStats();
+    }
+
     public void ShowOverallStats()
     {
         IsGraphView = false;
         IsViewingDeckStats = false;
         IsViewingGroupStats = false;
+        IsViewingNoteStats = false;
         SelectedDeckForStats = null;
         SelectedGroupForStats = null;
+        SelectedNoteForStats = null;
         LoadStats();
     }
 
@@ -342,24 +443,25 @@ public partial class DashboardViewModel : ViewModelBase
             return StatsScope.Group;
         }
 
+        if (IsViewingNoteStats && SelectedNoteForStats != null)
+        {
+            return StatsScope.Note;
+        }
+
         return StatsScope.Overall;
     }
 
     private void RefreshGraphStats()
     {
         var timeModifier = SelectedTimePeriod?.TimeModifier;
-        var rawRows = GetDailyStatsForCurrentScope(timeModifier);
 
         // Discard anomalies where attempts are 0
-        var validRows = rawRows.Where(r => r.total > 0).ToList();
+        var validRows = GetDailyStatsForCurrentScope(timeModifier).Where(r => r.total > 0).ToList();
+        var noteRows = GetDailyNoteTimeForCurrentScope(timeModifier);
 
         // Attempts Grouping
         var attemptsRows = GroupRows(validRows, SelectedAttemptsGrouping).ToList();
         int maxAttempts = attemptsRows.Count == 0 ? 0 : attemptsRows.Max(row => row.total);
-
-        // Time Grouping
-        var timeRows = GroupRows(validRows, SelectedTimeGrouping).ToList();
-        int maxTime = timeRows.Count == 0 ? 0 : timeRows.Max(row => row.timeTakenSeconds);
 
         AttemptsGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
             attemptsRows.Select(row => new GraphStatPointViewModel(
@@ -370,18 +472,122 @@ public partial class DashboardViewModel : ViewModelBase
                 maxAttempts,
                 0))); // maxTime not relevant for attempts chart
 
-        TimeGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
-            timeRows.Select(row => new GraphStatPointViewModel(
-                row.label,
-                row.correct,
-                row.total,
-                row.timeTakenSeconds,
-                0, // maxAttempts not relevant for time chart
-                maxTime)));
+        // Study time: flashcards and notes by day, then grouped, so each bar can show both.
+        var timeByDay = new SortedDictionary<DateOnly, (int cards, int notes)>();
+        foreach (var row in validRows) timeByDay[row.date] = (row.timeTakenSeconds, 0);
+        foreach (var (date, seconds) in noteRows)
+            timeByDay[date] = timeByDay.TryGetValue(date, out var day) ? (day.cards, day.notes + seconds) : (0, seconds);
 
-        GraphDateRangeText = validRows.Count == 0
+        var timeRows = timeByDay
+            .Where(day => day.Value.cards + day.Value.notes > 0)
+            .GroupBy(day => Period(day.Key, SelectedTimeGrouping))
+            .OrderBy(group => group.Key.Start)
+            .Select(group => (group.Key.Label, cards: group.Sum(day => day.Value.cards), notes: group.Sum(day => day.Value.notes)))
+            .ToList();
+        int maxTime = timeRows.Count == 0 ? 0 : timeRows.Max(row => row.cards + row.notes);
+
+        TimeGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
+            timeRows.Select(row => new GraphStatPointViewModel(row.Label, 0, 0, row.cards, 0, maxTime, row.notes)));
+
+        GraphDateRangeText = timeByDay.Count == 0
             ? "No study history recorded yet."
-            : $"{validRows.First().date:MMM d, yyyy} - {validRows.Last().date:MMM d, yyyy}";
+            : $"{timeByDay.Keys.First():MMM d, yyyy} - {timeByDay.Keys.Last():MMM d, yyyy}";
+
+        RefreshHeatmap();
+        RefreshTimeBreakdown(timeModifier);
+    }
+
+    /// <summary> The day, week (from Monday) or month a date falls in, with its chart label. </summary>
+    private static (DateOnly Start, string Label) Period(DateOnly date, string? grouping)
+    {
+        if (grouping == "Weekly")
+        {
+            var monday = date.AddDays(-((7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7));
+            return (monday, monday.ToString("MMM d"));
+        }
+        if (grouping == "Monthly")
+        {
+            var first = new DateOnly(date.Year, date.Month, 1);
+            return (first, first.ToString("MMM yyyy"));
+        }
+        return (date, date.ToString("MMM d"));
+    }
+
+    /// <summary> Time spent in notes per day: all notes overall, one note in its stats, none for a set or group. </summary>
+    private List<(DateOnly date, int seconds)> GetDailyNoteTimeForCurrentScope(string? timeModifier) => GetCurrentStatsScope() switch
+    {
+        StatsScope.Overall => NoteRepository.GetStudyTimeByDate(null, timeModifier),
+        StatsScope.Note when SelectedNoteForStats != null => NoteRepository.GetStudyTimeByDate(SelectedNoteForStats.ID, timeModifier),
+        _ => [],
+    };
+
+    /// <summary>
+    /// The study calendar: the last 53 weeks (Monday to Sunday), each day shaded by how long was spent studying,
+    /// flashcards and notes together, whatever time period is chosen.
+    /// </summary>
+    private void RefreshHeatmap()
+    {
+        const string lastYear = "-371 days";
+
+        var secondsByDay = new Dictionary<DateOnly, int>();
+        foreach (var row in GetDailyStatsForCurrentScope(lastYear).Where(r => r.total > 0))
+            secondsByDay[row.date] = secondsByDay.GetValueOrDefault(row.date) + row.timeTakenSeconds;
+        foreach (var (date, seconds) in GetDailyNoteTimeForCurrentScope(lastYear))
+            secondsByDay[date] = secondsByDay.GetValueOrDefault(date) + seconds;
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var thisMonday = today.AddDays(-((7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7));
+        var firstMonday = thisMonday.AddDays(-7 * 52);
+
+        HeatmapWeeks.Clear();
+        int totalSeconds = 0, activeDays = 0;
+        for (var week = 0; week <= 52; week++)
+        {
+            var monday = firstMonday.AddDays(7 * week);
+            var days = new List<HeatmapDay>();
+            for (var weekday = 0; weekday < 7; weekday++)
+            {
+                var date = monday.AddDays(weekday);
+                var seconds = date > today ? 0 : secondsByDay.GetValueOrDefault(date);
+                if (seconds > 0) { totalSeconds += seconds; activeDays++; }
+                days.Add(new HeatmapDay(date, seconds, date > today));
+            }
+
+            // A month's name over the first week that starts in it.
+            var label = week == 0 || monday.Month != monday.AddDays(-7).Month ? monday.ToString("MMM") : "";
+            HeatmapWeeks.Add(new HeatmapWeek(label, days));
+        }
+
+        HeatmapSummary = activeDays == 0
+            ? "Nothing studied in the last year yet."
+            : $"{TextUtility.FormatTime(TimeSpan.FromSeconds(totalSeconds))} over {activeDays} {(activeDays == 1 ? "day" : "days")} in the last year";
+    }
+
+    /// <summary> The sets and notes with the most time spent in the chosen period (overall stats only). </summary>
+    private void RefreshTimeBreakdown(string? timeModifier)
+    {
+        TimeBreakdown.Clear();
+
+        if (GetCurrentStatsScope() == StatsScope.Overall)
+        {
+            var deckNames = Decks.ToDictionary(deck => deck.ID, deck => deck.Name);
+            var noteNames = Notes.ToDictionary(note => note.ID, note => note.Name);
+
+            var items = FlashCardRepository.GetStudyTimeByDeck(timeModifier)
+                .Where(row => row.seconds > 0 && deckNames.ContainsKey(row.deckID))
+                .Select(row => (name: deckNames[row.deckID], kind: "Set", row.seconds))
+                .Concat(NoteRepository.GetStudyTimeByNote(timeModifier)
+                    .Where(row => row.seconds > 0 && noteNames.ContainsKey(row.noteID))
+                    .Select(row => (name: noteNames[row.noteID], kind: "Note", row.seconds)))
+                .OrderByDescending(item => item.seconds)
+                .Take(10)
+                .ToList();
+
+            var most = items.Count == 0 ? 0 : items[0].seconds;
+            foreach (var item in items) TimeBreakdown.Add(new TimeSpentItem(item.name, item.kind, item.seconds, most));
+        }
+
+        OnPropertyChanged(nameof(HasTimeBreakdown));
     }
 
     private IEnumerable<(DateOnly date, int correct, int total, int timeTakenSeconds, string label)> GroupRows(
@@ -425,6 +631,7 @@ public partial class DashboardViewModel : ViewModelBase
         {
             StatsScope.Deck when SelectedDeckForStats != null => FlashCardRepository.GetStatsByDate(SelectedDeckForStats.ID, timeModifier),
             StatsScope.Group when SelectedGroupForStats != null => GetDailyStatsForGroup(SelectedGroupForStats.ID, timeModifier),
+            StatsScope.Note => [],
             _ => FlashCardRepository.GetStatsByDate(null, timeModifier)
         };
     }
@@ -510,6 +717,13 @@ public partial class DashboardViewModel : ViewModelBase
                 : Decks.Where(deck => deck.FolderID == CurrentFolderID));
         }
 
+        if (ShowNotes)
+        {
+            visible.AddRange(IsSearching
+                ? Notes.Where(note => InScope(note.FolderID))
+                : Notes.Where(note => note.FolderID == CurrentFolderID));
+        }
+
         var ordered = visible.SearchAndSort(SearchText, SelectedSortOption?.Mode ?? SortMode.Relevance, TypePriority);
 
         DashboardItems.Clear();
@@ -526,6 +740,7 @@ public partial class DashboardViewModel : ViewModelBase
     {
         Folder => FolderPriority,
         StudyGroup => GroupPriority,
+        Note => NotePriority,
         _ => SetPriority,
     };
 
@@ -535,8 +750,8 @@ public partial class DashboardViewModel : ViewModelBase
     /// </summary>
     private void RefreshFolderMetadata()
     {
-        _folderTree.ApplyCounts(Decks, StudyGroups);
-        _folderTree.ApplyPaths(Decks, StudyGroups, CurrentFolderID);
+        _folderTree.ApplyCounts(Decks, StudyGroups, Notes);
+        _folderTree.ApplyPaths(Decks, StudyGroups, CurrentFolderID, Notes);
 
         Breadcrumbs.Clear();
         foreach (var folder in _folderTree.AncestorChain(CurrentFolderID)) Breadcrumbs.Add(folder);
@@ -551,8 +766,8 @@ public partial class DashboardViewModel : ViewModelBase
         EmptyStateText =
             IsSearching && IsInFolder ? $"Nothing in {CurrentFolderName} matches '{SearchText.Trim()}'." :
             IsSearching ? $"Nothing matches '{SearchText.Trim()}'." :
-            IsInFolder ? $"{CurrentFolderName} is empty. Create a set here, or move one in." :
-            "No flashcard sets yet. Create one to get started.";
+            IsInFolder ? $"{CurrentFolderName} is empty. Create a set or note here, or move one in." :
+            "No flashcard sets or notes yet. Create one to get started.";
 
         OnPropertyChanged(nameof(HasNoItems));
     }
@@ -603,9 +818,10 @@ public partial class DashboardViewModel : ViewModelBase
             CurrentFolderID = folder.ParentFolderID;
 
         ReloadLibrary();
+        if (withContents) RefreshStatsAfterDelete();
     }
 
-    /// <summary> Refiles a set, group or folder. Returns false when the move is not allowed. </summary>
+    /// <summary> Refiles a set, note, group or folder. Returns false when the move is not allowed. </summary>
     public bool MoveItem(object item, ulong? targetFolderID)
     {
         try
@@ -617,6 +833,9 @@ public partial class DashboardViewModel : ViewModelBase
                     break;
                 case StudyGroup group:
                     FolderRepository.MoveStudyGroup(group.ID, targetFolderID);
+                    break;
+                case Note note:
+                    FolderRepository.MoveNote(note.ID, targetFolderID);
                     break;
                 case Folder folder:
                     FolderRepository.MoveFolder(folder.ID, targetFolderID);
@@ -697,7 +916,7 @@ public partial class DashboardViewModel : ViewModelBase
 
     // --- Loading ---
 
-    /// <summary> Reloads folders, sets and groups from the database, then rebuilds the view. </summary>
+    /// <summary> Reloads folders, sets, notes and groups from the database, then rebuilds the view. </summary>
     public void ReloadLibrary()
     {
         _folderTree = FolderTree.Load();
@@ -709,6 +928,10 @@ public partial class DashboardViewModel : ViewModelBase
         var savedGroups = FlashCardRepository.GetAllStudyGroups();
         StudyGroups.Clear();
         foreach (var group in savedGroups) StudyGroups.Add(group);
+
+        var savedNotes = NoteRepository.GetAllNotes();
+        Notes.Clear();
+        foreach (var note in savedNotes) Notes.Add(note);
 
         // A folder we were standing in may be gone after a reload.
         if (!_folderTree.Exists(CurrentFolderID)) CurrentFolderID = null;
@@ -725,12 +948,14 @@ public partial class DashboardViewModel : ViewModelBase
 
         // Groups reload too: deleting a set changes the card counts of any group holding it.
         ReloadLibrary();
+        RefreshStatsAfterDelete();
     }
 
     public void DeleteStudyGroup(StudyGroup groupToDelete)
     {
         FlashCardRepository.DeleteStudyGroup(groupToDelete.ID);
         ReloadLibrary();
+        RefreshStatsAfterDelete();
     }
 
     public void RefreshAfterBackupRestore()
@@ -747,6 +972,40 @@ public partial class DashboardViewModel : ViewModelBase
 
         ReloadLibrary();
         RefreshStats();
+    }
+
+    // --- Notes ---
+
+    /// <summary> Creates a note filed in the folder currently open. </summary>
+    public Note CreateNote(string name)
+    {
+        var note = NoteRepository.CreateNote(name.Trim(), CurrentFolderID);
+        ReloadLibrary();
+        return note;
+    }
+
+    public void RenameNote(Note note, string newName)
+    {
+        NoteRepository.RenameNote(note.ID, newName.Trim());
+        ReloadLibrary();
+    }
+
+    public void DeleteNote(Note note)
+    {
+        NoteRepository.DeleteNote(note.ID);
+        ReloadLibrary();
+        RefreshStatsAfterDelete();
+    }
+
+    /// <summary> Opens a note as a page of its own; leaving it comes back here. </summary>
+    public void OpenNote(Note note)
+    {
+        CurrentPage = new NoteViewModel(note, () =>
+        {
+            CurrentPage = this;
+            ReloadLibrary();
+            RefreshStats();
+        });
     }
 
     /// <summary> Creates a set filed in the folder currently open. </summary>

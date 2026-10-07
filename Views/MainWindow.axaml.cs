@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using ReviFlash.Models;
+using ReviFlash.ViewModels;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
 
@@ -45,6 +46,13 @@ public partial class MainWindow : Window
         base.OnPropertyChanged(change);
         // IsActive rather than the Activated event, which is raised before IsActive is updated.
         if (change.Property == IsActiveProperty || change.Property == WindowStateProperty) UpdateSwirl();
+    }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        // A note saves a moment after typing stops; closing the app in that moment shouldn't lose the last words.
+        if ((DataContext as DashboardViewModel)?.CurrentPage is NoteViewModel note) note.SaveBeforeExit();
     }
 
     protected override void OnClosed(EventArgs e)

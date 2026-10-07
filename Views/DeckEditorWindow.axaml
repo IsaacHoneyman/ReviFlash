@@ -9,6 +9,7 @@
     Title="Deck Editor"
     Width="1000" Height="700"
     MinWidth="760" MinHeight="520"
+    WindowState="Maximized"
     WindowStartupLocation="CenterOwner"
     Background="{DynamicResource AppBackground}">
 

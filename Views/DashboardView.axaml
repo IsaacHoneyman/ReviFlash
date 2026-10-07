@@ -21,6 +21,46 @@
             <Setter Property="Background" Value="{DynamicResource GradientStart}" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
         </Style>
+
+        <!-- Graph view tiles, spaced by margin (the uniform grid they sit in has no spacing of its own). -->
+        <Style Selector="Border.graphTile">
+            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Margin" Value="7,0" />
+        </Style>
+
+        <!-- Study calendar squares: empty, then the theme colour stronger with more time studied. -->
+        <Style Selector="Border.heat">
+            <Setter Property="Width" Value="12" />
+            <Setter Property="Height" Value="12" />
+            <Setter Property="Margin" Value="1.5" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+        </Style>
+        <Style Selector="Border.heat.l1">
+            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+            <Setter Property="Opacity" Value="0.3" />
+        </Style>
+        <Style Selector="Border.heat.l2">
+            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+            <Setter Property="Opacity" Value="0.55" />
+        </Style>
+        <Style Selector="Border.heat.l3">
+            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+        <Style Selector="Border.heat.l4">
+            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+        </Style>
+        <Style Selector="Border.heat.future">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="TextBlock.heatDayLabel">
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="Height" Value="15" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
     </UserControl.Styles>
 
     <UserControl.DataTemplates>
@@ -330,6 +370,104 @@
 
             </Border>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type models:Note}">
+            <Border Width="286" Height="145"
+                Background="{DynamicResource CardBackground}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1.5" CornerRadius="20"
+                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
+                Focusable="True"
+                PointerPressed="NoteCard_Click"
+                KeyDown="NoteCard_KeyDown">
+
+                <Grid RowDefinitions="Auto, *">
+
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
+                        VerticalAlignment="Top">
+                        <Border Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource BadgeBackground}"
+                            CornerRadius="8" Padding="9,5"
+                            Height="28" MinHeight="28">
+                            <TextBlock Text="Note" FontSize="12" FontWeight="Bold"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextPrimary}" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <Button Click="RenameNote_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Rename Note">
+                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                            </Button>
+
+                            <Button Click="NoteStats_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="View Note Stats">
+                                <Path Classes="icon" Data="{StaticResource IconStats}" />
+                            </Button>
+
+                            <Button Click="MoveItem_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Move to Folder">
+                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                            </Button>
+
+                            <Button Click="DeleteNote_Click"
+                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
+                                Padding="10,6" Height="30"
+                                MinHeight="30"
+                                VerticalContentAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip.Tip="Delete Note">
+                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                        <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
+                            <TextBlock Text="{Binding Name}" FontSize="22"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextWrapping="Wrap"
+                                TextTrimming="CharacterEllipsis"
+                                MaxLines="2"
+                                VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding Summary}" FontSize="13"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding !HasFolderPath}"
+                            TextTrimming="CharacterEllipsis"
+                            Margin="0, 6, 0, 0" />
+                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="13"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding HasFolderPath}"
+                            TextTrimming="CharacterEllipsis"
+                            Margin="0, 6, 0, 0" />
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+        </DataTemplate>
     </UserControl.DataTemplates>
 
     <Grid>
@@ -397,7 +535,7 @@
                     </Style>
                 </Grid.Styles>
 
-                <Grid Grid.Row="0" x:Name="SearchRow" ColumnDefinitions="*, Auto, Auto, Auto, Auto" Margin="0, 0, 0, 14">
+                <Grid Grid.Row="0" x:Name="SearchRow" ColumnDefinitions="*, Auto, Auto" Margin="0, 0, 0, 14">
                     <Grid.Styles>
                         <Style Selector="Grid#SearchRow > :is(Control)">
                             <Setter Property="Height" Value="36" />
@@ -426,39 +564,19 @@
                         Background="{DynamicResource CardBackground}" />
 
                     <Button Grid.Column="2"
-                        Click="CreateFolder_Click"
-                        CornerRadius="8" Padding="12, 0" FontSize="14" FontWeight="SemiBold"
+                        CornerRadius="8" Padding="14, 0" FontSize="14" FontWeight="Bold"
                         Background="{DynamicResource StatTileBackground}"
                         Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" Margin="0,0,12,0">
-                        <Panel VerticalAlignment="Center">
-                            <TextBlock Classes="long" Text="+ New Folder" />
-                            <TextBlock Classes="short" Text="+ Folder" />
-                        </Panel>
-                    </Button>
-
-                    <Button Grid.Column="3"
-                        Click="CreateGroup_Click"
-                        CornerRadius="8" Padding="12, 0" FontSize="14" FontWeight="SemiBold"
-                        Background="{DynamicResource StatTileBackground}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" Margin="0,0,12,0">
-                        <Panel VerticalAlignment="Center">
-                            <TextBlock Classes="long" Text="+ New Group" />
-                            <TextBlock Classes="short" Text="+ Group" />
-                        </Panel>
-                    </Button>
-
-                    <Button Grid.Column="4"
-                        Click="CreateDeck_Click"
-                        CornerRadius="8" Padding="12, 0" FontSize="14" FontWeight="Bold"
-                        Background="{DynamicResource StatTileBackground}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand">
-                        <Panel VerticalAlignment="Center">
-                            <TextBlock Classes="long" Text="+ New Set" />
-                            <TextBlock Classes="short" Text="+ Set" />
-                        </Panel>
+                        Cursor="Hand" ToolTip.Tip="Create a set, note, folder or group here">
+                        <TextBlock Text="+ New" VerticalAlignment="Center" />
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                <MenuItem Header="Flashcard Set" Click="CreateDeck_Click" />
+                                <MenuItem Header="Note" Click="CreateNote_Click" />
+                                <MenuItem Header="Folder" Click="CreateFolder_Click" />
+                                <MenuItem Header="Study Group" Click="CreateGroup_Click" />
+                            </MenuFlyout>
+                        </Button.Flyout>
                     </Button>
                 </Grid>
 
@@ -575,6 +693,15 @@
                                 </Panel>
                             </ToggleButton>
 
+                            <ToggleButton
+                                IsChecked="{Binding ShowNotes, Mode=TwoWay}"
+                                Classes="dashboardToggle">
+                                <Panel>
+                                    <TextBlock Classes="long" Text="Show Notes" />
+                                    <TextBlock Classes="short" Text="Notes" />
+                                </Panel>
+                            </ToggleButton>
+
 
                             <Button Grid.Column="0" Click="MultiSelectDecks_Click"
                                 Content="{Binding ReviewSelectionButtonText}"
@@ -626,6 +753,9 @@
                         <TextBlock Grid.Column="0" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
                             Foreground="{DynamicResource TextPrimary}"
                             IsVisible="{Binding IsViewingGroupStats}" />
+                        <TextBlock Grid.Column="0" Text="{Binding SelectedNoteForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            IsVisible="{Binding IsViewingNoteStats}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
@@ -659,7 +789,8 @@
 
                     <Border Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
-                        Padding="16">
+                        Padding="16"
+                        IsVisible="{Binding ShowCardStats}">
                         <StackPanel>
                             <TextBlock Text="Total Questions"
                                 Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -670,7 +801,8 @@
 
                     <Border Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
-                        Padding="16">
+                        Padding="16"
+                        IsVisible="{Binding ShowCardStats}">
                         <StackPanel>
                             <TextBlock Text="Total Correct"
                                 Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -681,7 +813,8 @@
 
                     <Border Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
-                        Padding="16">
+                        Padding="16"
+                        IsVisible="{Binding ShowCardStats}">
                         <StackPanel>
                             <TextBlock Text="Accuracy Rate"
                                 Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -692,7 +825,8 @@
 
                     <Border Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
-                        Padding="16">
+                        Padding="16"
+                        IsVisible="{Binding ShowCardStats}">
                         <StackPanel>
                             <TextBlock Text="Grade"
                                 Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -712,13 +846,60 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{DynamicResource StatTileBackground}"
+                    <!-- Overall only: the total split into flashcards and notes. -->
+                    <Border IsVisible="{Binding ShowTimeSplit}" Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
                         Padding="16">
                         <StackPanel>
-                            <TextBlock Text="Time per Card"
+                            <TextBlock Text="Flashcard Time"
                                 Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding AverageTimePerCardText}" Foreground="{DynamicResource TextPrimary}"
+                            <TextBlock Text="{Binding FlashcardTimeFormatted}" Foreground="{DynamicResource TextPrimary}"
+                                FontSize="24" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border IsVisible="{Binding ShowTimeSplit}" Background="{DynamicResource StatTileBackground}"
+                        CornerRadius="10"
+                        Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Notes Time"
+                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                            <TextBlock Text="{Binding NoteTimeFormatted}" Foreground="{DynamicResource TextPrimary}"
+                                FontSize="24" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- A note's own stats. -->
+                    <Border Background="{DynamicResource StatTileBackground}"
+                        CornerRadius="10"
+                        Padding="16"
+                        IsVisible="{Binding IsViewingNoteStats}">
+                        <StackPanel>
+                            <TextBlock Text="Last Studied"
+                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                            <TextBlock Text="{Binding NoteLastStudiedText}" Foreground="{DynamicResource TextPrimary}"
+                                FontSize="24" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border IsVisible="{Binding IsViewingNoteStats}" Background="{DynamicResource StatTileBackground}"
+                        CornerRadius="10"
+                        Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Words"
+                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                            <TextBlock Text="{Binding NoteWordsText}" Foreground="{DynamicResource TextPrimary}"
+                                FontSize="24" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border IsVisible="{Binding IsViewingNoteStats}" Background="{DynamicResource StatTileBackground}"
+                        CornerRadius="10"
+                        Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Headings"
+                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                            <TextBlock Text="{Binding NoteHeadingsText}" Foreground="{DynamicResource TextPrimary}"
                                 FontSize="24" FontWeight="Bold" />
                         </StackPanel>
                     </Border>
@@ -726,7 +907,7 @@
                     <Border Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
                         Padding="16"
-                        IsVisible="{Binding IsViewingStats}">
+                        IsVisible="{Binding IsViewingCardStats}">
                         <StackPanel>
                             <TextBlock Text="Best Answer Streak"
                                 Foreground="{DynamicResource TextSecondary}" FontSize="12" />
@@ -803,49 +984,69 @@
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="18">
-                    <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="14">
-                        <Border Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                    <!-- One row of tiles; hidden ones (card stats for a note, the time split outside overall) take no space. -->
+                    <UniformGrid Rows="1" Margin="-7,0">
+                        <Border Classes="graphTile" IsVisible="{Binding ShowCardStats}">
                             <StackPanel>
                                 <TextBlock Text="Total Questions" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <TextBlock Text="{Binding TotalQuestions}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding TotalQuestions}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                </Viewbox>
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="1" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                        <Border Classes="graphTile" IsVisible="{Binding ShowCardStats}">
                             <StackPanel>
                                 <TextBlock Text="Accuracy" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                </Viewbox>
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="2" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                        <Border Classes="graphTile">
                             <StackPanel>
                                 <TextBlock Text="Total Time" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <TextBlock Text="{Binding TotalTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding TotalTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                </Viewbox>
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="3" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                        <Border Classes="graphTile" IsVisible="{Binding ShowTimeSplit}">
                             <StackPanel>
-                                <TextBlock Text="Average Time" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <TextBlock Text="{Binding AverageTimePerCardText}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="Flashcards" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding FlashcardTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                </Viewbox>
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="4" Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                        <Border Classes="graphTile" IsVisible="{Binding ShowTimeSplit}">
+                            <StackPanel>
+                                <TextBlock Text="Notes" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding NoteTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                </Viewbox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="graphTile" IsVisible="{Binding ShowCardStats}">
                             <StackPanel>
                                 <TextBlock Text="Grade" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <TextBlock Text="{Binding Grade}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding Grade}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                </Viewbox>
                             </StackPanel>
                         </Border>
-                    </Grid>
+                    </UniformGrid>
 
                     <Border Background="{DynamicResource CardBackground}"
                         BorderBrush="{DynamicResource CardBorder}"
                         BorderThickness="1.5"
                         CornerRadius="20"
                         Padding="20"
-                        IsVisible="{Binding HasGraphData}">
+                        IsVisible="{Binding HasAttemptsData}">
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Spacing="4">
@@ -925,13 +1126,13 @@
                         BorderThickness="1.5"
                         CornerRadius="20"
                         Padding="20"
-                        IsVisible="{Binding HasGraphData}">
+                        IsVisible="{Binding HasTimeData}">
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Spacing="4">
                                     <TextBlock Text="Study Time Chart" FontSize="18" FontWeight="Bold"
                                         Foreground="{DynamicResource TextPrimary}" />
-                                    <TextBlock Text="The bar height shows total time spent studying." FontSize="12"
+                                    <TextBlock Text="The bar height shows total time spent studying: blue is flashcards, purple is notes." FontSize="12"
                                         Foreground="{DynamicResource TextSecondary}" />
                                 </StackPanel>
 
@@ -966,12 +1167,17 @@
                                                         Foreground="{DynamicResource TextPrimary}" />
                                                 </StackPanel>
 
+                                                <!-- Flashcard time, with note time stacked at the bottom. -->
                                                 <Border Height="160" VerticalAlignment="Bottom" HorizontalAlignment="Center">
                                                     <Border Width="28" Height="{Binding TimeBarHeight}"
-                                                        CornerRadius="6" Background="#FF4AA3FF"
+                                                        CornerRadius="6" ClipToBounds="True" Background="#FF4AA3FF"
                                                         VerticalAlignment="Bottom"
                                                         IsVisible="{Binding HasTime}"
-                                                        ToolTip.Tip="{Binding TimeTooltip}" />
+                                                        ToolTip.Tip="{Binding TimeTooltip}">
+                                                        <Border Height="{Binding NoteBarHeight}"
+                                                            Background="#FFB57BFF"
+                                                            VerticalAlignment="Bottom" />
+                                                    </Border>
                                                 </Border>
 
                                             </StackPanel>
@@ -991,8 +1197,123 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="No chart data yet" FontSize="18" FontWeight="Bold"
                                 Foreground="{DynamicResource TextPrimary}" />
-                            <TextBlock Text="Study a deck or group to populate the graph view with daily activity." FontSize="12"
+                            <TextBlock Text="Review a set or group, or spend time in a note, to fill the graph view with daily activity." FontSize="12"
                                 Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Where your time went: the sets and notes with the most time in the chosen period (overall only). -->
+                    <Border Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource CardBorder}"
+                        BorderThickness="1.5"
+                        CornerRadius="20"
+                        Padding="20"
+                        IsVisible="{Binding HasTimeBreakdown}">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Where Your Time Went" FontSize="18" FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="The sets and notes you spent the most time on in this period." FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+
+                            <ItemsControl ItemsSource="{Binding TimeBreakdown}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:TimeSpentItem">
+                                        <Grid ColumnDefinitions="240, 52, *, Auto" ColumnSpacing="12" Margin="0,4">
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"
+                                                TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextPrimary}" />
+                                            <Border Grid.Column="1" Background="{DynamicResource BadgeBackground}" CornerRadius="6" HorizontalAlignment="Left"
+                                                Padding="7,2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Kind}" FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}" />
+                                            </Border>
+                                            <Border Grid.Column="2" Height="14" CornerRadius="5" HorizontalAlignment="Left"
+                                                Width="{Binding BarWidth}" Background="{DynamicResource GradientStart}"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3" Text="{Binding TimeText}" FontSize="13"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextPrimary}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Study calendar: the last year, a square per day shaded by time spent. -->
+                    <Border Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource CardBorder}"
+                        BorderThickness="1.5"
+                        CornerRadius="20"
+                        Padding="20">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Study Calendar" FontSize="18" FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="{Binding HeatmapSummary}" FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,12">
+                                    <!-- Weekday labels, lined up with the Monday, Wednesday and Friday rows. -->
+                                    <StackPanel Margin="0,18,0,0">
+                                        <TextBlock Classes="heatDayLabel" Text="Mon" />
+                                        <TextBlock Classes="heatDayLabel" Text="" />
+                                        <TextBlock Classes="heatDayLabel" Text="Wed" />
+                                        <TextBlock Classes="heatDayLabel" Text="" />
+                                        <TextBlock Classes="heatDayLabel" Text="Fri" />
+                                        <TextBlock Classes="heatDayLabel" Text="" />
+                                        <TextBlock Classes="heatDayLabel" Text="" />
+                                    </StackPanel>
+
+                                    <ItemsControl ItemsSource="{Binding HeatmapWeeks}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="vm:HeatmapWeek">
+                                                <StackPanel>
+                                                    <!-- Wider than a column, so it overflows to the right instead of wrapping. -->
+                                                    <Canvas Height="18" Width="15">
+                                                        <TextBlock Text="{Binding MonthLabel}" FontSize="10"
+                                                            Foreground="{DynamicResource TextSecondary}" />
+                                                    </Canvas>
+                                                    <ItemsControl ItemsSource="{Binding Days}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate DataType="vm:HeatmapDay">
+                                                                <Border Classes="heat"
+                                                                    Classes.l1="{Binding IsLevel1}"
+                                                                    Classes.l2="{Binding IsLevel2}"
+                                                                    Classes.l3="{Binding IsLevel3}"
+                                                                    Classes.l4="{Binding IsLevel4}"
+                                                                    Classes.future="{Binding IsFuture}"
+                                                                    ToolTip.Tip="{Binding Tooltip}" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                <TextBlock Text="Less" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                                <Border Classes="heat" />
+                                <Border Classes="heat l1" />
+                                <Border Classes="heat l2" />
+                                <Border Classes="heat l3" />
+                                <Border Classes="heat l4" />
+                                <TextBlock Text="More (1 hour+)" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>

@@ -97,6 +97,19 @@ public partial class SyntaxGuideWindow : Window
             new(["Ctrl+Shift+M"], "Maths on its own line"),
             new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),
         ]),
+        new("Notes", "Click a paragraph to edit it. The formatting shortcuts above work in it too.",
+        [
+            new(["Esc"], "Finish editing the paragraph"),
+            new(["↑"], "On its first line: edit the paragraph before"),
+            new(["↓"], "On its last line: edit the paragraph after"),
+            new(["Enter ×2"], "A blank line starts a new paragraph"),
+        ]),
+        new("Make Card", null,
+        [
+            new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),
+            new(["Ctrl+Enter"], "Add the card"),
+            new(["Esc"], "Cancel"),
+        ]),
         new("Reviews", "A hint under each card shows the keys that work right now. While typing an answer, only Enter and Esc work.",
         [
             new(["Space", "Enter"], "Show the answer on a Flip card"),

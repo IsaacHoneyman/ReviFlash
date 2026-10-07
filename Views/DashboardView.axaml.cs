@@ -54,6 +54,71 @@ public partial class DashboardView : UserControl
         vm.ReloadLibrary();
     }
 
+    // --- Notes ---
+
+    public async void CreateNote_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DashboardViewModel vm) return;
+
+        var prompt = new TextPromptWindow(
+            "Name your new note",
+            "Create",
+            "New Note",
+            vm.IsInFolder ? $"It will be created inside {vm.CurrentFolderName}." : "It will be created on the main menu.");
+
+        var name = await prompt.ShowDialog<string?>(OwnerWindow);
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        vm.OpenNote(vm.CreateNote(name));
+    }
+
+    public async void RenameNote_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as Control)?.DataContext is not Note note || DataContext is not DashboardViewModel vm) return;
+
+        var name = await new TextPromptWindow("Rename note", "Rename", note.Name).ShowDialog<string?>(OwnerWindow);
+        if (string.IsNullOrWhiteSpace(name) || name == note.Name) return;
+
+        vm.RenameNote(note, name);
+    }
+
+    public void NoteStats_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as Control)?.DataContext is Note note && DataContext is DashboardViewModel vm) vm.ShowNoteStats(note);
+    }
+
+    public async void DeleteNote_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as Control)?.DataContext is not Note note || DataContext is not DashboardViewModel vm) return;
+
+        var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete the note '{note.Name}'?");
+        if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteNote(note);
+    }
+
+    private void NoteCard_Click(object sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null) return;
+        if (DataContext is not DashboardViewModel vm || vm.IsSelectionModeActive) return;
+
+        if ((sender as Control)?.DataContext is Note note) vm.OpenNote(note);
+    }
+
+    private void NoteCard_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Space)) return;
+        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null) return;
+        if (DataContext is not DashboardViewModel vm || vm.IsSelectionModeActive) return;
+
+        if ((sender as Control)?.DataContext is Note note)
+        {
+            vm.OpenNote(note);
+            e.Handled = true;
+        }
+    }
+
     public async void CreateGroup_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
@@ -124,8 +189,8 @@ public partial class DashboardView : UserControl
             return;
         }
 
-        var (folders, sets, groups, cards) = FolderRepository.CountContents(vm.FolderTree.SubtreeIds(folder.ID));
-        var everything = string.Join(", ", new[] { Count(folders, "folder"), Count(sets, "set"), Count(groups, "group") }.Where(part => part.Length > 0));
+        var (folders, sets, groups, notes, cards) = FolderRepository.CountContents(vm.FolderTree.SubtreeIds(folder.ID));
+        var everything = string.Join(", ", new[] { Count(folders, "folder"), Count(sets, "set"), Count(notes, "note"), Count(groups, "group") }.Where(part => part.Length > 0));
         var deleteMessage = $"Delete the folder '{folder.Name}' and everything in it ({everything}, {Count(cards, "card")})? This can't be undone.";
 
         var dialog = new ConfirmDialogWindow(message, "Also delete everything inside", deleteMessage);
@@ -153,6 +218,7 @@ public partial class DashboardView : UserControl
             Folder folder => folder.ParentFolderID,
             StudyGroup group => group.FolderID,
             FlashCardDeck deck => deck.FolderID,
+            Note note => note.FolderID,
             _ => null,
         };
 
