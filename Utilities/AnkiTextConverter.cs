@@ -156,7 +156,7 @@ public static partial class AnkiTextConverter
         text = text.Replace('\n', ' ').Replace("\u0001", "\n\n");
         text = LatexLineBreakRegex().Replace(text, "\n");
         text = LatexListRegex().Replace(text, "\n");
-        text = LatexItemRegex().Replace(text, "\n• ");
+        text = LatexItemRegex().Replace(text, "\n- ");
 
         foreach (var (command, replacement) in LatexTextCommands)
             text = ReplaceCommand(text, command, replacement);
@@ -278,7 +278,7 @@ public static partial class AnkiTextConverter
                     continue;
                 case "li":
                     NewLine();
-                    output.Append("• ");
+                    output.Append("- ");
                     break;
                 case "td" or "th":
                     if (output.Length > 0 && output[^1] is not ('\n' or ' ')) output.Append("   ");

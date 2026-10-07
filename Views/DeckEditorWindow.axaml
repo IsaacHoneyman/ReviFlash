@@ -151,6 +151,9 @@
                                 <Button Classes="format" Click="Heading3_Click" ToolTip.Tip="Small heading: \H3{...}  (Ctrl+3)">
                                     <TextBlock Text="H3" FontWeight="Bold" />
                                 </Button>
+                                <Button Classes="format" Click="Bullet_Click" ToolTip.Tip="Bullet point: start the line with &quot;- &quot;  (Ctrl+P)">
+                                    <TextBlock Text="• Point" />
+                                </Button>
                                 <Rectangle Classes="separator" />
                                 <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
                                     <TextBlock Text="Maths" />

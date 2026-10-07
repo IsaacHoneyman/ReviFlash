@@ -211,6 +211,13 @@ public partial class NoteView : UserControl
             return;
         }
 
+        if (TextFormatting.IsBulletShortcut(e, _topLevel.PlatformSettings?.HotkeyConfiguration))
+        {
+            TextFormatting.ToggleBullets(box);
+            e.Handled = true;
+            return;
+        }
+
         if (TextFormatting.ShortcutFor(e, _topLevel.PlatformSettings?.HotkeyConfiguration, allowCloze: false) is { } pair)
         {
             TextFormatting.Wrap(box, pair.Open, pair.Close);
@@ -239,6 +246,7 @@ public partial class NoteView : UserControl
     private void Heading1_Click(object? sender, RoutedEventArgs e) => Wrap(@"\H1{", "}");
     private void Heading2_Click(object? sender, RoutedEventArgs e) => Wrap(@"\H2{", "}");
     private void Heading3_Click(object? sender, RoutedEventArgs e) => Wrap(@"\H3{", "}");
+    private void Bullet_Click(object? sender, RoutedEventArgs e) { if (_activeEditor is { IsVisible: true } box) TextFormatting.ToggleBullets(box); }
     private void InlineMath_Click(object? sender, RoutedEventArgs e) => Wrap("$", "$");
     private void DisplayMath_Click(object? sender, RoutedEventArgs e) => Wrap("$$", "$$");
 

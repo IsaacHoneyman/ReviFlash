@@ -28,6 +28,12 @@ public partial class MakeCardWindow : Window
         }
 
         if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;
+        if (TextFormatting.IsBulletShortcut(e, PlatformSettings?.HotkeyConfiguration))
+        {
+            TextFormatting.ToggleBullets(box);
+            e.Handled = true;
+            return;
+        }
         if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsCloze == true) is not { } pair) return;
 
         TextFormatting.Wrap(box, pair.Open, pair.Close);

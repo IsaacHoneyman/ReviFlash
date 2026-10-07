@@ -20,6 +20,9 @@ public static partial class NoteText
     [GeneratedRegex(@"\\[A-Za-z]+\d*\{|[{}$\\]")]
     private static partial Regex MarkupRegex();
 
+    [GeneratedRegex(@"^[ \t]*- ", RegexOptions.Multiline)]
+    private static partial Regex BulletRegex();
+
     /// <summary> Splits content into blocks at blank lines, outside display maths. Never returns an empty list. </summary>
     public static List<string> SplitBlocks(string? content)
     {
@@ -92,7 +95,7 @@ public static partial class NoteText
     public static int WordCount(string? content)
     {
         if (string.IsNullOrWhiteSpace(content)) return 0;
-        var plain = MarkupRegex().Replace(content, " ");
+        var plain = MarkupRegex().Replace(BulletRegex().Replace(content, ""), " ");
         return plain.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
     }
 

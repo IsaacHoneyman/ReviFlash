@@ -74,6 +74,7 @@ public partial class DeckEditorWindow : Window
     private void Heading1_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\H1{", "}");
     private void Heading2_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\H2{", "}");
     private void Heading3_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\H3{", "}");
+    private void Bullet_Click(object? sender, RoutedEventArgs e) { if (_activeField is { } box) TextFormatting.ToggleBullets(box); }
     private void InlineMath_Click(object? sender, RoutedEventArgs e) => WrapActiveField("$", "$");
     private void DisplayMath_Click(object? sender, RoutedEventArgs e) => WrapActiveField("$$", "$$");
     private void Blank_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\C{", "}");
@@ -83,6 +84,13 @@ public partial class DeckEditorWindow : Window
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
     {
         if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;
+        if (TextFormatting.IsBulletShortcut(e, PlatformSettings?.HotkeyConfiguration))
+        {
+            _activeField = box;
+            TextFormatting.ToggleBullets(box);
+            e.Handled = true;
+            return;
+        }
         if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsClozeCardType == true) is not { } pair) return;
 
         _activeField = box;

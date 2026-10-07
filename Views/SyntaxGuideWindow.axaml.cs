@@ -24,7 +24,7 @@ public partial class SyntaxGuideWindow : Window
 
     public IReadOnlyList<GuideSection> Sections { get; } =
     [
-        new("Formatting", "Press Enter in a card field for a new line. Headings always sit on a line of their own.",
+        new("Formatting", "Press Enter in a card field for a new line. Headings and bullet points always sit on a line of their own.",
         [
             new("Bold", @"\B{bold text}"),
             new("Italic", @"\I{italic text}"),
@@ -33,6 +33,8 @@ public partial class SyntaxGuideWindow : Window
             new("Heading", @"\H1{Big heading}"),
             new("Subheading", @"\H2{Smaller heading}"),
             new("Small heading", @"\H3{Smallest heading}"),
+            new("Bullet points", "- First point\n- Second point, with $x^2$"),
+            new("A dash at the start of a line", @"\- not a bullet point"),
             new("Maths in the line", @"The area is $\pi r^2$."),
             new("Maths on its own line", @"$$E = mc^2$$"),
             new("A dollar sign", @"It costs \$5."),
@@ -93,6 +95,7 @@ public partial class SyntaxGuideWindow : Window
             new(["Ctrl+1"], "Heading"),
             new(["Ctrl+2"], "Subheading"),
             new(["Ctrl+3"], "Small heading"),
+            new(["Ctrl+P"], "Bullet points (on every line selected)"),
             new(["Ctrl+M"], "Maths in the line"),
             new(["Ctrl+Shift+M"], "Maths on its own line"),
             new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),

@@ -15,7 +15,8 @@ using LineStyle = CSharpMath.Atom.LineStyle;
 namespace ReviFlash.Views;
 
 /// <summary>
-/// Card text with inline $...$ and display $$...$$ maths, plus \B{...}, \I{...}, \U{...} and headings \H1{...} to \H3{...}.
+/// Card text with inline $...$ and display $$...$$ maths, plus \B{...}, \I{...}, \U{...}, headings \H1{...} to \H3{...}
+/// and bullet points (lines starting "- ").
 /// Used everywhere card content is shown so the editor previews and review screen match.
 /// Text is laid out by Avalonia (in the app font, or Latin Modern with the LaTeX font setting) and each
 /// formula is typeset by CSharpMath and placed inline on the text baseline.
@@ -90,8 +91,10 @@ public class MathText : Decorator
         var size = base.MeasureOverride(availableSize);
         if (!IsCentered || Child is not Panel panel) return size;
 
+        // A list reads as a list, so any bullet point keeps everything left-aligned too.
         var paragraphs = panel.Children.OfType<TextBlock>().ToList();
-        var alignment = paragraphs.Any(p => p.TextLayout.TextLines.Count > 1) ? TextAlignment.Left : TextAlignment.Center;
+        var alignment = paragraphs.Any(p => p.TextLayout.TextLines.Count > 1) || panel.Children.Any(IsBulletRow)
+            ? TextAlignment.Left : TextAlignment.Center;
         foreach (var paragraph in paragraphs) paragraph.TextAlignment = alignment;
         return size;
     }
@@ -133,6 +136,7 @@ public class MathText : Decorator
         var panel = new StackPanel();
         TextBlock? paragraph = null;
         var paragraphHeading = 0;
+        var paragraphBullet = false;
 
         foreach (var segment in segments)
         {
@@ -146,20 +150,23 @@ public class MathText : Decorator
                 continue;
             }
 
-            if (segment is LineBreakSegment && paragraphHeading > 0)
+            if (segment is LineBreakSegment && (paragraphHeading > 0 || paragraphBullet))
             {
-                // A heading is a line of its own, so the line break after it just ends it.
+                // A heading or bullet point is a line of its own, so the line break after it just ends it.
                 paragraph = null;
                 paragraphHeading = 0;
+                paragraphBullet = false;
                 continue;
             }
 
-            // Headings are their own paragraph, larger than the text around them.
+            // Headings and bullet points are their own paragraph: a heading larger than the text around it, a point
+            // with a bullet beside it.
             var heading = segment switch { TextSegment t => t.Heading, MathSegment m => m.Heading, _ => paragraphHeading };
-            if (paragraph is not null && heading != paragraphHeading)
+            var bullet = segment switch { TextSegment t => t.Bullet, MathSegment m => m.Bullet, _ => paragraphBullet };
+            if (paragraph is not null && (heading != paragraphHeading || bullet != paragraphBullet))
             {
-                // The heading starts its own line, so a line break just before it would leave a gap.
-                if (heading > 0 && paragraph.Inlines!.Count > 0 && paragraph.Inlines[^1] is LineBreak)
+                // It starts its own line, so a line break just before it would leave a gap.
+                if ((heading > 0 || bullet) && paragraph.Inlines!.Count > 0 && paragraph.Inlines[^1] is LineBreak)
                     paragraph.Inlines.RemoveAt(paragraph.Inlines.Count - 1);
                 paragraph = null;
             }
@@ -168,9 +175,10 @@ public class MathText : Decorator
             {
                 paragraph = CreateParagraph(null, heading);
                 paragraphHeading = heading;
+                paragraphBullet = bullet;
                 // Room above a heading, separating it from what came before.
                 if (heading > 0 && panel.Children.Count > 0) paragraph.Margin = new Thickness(0, FontSize * 0.6, 0, 0);
-                panel.Children.Add(paragraph);
+                panel.Children.Add(bullet ? CreateBulletRow(paragraph, heading) : paragraph);
             }
 
             if (segment is MathSegment inline)
@@ -186,6 +194,32 @@ public class MathText : Decorator
 
         return panel;
     }
+
+    /// <summary> A bullet point: the bullet, then the point's text, wrapping under itself rather than under the bullet. </summary>
+    private Grid CreateBulletRow(TextBlock paragraph, int heading)
+    {
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto, *"), Tag = BulletRowTag, Margin = paragraph.Margin };
+        paragraph.Margin = default;
+        paragraph.TextAlignment = TextAlignment.Left;
+
+        var dot = new TextBlock
+        {
+            Text = "•",
+            FontSize = SizeFor(heading),
+            Foreground = Foreground,
+            Margin = new Thickness(FontSize * 0.3, 0, FontSize * 0.5, 0),
+        };
+        if (_builtWithLatexFont == true) dot.FontFamily = LatinModernFaces[0];
+
+        Grid.SetColumn(paragraph, 1);
+        row.Children.Add(dot);
+        row.Children.Add(paragraph);
+        return row;
+    }
+
+    private const string BulletRowTag = "bullet";
+
+    private static bool IsBulletRow(Control control) => control is Grid { Tag: BulletRowTag };
 
     private TextBlock CreateParagraph(IEnumerable<TextSegment>? text, int heading = 0)
     {
@@ -223,7 +257,7 @@ public class MathText : Decorator
     private static TextSegment Fallback(MathSegment math)
     {
         var delimiter = math.Display ? "$$" : "$";
-        return new TextSegment(delimiter + math.Source + delimiter, false, false, Heading: math.Heading);
+        return new TextSegment(delimiter + math.Source + delimiter, false, false, Heading: math.Heading, Bullet: math.Bullet);
     }
 
     /// <summary> The maths as typed, and in the editor a note saying why it isn't rendered. </summary>
@@ -231,7 +265,7 @@ public class MathText : Decorator
     {
         yield return Fallback(math);
         if (ShowErrors && CrashesTypesetter(math.Latex))
-            yield return new TextSegment(" (this maths can't be displayed; try removing spacing such as \\; between symbols)", false, false, Heading: math.Heading);
+            yield return new TextSegment(" (this maths can't be displayed; try removing spacing such as \\; between symbols)", false, false, Heading: math.Heading, Bullet: math.Bullet);
     }
 
     private static readonly Dictionary<string, bool> TypesetterCrashes = new();

@@ -8,19 +8,20 @@ namespace ReviFlash.Utilities;
 public abstract record CardSegment;
 
 /// <summary>
-/// Literal text, styled by any \B{...} / \I{...} / \U{...} it sits in, and in a heading (1 to 3) when inside \H1{...} to \H3{...}.
+/// Literal text, styled by any \B{...} / \I{...} / \U{...} it sits in, in a heading (1 to 3) when inside \H1{...} to \H3{...},
+/// and part of a bullet point when its line starts with "- ".
 /// </summary>
-public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false, int Heading = 0) : CardSegment;
+public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false, int Heading = 0, bool Bullet = false) : CardSegment;
 
 /// <summary> Maths ready for CSharpMath, plus what the user typed for falling back to. </summary>
-public sealed record MathSegment(string Latex, string Source, bool Display, int Heading = 0) : CardSegment;
+public sealed record MathSegment(string Latex, string Source, bool Display, int Heading = 0, bool Bullet = false) : CardSegment;
 
 public sealed record LineBreakSegment : CardSegment;
 
 /// <summary>
 /// Turns card text into segments for rendering: styled text, line breaks, and maths ready for CSharpMath.
-/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, headings \H1{...} to \H3{...}, \$
-/// and cloze blanks \C{...} (shown bold);
+/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, headings \H1{...} to \H3{...},
+/// bullet points (a line starting "- "), \$, \- and cloze blanks \C{...} (shown bold);
 /// inside, the maths is passed through with rewrites for commands CSharpMath lacks.
 /// </summary>
 public static partial class LatexUtility
@@ -90,6 +91,7 @@ public static partial class LatexUtility
         // heading, '{' for a literal brace.
         var braces = new Stack<char>();
         var i = 0;
+        var bullet = false;
 
         // The innermost heading wins (a stack enumerates from the top).
         int Heading() => braces.FirstOrDefault(char.IsAsciiDigit) is var level and not '\0' ? level - '0' : 0;
@@ -97,12 +99,21 @@ public static partial class LatexUtility
         void FlushText()
         {
             if (text.Length == 0) return;
-            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I'), braces.Contains('U'), Heading()));
+            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I'), braces.Contains('U'), Heading(), bullet));
             text.Clear();
         }
 
         while (i < input.Length)
         {
+            // A line that starts with "- " (after any spaces) is a bullet point, up to the line break.
+            if ((i == 0 || input[i - 1] == '\n') && TryReadBullet(input, i, out var pointStart))
+            {
+                FlushText();
+                bullet = true;
+                i = pointStart;
+                continue;
+            }
+
             var c = input[i];
 
             if (c == '$')
@@ -116,7 +127,7 @@ public static partial class LatexUtility
                 {
                     FlushText();
                     var source = input[start..end];
-                    segments.Add(new MathSegment(ToMathLatex(source), source, display, Heading()));
+                    segments.Add(new MathSegment(ToMathLatex(source), source, display, Heading(), bullet));
                     i = end + delimiter.Length;
                     continue;
                 }
@@ -129,9 +140,10 @@ public static partial class LatexUtility
 
             if (c == '\\')
             {
-                if (i + 1 < input.Length && input[i + 1] == '$')
+                // \$ is a dollar sign and \- a dash, so a line can start with one without becoming a bullet point.
+                if (i + 1 < input.Length && input[i + 1] is '$' or '-')
                 {
-                    text.Append('$');
+                    text.Append(input[i + 1]);
                     i += 2;
                     continue;
                 }
@@ -176,6 +188,7 @@ public static partial class LatexUtility
             if (c == '\n')
             {
                 FlushText();
+                bullet = false;
                 segments.Add(new LineBreakSegment());
             }
             else if (c != '\r')
@@ -367,9 +380,18 @@ public static partial class LatexUtility
         command = default;
         if (index + 2 >= input.Length) return false;
         var name = input[index + 1];
-        if ((name != 'B' && name != 'I' && name != 'U') || input[index + 2] != '{') return false;
+        if (name is not ('B' or 'I' or 'U') || input[index + 2] != '{') return false;
         command = name;
         return true;
+    }
+
+    /// <summary> "- " at the start of a line, after any spaces; <paramref name="pointStart"/> is where the point's text begins. </summary>
+    private static bool TryReadBullet(string input, int lineStart, out int pointStart)
+    {
+        var i = lineStart;
+        while (i < input.Length && input[i] is ' ' or '\t') i++;
+        pointStart = i + 2;
+        return i + 1 < input.Length && input[i] == '-' && input[i + 1] == ' ';
     }
 
     /// <summary> \H1{, \H2{ or \H3{, giving the level as its digit. </summary>

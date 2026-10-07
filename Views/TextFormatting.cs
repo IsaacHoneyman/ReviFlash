@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -13,7 +14,8 @@ public static class TextFormatting
 {
     /// <summary>
     /// The wrapping for a formatting shortcut: Ctrl (Cmd on macOS) + B / I / U / M / 1–3, Shift+M for display maths,
-    /// and Shift+C for a cloze blank when <paramref name="allowCloze"/>. Null for any other key.
+    /// and Shift+C for a cloze blank when <paramref name="allowCloze"/>. Null for any other key. Bullet points (Ctrl+P)
+    /// aren't a wrapping: see <see cref="IsBulletShortcut"/>.
     /// </summary>
     public static (string Open, string Close)? ShortcutFor(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys, bool allowCloze)
     {
@@ -34,6 +36,46 @@ public static class TextFormatting
             (Key.C, true) when allowCloze => (@"\C{", "}"),
             _ => null,
         };
+    }
+
+    /// <summary> Ctrl (Cmd on macOS) + P: turn the selected lines into bullet points, or back. </summary>
+    public static bool IsBulletShortcut(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys)
+    {
+        var command = hotkeys?.CommandModifiers ?? KeyModifiers.Control;
+        return e.Key == Key.P && e.KeyModifiers.HasFlag(command) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+    }
+
+    /// <summary>
+    /// Makes every line the selection touches (or the cursor's line) a bullet point by starting it with "- ". If they all
+    /// already are, the bullets are removed instead.
+    /// </summary>
+    public static void ToggleBullets(TextBox box)
+    {
+        var text = box.Text ?? "";
+        var start = Math.Min(box.SelectionStart, box.SelectionEnd);
+        var end = Math.Max(box.SelectionStart, box.SelectionEnd);
+
+        // The whole lines the selection touches.
+        var firstLine = start == 0 ? 0 : text.LastIndexOf('\n', start - 1) + 1;
+        var lastLineEnd = text.IndexOf('\n', end);
+        if (lastLineEnd < 0) lastLineEnd = text.Length;
+
+        var lines = text[firstLine..lastLineEnd].Split('\n');
+        var allBullets = lines.All(line => line.TrimStart(' ', '\t').StartsWith("- ", StringComparison.Ordinal));
+        var changed = lines.Select(line =>
+        {
+            var indent = line.Length - line.TrimStart(' ', '\t').Length;
+            return allBullets ? line.Remove(indent, 2) : line.Insert(indent, "- ");
+        });
+        var replaced = string.Join('\n', changed);
+
+        box.Text = text[..firstLine] + replaced + text[lastLineEnd..];
+
+        // Keep the same lines selected, or the cursor where it was in its line.
+        var shift = allBullets ? -2 : 2;
+        if (start == end) Select(box, Math.Max(firstLine, start + shift), Math.Max(firstLine, start + shift));
+        else Select(box, firstLine, firstLine + replaced.Length);
+        box.Focus();
     }
 
     /// <summary>
