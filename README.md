@@ -33,6 +33,8 @@ Updates are handled automatically within ReviFlash! On startup the app checks wh
 
 ## New in 1.3
 
+**1.3.1**: bullet points. Start a line with `- ` and it shows as a bullet point, in notes and cards, with wrapped text lined up under the point. The new **• Point** button next to H1–H3, or Ctrl+P (Cmd+P on macOS), turns the selected lines into bullet points or back. Type `\-` for a dash at the start of a line that isn't a bullet point, and lists in Anki decks now import as bullet points.
+
 **Lecture notes**
 - Write your notes in ReviFlash, next to your flashcards: create one from **+ New → Note**. Notes use the same formatting, headings and LaTeX maths as cards, so the maths in your notes renders properly too.
 - Each paragraph shows formatted until you click it, then you edit it as typed text. Press Esc or click elsewhere when you're done, and leave a blank line to start a new paragraph.

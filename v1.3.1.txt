@@ -1,4 +1,0 @@
-Bullet points: start a line with "- " and it shows as a bullet point, in notes and cards, with wrapped text lined up under the point
-A • Point button next to H1, H2 and H3, and Ctrl+P (Cmd+P on macOS), turn the selected lines into bullet points, or back
-Type \- for a dash at the start of a line that isn't a bullet point
-Lists in Anki decks (and \item in [latex] blocks) import as bullet points
