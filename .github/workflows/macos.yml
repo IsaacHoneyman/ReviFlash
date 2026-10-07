@@ -41,12 +41,23 @@ jobs:
             -c Release \
             -r osx-arm64 \
             --self-contained true \
+            -p:PublishReadyToRun=true \
             -o publish/osx-arm64
 
       - name: Pack with Velopack
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Earlier macOS packages (if any) let vpk build delta updates; none exist on the first release.
-          vpk download github --repoUrl https://github.com/${{ github.repository }} -o releases || true
+          # The previous macOS release lets vpk build a delta update. It's the newest published release other than this
+          # version, so re-running the build for a version that's already out still diffs against the one before.
+          # Signed in with the workflow's token: unauthenticated downloads from shared runners hit GitHub's rate limit.
+          PREVIOUS=$(gh release list --repo ${{ github.repository }} --exclude-drafts --json tagName -q '.[].tagName' \
+            | grep -vx "$VERSION" | head -1)
+          echo "Previous release: ${PREVIOUS:-none}"
+          if [ -n "$PREVIOUS" ]; then
+            gh release download "$PREVIOUS" --repo ${{ github.repository }} -D releases \
+              --pattern '*-osx-full.nupkg' --pattern 'releases.osx.json' || true
+          fi
           vpk pack \
             -u ReviFlash \
             -v "$VERSION" \
