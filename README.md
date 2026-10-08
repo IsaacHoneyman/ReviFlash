@@ -33,6 +33,8 @@ Updates are handled automatically within ReviFlash! On startup the app checks wh
 
 ## New in 1.3
 
+**1.3.3**: searching is faster in a big library, and a folder found by search shows where it lives on its summary line. Buttons keep their colours when you hover over them, Cancel buttons look the same everywhere, and Escape closes the Move to Folder, Study Group, Delete Stats and rename windows. Folder study time now includes time in notes. Deleting stats, or a set, group or folder, clears its best answer streak too, and a set downloaded into new folders from the Cloud Manager shows up straight away.
+
 **1.3.2**: Ctrl+L (Cmd+L on macOS) selects the line you're on, in notes and card fields; press it again to take in the next line too. In a note, Backspace at the start of a paragraph joins it onto the paragraph before.
 
 **1.3.1**: bullet points. Start a line with `- ` and it shows as a bullet point, in notes and cards, with wrapped text lined up under the point. The new **• Point** button next to H1–H3, or Ctrl+P (Cmd+P on macOS), turns the selected lines into bullet points or back. Type `\-` for a dash at the start of a line that isn't a bullet point, and lists in Anki decks now import as bullet points.
