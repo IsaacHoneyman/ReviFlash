@@ -106,6 +106,7 @@ public partial class SyntaxGuideWindow : Window
             new(["↑"], "On its first line: edit the paragraph before"),
             new(["↓"], "On its last line: edit the paragraph after"),
             new(["Enter ×2"], "A blank line starts a new paragraph"),
+            new(["Backspace"], "At its start: join it onto the paragraph before"),
         ]),
         new("Make Card", null,
         [

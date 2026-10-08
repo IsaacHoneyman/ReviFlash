@@ -173,7 +173,7 @@ public partial class NoteView : UserControl
 
     /// <summary>
     /// In a paragraph being edited: Esc finishes it, Up on its first line and Down on its last move to the paragraph
-    /// before or after, and the formatting shortcuts wrap the selection.
+    /// before or after, Backspace at its start joins it onto the one before, and the formatting shortcuts wrap the selection.
     /// </summary>
     private void Note_KeyDown(object? sender, KeyEventArgs e)
     {
@@ -200,6 +200,13 @@ public partial class NoteView : UserControl
                 vm.SplitEditingAt(caret);
                 e.Handled = true;
             }
+            return;
+        }
+
+        // Backspace at the very start joins this paragraph onto the one before.
+        if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Back && box.SelectionStart == box.SelectionEnd && box.CaretIndex == 0)
+        {
+            e.Handled = vm.MergeEditingIntoPrevious();
             return;
         }
 

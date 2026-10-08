@@ -193,6 +193,37 @@ public partial class NoteViewModel : ViewModelBase
         BeginEdit(next, caret: 0);
     }
 
+    /// <summary>
+    /// Joins the paragraph being edited onto the end of the one before (Backspace at its start, undoing the blank
+    /// line between them), and carries on editing there with the cursor where the two meet.
+    /// </summary>
+    public bool MergeEditingIntoPrevious()
+    {
+        if (EditingBlock is not { } block) return false;
+        var index = Blocks.IndexOf(block);
+        if (index <= 0) return false;
+
+        var previous = Blocks[index - 1];
+        var before = previous.Text.TrimEnd('\r', '\n');
+        var after = block.Text;
+
+        string joined;
+        int caret;
+        if (string.IsNullOrWhiteSpace(before)) (joined, caret) = (after, 0);
+        else if (string.IsNullOrWhiteSpace(after)) (joined, caret) = (before, before.Length);
+        else (joined, caret) = (before + "\n" + after, before.Length + 1);
+
+        // Not committed: committing would re-split and save a paragraph that's about to go.
+        EditingBlock = null;
+        block.IsEditing = false;
+        RemoveBlock(block);
+
+        previous.Text = joined;
+        BeginEdit(previous, caret);
+        RefreshContents();
+        return true;
+    }
+
     /// <summary> Edits the paragraph before the one being edited, with the cursor at its end. </summary>
     public bool EditPrevious()
     {
