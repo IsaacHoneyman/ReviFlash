@@ -21,7 +21,6 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
     public ObservableCollection<FlashCardDeck> AvailableDecks { get; } = [];
     public ObservableCollection<FlashCardDeck> SelectedDecks { get; } = [];
 
-    /// <summary> Folder-aware picker over <see cref="AvailableDecks"/>. </summary>
     public DeckFolderBrowser AvailableBrowser { get; }
 
     public bool IsEditing => _editingGroup != null;

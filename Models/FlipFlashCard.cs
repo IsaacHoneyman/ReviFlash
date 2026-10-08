@@ -11,7 +11,7 @@ public class FlipFlashCard : FlashCard
     /// <summary> The back-to-front question a review session made from a reversible card. </summary>
     public bool IsReversedCopy { get; private init; }
 
-    /// <summary> Same card ID, so stats still go to the card's deck. </summary>
+    /// <summary> Keeps the card ID so stats go to the card's deck. </summary>
     public FlipFlashCard CreateReversedCopy() => new(Back, Front, ID) { IsReversedCopy = true };
 
     public override bool VerifyAnswer(object answer) { return true; }

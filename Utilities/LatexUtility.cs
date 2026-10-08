@@ -7,10 +7,7 @@ namespace ReviFlash.Utilities;
 
 public abstract record CardSegment;
 
-/// <summary>
-/// Literal text, styled by any \B{...} / \I{...} / \U{...} it sits in, in a heading (1 to 3) when inside \H1{...} to \H3{...},
-/// and part of a bullet point when its line starts with "- ".
-/// </summary>
+/// <summary> Literal text with the \B / \I / \U styling, \H1 to \H3 heading level and bullet point it sits in. </summary>
 public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false, int Heading = 0, bool Bullet = false) : CardSegment;
 
 /// <summary> Maths ready for CSharpMath, plus what the user typed for falling back to. </summary>
@@ -18,16 +15,9 @@ public sealed record MathSegment(string Latex, string Source, bool Display, int 
 
 public sealed record LineBreakSegment : CardSegment;
 
-/// <summary>
-/// Turns card text into segments for rendering: styled text, line breaks, and maths ready for CSharpMath.
-/// Outside $...$ / $$...$$ everything is literal apart from \B{...}, \I{...}, \U{...}, headings \H1{...} to \H3{...},
-/// bullet points (a line starting "- "), \$, \- and cloze blanks \C{...} (shown bold);
-/// inside, the maths is passed through with rewrites for commands CSharpMath lacks.
-/// </summary>
+/// <summary> Card text to render segments: outside maths only \B, \I, \U, \H1 to \H3, "- " bullets, \$, \- and \C{...} are special; maths is rewritten for CSharpMath. </summary>
 public static partial class LatexUtility
 {
-    // --- Regex ---
-
     [GeneratedRegex(@"\\(?:big|Big|bigg|Bigg)[lrm]?(?![a-zA-Z])")]
     private static partial Regex SizedDelimiterRegex();
 
@@ -73,22 +63,20 @@ public static partial class LatexUtility
         ["lnot"] = @"\neg",
         ["prime"] = "'",
         ["bmod"] = @"\;\mathrm{mod}\;",
-        // AvaloniaMath spellings found in existing decks.
+        // AvaloniaMath spellings some decks use.
         ["mod"] = @"\mathrm{mod}\,",
         ["cosec"] = @"\operatorname{cosec}",
         ["lbrack"] = "[",
         ["rbrack"] = "]",
     };
 
-    /// <summary> Splits card text into styled text, maths and line breaks. </summary>
     public static List<CardSegment> Parse(string? input)
     {
         var segments = new List<CardSegment>();
         if (string.IsNullOrEmpty(input)) return segments;
 
         var text = new StringBuilder();
-        // One entry per open brace in the text: 'B' / 'I' / 'U' for a \B{ / \I{ / \U{ group, '1' to '3' for a
-        // heading, '{' for a literal brace.
+        // One entry per open brace: 'B' / 'I' / 'U' for a format group, '1' to '3' for a heading, '{' for a literal brace.
         var braces = new Stack<char>();
         var i = 0;
         var bullet = false;
@@ -236,11 +224,7 @@ public static partial class LatexUtility
         return math;
     }
 
-    /// <summary>
-    /// CSharpMath measures each table row from its first cell's left edge, so when that cell is centred
-    /// or right-aligned in a wider column the table comes out too narrow and following content overlaps it.
-    /// An empty first column pins every row to x = 0, and an empty last column keeps the padding even.
-    /// </summary>
+    /// <summary> Adds empty first and last columns, since CSharpMath measures rows from the first cell's left edge and a centred cell otherwise overlaps what follows. </summary>
     private static string PadTables(string math)
     {
         var begins = TableBeginRegex().Matches(math);
@@ -271,8 +255,7 @@ public static partial class LatexUtility
 
             if (environment == "aligned")
             {
-                // aligned only allows 2 columns, so it becomes the array it lays out as: right, then left
-                // with an empty atom before the second cell for the spacing around =.
+                // aligned allows only 2 columns, so it becomes an "rl" array with an empty atom before the second cell for the spacing around =.
                 for (var r = 0; r < rows.Count; r++)
                 {
                     var cells = SplitTopLevel(rows[r], "&");

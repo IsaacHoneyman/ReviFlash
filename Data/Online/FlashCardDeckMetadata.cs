@@ -21,7 +21,7 @@ public partial class FlashCardDeckMetadata : ObservableObject, ISearchable
     [JsonIgnore] public bool IsPrivate => Visibility == SupabaseConnection.PrivateVisibility;
     [JsonIgnore] public string VisibilityToggleText => IsPrivate ? "Make Public" : "Make Private";
 
-    /// <summary> Distinct signed-in users who have downloaded the deck. Observable: a download updates it in place. </summary>
+    /// <summary> Distinct signed-in users who have downloaded the deck; observable so a download updates it in place. </summary>
     [property: JsonPropertyName("download_count")]
     [NotifyPropertyChangedFor(nameof(DownloadCountText))]
     [ObservableProperty] private int _downloadCount;
@@ -39,7 +39,7 @@ public partial class FlashCardDeckMetadata : ObservableObject, ISearchable
     [JsonPropertyName("created_at")] public DateTimeOffset? CreatedAt { get; set; }
     [JsonPropertyName("updated_at")] public DateTimeOffset? UpdatedAt { get; set; }
 
-    /// <summary> What every 1.0 upload put in the description; since 1.1 the description is the folder path. </summary>
+    /// <summary> Placeholder description some uploaded decks carry; treated as no description. </summary>
     private const string LegacyDescription = "Uploaded via ReviFlash Desktop";
 
     [JsonIgnore] public bool HasDescription => !string.IsNullOrWhiteSpace(Description) && Description != LegacyDescription;
@@ -51,12 +51,10 @@ public partial class FlashCardDeckMetadata : ObservableObject, ISearchable
     [JsonIgnore] public int SortCardCount => CardCount;
     [JsonIgnore] public int SortDownloads => DownloadCount;
 
-    // Cloud decks carry no local study history, so the recency sort uses when they were
-    // last published instead.
+    // Cloud decks have no local study history, so the recency sort uses their last publish time.
     [JsonIgnore] public DateTime? SortLastActivity => (UpdatedAt ?? CreatedAt)?.UtcDateTime;
 }
 
-/// <summary> The public part of a deck owner's profile. </summary>
 public sealed class DeckOwnerProfile
 {
     [JsonPropertyName("display_name")] public string? DisplayName { get; set; }

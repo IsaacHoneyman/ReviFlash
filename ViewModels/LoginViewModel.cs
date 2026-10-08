@@ -14,11 +14,7 @@ public enum LoginMode
     ResetPassword,
 }
 
-/// <summary>
-/// The single sign-in flow for ReviFlash Online: sign in, create an account, or reset a
-/// forgotten password with an emailed code. Raises <see cref="SignedIn"/> once a session
-/// has been stored.
-/// </summary>
+/// <summary> ReviFlash Online sign-in, sign-up and emailed-code password reset. </summary>
 public partial class LoginViewModel : ViewModelBase
 {
     // Supabase's default minimum; the server is the real authority.

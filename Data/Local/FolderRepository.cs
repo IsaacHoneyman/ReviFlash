@@ -6,19 +6,12 @@ using ReviFlash.Models;
 
 namespace ReviFlash.Data.Local;
 
-/// <summary>
-/// Folder storage. Folders only ever record where a set, note or group is filed; deleting or
-/// moving one never touches the cards, notes, stats or group memberships underneath it, unless
-/// <see cref="DeleteFolderAndContents"/> is asked to take them too.
-/// </summary>
+/// <summary> Folders only record where items are filed; only <see cref="DeleteFolderAndContents"/> touches what's inside them. </summary>
 public static class FolderRepository
 {
     // --- Reads ---
 
-    /// <summary>
-    /// Every folder, flat, parent links included. Counts are derived by the caller from
-    /// the sets and groups it already holds, so they always agree with what is on screen.
-    /// </summary>
+    /// <summary> Every folder, flat; callers derive counts from the sets and groups they hold, so they match the screen. </summary>
     public static List<Folder> GetAllFolders()
     {
         var folders = new List<Folder>();
@@ -94,10 +87,7 @@ public static class FolderRepository
         command.ExecuteNonQuery();
     }
 
-    /// <summary>
-    /// Removes a folder and lifts everything inside it (subfolders, sets, notes and groups) up to
-    /// the deleted folder's own parent. Nothing is ever deleted along with the folder.
-    /// </summary>
+    /// <summary> Removes a folder and lifts everything inside it up to its parent; nothing else is deleted. </summary>
     public static void DeleteFolder(ulong folderID)
     {
         using var connection = DatabaseManager.GetConnection();
@@ -139,10 +129,7 @@ public static class FolderRepository
         return (subtreeIDs.Count - 1, reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2), reader.GetInt32(3));
     }
 
-    /// <summary>
-    /// Deletes a folder with everything beneath it: subfolders, groups, notes, and sets with their cards and stats
-    /// (which go with their set). <paramref name="subtreeIDs"/> is the folder and all its descendants.
-    /// </summary>
+    /// <summary> Deletes a folder and its descendants (the subtree IDs) with all their groups, notes, sets, cards and stats. </summary>
     public static void DeleteFolderAndContents(ICollection<ulong> subtreeIDs)
     {
         using var connection = DatabaseManager.GetConnection();

@@ -113,10 +113,7 @@ public partial class OnlineImportViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Ranks what the server returned locally, so cloud results come back in the same
-    /// order a local search would produce.
-    /// </summary>
+    /// <summary> Ranks the server's results locally, in the same order a local search would produce. </summary>
     private void ApplyOrdering()
     {
         SearchResults.Clear();

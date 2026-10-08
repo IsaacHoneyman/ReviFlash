@@ -35,8 +35,7 @@ public static class DeckTransferManager
         return JsonSerializer.Serialize(payload, TextUtility.Indented);
     }
 
-    /// <param name="targetFolderID"> Folder the downloaded set is filed into; null for the main menu. </param>
-    /// <param name="recreateFolders"> Rebuild the uploader's folder path beneath <paramref name="targetFolderID"/>. </param>
+    /// <summary> Imports a downloaded deck into the target folder (null for the main menu), optionally rebuilding the uploader's folders beneath it. </summary>
     public static void TryImportCloudDeck(string jsonPayload, ulong? targetFolderID = null, bool recreateFolders = false)
     {
         using var document = JsonDocument.Parse(jsonPayload);
@@ -53,7 +52,7 @@ public static class DeckTransferManager
 
         DatabaseManager.InitDatabase();
 
-        // Uploads from before 1.1 carry no FolderPath and land directly in the target folder.
+        // Uploads without a FolderPath land directly in the target folder.
         if (recreateFolders && root.TryGetProperty("FolderPath", out var pathProp) && pathProp.ValueKind == JsonValueKind.Array)
         {
             var folderNames = pathProp.EnumerateArray()

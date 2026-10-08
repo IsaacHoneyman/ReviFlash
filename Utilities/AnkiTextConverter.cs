@@ -7,10 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace ReviFlash.Utilities;
 
-/// <summary>
-/// Turns an Anki field (HTML, MathJax \(...\) / \[...\], [latex]...[/latex], {{c1::...}} clozes) into ReviFlash card text
-/// ($...$ / $$...$$, \B / \I / \U, \H1 to \H3, \C1{...}). Images can't come across yet and are left as "[image]".
-/// </summary>
+/// <summary> Turns an Anki field (HTML, MathJax, [latex]...[/latex], {{c1::...}} clozes) into card text; images become "[image]". </summary>
 public static partial class AnkiTextConverter
 {
     public const string ImagePlaceholder = "[image]";
@@ -164,8 +161,7 @@ public static partial class AnkiTextConverter
         foreach (var (escaped, literal) in LatexEscapes)
             text = text.Replace(escaped, literal);
 
-        // Any other command (\large, \centering...) is dropped, and so are braces that only grouped text
-        // (literal \{ and \} are kept out of the way meanwhile).
+        // Drop any other command (\large, \centering...) and braces that only grouped text, shielding literal \{ and \} meanwhile.
         text = text.Replace(@"\{", "\u0006").Replace(@"\}", "\u0007");
         text = UnknownCommandRegex().Replace(text, "");
         text = RemoveGroupingBraces(text).Replace('\u0006', '{').Replace('\u0007', '}');
@@ -223,8 +219,6 @@ public static partial class AnkiTextConverter
 
     private static string RestoreMaths(string text, List<string> maths) =>
         MathPlaceholderRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
-
-    // --- HTML ---
 
     private static string ConvertHtml(string html, out bool hadImage)
     {

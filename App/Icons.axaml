@@ -1,21 +1,7 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!--
-        ReviFlash icon set.
-
-        Every glyph is drawn on the same 24x24 grid with round caps and joins, and is sized
-        to a shared 17x17 live area centred on (12,12). That matters: Stretch="Uniform"
-        fits a Path to its own ink bounds, so glyphs drawn to different extents would
-        render at different apparent sizes and sit off-centre from one another. Keep new
-        icons inside the same live area. Avalonia applies StrokeThickness in control space
-        rather than scaling it with Stretch, which means the weight set by the Path styles
-        below stays visually identical whether an icon is drawn at 15px or 24px.
-
-        These replace the emoji the interface used to rely on: emoji pick up a colour font
-        that varies by platform, ignore the active theme, and are missing outright on some
-        Linux systems.
-    -->
+    <!-- Keep every glyph inside the 17x17 live area centred on (12,12) of a 24x24 grid, since Stretch="Uniform" fits each Path to its ink bounds. -->
 
     <StreamGeometry x:Key="IconItalic">M10 4 L 19 4 M5 20 L 14 20 M14.5 4 L 9.5 20</StreamGeometry>
     <StreamGeometry x:Key="IconEdit">M17.96 3.56 A 1.75 1.75 0 0 1 20.44 6.04 L 8.04 18.44 L 3.5 20.5 L 5.56 15.96 Z M14.96 6.56 L 17.44 9.04</StreamGeometry>
@@ -39,7 +25,6 @@
 
     <StreamGeometry x:Key="IconGlobe">M3.5 12 A 8.5 8.5 0 1 0 20.5 12 A 8.5 8.5 0 1 0 3.5 12 Z M3.5 12 L 20.5 12 M12 3.5 A 4 8.5 0 0 1 12 20.5 A 4 8.5 0 0 1 12 3.5 Z</StreamGeometry>
 
-    <!-- Replace the ✕ ✓ + ↔ text symbols, which depend on the platform's fonts. -->
     <StreamGeometry x:Key="IconClose">M5.5 5.5 L 18.5 18.5 M18.5 5.5 L 5.5 18.5</StreamGeometry>
 
     <StreamGeometry x:Key="IconPlus">M12 3.5 L 12 20.5 M3.5 12 L 20.5 12</StreamGeometry>

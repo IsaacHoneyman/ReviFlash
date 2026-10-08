@@ -12,20 +12,14 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary>
-/// Cloud Manager: upload local decks, and update, download, list/unlist or delete your own cloud decks.
-/// Only ever opened once signed in (see <see cref="AuthSession"/>).
-/// </summary>
+/// <summary> Cloud Manager: upload local decks and manage your own cloud decks. Only opened once signed in. </summary>
 public partial class OnlineExportViewModel : ViewModelBase
 {
     public string AccountText => $"Signed in as {AuthSession.Username}";
 
     [ObservableProperty] private string _statusMessage = string.Empty;
 
-    /// <summary>
-    /// Uploads carry the deck's folder path (shown as the cloud description), and downloads
-    /// rebuild it.
-    /// </summary>
+    /// <summary> Uploads carry the folder path as the cloud description, and downloads rebuild it. </summary>
     [ObservableProperty] private bool _includeFolderInfo;
 
     /// <summary> New uploads stay out of community search, visible only to their owner. </summary>

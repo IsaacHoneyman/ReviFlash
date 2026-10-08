@@ -7,10 +7,7 @@ using Velopack;
 
 namespace ReviFlash.Views;
 
-/// <summary>
-/// Shows an update downloading, the startup counterpart to the progress text in Settings.
-/// The app restarts into the new version when it finishes; if it fails, says so and can be closed.
-/// </summary>
+/// <summary> Shows a startup update downloading; the app restarts when it finishes, or the window reports a failure and can be closed. </summary>
 public partial class UpdateProgressWindow : Window
 {
     private readonly UpdateClient? _client;

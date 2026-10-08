@@ -16,9 +16,7 @@ namespace ReviFlash.Views;
 
 public partial class MainWindow : Window
 {
-    // The background swirl is stepped by a timer instead of a style animation. Every step repaints the
-    // whole window, so a 60fps animation kept a CPU core busy even while minimised. It turns slowly enough
-    // that a low frame rate looks the same, and it pauses whenever the window is out of focus or minimised.
+    // Every swirl step repaints the whole window, so a low-rate timer drives it and pauses when unfocused or minimised.
     private const double SwirlFramesPerSecond = 20;
     private const double OuterSwirlSeconds = 14;
     private const double InnerSwirlSeconds = 11;

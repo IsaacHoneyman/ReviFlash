@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ReviFlash;
 
-/// <summary> Project entry point. </summary>
 sealed class Program
 {
     [STAThread]
@@ -25,7 +24,7 @@ sealed class Program
             .LogToTrace();
 }
 
-/// <summary> Given a view model, returns the corresponding view if possible. </summary>
+/// <summary> Resolves a view model to the view named by swapping "ViewModel" for "View". </summary>
 public class ViewLocator : IDataTemplate
 {
     public Control? Build(object? param)
@@ -44,7 +43,6 @@ public class ViewLocator : IDataTemplate
     public bool Match(object? data) { return data is ViewModelBase; }
 }
 
-/// <summary> Based view model class. </summary>
 public abstract class ViewModelBase : ObservableObject { }
 
 

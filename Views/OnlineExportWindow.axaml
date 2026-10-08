@@ -15,7 +15,6 @@
 
     <Grid RowDefinitions="Auto, *, Auto">
 
-        <!-- Header: title on the left, account on the right. -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,24">
             <StackPanel Grid.Column="0" Spacing="4">
                 <TextBlock Text="Cloud Manager" Foreground="{DynamicResource TextPrimary}" FontSize="32" FontWeight="Bold"/>
@@ -28,11 +27,9 @@
             </StackPanel>
         </Grid>
 
-        <!-- Dual pane workspace. Both panes share one layout (title, then search, then list)
-             so the two search bars line up. -->
+        <!-- Both panes share one layout (title, then search, then list) so the two search bars line up. -->
         <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
 
-            <!-- LEFT PANE: LOCAL DECKS -->
             <Border Grid.Column="0" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" CornerRadius="20" Padding="20">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
                     <TextBlock Text="On this device" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
@@ -40,7 +37,6 @@
                 </Grid>
             </Border>
 
-            <!-- RIGHT PANE: CLOUD DECKS -->
             <Border Grid.Column="1" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" CornerRadius="20" Padding="20">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
                     <TextBlock Text="In the cloud" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
@@ -75,7 +71,6 @@
                                                                Foreground="{DynamicResource TextSecondary}" />
                                                 </StackPanel>
 
-                                                <!-- Same compact icon buttons as the set cards on the main menu. -->
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                     <Button Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).DownloadCommand}" CommandParameter="{Binding}"
                                                             Background="{DynamicResource BadgeBackground}" CornerRadius="8"
@@ -116,7 +111,6 @@
             </Border>
         </Grid>
 
-        <!-- Footer: options on the left, status on the right. -->
         <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="20" Margin="0,16,0,0">
             <CheckBox Grid.Column="0" IsChecked="{Binding IncludeFolderInfo}" Content="Include folder information"
                       Foreground="{DynamicResource TextSecondary}" FontSize="13"
@@ -128,9 +122,7 @@
                        HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="16,0,0,0" />
         </Grid>
     </Grid>
-    <!-- ========================================== -->
-    <!-- OVERLAY 3: MANUAL DECK SELECTION MENU      -->
-    <!-- ========================================== -->
+    <!-- Overlay: pick the local deck that overwrites a cloud deck. -->
     <Grid Background="#B3000000" IsVisible="{Binding IsSelectingUpdateDeck}">
         <Border Background="{DynamicResource CardBackground}"
                 BorderBrush="{DynamicResource CardBorder}"

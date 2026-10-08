@@ -10,7 +10,6 @@
     Background="{DynamicResource AppBackground}">
 
     <Window.Styles>
-        <!-- Field captions. -->
         <Style Selector="TextBlock.label">
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -51,7 +50,6 @@
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
 
-        <!-- Text-only buttons. -->
         <Style Selector="Button.link">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource GradientStart}" />
@@ -75,7 +73,6 @@
 
     <StackPanel Margin="40,36,40,32" Spacing="20">
 
-        <!-- Heading -->
         <StackPanel Spacing="6">
             <TextBlock Text="{Binding Title}" FontSize="26" FontWeight="Bold"
                 Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
@@ -84,7 +81,6 @@
                 TextWrapping="Wrap" TextAlignment="Center" />
         </StackPanel>
 
-        <!-- Sign in / Create account -->
         <Border IsVisible="{Binding ShowTabs}"
             Background="{DynamicResource CardBackground}"
             BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
@@ -97,7 +93,6 @@
             </Grid>
         </Border>
 
-        <!-- Fields -->
         <StackPanel Spacing="14">
             <StackPanel Spacing="6" IsVisible="{Binding IsSignUp}">
                 <TextBlock Classes="label" Text="Username" />
@@ -140,7 +135,6 @@
             Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
             CornerRadius="8" Padding="12" FontSize="15" FontWeight="Bold" Cursor="Hand" />
 
-        <!-- Recovery footer -->
         <StackPanel IsVisible="{Binding IsRecovering}" Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
             <Button Classes="link" Content="Back to sign in" Command="{Binding ShowSignInCommand}" />
             <Button Classes="link" Content="Resend code" IsVisible="{Binding IsResetting}" Command="{Binding ResendCodeCommand}" />

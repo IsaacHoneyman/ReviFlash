@@ -12,7 +12,6 @@ using ReviFlash.Data.Local;
 
 namespace ReviFlash;
 
-/// <summary> App container. </summary>
 public partial class App : Application
 {
     public override void Initialize()

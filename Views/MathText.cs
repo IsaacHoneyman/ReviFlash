@@ -14,13 +14,7 @@ using LineStyle = CSharpMath.Atom.LineStyle;
 
 namespace ReviFlash.Views;
 
-/// <summary>
-/// Card text with inline $...$ and display $$...$$ maths, plus \B{...}, \I{...}, \U{...}, headings \H1{...} to \H3{...}
-/// and bullet points (lines starting "- ").
-/// Used everywhere card content is shown so the editor previews and review screen match.
-/// Text is laid out by Avalonia (in the app font, or Latin Modern with the LaTeX font setting) and each
-/// formula is typeset by CSharpMath and placed inline on the text baseline.
-/// </summary>
+/// <summary> Card text with $...$ / $$...$$ maths, \B, \I, \U, \H1-\H3 and "- " bullets; each formula is typeset by CSharpMath on the text baseline. </summary>
 public class MathText : Decorator
 {
     public static readonly StyledProperty<string?> TextProperty =
@@ -35,7 +29,7 @@ public class MathText : Decorator
     public static readonly StyledProperty<bool> IsCenteredProperty =
         AvaloniaProperty.Register<MathText, bool>(nameof(IsCentered));
 
-    /// <summary> Show LaTeX errors (editor previews) instead of falling back to the plain text (review). </summary>
+    /// <summary> True shows LaTeX errors (editor previews); false falls back to the plain text (review). </summary>
     public static readonly StyledProperty<bool> ShowErrorsProperty =
         AvaloniaProperty.Register<MathText, bool>(nameof(ShowErrors));
 
@@ -82,10 +76,7 @@ public class MathText : Decorator
         if (e.PropertyName == nameof(MetaDataManager.Data.UseLatexFontForCards)) Rebuild();
     }
 
-    /// <summary>
-    /// With <see cref="IsCentered"/>, text is centred only while every paragraph fits on one line: wrapped,
-    /// it reads better left-aligned. Alignment doesn't change where lines break, so one measure decides.
-    /// </summary>
+    /// <summary> With IsCentered, text is centred only while every paragraph fits on one line; alignment doesn't move line breaks, so one measure decides. </summary>
     protected override Size MeasureOverride(Size availableSize)
     {
         var size = base.MeasureOverride(availableSize);
@@ -105,10 +96,7 @@ public class MathText : Decorator
         Child = BuildView(LatexUtility.Parse(Text));
     }
 
-    /// <summary>
-    /// Text faces for the "LaTeX Font for Card Text" setting (maths is always in CSharpMath's Latin Modern Math).
-    /// One file each: given the whole folder, Avalonia picks the first file (bold) for every weight.
-    /// </summary>
+    /// <summary> One file per face: given the whole folder, Avalonia picks the first file (bold) for every weight. </summary>
     private static readonly FontFamily[] LatinModernFaces =
     [
         LatinModernFace("regular"), LatinModernFace("bold"), LatinModernFace("italic"), LatinModernFace("bolditalic"),
@@ -117,11 +105,7 @@ public class MathText : Decorator
     private static FontFamily LatinModernFace(string style) =>
         new($"avares://ReviFlash/Assets/Fonts/LatinModern/lmroman10-{style}.otf#Latin Modern Roman");
 
-    /// <summary>
-    /// CSharpMath sizes in points and Avalonia in pixels (4/3 of a point), so maths at the same number is a third
-    /// bigger than the text. 0.75 matches Latin Modern text exactly; next to Inter, whose letters are taller than
-    /// Latin Modern's, 0.9 looks the same size.
-    /// </summary>
+    /// <summary> CSharpMath sizes in points and Avalonia in pixels: 0.75 matches Latin Modern text, 0.9 matches Inter's taller letters. </summary>
     private double MathScale => _builtWithLatexFont == true ? 0.75 : 0.9;
 
     /// <summary> Text size of \H1, \H2 and \H3 relative to the body text. </summary>
@@ -159,8 +143,7 @@ public class MathText : Decorator
                 continue;
             }
 
-            // Headings and bullet points are their own paragraph: a heading larger than the text around it, a point
-            // with a bullet beside it.
+            // A change of heading level or bullet starts a new paragraph.
             var heading = segment switch { TextSegment t => t.Heading, MathSegment m => m.Heading, _ => paragraphHeading };
             var bullet = segment switch { TextSegment t => t.Bullet, MathSegment m => m.Bullet, _ => paragraphBullet };
             if (paragraph is not null && (heading != paragraphHeading || bullet != paragraphBullet))
@@ -176,7 +159,6 @@ public class MathText : Decorator
                 paragraph = CreateParagraph(null, heading);
                 paragraphHeading = heading;
                 paragraphBullet = bullet;
-                // Room above a heading, separating it from what came before.
                 if (heading > 0 && panel.Children.Count > 0) paragraph.Margin = new Thickness(0, FontSize * 0.6, 0, 0);
                 panel.Children.Add(bullet ? CreateBulletRow(paragraph, heading) : paragraph);
             }
@@ -231,8 +213,7 @@ public class MathText : Decorator
             TextAlignment = IsCentered ? TextAlignment.Center : TextAlignment.Left,
             MaxLines = MaxLines,
             TextTrimming = MaxLines > 0 ? TextTrimming.CharacterEllipsis : TextTrimming.None,
-            // A TextBlock is only as wide as its letters' advances and clips to that by default, which cuts off
-            // the overhang of an italic letter at the end of a line.
+            // A TextBlock clips to its letters' advances, cutting off an italic letter's overhang at the end of a line.
             ClipToBounds = false,
             Inlines = [],
         };
@@ -270,10 +251,7 @@ public class MathText : Decorator
 
     private static readonly Dictionary<string, bool> TypesetterCrashes = new();
 
-    /// <summary>
-    /// CSharpMath throws on some maths it parses fine, e.g. spacing between two operators ($a \times \; \div b$),
-    /// and a throw while the window lays out crashes the app. Typesetting once here, cached, finds those up front.
-    /// </summary>
+    /// <summary> CSharpMath throws on some maths it parses (e.g. $a \times \; \div b$), crashing layout, so typeset once here and cache the result. </summary>
     private static bool CrashesTypesetter(string latex)
     {
         if (TypesetterCrashes.TryGetValue(latex, out var crashes)) return crashes;
@@ -324,10 +302,7 @@ public class MathText : Decorator
     }
 }
 
-/// <summary>
-/// The last line of defence for CSharpMath throwing during layout or drawing (MathText checks maths before
-/// using it, but this keeps anything it misses from crashing the app): logs it and draws nothing.
-/// </summary>
+/// <summary> Last line of defence against CSharpMath throwing during layout or drawing: logs it and draws nothing. </summary>
 internal static class SafeTypesetting
 {
     public static Size Run(Func<Size> typeset, string? latex)
@@ -350,10 +325,7 @@ public class InlineMathView : MathView
     public override void Render(DrawingContext context) =>
         SafeTypesetting.Run(() => { base.Render(context); return Size.Infinity; }, LaTeX);
 
-    /// <summary>
-    /// Sets TextBlock.BaselineOffset from the typeset formula. Call once the LaTeX, size, style and margin are set:
-    /// the TextBlock reads it when laying out its line, which can be before this control is measured.
-    /// </summary>
+    /// <summary> Sets TextBlock.BaselineOffset; call once LaTeX, size, style and margin are set, as the TextBlock can read it before this is measured. </summary>
     public void UpdateBaseline()
     {
         var height = SafeTypesetting.Run(() => { var rect = Painter.Measure(float.NaN); return new Size(rect.Width, rect.Height); }, LaTeX).Height;

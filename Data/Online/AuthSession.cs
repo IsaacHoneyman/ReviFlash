@@ -4,11 +4,7 @@ using ReviFlash.Data.Local;
 
 namespace ReviFlash.Data.Online;
 
-/// <summary>
-/// The one place that knows whether the user is signed in to ReviFlash Online. Sessions
-/// are stored in the metadata file and quietly refreshed, so a sign-in lasts until the user
-/// signs out rather than for the hour an access token is valid.
-/// </summary>
+/// <summary> Tracks the ReviFlash Online sign-in; sessions are stored and quietly refreshed so they last until sign-out. </summary>
 public static class AuthSession
 {
     // Refresh a little early so a token never expires halfway through a request.
@@ -17,10 +13,7 @@ public static class AuthSession
     public static string? UserId => MetaDataManager.Data.SupabaseUserId;
     public static string Username => MetaDataManager.Data.SupabaseUsername ?? "User";
 
-    /// <summary>
-    /// A session is stored, even if its access token has lapsed: it is refreshed on next use,
-    /// and cleared only if the server rejects it.
-    /// </summary>
+    /// <summary> A session is stored, even if lapsed: it is refreshed on next use and cleared only if the server rejects it. </summary>
     public static bool IsSignedIn =>
         HasValidAccessToken || !string.IsNullOrEmpty(MetaDataManager.Data.SupabaseRefreshToken);
 
@@ -29,17 +22,12 @@ public static class AuthSession
         // Margin added to now, not taken off the expiry: signed out, that is DateTime.MinValue.
         DateTime.Now + ExpiryMargin < MetaDataManager.Data.SupabaseExpirationTime;
 
-    /// <summary>
-    /// True when there is a usable session, refreshing it first if needed. A session the
-    /// server rejects is cleared; a network or server failure leaves it in place for next time.
-    /// </summary>
+    /// <summary> True when there is a usable session, refreshing it first if needed; only a server rejection clears it. </summary>
     public static Task<bool> TryRestoreAsync()
     {
         if (HasValidAccessToken) return Task.FromResult(true);
 
-        // Callers arriving mid-refresh share it: refresh tokens are single use, and
-        // presenting a spent one can make Supabase revoke the whole session. Callers are
-        // all on the UI thread, so the field needs no lock.
+        // Concurrent callers share one refresh: a spent refresh token can make Supabase revoke the session (UI thread only, no lock).
         return _refreshing ??= RefreshAsync();
     }
 
@@ -77,7 +65,6 @@ public static class AuthSession
         MetaDataManager.SaveMetaData();
     }
 
-    /// <summary> Renames the signed-in user on the server, then here. </summary>
     public static async Task<AuthResult> ChangeUsernameAsync(string username)
     {
         if (UserId is not { Length: > 0 } userId) return AuthResult.Fail("You're not signed in.");

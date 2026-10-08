@@ -192,8 +192,7 @@ public partial class ReviewViewModel : ViewModelBase
     {
         ArgumentNullException.ThrowIfNull(cards);
 
-        // Reversible flip cards are also asked back to front, and cloze cards once per blank group:
-        // each is a question of its own.
+        // Reversible flip cards are also asked back to front, and cloze cards once per blank group, each as its own question.
         _sessionCards = [.. cards
             .SelectMany(card => card switch
             {
@@ -201,7 +200,7 @@ public partial class ReviewViewModel : ViewModelBase
                 ClozeFlashCard cloze => cloze.CreateQuestions(),
                 _ => [card],
             })
-            .OrderBy(_ => Guid.NewGuid())]; // Shuffle cards
+            .OrderBy(_ => Guid.NewGuid())];
         if (_sessionCards.Count == 0)
         {
             throw new ArgumentException("Cannot start a review session with no cards.", nameof(cards));
@@ -220,7 +219,6 @@ public partial class ReviewViewModel : ViewModelBase
         LoadMultiChoiceOptionsForCurrentCard();
         LoadMatchRowsForCurrentCard();
 
-        // Start a timer to update the display every 100ms
         _displayTimer = new Timer(100);
         _displayTimer.Elapsed += (_, _) =>
         {
@@ -232,7 +230,6 @@ public partial class ReviewViewModel : ViewModelBase
         _displayTimer.AutoReset = true;
         _displayTimer.Start();
 
-        // Initialize timer text
         UpdateTimerText();
     }
 

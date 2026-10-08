@@ -8,10 +8,7 @@ namespace ReviFlash.Utilities;
 /// <summary> A heading in a note: its level (1 to 3), what was typed inside \Hn{...}, and where it starts. </summary>
 public sealed record NoteHeading(int Level, string Source, int Index);
 
-/// <summary>
-/// Note content as blocks: paragraphs separated by blank lines, which the note page shows and edits one at a time.
-/// A $$...$$ block is never split, even if it has a blank line inside.
-/// </summary>
+/// <summary> Note content as blocks: paragraphs split at blank lines, never inside a $$...$$ block. </summary>
 public static partial class NoteText
 {
     [GeneratedRegex(@"\\H([1-3])\{")]
@@ -71,10 +68,7 @@ public static partial class NoteText
         return headings;
     }
 
-    /// <summary>
-    /// A paragraph that opens with a heading, split into what's typed inside the heading and the rest
-    /// (e.g. "\H2{Definition}\nA scalar..." gives "Definition" and "A scalar..."). Null heading if it doesn't open with one.
-    /// </summary>
+    /// <summary> "\H2{Definition}\nA scalar..." gives ("Definition", "A scalar..."); null heading if the paragraph doesn't open with one. </summary>
     public static (string? Heading, string Body) SplitLeadingHeading(string text)
     {
         var trimmed = text.TrimStart();
@@ -88,7 +82,6 @@ public static partial class NoteText
         return heading.Length == 0 ? (null, text) : (heading, trimmed[(end + 1)..].Trim());
     }
 
-    /// <summary> What is typed inside the last heading in <paramref name="text"/>, or null if it has none. </summary>
     public static string? LastHeading(string text) => Headings(text).LastOrDefault()?.Source;
 
     /// <summary> Words in the note, not counting formatting commands or maths delimiters. </summary>

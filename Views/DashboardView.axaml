@@ -517,8 +517,7 @@
 
             <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 0">
 
-            <!-- "compact" is set from code-behind when the column is too narrow for the full labels, so the search
-                 box keeps a usable width and the bottom bar stays inside its card in a small window. -->
+            <!-- Code-behind sets "compact" when the column is too narrow for the full labels. -->
             <Grid Grid.Column="0" x:Name="LibraryColumn" RowDefinitions="Auto, Auto, *" Margin="0, 0, 24, 0">
                 <Grid.Styles>
                     <Style Selector="Grid#LibraryColumn TextBlock.short">
@@ -577,7 +576,7 @@
                     </Button>
                 </Grid>
 
-                <!-- Breadcrumb trail, shown only once you are inside a folder. -->
+                <!-- Breadcrumb trail. -->
                 <Grid Grid.Row="1" ColumnDefinitions="Auto, *" Margin="0,0,0,14"
                     IsVisible="{Binding IsInFolder}">
 
@@ -866,7 +865,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- A note's own stats. -->
                     <Border Background="{DynamicResource StatTileBackground}"
                         CornerRadius="10"
                         Padding="16"
@@ -1199,7 +1197,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Where your time went: the sets and notes with the most time in the chosen period (overall only). -->
                     <Border Background="{DynamicResource CardBackground}"
                         BorderBrush="{DynamicResource CardBorder}"
                         BorderThickness="1.5"
@@ -1275,7 +1272,7 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="vm:HeatmapWeek">
                                                 <StackPanel>
-                                                    <!-- Wider than a column, so it overflows to the right instead of wrapping. -->
+                                                    <!-- The Canvas lets a month label run past its narrow column without wrapping. -->
                                                     <Canvas Height="18" Width="15">
                                                         <TextBlock Text="{Binding MonthLabel}" FontSize="10"
                                                             Foreground="{DynamicResource TextSecondary}" />

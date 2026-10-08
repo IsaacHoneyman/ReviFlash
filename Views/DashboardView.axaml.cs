@@ -429,7 +429,6 @@ public partial class DashboardView : UserControl
             return;
         }
 
-        // Ignore key events from nested action buttons.
         if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
         {
             return;
@@ -566,9 +565,7 @@ public partial class DashboardView : UserControl
 
         var reviewVM = new ReviewViewModel(cards, deck.ID)
         {
-            // Capture vm directly rather than re-reading DataContext here: this callback
-            // fires much later, by which point DashboardView has been swapped out of the
-            // ContentControl for ReviewView, so `DataContext` on this instance is stale.
+            // Capture vm: by the time this runs the view has been swapped for ReviewView, so its DataContext is stale.
             OnSessionComplete = (score, total, time, isPartial) =>
                 vm.CurrentPage = new SummaryViewModel(score, total, time, isPartial)
                 {
@@ -609,7 +606,7 @@ public partial class DashboardView : UserControl
 
         var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap, groupId)
         {
-            // See comment in the other StartReviewSession overload re: capturing vm directly.
+            // Capture vm: by the time this runs the view has been swapped for ReviewView, so its DataContext is stale.
             OnSessionComplete = (score, total, time, isPartial) =>
                 vm.CurrentPage = new SummaryViewModel(score, total, time, isPartial)
                 {
@@ -626,6 +623,6 @@ public partial class DashboardView : UserControl
         vm.CurrentPage = vm; // Switches back to the Dashboard template
         vm.CancelSelectionMode();
         vm.ReloadLibrary();
-        vm.RefreshStats(); // Refresh stats after session completes
+        vm.RefreshStats();
     }
 }

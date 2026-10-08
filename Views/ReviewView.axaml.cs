@@ -57,11 +57,7 @@ public partial class ReviewView : UserControl
             Dispatcher.UIThread.Post(() => TypedAnswerBox.Focus(), DispatcherPriority.Background);
     }
 
-    /// <summary>
-    /// Space reveals, Left/Right (or 1/2) mark incorrect/correct or pick True/False, 1-9 tick options or place
-    /// match answers, Enter submits and then moves on, S skips (ending the review on the last card), R retries later and Esc quits.
-    /// While typing an answer only Enter and Esc count.
-    /// </summary>
+    /// <summary> Space reveals, Left/Right or 1/2 mark or pick True/False, 1-9 pick options, Enter submits, S skips, R retries later, Esc quits; typing allows only Enter and Esc. </summary>
     private void Review_KeyDown(object? sender, KeyEventArgs e)
     {
         if (!IsEffectivelyVisible || GetReviewVM() is not { } vm) return;

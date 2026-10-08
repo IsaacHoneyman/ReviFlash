@@ -26,10 +26,7 @@ public class UpdateClient
         }
     }
 
-    /// <summary>
-    /// Downloads the update and restarts into it. On success the app exits here, so returning
-    /// at all means it failed (already logged).
-    /// </summary>
+    /// <summary> Downloads the update and restarts into it; on success the app exits, so a return means failure. </summary>
     public async Task<bool> DownloadAndApplyUpdateAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null)
     {
         try

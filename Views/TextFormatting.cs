@@ -6,17 +6,10 @@ using Avalonia.Input.Platform;
 
 namespace ReviFlash.Views;
 
-/// <summary>
-/// The formatting toolbar and shortcuts shared by every place card or note text is typed: the card editor,
-/// note blocks and the make-card dialog.
-/// </summary>
+/// <summary> Formatting toolbar and shortcuts shared by the card editor, note blocks and the make-card dialog. </summary>
 public static class TextFormatting
 {
-    /// <summary>
-    /// The wrapping for a formatting shortcut: Ctrl (Cmd on macOS) + B / I / U / M / 1–3, Shift+M for display maths,
-    /// and Shift+C for a cloze blank when <paramref name="allowCloze"/>. Null for any other key. Bullet points (Ctrl+P)
-    /// aren't a wrapping: see <see cref="IsBulletShortcut"/>.
-    /// </summary>
+    /// <summary> Wrapping for Ctrl (Cmd on macOS) + B/I/U/M/1-3, Shift+M for display maths and Shift+C for a cloze blank; null otherwise. </summary>
     public static (string Open, string Close)? ShortcutFor(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys, bool allowCloze)
     {
         var command = hotkeys?.CommandModifiers ?? KeyModifiers.Control;
@@ -52,10 +45,7 @@ public static class TextFormatting
         return e.Key == Key.L && e.KeyModifiers.HasFlag(command) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
     }
 
-    /// <summary>
-    /// Selects the whole line the cursor is on, its line break included. With whole lines already selected, the
-    /// selection grows by the next line, so pressing it again keeps selecting further down.
-    /// </summary>
+    /// <summary> Selects the cursor's whole line with its line break; with whole lines already selected, extends to the next line. </summary>
     public static void SelectLine(TextBox box)
     {
         var text = box.Text ?? "";
@@ -68,17 +58,13 @@ public static class TextFormatting
         box.Focus();
     }
 
-    /// <summary>
-    /// Makes every line the selection touches (or the cursor's line) a bullet point by starting it with "- ". If they all
-    /// already are, the bullets are removed instead.
-    /// </summary>
+    /// <summary> Starts every line the selection touches with "- ", or removes the bullets if they all have one. </summary>
     public static void ToggleBullets(TextBox box)
     {
         var text = box.Text ?? "";
         var start = Math.Min(box.SelectionStart, box.SelectionEnd);
         var end = Math.Max(box.SelectionStart, box.SelectionEnd);
 
-        // The whole lines the selection touches.
         var firstLine = start == 0 ? 0 : text.LastIndexOf('\n', start - 1) + 1;
         var lastLineEnd = text.IndexOf('\n', end);
         if (lastLineEnd < 0) lastLineEnd = text.Length;
@@ -101,10 +87,7 @@ public static class TextFormatting
         box.Focus();
     }
 
-    /// <summary>
-    /// Wraps the selection (or puts an empty pair at the cursor, cursor inside) in <paramref name="open"/> and
-    /// <paramref name="close"/>. If the selection is already wrapped in them, the wrapping is removed instead.
-    /// </summary>
+    /// <summary> Wraps the selection in open/close (an empty pair at the cursor if nothing is selected), or unwraps it if already wrapped. </summary>
     public static void Wrap(TextBox box, string open, string close)
     {
         var text = box.Text ?? "";

@@ -11,10 +11,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary>
-/// A paragraph of a note. <see cref="Text"/> follows the typing; <see cref="RenderedText"/> only changes when
-/// editing finishes, so the rendered view (maths and all) isn't rebuilt on every key press.
-/// </summary>
+/// <summary> A note paragraph; RenderedText only updates when editing finishes so the maths isn't re-rendered per key. </summary>
 public partial class NoteBlock : ObservableObject
 {
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
@@ -42,15 +39,12 @@ public sealed record ContentsEntry(int Level, string Source, NoteBlock Block)
     public double FontSize => Level switch { 1 => 15, 2 => 14, _ => 13 };
 }
 
-/// <summary>
-/// A note open as a page: its paragraphs, edited one at a time, a contents panel from its headings, and autosave.
-/// </summary>
+/// <summary> A note open as a page: paragraphs edited one at a time, a contents panel from its headings, and autosave. </summary>
 public partial class NoteViewModel : ViewModelBase
 {
     private static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(1);
 
-    // Study time counts while the note is open in the focused window, and stops after this long with no typing,
-    // clicking or scrolling, so a note left open doesn't keep counting.
+    // Study time stops counting after this long with no typing, clicking or scrolling.
     private static readonly TimeSpan IdleAfter = TimeSpan.FromMinutes(2);
     private const int StudyTickSeconds = 5;
     private const int StudyFlushSeconds = 60;
@@ -140,10 +134,7 @@ public partial class NoteViewModel : ViewModelBase
         block.IsEditing = true;
     }
 
-    /// <summary>
-    /// Finishes editing: blank lines typed into the paragraph split it into several, an emptied paragraph goes
-    /// (unless it's the only one), and the note saves.
-    /// </summary>
+    /// <summary> Finishes editing: blank lines split the paragraph, an emptied one is removed (unless it's the only one), and the note saves. </summary>
     public void CommitEditing()
     {
         if (EditingBlock is not { } block) return;
@@ -171,10 +162,7 @@ public partial class NoteViewModel : ViewModelBase
         SaveNow();
     }
 
-    /// <summary>
-    /// Ends the paragraph being edited at <paramref name="caret"/> (a blank line was just typed there): the text before
-    /// it shows formatted straight away, and editing carries on in a new paragraph with the text after it.
-    /// </summary>
+    /// <summary> Splits the edited paragraph at the caret, rendering the text before and editing the rest as a new paragraph. </summary>
     public void SplitEditingAt(int caret)
     {
         if (EditingBlock is not { } block) return;
@@ -193,10 +181,7 @@ public partial class NoteViewModel : ViewModelBase
         BeginEdit(next, caret: 0);
     }
 
-    /// <summary>
-    /// Joins the paragraph being edited onto the end of the one before (Backspace at its start, undoing the blank
-    /// line between them), and carries on editing there with the cursor where the two meet.
-    /// </summary>
+    /// <summary> Joins the edited paragraph onto the one before, with the cursor where the two meet. </summary>
     public bool MergeEditingIntoPrevious()
     {
         if (EditingBlock is not { } block) return false;

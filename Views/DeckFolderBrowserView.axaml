@@ -25,7 +25,7 @@
                 Background="{DynamicResource AppBackground}" />
         </Grid>
 
-        <!-- Breadcrumb trail, shown only once you are inside a folder. -->
+        <!-- Breadcrumb trail. -->
         <Grid Grid.Row="1" ColumnDefinitions="Auto, *" IsVisible="{Binding IsInFolder}">
             <Button Grid.Column="0"
                 Command="{Binding NavigateUpCommand}"
@@ -116,7 +116,7 @@
                             </Button>
                         </DataTemplate>
 
-                        <!-- Set: name, cards, location, and the host's action button. -->
+                        <!-- Set: the action button's text and command come from the host. -->
                         <DataTemplate DataType="models:FlashCardDeck">
                             <Border Background="#14000000"
                                 BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"

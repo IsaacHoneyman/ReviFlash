@@ -4,17 +4,12 @@ using System.Text;
 
 namespace ReviFlash.Utilities;
 
-/// <summary>
-/// Cloze blanks: \C{...} hides its text in a question of its own, and \C2{...} blanks sharing a
-/// number are hidden together. Works on the raw card text, so blanks can sit inside $...$ maths too.
-/// </summary>
+/// <summary> Cloze blanks in raw card text (so inside $...$ too): \C{...} is its own question, \C2{...} blanks sharing a number hide together. </summary>
 public static class ClozeUtility
 {
     public const string HiddenMarker = "[...]";
 
-    /// <param name="Start"> Index of the backslash. </param>
-    /// <param name="End"> Index just past the closing brace. </param>
-    /// <param name="Group"> The blank's number, or a unique key for an unnumbered blank. </param>
+    // Start is the backslash, End is just past the closing brace, Group is the number or a unique key when unnumbered.
     private sealed record Blank(int Start, int End, string Group, string Content);
 
     /// <summary> Each group of blanks that becomes a question, in the order they first appear. </summary>

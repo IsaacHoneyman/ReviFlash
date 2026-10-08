@@ -5,10 +5,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.Models;
 
-/// <summary>
-/// A container on the main menu. Folders hold flashcard sets, notes, study groups and other
-/// folders; they are purely organisational and never change how cards are reviewed.
-/// </summary>
+/// <summary> Holds sets, notes, groups and other folders; purely organisational, never affects review. </summary>
 public partial class Folder(string name) : ObservableObject, ISearchable
 {
     public ulong ID { get; private set; } = ulong.MaxValue;
@@ -45,7 +42,7 @@ public partial class Folder(string name) : ObservableObject, ISearchable
     /// <summary> Trails the contents summary on the card, so the location never needs a line of its own. </summary>
     public string LocationSuffix => HasFolderPath ? $" · in {FolderPath}" : "";
 
-    /// <summary> Combined study time across the subtree. </summary>
+    /// <summary> Study time across the whole subtree. </summary>
     public int StudySeconds { get; set; }
 
     /// <summary> Most recent day anything in the subtree was studied. </summary>

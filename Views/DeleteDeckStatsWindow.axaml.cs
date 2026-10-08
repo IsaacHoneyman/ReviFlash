@@ -7,7 +7,6 @@ namespace ReviFlash.Views;
 
 public partial class DeleteDeckStatsWindow : Window
 {
-    /// <summary> Raised after a deck's stats are deleted, so the dashboard can refresh. </summary>
     public event Action? StatsDeleted;
 
     public DeleteDeckStatsWindow()

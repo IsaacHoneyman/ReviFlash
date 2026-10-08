@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ReviFlash.Utilities;
 
-/// <summary> Utility for grade calculations and card types </summary>
 public static class CardUtility
 {
     public const int GRADE_A_STAR_THRESHOLD = 90;

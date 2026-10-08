@@ -4,10 +4,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary>
-/// A day in the study calendar, shaded by how long was spent studying: none, under 15 minutes, under 30,
-/// under an hour, or an hour or more.
-/// </summary>
+/// <summary> A day in the study calendar, shaded by how long was spent studying. </summary>
 public sealed class HeatmapDay(DateOnly date, int seconds, bool isFuture)
 {
     public DateOnly Date { get; } = date;

@@ -6,17 +6,11 @@ using ReviFlash.Models;
 
 namespace ReviFlash.Utilities;
 
-/// <summary>
-/// An in-memory view of the folder hierarchy. Built once per dashboard refresh and shared
-/// by anything that needs to walk folders: navigation, breadcrumbs, subtree search, the
-/// move dialog and the folder card counts.
-/// </summary>
+/// <summary> In-memory folder hierarchy, built once per dashboard refresh and shared by navigation, breadcrumbs, search and the move dialog. </summary>
 public sealed class FolderTree
 {
-    /// <summary> Separator shown between folder names in breadcrumb text. </summary>
     public const string PathSeparator = " / ";
 
-    /// <summary> Label used wherever the top level needs a name of its own. </summary>
     public const string RootLabel = "Main Menu";
 
     private readonly Dictionary<ulong, Folder> _byId;
@@ -32,8 +26,7 @@ public sealed class FolderTree
 
         foreach (var folder in AllFolders)
         {
-            // A parent that no longer exists would strand the folder out of reach, so
-            // treat it as a root folder instead of losing it.
+            // A folder whose parent is missing is treated as a root folder so it stays reachable.
             if (folder.ParentFolderID is ulong parentId && _byId.ContainsKey(parentId))
             {
                 if (!_childrenByParent.TryGetValue(parentId, out var siblings))
@@ -103,10 +96,7 @@ public sealed class FolderTree
         return ids;
     }
 
-    /// <summary>
-    /// Whether an item filed in <paramref name="folderID"/> falls inside
-    /// <paramref name="rootFolderID"/>'s subtree. A null root means the whole library.
-    /// </summary>
+    /// <summary> A null root means the whole library. </summary>
     public bool IsInSubtree(ulong? folderID, ulong? rootFolderID)
     {
         if (rootFolderID is not ulong root) return true;
@@ -115,11 +105,7 @@ public sealed class FolderTree
         return SubtreeIds(root).Contains(id);
     }
 
-    /// <summary>
-    /// Fills in the counts shown on folder cards. Card totals and study time roll up
-    /// through the whole subtree; sets, groups and subfolders are counted directly so the
-    /// card describes what you will actually see when you open it.
-    /// </summary>
+    /// <summary> Card totals and study time roll up through the subtree; sets, groups, notes and subfolders count direct children only. </summary>
     public void ApplyCounts(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, IEnumerable<Note>? notes = null)
     {
         var deckList = decks as IReadOnlyList<FlashCardDeck> ?? [.. decks];
@@ -151,8 +137,7 @@ public sealed class FolderTree
             if (Get(note.FolderID) is Folder folder) folder.NoteCount++;
         }
 
-        // Cards and study time roll up from sets only: a group's cards live in decks that
-        // are already counted, so including groups would count them twice.
+        // Groups are skipped: their cards live in decks already counted.
         foreach (var folder in AllFolders)
         {
             var subtree = SubtreeIds(folder.ID);
@@ -173,10 +158,7 @@ public sealed class FolderTree
         }
     }
 
-    /// <summary>
-    /// Stamps each item with the folder it lives in, so search results found deeper down
-    /// can show where they came from. Items at <paramref name="relativeTo"/> get no path.
-    /// </summary>
+    /// <summary> Stamps each item with its folder path relative to <paramref name="relativeTo"/>, so deeper search results show where they came from. </summary>
     public void ApplyPaths(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, ulong? relativeTo = null, IEnumerable<Note>? notes = null)
     {
         string basePath = PathOf(relativeTo);

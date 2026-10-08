@@ -10,7 +10,6 @@ using ReviFlash.Data.Local;
 
 namespace ReviFlash.Data.Online;
 
-/// <summary> Interface to online shared database. </summary>
 public sealed class SupabaseConnection : IDisposable
 {
     private const string ProjectURL = "https://hegjwggsueldwtnxpnnv.supabase.co";
@@ -23,8 +22,7 @@ public sealed class SupabaseConnection : IDisposable
 
     public SupabaseConnection()
     {
-        // An expired session token is rejected outright (401), even for public reads, so
-        // fall back to the anon key once it lapses.
+        // An expired session token gets a 401 even for public reads, so fall back to the anon key.
         var data = MetaDataManager.Data;
         var authToken = !string.IsNullOrEmpty(data.SupabaseAccessToken) && data.SupabaseExpirationTime > DateTime.Now
             ? data.SupabaseAccessToken
@@ -47,10 +45,7 @@ public sealed class SupabaseConnection : IDisposable
 
     // --- AUTHENTICATION METHODS ---
 
-    /// <summary>
-    /// A connection carrying the current session, refreshed first if it has lapsed. Use this
-    /// for everything except the auth calls, which work fine with the anon key.
-    /// </summary>
+    /// <summary> A connection carrying the current session, refreshed first if lapsed; auth calls work with the anon key. </summary>
     public static async Task<SupabaseConnection> CreateAsync()
     {
         // No ConfigureAwait(false): a refresh updates the metadata, which belongs to the UI thread.
@@ -84,8 +79,7 @@ public sealed class SupabaseConnection : IDisposable
     public async Task<AuthResult> RefreshSessionAsync(string refreshToken)
     {
         var (ok, json, status) = await PostAuthAsync("token?grant_type=refresh_token", new { refresh_token = refreshToken }).ConfigureAwait(false);
-        // Only a 4xx means the token itself is dead (revoked, reused, signed out elsewhere).
-        // Rate limits and server errors leave the session in place to retry later.
+        // Only a 4xx means the token is dead; rate limits and server errors keep the session for a retry.
         if (!ok)
         {
             bool rejected = status is >= 400 and < 500 and not 408 and not 429;
@@ -129,10 +123,7 @@ public sealed class SupabaseConnection : IDisposable
         catch (Exception ex) { return AuthResult.Fail($"Network error: {ex.Message}"); }
     }
 
-    /// <summary>
-    /// Renames the signed-in user: their profile (what community decks show) and their auth
-    /// metadata (where sign-in reads the name from), so the two never disagree.
-    /// </summary>
+    /// <summary> Renames the user in both their profile (shown on community decks) and auth metadata (read at sign-in). </summary>
     public async Task<AuthResult> UpdateUsernameAsync(string userId, string username)
     {
         try
@@ -235,10 +226,7 @@ public sealed class SupabaseConnection : IDisposable
 
     // --- Upload ---
 
-    /// <summary>
-    /// A fresh, unguessable file name. The bucket is public, so a private deck's file stays
-    /// out of reach only while nobody can work out its name.
-    /// </summary>
+    /// <summary> A fresh, unguessable file name: the bucket is public, so a private deck is hidden only by its name. </summary>
     private static string NewStoragePath(string userId) => $"{userId}/{Guid.NewGuid():N}.json";
 
     public async Task<(bool Success, string Message)> UploadCloudDeckAsync(string userId, string title, string description, int cardCount, string jsonPayload, bool isPrivate)
@@ -317,10 +305,7 @@ public sealed class SupabaseConnection : IDisposable
         }
     }
 
-    /// <summary>
-    /// Lists or unlists one of the user's decks. Going private also renames the file: its old
-    /// name was visible to everyone while the deck was public.
-    /// </summary>
+    /// <summary> Lists or unlists a deck; going private also renames the file, since its public name was visible to everyone. </summary>
     public async Task<(bool Success, string Message)> SetCloudDeckVisibilityAsync(string userId, string storagePath, bool makePrivate)
     {
         try
@@ -370,8 +355,7 @@ public sealed class SupabaseConnection : IDisposable
     {
         try
         {
-            // Row first: if the file delete then fails, the deck is merely orphaned in storage
-            // rather than listed publicly with nothing behind it.
+            // Row first: a failed file delete then leaves an orphaned file, not a listing with nothing behind it.
             string dbUrl = $"{ProjectURL}/rest/v1/decks?storage_path=eq.{Uri.EscapeDataString(storagePath)}";
             using var dbRes = await _http.DeleteAsync(dbUrl).ConfigureAwait(false);
 
@@ -410,10 +394,7 @@ public sealed class SupabaseConnection : IDisposable
         return await res.Content.ReadAsStringAsync().ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Counts a download for the signed-in user (once per user, never the owner).
-    /// Returns the deck's new total, or null if it couldn't be recorded.
-    /// </summary>
+    /// <summary> Counts a download once per signed-in user (never the owner); returns the new total, or null on failure. </summary>
     public async Task<int?> RecordDownloadAsync(Guid deckId)
     {
         try
@@ -450,8 +431,7 @@ public sealed class SupabaseConnection : IDisposable
 
     public async Task<List<FlashCardDeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)
     {
-        // search_public_decks matches the title or the uploader's name and returns the most
-        // downloaded first, capped at p_limit (a SQL function in the Supabase project).
+        // search_public_decks (a Supabase SQL function) matches title or uploader name, most downloaded first.
         var url = $"{ProjectURL}/rest/v1/rpc/search_public_decks?select=id,owner_id,title,description,storage_path,card_count,download_count,version,created_at,updated_at,owner:profiles(display_name)&p_limit={limit}";
         if (!string.IsNullOrWhiteSpace(searchText))
         {

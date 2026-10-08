@@ -92,7 +92,6 @@ public static class NoteRepository
         return rows;
     }
 
-    /// <summary> Seconds per note within the time period. </summary>
     public static List<(ulong noteID, int seconds)> GetStudyTimeByNote(string? timeModifier)
     {
         var rows = new List<(ulong, int)>();
@@ -109,7 +108,6 @@ public static class NoteRepository
         return rows;
     }
 
-    /// <summary> The last day any time was spent in the note, or null if never. </summary>
     public static DateOnly? GetLastStudied(ulong noteID)
     {
         using var connection = DatabaseManager.GetConnection();

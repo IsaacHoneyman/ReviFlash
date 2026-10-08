@@ -7,7 +7,6 @@ using ReviFlash.ViewModels;
 
 namespace ReviFlash.Data.Local;
 
-/// <summary> Responsible for meta data mangement in running application. </summary>
 public static class MetaDataManager
 {
     public static AppMetaData Data { get; private set; } = null!;

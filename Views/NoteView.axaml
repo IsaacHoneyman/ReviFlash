@@ -85,7 +85,6 @@
 
     <Grid RowDefinitions="Auto, Auto, *" Margin="24, 16, 24, 0">
 
-        <!-- Header: back, the note's name, save status, contents toggle and make card. -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto, Auto, Auto" ColumnSpacing="12" Margin="0,0,0,12">
             <Button Grid.Column="0" Click="Back_Click"
                 CornerRadius="8" Padding="12,0" Height="36" FontSize="14" FontWeight="SemiBold"
@@ -126,7 +125,6 @@
             </Button>
         </Grid>
 
-        <!-- Formatting toolbar: acts on the paragraph being edited. -->
         <!-- Dimmed until a paragraph is being edited (disabled buttons would take on the theme's disabled colours). -->
         <Border Grid.Row="1" Classes="toolbar" Classes.idle="{Binding !IsEditingBlock}" Margin="0,0,0,12" HorizontalAlignment="Left">
             <WrapPanel Orientation="Horizontal" ItemSpacing="4" LineSpacing="4">

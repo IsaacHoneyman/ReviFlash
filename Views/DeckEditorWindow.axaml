@@ -129,7 +129,6 @@
 
                         <!-- Formatting toolbar: acts on the card field last clicked into -->
                         <Border Classes="toolbar">
-                            <!-- Wraps onto a second row when the editor is too narrow for every button. -->
                             <WrapPanel Orientation="Horizontal" ItemSpacing="4" LineSpacing="4">
                                 <Button Classes="format" Click="Bold_Click" ToolTip.Tip="Bold: \B{...}  (Ctrl+B)">
                                     <TextBlock Text="B" FontWeight="Bold" />

@@ -44,7 +44,6 @@
 
         <Grid Grid.Row="1" ColumnDefinitions="3*, 2*" ColumnSpacing="20">
 
-            <!-- The card. -->
             <Border Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Spacing="10" x:Name="FieldsPanel">
@@ -82,7 +81,6 @@
                 </ScrollViewer>
             </Border>
 
-            <!-- Where it goes. -->
             <Border Grid.Column="1" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
                 <Grid RowDefinitions="Auto, Auto, *" RowSpacing="8">
                     <TextBlock Grid.Row="0" Text="Add to set" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />

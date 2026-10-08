@@ -15,9 +15,7 @@ public sealed record ShortcutSection(string Title, string? Note, IReadOnlyList<S
 
 public enum HelpTab { Formatting, KeyboardShortcuts }
 
-/// <summary>
-/// Help: what can be typed into a card, each example shown next to how it renders, and every keyboard shortcut.
-/// </summary>
+/// <summary> Help: card syntax with each example beside its rendering, plus every keyboard shortcut. </summary>
 public partial class SyntaxGuideWindow : Window
 {
     private static SyntaxGuideWindow? _open;

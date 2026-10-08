@@ -81,7 +81,6 @@ public partial class DashboardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(SearchWatermark))]
     [ObservableProperty] private ulong? _currentFolderID;
 
-    /// <summary> Trail from the main menu down to the open folder, for the breadcrumb bar. </summary>
     public ObservableCollection<Folder> Breadcrumbs { get; } = [];
 
     public FolderTree FolderTree => _folderTree;
@@ -173,7 +172,6 @@ public partial class DashboardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
     [ObservableProperty] private Note? _selectedNoteForStats = null;
 
-    // A note's own stats.
     [ObservableProperty] private string _noteWordsText = "";
     [ObservableProperty] private string _noteHeadingsText = "";
     [ObservableProperty] private string _noteLastStudiedText = "";
@@ -305,7 +303,6 @@ public partial class DashboardViewModel : ViewModelBase
         }
     }
 
-    /// <summary> A note's stats: time spent in it over the chosen period, its length, and when it was last studied. </summary>
     public void ShowNoteStats(Note note)
     {
         IsGraphView = false;
@@ -367,7 +364,6 @@ public partial class DashboardViewModel : ViewModelBase
 
         var timeModifier = SelectedTimePeriod?.TimeModifier;
 
-        // Get all decks in the group and sum their stats
         var decksInGroup = FlashCardRepository.GetDecksForStudyGroup(group.ID);
 
         int totalCorrect = 0;
@@ -459,7 +455,6 @@ public partial class DashboardViewModel : ViewModelBase
         var validRows = GetDailyStatsForCurrentScope(timeModifier).Where(r => r.total > 0).ToList();
         var noteRows = GetDailyNoteTimeForCurrentScope(timeModifier);
 
-        // Attempts Grouping
         var attemptsRows = GroupRows(validRows, SelectedAttemptsGrouping).ToList();
         int maxAttempts = attemptsRows.Count == 0 ? 0 : attemptsRows.Max(row => row.total);
 
@@ -521,10 +516,7 @@ public partial class DashboardViewModel : ViewModelBase
         _ => [],
     };
 
-    /// <summary>
-    /// The study calendar: the last 53 weeks (Monday to Sunday), each day shaded by how long was spent studying,
-    /// flashcards and notes together, whatever time period is chosen.
-    /// </summary>
+    /// <summary> The study calendar: the last 53 weeks (Monday to Sunday), each day shaded by total study time, whatever period is chosen. </summary>
     private void RefreshHeatmap()
     {
         const string lastYear = "-371 days";
@@ -674,17 +666,12 @@ public partial class DashboardViewModel : ViewModelBase
         return (correct, total, timeTakenSeconds, percentage, grade);
     }
 
-    /// <summary>
-    /// Rebuilds the visible list: everything filed in the open folder, ranked by the
-    /// shared search, ordered by the chosen sort. While a search is running the scope
-    /// widens to the open folder's subfolders, but never above where you are standing.
-    /// </summary>
+    /// <summary> Rebuilds the visible list from the open folder; while searching it also covers the folder's subfolders. </summary>
     public void RefreshLibraryView()
     {
         if (_suspendRefresh) return;
 
-        // The open folder can disappear underneath us (deleted here, or replaced by a
-        // restored backup); fall back to the main menu rather than showing an empty void.
+        // The open folder can disappear (deleted, or replaced by a restored backup); fall back to the main menu.
         if (!_folderTree.Exists(CurrentFolderID))
         {
             CurrentFolderID = null;
@@ -744,10 +731,7 @@ public partial class DashboardViewModel : ViewModelBase
         _ => SetPriority,
     };
 
-    /// <summary>
-    /// Recomputes folder card counts, the "found in" labels and the breadcrumb trail.
-    /// Only reloading or navigating changes these, so searching does not pay for them.
-    /// </summary>
+    /// <summary> Folder counts, "found in" labels and breadcrumbs: only reloading or navigating changes these, so searching skips them. </summary>
     private void RefreshFolderMetadata()
     {
         _folderTree.ApplyCounts(Decks, StudyGroups, Notes);
@@ -806,8 +790,7 @@ public partial class DashboardViewModel : ViewModelBase
         ReloadLibrary();
     }
 
-    /// <summary> Deletes the folder only: its contents move up to the folder's parent. </summary>
-    /// <param name="withContents"> Delete everything inside too, instead of moving it up a level. </param>
+    /// <summary> Deletes the folder, moving its contents up to its parent unless <paramref name="withContents"/> deletes them too. </summary>
     public void DeleteFolder(Folder folder, bool withContents = false)
     {
         if (withContents) FolderRepository.DeleteFolderAndContents(FolderTree.SubtreeIds(folder.ID));
@@ -916,7 +899,6 @@ public partial class DashboardViewModel : ViewModelBase
 
     // --- Loading ---
 
-    /// <summary> Reloads folders, sets, notes and groups from the database, then rebuilds the view. </summary>
     public void ReloadLibrary()
     {
         _folderTree = FolderTree.Load();
@@ -976,7 +958,6 @@ public partial class DashboardViewModel : ViewModelBase
 
     // --- Notes ---
 
-    /// <summary> Creates a note filed in the folder currently open. </summary>
     public Note CreateNote(string name)
     {
         var note = NoteRepository.CreateNote(name.Trim(), CurrentFolderID);
@@ -1008,7 +989,6 @@ public partial class DashboardViewModel : ViewModelBase
         });
     }
 
-    /// <summary> Creates a set filed in the folder currently open. </summary>
     public FlashCardDeck CreateNewDeck()
     {
         var newDeck = new FlashCardDeck("New Flashcard Set");

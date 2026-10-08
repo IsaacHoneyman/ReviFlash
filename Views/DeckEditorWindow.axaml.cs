@@ -51,7 +51,6 @@ public partial class DeckEditorWindow : Window
         _cardLoadScheduled = false;
     }
 
-    /// <summary> The card a button in the card list belongs to. </summary>
     private static FlashCard? CardOf(object? sender) => (sender as Button)?.DataContext as FlashCard;
 
     /// <summary> True if the editor has nothing unsaved, or the user agrees to lose it. </summary>
@@ -80,7 +79,6 @@ public partial class DeckEditorWindow : Window
     private void Blank_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\C{", "}");
     private void Help_Click(object? sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(this);
 
-    /// <summary> The formatting shortcuts (see <see cref="TextFormatting.ShortcutFor"/>), in the card fields. </summary>
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
     {
         if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;

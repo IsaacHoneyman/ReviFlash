@@ -103,7 +103,7 @@ public static class DatabaseManager
                     PRIMARY KEY (TargetType, TargetId)
                 );
 
-                -- Lecture notes: 1.3. Local only for now; SyncID is a stable GUID so they can sync later.
+                -- Lecture notes; SyncID is a stable GUID for syncing.
                 CREATE TABLE IF NOT EXISTS Notes (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     SyncID TEXT NOT NULL UNIQUE,
@@ -138,17 +138,14 @@ public static class DatabaseManager
         }
     }
 
-    /// <summary>
-    /// Brings databases created before a schema change up to date. Every step is
-    /// guarded so running it on an already current database is a no-op.
-    /// </summary>
+    /// <summary> Brings older databases up to date; every step is guarded, so it is a no-op on a current one. </summary>
     private static void ApplyMigrations(SqliteConnection connection)
     {
-        // Folders: added after release, so existing Decks/StudyGroups tables predate the column.
+        // Folders: adds FolderID to Decks and StudyGroups.
         AddColumnIfMissing(connection, "Decks", "FolderID", "INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL");
         AddColumnIfMissing(connection, "StudyGroups", "FolderID", "INTEGER NULL REFERENCES Folders(ID) ON DELETE SET NULL");
 
-        // Reversed flip cards: 1.2.
+        // Reversible flip cards: adds Cards.IsReversible.
         AddColumnIfMissing(connection, "Cards", "IsReversible", "INTEGER NOT NULL DEFAULT 0");
     }
 

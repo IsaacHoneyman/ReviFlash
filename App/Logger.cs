@@ -3,7 +3,6 @@ using System.Diagnostics;
 
 namespace ReviFlash;
 
-/// <summary> Logging for debugging ReviFlash. </summary>
 public static class Logger
 {
     public static void LogInfo<T>(T? message) =>

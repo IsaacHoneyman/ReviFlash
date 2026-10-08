@@ -7,8 +7,7 @@
     x:DataType="vm:ReviewViewModel">
 
     <UserControl.Styles>
-        <!-- Every review button: one shape, in the app's two button colours (plus red/green to mark a flip card).
-             Not focusable: the keyboard drives the whole screen, so focus never wanders onto a button. -->
+        <!-- Not focusable: the keyboard drives the whole screen, so focus never wanders onto a button -->
         <Style Selector="Button.action">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Cursor" Value="Hand" />
@@ -145,9 +144,7 @@
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto, *">
-        <!-- Top Bar with Timer, Progress, and Quit Button -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, *" Margin="24, 16, 24, 16" VerticalAlignment="Center">
-            <!-- Timer -->
             <StackPanel Grid.Column="0" Spacing="8">
                 <StackPanel IsVisible="{Binding ShouldShowTimer}">
                     <TextBlock Text="Time" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
@@ -160,7 +157,6 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- Progress (Center) -->
             <StackPanel Grid.Column="1" HorizontalAlignment="Center" IsVisible="{Binding ShouldShowProgress}">
                 <TextBlock Text="Progress" FontSize="14" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" />
                 <TextBlock Text="{Binding ProgressCardCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
@@ -172,7 +168,6 @@
                 VerticalAlignment="Top" ToolTip.Tip="Quit and save progress (Esc)" />
         </Grid>
 
-        <!-- Review Card -->
         <Grid Grid.Row="1" Margin="0">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                 HorizontalScrollBarVisibility="Disabled"
@@ -183,7 +178,7 @@
             <Border MaxWidth="{Binding CardMaxWidth}" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
                 Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
-                <!-- Card type (and deck, in a study group); progress is already in the top bar -->
+                <!-- Card type, plus the deck in a study group -->
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                     <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
                         IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
@@ -211,7 +206,6 @@
                             IsVisible="{Binding !IsAnswerCorrect}" />
                     </Panel>
 
-                    <!-- Flip Card -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsFlipCard}">
                         <Button Classes="action primary" Content="Show Answer" Click="ShowAnswer_Click"
                             IsVisible="{Binding ShowAnswerButtonVisible}" />
@@ -231,12 +225,11 @@
                             </Button>
                         </UniformGrid>
 
-                        <!-- Put it back in the queue instead of marking it -->
+                        <!-- Puts the card back in the queue unmarked -->
                         <Button Classes="action secondary" Content="Retry Later" Click="RetryLater_Click"
                             IsVisible="{Binding ShowFlipRetryLater}" />
                     </StackPanel>
 
-                    <!-- Type Card -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsTypeCard}">
                         <StackPanel Spacing="12" IsVisible="{Binding !IsAnswerChecked}">
                             <TextBox x:Name="TypedAnswerBox" Text="{Binding UserTypedAnswer, Mode=TwoWay}"
@@ -257,7 +250,6 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Multi Choice Card -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsMultiChoiceCard}">
                         <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
                             <TextBlock Classes="prompt" Text="Select all options you think are correct:" />
@@ -330,7 +322,6 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Match Card: the items to match on the left, the answers to place on the right -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsMatchCard}">
                         <StackPanel Spacing="14" IsVisible="{Binding !IsAnswerChecked}">
                             <TextBlock Classes="prompt" Text="Pick an answer for the highlighted item. Click an item to change its answer."
@@ -425,7 +416,6 @@
                         </ItemsControl>
                     </StackPanel>
 
-                    <!-- True/False Card -->
                     <StackPanel Spacing="12" IsVisible="{Binding IsTrueFalseCard}">
                         <StackPanel Spacing="10" IsVisible="{Binding !IsAnswerChecked}">
                             <TextBlock Classes="prompt" Text="Pick the correct option:" />

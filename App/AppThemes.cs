@@ -2,7 +2,6 @@ using Avalonia.Styling;
 
 namespace ReviFlash;
 
-/// <summary> Theme manager. </summary>
 public static class AppThemes
 {
     public static readonly ThemeVariant Midnight = new("Midnight", ThemeVariant.Dark);
@@ -79,6 +78,6 @@ public static class AppThemes
         "Nether" => Nether,
         "MidnightRose" => MidnightRose,
         "MidnightSlate" => MidnightSlate,
-        _          => Vaporwave, // Default to Vaporwave if theme name is not recognized
+        _          => Vaporwave,
     };
 }

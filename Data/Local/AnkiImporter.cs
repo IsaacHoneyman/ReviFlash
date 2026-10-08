@@ -12,18 +12,10 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.Data.Local;
 
-/// <param name="Decks"> ReviFlash decks created, one per Anki deck with cards. </param>
-/// <param name="Cards"> Cards imported (a reversible card counts once). </param>
-/// <param name="CardsWithImages"> Imported cards that had images, left as "[image]". </param>
-/// <param name="Skipped"> Notes left out: image occlusion, or nothing but images and sounds. </param>
-/// <param name="DecksWithImages"> Names of the decks those image cards are in. </param>
+/// <summary> Import counts: image cards keep "[image]" placeholders; Skipped notes are image occlusion or media only. </summary>
 public sealed record AnkiImportResult(int Decks, int Cards, int CardsWithImages, int Skipped, IReadOnlyList<string> DecksWithImages);
 
-/// <summary>
-/// Imports an Anki .apkg (or .colpkg) as ReviFlash decks: Basic notes become Flip cards (reversible when Anki
-/// made the reverse card too), "type in the answer" notes Type to Answer cards, and Cloze notes Cloze cards.
-/// Each Anki deck becomes a deck, with its parent decks ("Maths::Calculus") as folders. Scheduling isn't kept.
-/// </summary>
+/// <summary> Imports an Anki .apkg/.colpkg as decks (parent decks become folders) of Flip, Type and Cloze cards, without scheduling. </summary>
 public static partial class AnkiImporter
 {
     private sealed record NoteType(string Name, bool IsCloze, List<string> Fields, List<(string Question, string Answer)> Templates);
@@ -45,11 +37,7 @@ public static partial class AnkiImporter
 
     // --- Reading the package ---
 
-    /// <summary>
-    /// Copies the collection database out of the zip. Anki 2.1.50+ stores it zstd-compressed (collection.anki21b);
-    /// older exports have collection.anki21 or collection.anki2. Newer packages also hold a collection.anki2
-    /// containing only a "please update Anki" note, so the newest format present wins.
-    /// </summary>
+    /// <summary> Copies the collection out of the zip, newest format first: newer packages also hold a stub "please update Anki" collection.anki2. </summary>
     private static string ExtractCollection(string packagePath)
     {
         ZipArchive zip;

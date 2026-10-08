@@ -25,10 +25,7 @@ public sealed class FolderChoice(ulong? folderID, string name, int depth, string
     public IEnumerable<string?> SearchKeywords => [PathText];
 }
 
-/// <summary>
-/// Destination picker for moving a set, group or folder. Folders that would create a
-/// loop (the folder being moved, and everything inside it) are left out entirely.
-/// </summary>
+/// <summary> Destination picker for moving an item; a moved folder's own subtree is never offered. </summary>
 public partial class MoveToFolderViewModel : ViewModelBase
 {
     private readonly List<FolderChoice> _allChoices = [];
@@ -59,8 +56,7 @@ public partial class MoveToFolderViewModel : ViewModelBase
             _ => ("item", "Item"),
         };
 
-        // Moving a folder into itself, or into one of its own subfolders, would orphan
-        // the branch; those destinations are never offered.
+        // Moving a folder into its own subtree would orphan the branch.
         var excluded = item is Folder movedFolder ? tree.SubtreeIds(movedFolder.ID) : [];
 
         _allChoices.Add(new FolderChoice(null, FolderTree.RootLabel, 0, "")
@@ -91,8 +87,7 @@ public partial class MoveToFolderViewModel : ViewModelBase
 
     private void RefreshChoices()
     {
-        // With no query the list keeps its tree order, which the indentation depends on;
-        // searching flattens it into ranked matches like every other list in the app.
+        // Tree order is kept when not searching, since the indentation depends on it.
         var visible = SearchUtility.IsEmptyQuery(SearchText)
             ? _allChoices
             : _allChoices.SearchAndSort(SearchText, SortMode.Relevance);

@@ -12,7 +12,6 @@
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="24">
         
-        <!-- Search Header -->
         <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,16">
             <Grid ColumnDefinitions="*, Auto">
                 <StackPanel Grid.Column="0" Spacing="4">
@@ -58,7 +57,6 @@
             </Grid>
         </StackPanel>
 
-        <!-- Search Results Grid -->
         <Border Grid.Row="1" Background="{DynamicResource CardBackground}" 
                 BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" 
                 CornerRadius="16" Padding="16">
@@ -99,7 +97,6 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Footer: where downloads go and how, then status. -->
         <Grid Grid.Row="2" ColumnDefinitions="Auto, *" Margin="0,16,0,0">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                 <TextBlock Text="{Binding TargetFolderText}" Foreground="{DynamicResource TextSecondary}" FontSize="13" VerticalAlignment="Center"/>

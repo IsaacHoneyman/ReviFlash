@@ -9,11 +9,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary>
-/// Folder-aware deck picker shared by the group editor, the cloud manager and settings.
-/// Folders open in place like the main menu, and a search reaches down through the open
-/// folder's subfolders but never above it. Folders with no decks on offer are hidden.
-/// </summary>
+/// <summary> Folder-aware deck picker; search covers the open folder's subtree only, and folders with no decks on offer are hidden. </summary>
 public partial class DeckFolderBrowser : ViewModelBase
 {
     private const int FolderPriority = 0;

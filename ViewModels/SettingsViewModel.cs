@@ -14,54 +14,54 @@ public partial class SettingsViewModel : ViewModelBase
 {
     private static readonly Dictionary<string, ThemeVariant> ThemeMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Pinks & Violets / Pinks (Synthwave, Sakura, Vaporwave, MidnightRose)
+        // Pinks & Violets
         { "Vaporwave", AppThemes.Vaporwave },
         { "Synthwave", AppThemes.Synthwave },
         { "Midnight Rose", AppThemes.MidnightRose },        
         { "Sakura", AppThemes.Sakura },
 
-        // Neutrals & True Monochromes (Dark grays/blacks)
+        // Neutrals & Monochromes
         { "Eclipse", AppThemes.Eclipse },
         { "Graphite", AppThemes.Graphite },
         { "Midnight Slate", AppThemes.MidnightSlate },
         { "Focus", AppThemes.Focus },
         { "Slate", AppThemes.Slate },
 
-        // Reds & Crimson (Deep reds, wines, blood)
+        // Reds
         { "Crimson", AppThemes.Crimson },
         { "Ember", AppThemes.Ember },
         { "Blood Moon", AppThemes.BloodMoon },
 
 
-        // Purples (Nether, Amethyst, Void)
+        // Purples
         { "Nether", AppThemes.Nether },
         { "Amethyst", AppThemes.Amethyst },
         { "Void", AppThemes.Void },
 
-        // Blues & Teals (Cobalt, Midnight, Nordic, Ocean, Abyssal)
+        // Blues & Teals
         { "Cobalt", AppThemes.Cobalt },
         { "Midnight", AppThemes.Midnight },
         { "Nordic", AppThemes.Nordic },
         { "Ocean", AppThemes.Ocean },
         { "Abyssal", AppThemes.Abyssal },
 
-        // Greens (Matrix, Forest, Mint, DeepMoss, Toxic)
+        // Greens
         { "Matrix", AppThemes.Matrix },
         { "Forest", AppThemes.Forest },
         { "Mint Choco", AppThemes.MintChoco },
         { "Toxic", AppThemes.Toxic },
 
-        // Oranges & Warm Tones (Sunset, Coffee, Honeycomb, DarkAmber, SolarFlare, Bunker)
+        // Oranges & Warm Tones
         { "Sunset", AppThemes.Sunset },
         { "Coffee", AppThemes.Coffee },
         { "Honeycomb", AppThemes.Honeycomb },
         { "Dark Amber", AppThemes.DarkAmber },
         { "Bunker", AppThemes.Bunker },
 
-        // Cyberpunk (Multi-color neon)
+        // Multi-colour neon
         { "Cyberpunk", AppThemes.Cyberpunk },
 
-        // Light Themes Section
+        // Light themes
         { "Sun", AppThemes.Sun },
         { "Desert", AppThemes.Desert },
         { "Sepia", AppThemes.Sepia },

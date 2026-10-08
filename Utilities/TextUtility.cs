@@ -7,20 +7,13 @@ using ReviFlash.ViewModels;
 
 namespace ReviFlash.Utilities;
 
-/// <summary> Precompiled regex & other text utilis  </summary>
 public static partial class TextUtility
 {
-    // --- Regex ---
-
     [GeneratedRegex(@"(\d+)\.(\d+)\.(\d+)")]
     public static partial Regex VersionRegex();
 
-    // --- Json ---
-
     public static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
     public static readonly JsonSerializerOptions CaseInsensitive = new() { PropertyNameCaseInsensitive = true };
-
-    // --- Paths ---
 
     public const string MetadataFileName = "metadata.json";
     public const string DatabaseFileName = "reviflash.db";
@@ -42,8 +35,6 @@ public static partial class TextUtility
     public static string MetadataPath => Path.Combine(AppDataDirectory, MetadataFileName);
     public static string DatabasePath => Path.Combine(AppDataDirectory, DatabaseFileName);
 
-    // --- Versions ---
-
     public static string VersionText => $"Version {GetAssemblyVersionText()}";
 
     private static string GetAssemblyVersionText()
@@ -61,8 +52,6 @@ public static partial class TextUtility
             ? "Unknown"
             : $"{version.Major}.{version.Minor}.{version.Build}";
     }
-
-    // --- Misc ---
 
     public static string FormatTime(TimeSpan time)
     {

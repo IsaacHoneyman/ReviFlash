@@ -7,7 +7,6 @@ namespace ReviFlash.ViewModels;
 /// <summary> Picks one deck, browsed by folder, and deletes its stats. Opened from Settings. </summary>
 public partial class DeleteDeckStatsViewModel : ViewModelBase
 {
-    /// <summary> Folder-aware picker for the deck whose stats get deleted. </summary>
     public DeckFolderBrowser DeckBrowser { get; }
 
     [ObservableProperty] private FlashCardDeck? _selectedDeck;

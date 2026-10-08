@@ -12,7 +12,6 @@ using ReviFlash.Data.Local;
 
 namespace ReviFlash.Data.Backup.Local;
 
-/// <summary> Handles local backups and imports. </summary>
 public static class BackupManager
 {
     // --- Entry ---
@@ -41,8 +40,7 @@ public static class BackupManager
 
         try
         {
-            // The sign-in never goes into a backup: the file may be shared, and restoring an
-            // old refresh token could get the live session revoked.
+            // The sign-in never goes into a backup: it may be shared, and restoring an old refresh token could revoke the live session.
             var metadata = ReadMetadataFromPath(metadataPath);
             metadata.SetSupabase(null, null, null, null, DateTime.MinValue);
             if (!includeStats)
@@ -53,8 +51,7 @@ public static class BackupManager
             string stagedMetadata = Path.Combine(stagingDirectory, TextUtility.MetadataFileName);
             File.WriteAllText(stagedMetadata, JsonSerializer.Serialize(metadata, TextUtility.Indented));
 
-            // SQLite's backup API takes a consistent snapshot even if a write is in progress,
-            // which copying the file does not.
+            // SQLite's backup API takes a consistent snapshot even mid-write, which copying the file does not.
             string stagedDatabase = Path.Combine(stagingDirectory, TextUtility.DatabaseFileName);
             using (var source = DatabaseManager.GetConnection())
             using (var target = OpenUnpooled(stagedDatabase))
@@ -176,10 +173,7 @@ public static class BackupManager
 
     // --- Shared Helpers ---
 
-    /// <summary>
-    /// A connection to a staged copy, outside the pool so the file is released (and can be
-    /// deleted) as soon as the connection is disposed.
-    /// </summary>
+    /// <summary> Opens a staged copy outside the pool, so the file can be deleted as soon as the connection is disposed. </summary>
     private static SqliteConnection OpenUnpooled(string databasePath, SqliteOpenMode mode = SqliteOpenMode.ReadWriteCreate)
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
@@ -318,8 +312,7 @@ public static class BackupManager
         string sourceDatabasePath = Path.Combine(sourceDirectory, $"{TextUtility.DatabaseFileName}.bak");
         if (!File.Exists(sourceDatabasePath)) return;
 
-        // Only stats for decks the backup has: the rest have nothing to attach to (and the
-        // foreign key would reject them).
+        // Only stats for decks the backup has: the rest have nothing to attach to and the foreign key would reject them.
         RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "DeckStats", ["DeckId", "CorrectCount", "TotalAttempts", "TimeTakenSeconds", "DateChecked"],
             where: "DeckId IN (SELECT ID FROM main.Decks)");
         RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "AnswerStreaks", ["TargetType", "TargetId", "BestStreak"]);

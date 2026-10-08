@@ -5,11 +5,7 @@ using System.Linq;
 
 namespace ReviFlash.Utilities;
 
-/// <summary>
-/// Describes anything that can appear in a searchable list. Implemented by decks,
-/// study groups, folders and cloud deck metadata so every list in the app ranks and
-/// sorts results identically.
-/// </summary>
+/// <summary> Implemented by decks, study groups, folders and cloud decks so every list ranks and sorts the same way. </summary>
 public interface ISearchable
 {
     /// <summary> The primary text a search matches against, and the name sorts use. </summary>
@@ -18,20 +14,16 @@ public interface ISearchable
     /// <summary> Secondary text (card counts, descriptions, folder paths) matched at reduced weight. </summary>
     IEnumerable<string?> SearchKeywords => [];
 
-    /// <summary> Number of cards, for the card count sorts. </summary>
     int SortCardCount => 0;
 
-    /// <summary> Recorded study time in seconds, for the study time sorts. </summary>
     int SortStudySeconds => 0;
 
-    /// <summary> When the item was last touched, for the recency sort. Null sorts last. </summary>
+    /// <summary> When the item was last touched; null sorts last. </summary>
     DateTime? SortLastActivity => null;
 
-    /// <summary> Download count, for the popularity sort on cloud decks. </summary>
     int SortDownloads => 0;
 }
 
-/// <summary> The orderings every searchable list in the app offers. </summary>
 public enum SortMode
 {
     Relevance,
@@ -45,7 +37,6 @@ public enum SortMode
     DownloadsDescending,
 }
 
-/// <summary> A sort choice bound to a ComboBox. </summary>
 public sealed class SortOption(string label, SortMode mode)
 {
     public string Label { get; } = label;
@@ -54,13 +45,9 @@ public sealed class SortOption(string label, SortMode mode)
     public override string ToString() => Label;
 }
 
-/// <summary>
-/// Relevance scoring and ordering shared by the dashboard, the study group editor and
-/// the online import/export browsers.
-/// </summary>
+/// <summary> Relevance scoring and ordering shared by every searchable list. </summary>
 public static class SearchUtility
 {
-    /// <summary> Returned by <see cref="ScoreText"/> when the text does not match at all. </summary>
     public const int NoMatch = -1;
 
     // Match tiers, best first. The gaps leave room for the per-tier quality bonuses below.
@@ -91,10 +78,7 @@ public static class SearchUtility
     /// <summary> A fresh bindable copy of the shared sort options, one per view. </summary>
     public static List<SortOption> CreateSortOptions() => [.. SortOptions];
 
-    /// <summary>
-    /// Orderings for cloud decks: popularity first, and no study-time sorts, since cloud
-    /// decks carry no study history (their "recent" means recently updated).
-    /// </summary>
+    /// <summary> Cloud decks have no study history, so there are no study-time sorts and "recent" means recently updated. </summary>
     public static List<SortOption> CreateCloudSortOptions() =>
     [
         new("Most downloaded", SortMode.DownloadsDescending),
@@ -108,10 +92,7 @@ public static class SearchUtility
 
     public static bool IsEmptyQuery(string? query) => string.IsNullOrWhiteSpace(query);
 
-    /// <summary>
-    /// Scores a single piece of text against a query. Higher is better;
-    /// <see cref="NoMatch"/> means the text should be filtered out.
-    /// </summary>
+    /// <summary> Higher is better; <see cref="NoMatch"/> means the text should be filtered out. </summary>
     public static int ScoreText(string? candidate, string? query)
     {
         if (IsEmptyQuery(query)) return 0;
@@ -155,9 +136,7 @@ public static class SearchUtility
         return NoMatch;
     }
 
-    /// <summary>
-    /// Scores an item across its name and keywords, taking its best field match.
-    /// </summary>
+    /// <summary> The best score across the item's name and down-weighted keywords. </summary>
     public static int ScoreItem(ISearchable item, string? query)
     {
         if (IsEmptyQuery(query)) return 0;
@@ -183,11 +162,7 @@ public static class SearchUtility
         return items.Where(item => ScoreItem(item, query) != NoMatch);
     }
 
-    /// <summary>
-    /// The one entry point every list uses: drops non-matches, then orders what is left
-    /// by the chosen sort. <paramref name="typePriority"/> lets a mixed list (folders,
-    /// groups, sets) keep its type grouping when not sorting by relevance.
-    /// </summary>
+    /// <summary> Drops non-matches and orders the rest; <paramref name="typePriority"/> keeps a mixed list grouped by type outside relevance sorting. </summary>
     public static List<T> SearchAndSort<T>(
         this IEnumerable<T> items,
         string? query,
@@ -201,8 +176,7 @@ public static class SearchUtility
             .Where(entry => entry.Score != NoMatch)
             .ToList();
 
-        // "Best match" only means anything while there is a query to match against;
-        // without one it falls back to A-Z so the list never looks arbitrary.
+        // Without a query "Best match" falls back to A-Z so the list never looks arbitrary.
         var effectiveMode = sortMode == SortMode.Relevance && !hasQuery ? SortMode.NameAscending : sortMode;
 
         IOrderedEnumerable<(T Item, int Score)> ordered;
@@ -226,9 +200,8 @@ public static class SearchUtility
                 SortMode.CardsAscending => grouped.ThenBy(e => e.Item.SortCardCount),
                 SortMode.StudyTimeDescending => grouped.ThenByDescending(e => e.Item.SortStudySeconds),
                 SortMode.StudyTimeAscending => grouped.ThenBy(e => e.Item.SortStudySeconds),
-                // Never-studied items have no date at all; park them at the end rather
-                // than letting DateTime.MinValue interleave with real timestamps.
                 SortMode.DownloadsDescending => grouped.ThenByDescending(e => e.Item.SortDownloads),
+                // Never-studied items have no date, so they go last.
                 SortMode.RecentlyStudied => grouped
                     .ThenBy(e => e.Item.SortLastActivity.HasValue ? 0 : 1)
                     .ThenByDescending(e => e.Item.SortLastActivity ?? DateTime.MinValue),
@@ -244,12 +217,7 @@ public static class SearchUtility
         return [.. ordered.Select(entry => entry.Item)];
     }
 
-    /// <summary>
-    /// Makes a bound list match <paramref name="target"/> while touching as few rows as
-    /// possible. Clearing and refilling rebuilds every card on screen on each keystroke;
-    /// this keeps the longest run of rows already in the right order and only removes or
-    /// inserts the rest, so narrowing a search mostly just drops cards.
-    /// </summary>
+    /// <summary> Matches the bound list to <paramref name="target"/> by keeping the longest in-order run of rows and only removing or inserting the rest. </summary>
     public static void SyncTo<T>(this ObservableCollection<T> list, IReadOnlyList<T> target) where T : class
     {
         var targetIndex = new Dictionary<T, int>(ReferenceEqualityComparer.Instance);
@@ -275,10 +243,7 @@ public static class SearchUtility
         }
     }
 
-    /// <summary>
-    /// Marks the longest strictly increasing subsequence of the non-negative entries:
-    /// the rows that are already in order relative to each other and can stay put.
-    /// </summary>
+    /// <summary> Marks the longest strictly increasing subsequence of the non-negative entries, i.e. the rows already in order. </summary>
     private static bool[] LongestIncreasingRun(int[] values)
     {
         var keep = new bool[values.Length];
@@ -306,8 +271,6 @@ public static class SearchUtility
 
         return keep;
     }
-
-    // --- Scoring helpers ---
 
     // Shorter names are the better match for the same tier: "Cells" beats "Cells of the Liver".
     private static int LengthBonus(string text) => Math.Max(0, 100 - Math.Min(text.Length, 100));

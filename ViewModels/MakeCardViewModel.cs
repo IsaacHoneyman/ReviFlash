@@ -6,10 +6,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary>
-/// Makes a Flip or Cloze card from a note: the selected text becomes the back (or the cloze text), and the nearest
-/// heading starts off as the front, ready to be rewritten as a question.
-/// </summary>
+/// <summary> Makes a card from a note: the selection becomes the back (or cloze text) and the nearest heading the front. </summary>
 public partial class MakeCardViewModel : ViewModelBase
 {
     public const string FlipType = "Flip";

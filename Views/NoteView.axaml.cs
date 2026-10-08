@@ -92,7 +92,7 @@ public partial class NoteView : UserControl
 
     private void Block_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        // Right-click opens the paragraph's menu instead of editing it.
+        // Only a left click edits; right-click opens the paragraph's menu.
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
         if ((sender as Control)?.DataContext is not NoteBlock block || ViewModel is not { } vm) return;
 
@@ -171,10 +171,7 @@ public partial class NoteView : UserControl
 
     // --- Keys ---
 
-    /// <summary>
-    /// In a paragraph being edited: Esc finishes it, Up on its first line and Down on its last move to the paragraph
-    /// before or after, Backspace at its start joins it onto the one before, and the formatting shortcuts wrap the selection.
-    /// </summary>
+    /// <summary> While editing: Esc finishes, Up/Down on the first/last line move between paragraphs, Backspace at the start joins, shortcuts format. </summary>
     private void Note_KeyDown(object? sender, KeyEventArgs e)
     {
         if (ViewModel is not { } vm || !IsEffectivelyVisible) return;
@@ -188,8 +185,7 @@ public partial class NoteView : UserControl
             return;
         }
 
-        // Enter on an empty line would make a blank line, which starts a new paragraph: do that now rather than on
-        // finishing, so the paragraph above shows formatted straight away. Inside $$...$$ a blank line is just a blank line.
+        // Enter on an empty line splits the paragraph right away so the one above shows formatted; inside $$...$$ it's just a blank line.
         if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Enter && box.SelectionStart == box.SelectionEnd)
         {
             var text = box.Text ?? "";
@@ -203,7 +199,6 @@ public partial class NoteView : UserControl
             return;
         }
 
-        // Backspace at the very start joins this paragraph onto the one before.
         if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Back && box.SelectionStart == box.SelectionEnd && box.CaretIndex == 0)
         {
             e.Handled = vm.MergeEditingIntoPrevious();

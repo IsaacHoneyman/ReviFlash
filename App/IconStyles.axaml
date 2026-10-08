@@ -1,16 +1,9 @@
 <Styles xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!--
-        Presentation for the geometries in Icons.axaml. Size is chosen per use through the
-        class; stroke weight is nudged with it so larger icons do not read as thin.
-    -->
+    <!-- Styles for Icons.axaml; size is set per class and stroke weight rises with it so large icons don't read thin. -->
 
-    <!--
-        Width only: with Stretch="Uniform" the Path then takes its natural aspect ratio, so
-        a wide glyph like the folder is centred by its parent instead of being pinned to
-        the top of a fixed square.
-    -->
+    <!-- Width only, so Stretch="Uniform" keeps each glyph's aspect ratio and wide ones like the folder centre in their parent. -->
     <Style Selector="Path.icon">
         <Setter Property="Stroke" Value="{DynamicResource TextPrimary}" />
         <Setter Property="StrokeThickness" Value="1.3" />
