@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace ReviFlash.Utilities;
@@ -241,6 +242,69 @@ public static class SearchUtility
         }
 
         return [.. ordered.Select(entry => entry.Item)];
+    }
+
+    /// <summary>
+    /// Makes a bound list match <paramref name="target"/> while touching as few rows as
+    /// possible. Clearing and refilling rebuilds every card on screen on each keystroke;
+    /// this keeps the longest run of rows already in the right order and only removes or
+    /// inserts the rest, so narrowing a search mostly just drops cards.
+    /// </summary>
+    public static void SyncTo<T>(this ObservableCollection<T> list, IReadOnlyList<T> target) where T : class
+    {
+        var targetIndex = new Dictionary<T, int>(ReferenceEqualityComparer.Instance);
+        for (int i = 0; i < target.Count; i++) targetIndex.TryAdd(target[i], i);
+
+        // Rows that stay, as their position in the target.
+        var positions = new int[list.Count];
+        for (int i = 0; i < list.Count; i++)
+        {
+            positions[i] = targetIndex.TryGetValue(list[i], out int index) ? index : -1;
+        }
+
+        var keep = LongestIncreasingRun(positions);
+
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            if (!keep[i]) list.RemoveAt(i);
+        }
+
+        for (int i = 0; i < target.Count; i++)
+        {
+            if (i >= list.Count || !ReferenceEquals(list[i], target[i])) list.Insert(i, target[i]);
+        }
+    }
+
+    /// <summary>
+    /// Marks the longest strictly increasing subsequence of the non-negative entries:
+    /// the rows that are already in order relative to each other and can stay put.
+    /// </summary>
+    private static bool[] LongestIncreasingRun(int[] values)
+    {
+        var keep = new bool[values.Length];
+        var tails = new List<int>();          // index into values of the smallest tail per length
+        var previous = new int[values.Length];
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (values[i] < 0) continue;
+
+            int low = 0, high = tails.Count;
+            while (low < high)
+            {
+                int mid = (low + high) / 2;
+                if (values[tails[mid]] < values[i]) low = mid + 1;
+                else high = mid;
+            }
+
+            previous[i] = low > 0 ? tails[low - 1] : -1;
+            if (low == tails.Count) tails.Add(i);
+            else tails[low] = i;
+        }
+
+        for (int i = tails.Count > 0 ? tails[^1] : -1; i >= 0; i = previous[i]) keep[i] = true;
+
+        return keep;
     }
 
     // --- Scoring helpers ---

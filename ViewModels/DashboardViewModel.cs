@@ -726,12 +726,12 @@ public partial class DashboardViewModel : ViewModelBase
 
         var ordered = visible.SearchAndSort(SearchText, SelectedSortOption?.Mode ?? SortMode.Relevance, TypePriority);
 
-        DashboardItems.Clear();
-        foreach (var item in ordered)
+        foreach (var deck in ordered.OfType<FlashCardDeck>())
         {
-            if (item is FlashCardDeck deck) deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
-            DashboardItems.Add(item);
+            deck.IsSelectedForMultiReview = _selectedDeckIds.Contains(deck.ID);
         }
+
+        DashboardItems.SyncTo<object>(ordered);
 
         RefreshEmptyState();
     }

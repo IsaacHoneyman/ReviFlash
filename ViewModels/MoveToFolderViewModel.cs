@@ -91,15 +91,13 @@ public partial class MoveToFolderViewModel : ViewModelBase
 
     private void RefreshChoices()
     {
-        Choices.Clear();
-
         // With no query the list keeps its tree order, which the indentation depends on;
         // searching flattens it into ranked matches like every other list in the app.
         var visible = SearchUtility.IsEmptyQuery(SearchText)
             ? _allChoices
             : _allChoices.SearchAndSort(SearchText, SortMode.Relevance);
 
-        foreach (var choice in visible) Choices.Add(choice);
+        Choices.SyncTo(visible);
 
         if (SelectedChoice is not null && !Choices.Contains(SelectedChoice)) SelectedChoice = null;
     }

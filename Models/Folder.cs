@@ -37,9 +37,13 @@ public partial class Folder(string name) : ObservableObject, ISearchable
 
     /// <summary> Breadcrumb text shown when a search surfaces this folder from deeper down. </summary>
     [NotifyPropertyChangedFor(nameof(HasFolderPath))]
+    [NotifyPropertyChangedFor(nameof(LocationSuffix))]
     [ObservableProperty] private string? _folderPath;
 
     public bool HasFolderPath => !string.IsNullOrEmpty(FolderPath);
+
+    /// <summary> Trails the contents summary on the card, so the location never needs a line of its own. </summary>
+    public string LocationSuffix => HasFolderPath ? $" · in {FolderPath}" : "";
 
     /// <summary> Combined study time across the subtree. </summary>
     public int StudySeconds { get; set; }

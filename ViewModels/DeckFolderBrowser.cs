@@ -160,8 +160,7 @@ public partial class DeckFolderBrowser : ViewModelBase
             SelectedSortOption?.Mode ?? SortMode.Relevance,
             item => item is Folder ? FolderPriority : SetPriority);
 
-        Items.Clear();
-        foreach (var item in ordered) Items.Add(item);
+        Items.SyncTo(ordered);
 
         EmptyStateText =
             isSearching && IsInFolder ? $"Nothing in {CurrentFolderName} matches '{SearchText.Trim()}'." :
