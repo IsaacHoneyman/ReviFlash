@@ -34,6 +34,12 @@ public partial class MakeCardWindow : Window
             e.Handled = true;
             return;
         }
+        if (TextFormatting.IsSelectLineShortcut(e, PlatformSettings?.HotkeyConfiguration))
+        {
+            TextFormatting.SelectLine(box);
+            e.Handled = true;
+            return;
+        }
         if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsCloze == true) is not { } pair) return;
 
         TextFormatting.Wrap(box, pair.Open, pair.Close);

@@ -45,6 +45,29 @@ public static class TextFormatting
         return e.Key == Key.P && e.KeyModifiers.HasFlag(command) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
     }
 
+    /// <summary> Ctrl (Cmd on macOS) + L: select the cursor's line. </summary>
+    public static bool IsSelectLineShortcut(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys)
+    {
+        var command = hotkeys?.CommandModifiers ?? KeyModifiers.Control;
+        return e.Key == Key.L && e.KeyModifiers.HasFlag(command) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+    }
+
+    /// <summary>
+    /// Selects the whole line the cursor is on, its line break included. With whole lines already selected, the
+    /// selection grows by the next line, so pressing it again keeps selecting further down.
+    /// </summary>
+    public static void SelectLine(TextBox box)
+    {
+        var text = box.Text ?? "";
+        var start = Math.Min(box.SelectionStart, box.SelectionEnd);
+        var end = Math.Max(box.SelectionStart, box.SelectionEnd);
+
+        var lineStart = start == 0 ? 0 : text.LastIndexOf('\n', start - 1) + 1;
+        var lineBreak = text.IndexOf('\n', end);
+        Select(box, lineStart, lineBreak < 0 ? text.Length : lineBreak + 1);
+        box.Focus();
+    }
+
     /// <summary>
     /// Makes every line the selection touches (or the cursor's line) a bullet point by starting it with "- ". If they all
     /// already are, the bullets are removed instead.

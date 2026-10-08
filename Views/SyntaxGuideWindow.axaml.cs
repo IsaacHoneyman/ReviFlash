@@ -96,6 +96,7 @@ public partial class SyntaxGuideWindow : Window
             new(["Ctrl+2"], "Subheading"),
             new(["Ctrl+3"], "Small heading"),
             new(["Ctrl+P"], "Bullet points (on every line selected)"),
+            new(["Ctrl+L"], "Select the line (again for the next line too)"),
             new(["Ctrl+M"], "Maths in the line"),
             new(["Ctrl+Shift+M"], "Maths on its own line"),
             new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),

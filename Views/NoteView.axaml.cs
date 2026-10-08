@@ -225,6 +225,13 @@ public partial class NoteView : UserControl
             return;
         }
 
+        if (TextFormatting.IsSelectLineShortcut(e, _topLevel.PlatformSettings?.HotkeyConfiguration))
+        {
+            TextFormatting.SelectLine(box);
+            e.Handled = true;
+            return;
+        }
+
         if (TextFormatting.ShortcutFor(e, _topLevel.PlatformSettings?.HotkeyConfiguration, allowCloze: false) is { } pair)
         {
             TextFormatting.Wrap(box, pair.Open, pair.Close);

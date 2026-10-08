@@ -91,6 +91,12 @@ public partial class DeckEditorWindow : Window
             e.Handled = true;
             return;
         }
+        if (TextFormatting.IsSelectLineShortcut(e, PlatformSettings?.HotkeyConfiguration))
+        {
+            TextFormatting.SelectLine(box);
+            e.Handled = true;
+            return;
+        }
         if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsClozeCardType == true) is not { } pair) return;
 
         _activeField = box;
