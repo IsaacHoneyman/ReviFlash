@@ -121,63 +121,21 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedThemeChanged(string value)
-    {
-        ApplyTheme(MetaDataManager.Data, value);
-        MetaDataManager.SaveMetaData();
-    }
+    partial void OnSelectedThemeChanged(string value) => Save(data => ApplyTheme(data, value));
 
-    partial void OnShowTimerChanged(bool value)
-    {
-        MetaDataManager.Data.ShowTimer = value;
-        MetaDataManager.SaveMetaData();
-    }
+    partial void OnShowTimerChanged(bool value) => Save(data => data.ShowTimer = value);
+    partial void OnShowProgressChanged(bool value) => Save(data => data.ShowProgress = value);
+    partial void OnShowSkipButtonChanged(bool value) => Save(data => data.ShowSkipButton = value);
+    partial void OnShowRetryLaterButtonChanged(bool value) => Save(data => data.ShowRetryLaterButton = value);
+    partial void OnShowAnswerStreakInReviewChanged(bool value) => Save(data => data.ShowAnswerStreakInReview = value);
+    partial void OnShowAdditionalFieldLatexPreviewsChanged(bool value) => Save(data => data.ShowAdditionalFieldLatexPreviews = value);
+    partial void OnShowBackgroundSwirlChanged(bool value) => Save(data => data.ShowBackgroundSwirl = value);
+    partial void OnUseLatexFontForCardsChanged(bool value) => Save(data => data.UseLatexFontForCards = value);
+    partial void OnCheckForUpdatesOnStartupChanged(bool value) => Save(data => data.CheckForUpdatesOnStartup = value);
 
-    partial void OnShowProgressChanged(bool value)
+    private static void Save(Action<AppMetaData> apply)
     {
-        MetaDataManager.Data.ShowProgress = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnShowSkipButtonChanged(bool value)
-    {
-        MetaDataManager.Data.ShowSkipButton = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnShowRetryLaterButtonChanged(bool value)
-    {
-        MetaDataManager.Data.ShowRetryLaterButton = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnShowAnswerStreakInReviewChanged(bool value)
-    {
-        MetaDataManager.Data.ShowAnswerStreakInReview = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnShowAdditionalFieldLatexPreviewsChanged(bool value)
-    {
-        MetaDataManager.Data.ShowAdditionalFieldLatexPreviews = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnShowBackgroundSwirlChanged(bool value)
-    {
-        MetaDataManager.Data.ShowBackgroundSwirl = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnUseLatexFontForCardsChanged(bool value)
-    {
-        MetaDataManager.Data.UseLatexFontForCards = value;
-        MetaDataManager.SaveMetaData();
-    }
-
-    partial void OnCheckForUpdatesOnStartupChanged(bool value)
-    {
-        MetaDataManager.Data.CheckForUpdatesOnStartup = value;
+        apply(MetaDataManager.Data);
         MetaDataManager.SaveMetaData();
     }
 

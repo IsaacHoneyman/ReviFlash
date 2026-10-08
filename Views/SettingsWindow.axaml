@@ -9,321 +9,169 @@
     CanResize="False"
     Background="{DynamicResource AppBackground}">
 
+    <Window.Styles>
+        <Style Selector="TextBlock.heading">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="TextBlock.note">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <!-- A labelled setting: the header on the left, its control on the right. -->
+        <Style Selector="HeaderedContentControl.settingRow">
+            <Setter Property="Template">
+                <ControlTemplate TargetType="HeaderedContentControl">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <ContentPresenter Name="PART_HeaderPresenter" Content="{TemplateBinding Header}"
+                            VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
+                        <ContentPresenter Name="PART_ContentPresenter" Grid.Column="1" Content="{TemplateBinding Content}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
     <ScrollViewer Margin="24,24,8,24"
         Padding="0,0,16,0"
         VerticalScrollBarVisibility="Auto"
         HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="16">
-            <TextBlock Text="Settings" FontSize="28" FontWeight="Bold"
-                Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Classes="title" Text="Settings" />
 
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
+            <Border Classes="card compact">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Appearance"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="heading" Text="Appearance" />
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Application Theme"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableThemes}"
-                            SelectedItem="{Binding SelectedTheme}"
-                            HorizontalAlignment="Right" Width="180" CornerRadius="5" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Application Theme">
+                        <ComboBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"
+                            Width="180" CornerRadius="5" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto" Margin="0,6,0,0">
-                        <TextBlock Grid.Column="0" Text="Background Swirl"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowBackgroundSwirl}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Background Swirl" Margin="0,6,0,0">
+                        <CheckBox IsChecked="{Binding ShowBackgroundSwirl}" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="LaTeX Font for Card Text"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding UseLatexFontForCards}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="LaTeX Font for Card Text">
+                        <CheckBox IsChecked="{Binding UseLatexFontForCards}" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show LaTeX Previews for Additional Fields"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1"
-                            IsChecked="{Binding ShowAdditionalFieldLatexPreviews}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Show LaTeX Previews for Additional Fields">
+                        <CheckBox IsChecked="{Binding ShowAdditionalFieldLatexPreviews}" />
+                    </HeaderedContentControl>
                 </StackPanel>
             </Border>
 
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
+            <Border Classes="card compact">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Review"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="heading" Text="Review" />
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show Timer" VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowTimer}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Show Timer">
+                        <CheckBox IsChecked="{Binding ShowTimer}" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show Progress Meter"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowProgress}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Show Progress Meter">
+                        <CheckBox IsChecked="{Binding ShowProgress}" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show Skip Button"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowSkipButton}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Show Skip Button">
+                        <CheckBox IsChecked="{Binding ShowSkipButton}" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show Retry Later Button"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowRetryLaterButton}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Show Retry Later Button">
+                        <CheckBox IsChecked="{Binding ShowRetryLaterButton}" />
+                    </HeaderedContentControl>
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="Show Answer Streak"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowAnswerStreakInReview}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Show Answer Streak">
+                        <CheckBox IsChecked="{Binding ShowAnswerStreakInReview}" />
+                    </HeaderedContentControl>
                 </StackPanel>
             </Border>
 
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
+            <Border Classes="card compact">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Backup and Import"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="heading" Text="Backup and Import" />
 
-                    <TextBlock
-                        Text="Create a backup zip or restore the app from an existing backup file."
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Classes="note"
+                        Text="Create a backup zip or restore the app from an existing backup file." />
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0"
-                            Text="Include flashcard stats in backup"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox x:Name="IncludeStatsInBackupCheckBox"
-                            Grid.Column="1"
-                            IsChecked="True"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Include flashcard stats in backup">
+                        <CheckBox x:Name="IncludeStatsInBackupCheckBox" IsChecked="True" />
+                    </HeaderedContentControl>
 
                     <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
-                        <Button Grid.Column="0"
-                            Content="Create Backup"
-                            Click="CreateBackup_Click"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center"
-                            CornerRadius="8"
-                            Padding="12,10"
-                            FontWeight="Bold"
-                            Background="{DynamicResource CardBorder}"
-                            Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
-
-                        <Button Grid.Column="1"
-                            Content="Restore Backup"
-                            Click="RestoreBackup_Click"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center"
-                            CornerRadius="8"
-                            Padding="12,10"
-                            FontWeight="Bold"
-                            Background="{DynamicResource CardBorder}"
-                            Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
+                        <Button Grid.Column="0" Classes="wide secondary" Content="Create Backup" Click="CreateBackup_Click" />
+                        <Button Grid.Column="1" Classes="wide secondary" Content="Restore Backup" Click="RestoreBackup_Click" />
                     </Grid>
 
-                    <TextBlock x:Name="BackupStatusText"
-                        IsVisible="False"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock x:Name="BackupStatusText" Classes="note" IsVisible="False" />
 
                     <Rectangle Height="1" Margin="0,6" Fill="{DynamicResource CardBorder}" />
 
-                    <TextBlock Text="Import from Anki"
-                        FontSize="13" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="heading" Text="Import from Anki" FontSize="13" />
 
-                    <TextBlock
-                        Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, cloze, type-in and reversed cards all come across, and sub-decks become folders. Images and sounds aren't supported yet: cards with images are marked [image]."
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Classes="note"
+                        Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, cloze, type-in and reversed cards all come across, and sub-decks become folders. Images and sounds aren't supported yet: cards with images are marked [image]." />
 
-                    <Button x:Name="AnkiImportButton"
-                        Content="Import Anki Deck"
-                        Click="ImportAnki_Click"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        CornerRadius="8"
-                        Padding="12,10"
-                        FontWeight="Bold"
-                        Background="{DynamicResource CardBorder}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" />
+                    <Button x:Name="AnkiImportButton" Classes="wide secondary" Content="Import Anki Deck" Click="ImportAnki_Click" />
 
-                    <TextBlock x:Name="AnkiImportStatusText"
-                        IsVisible="False"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock x:Name="AnkiImportStatusText" Classes="note" IsVisible="False" />
                 </StackPanel>
             </Border>
 
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
+            <Border Classes="card compact">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Updates"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="heading" Text="Updates" />
 
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0"
-                            Text="Check for updates on startup"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <CheckBox Grid.Column="1"
-                            IsChecked="{Binding CheckForUpdatesOnStartup}"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center" />
-                    </Grid>
+                    <HeaderedContentControl Classes="settingRow" Header="Check for updates on startup">
+                        <CheckBox IsChecked="{Binding CheckForUpdatesOnStartup}" />
+                    </HeaderedContentControl>
 
-                    <Button Content="Check for Updates Now"
-                        Click="CheckForUpdates_Click"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8"
-                        Padding="12,10"
-                        FontWeight="Bold"
-                        Background="{DynamicResource CardBorder}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" />
+                    <Button Classes="wide secondary" Content="Check for Updates Now" Click="CheckForUpdates_Click" />
 
-                    <TextBlock x:Name="UpdateStatusText"
-                        IsVisible="False"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock x:Name="UpdateStatusText" Classes="note" IsVisible="False" />
                 </StackPanel>
             </Border>
 
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1"
-                CornerRadius="10"
-                Padding="16">
+            <Border Classes="card compact">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Account"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="heading" Text="Account" />
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
                         <TextBlock Grid.Column="0" Text="{Binding AccountText}"
                             VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                             Foreground="{DynamicResource TextPrimary}" />
-                        <Button Grid.Column="1" Content="Sign Out" Click="SignOut_Click"
-                            IsVisible="{Binding IsSignedIn}"
-                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
-                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
-                        <Button Grid.Column="1" Content="Sign In" Click="SignIn_Click"
-                            IsVisible="{Binding !IsSignedIn}"
-                            CornerRadius="8" Padding="12,6" FontWeight="SemiBold"
-                            Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                            Cursor="Hand" />
+                        <Button Grid.Column="1" Classes="secondary" Content="Sign Out" Click="SignOut_Click"
+                            IsVisible="{Binding IsSignedIn}" Padding="12,6" />
+                        <Button Grid.Column="1" Classes="secondary" Content="Sign In" Click="SignIn_Click"
+                            IsVisible="{Binding !IsSignedIn}" Padding="12,6" />
                     </Grid>
 
-                    <Button Content="Change Username" Click="ChangeUsername_Click"
-                        IsVisible="{Binding IsSignedIn}"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8" Padding="12,8" FontWeight="SemiBold"
-                        Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" />
+                    <Button Classes="wide secondary" Content="Change Username" Click="ChangeUsername_Click"
+                        IsVisible="{Binding IsSignedIn}" Padding="12,8" />
 
-                    <TextBlock Text="Sign in to share decks, keep private copies, and download community decks."
-                        IsVisible="{Binding !IsSignedIn}" FontSize="12" TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Classes="caption" Text="Sign in to share decks, keep private copies, and download community decks."
+                        IsVisible="{Binding !IsSignedIn}" TextWrapping="Wrap" />
 
-                    <TextBlock x:Name="AccountStatusText"
-                        IsVisible="False"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock x:Name="AccountStatusText" Classes="note" IsVisible="False" />
                 </StackPanel>
             </Border>
 
-            <Border Background="{DynamicResource SurfaceOverlayBackground}"
-                BorderBrush="{DynamicResource DangerForeground}"
-                BorderThickness="1.5"
-                CornerRadius="10"
-                Padding="16">
+            <Border Classes="card compact" Background="{DynamicResource SurfaceOverlayBackground}"
+                BorderBrush="{DynamicResource DangerForeground}" BorderThickness="1.5">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Danger Zone"
-                        FontWeight="SemiBold"
-                        FontSize="16"
+                    <TextBlock Classes="heading" Text="Danger Zone" FontSize="16"
                         Foreground="{DynamicResource DangerForeground}" />
 
-                    <TextBlock
-                        Text="Delete flashcard stats, for every deck or just one. This cannot be undone."
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="note" Foreground="{DynamicResource TextPrimary}"
+                        Text="Delete flashcard stats, for every deck or just one. This cannot be undone." />
 
-                    <Button Content="Delete All Flashcard Stats"
-                        Click="DeleteAllStats_Click"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8"
-                        Padding="12,10"
-                        FontWeight="Bold"
-                        Background="{DynamicResource DangerBackground}"
-                        Foreground="{DynamicResource DangerBackgroundForeground}"
-                        Cursor="Hand" />
+                    <Button Classes="wide danger" Content="Delete All Flashcard Stats" Click="DeleteAllStats_Click" />
+                    <Button Classes="wide danger" Content="Delete Flashcard Deck Stats" Click="OpenDeleteDeckStats_Click" />
 
-                    <Button Content="Delete Flashcard Deck Stats"
-                        Click="OpenDeleteDeckStats_Click"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8"
-                        Padding="12,10"
-                        FontWeight="Bold"
-                        Background="{DynamicResource DangerBackground}"
-                        Foreground="{DynamicResource DangerBackgroundForeground}"
-                        Cursor="Hand" />
-
-                    <TextBlock x:Name="DeleteStatsStatusText"
-                        IsVisible="False"
-                        TextWrapping="Wrap"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock x:Name="DeleteStatsStatusText" Classes="note" IsVisible="False" />
                 </StackPanel>
             </Border>
         </StackPanel>

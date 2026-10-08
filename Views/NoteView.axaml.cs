@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ReviFlash.Utilities;
 using ReviFlash.ViewModels;
+using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
 
@@ -81,11 +82,6 @@ public partial class NoteView : UserControl
         ViewModel?.CommitName();
         PageScroll.Focus();
         e.Handled = true;
-    }
-
-    private void Help_Click(object? sender, RoutedEventArgs e)
-    {
-        if (OwnerWindow is { } owner) SyntaxGuideWindow.ShowFor(owner);
     }
 
     // --- Paragraphs ---
@@ -213,25 +209,7 @@ public partial class NoteView : UserControl
             return;
         }
 
-        if (TextFormatting.IsBulletShortcut(e, _topLevel.PlatformSettings?.HotkeyConfiguration))
-        {
-            TextFormatting.ToggleBullets(box);
-            e.Handled = true;
-            return;
-        }
-
-        if (TextFormatting.IsSelectLineShortcut(e, _topLevel.PlatformSettings?.HotkeyConfiguration))
-        {
-            TextFormatting.SelectLine(box);
-            e.Handled = true;
-            return;
-        }
-
-        if (TextFormatting.ShortcutFor(e, _topLevel.PlatformSettings?.HotkeyConfiguration, allowCloze: false) is { } pair)
-        {
-            TextFormatting.Wrap(box, pair.Open, pair.Close);
-            e.Handled = true;
-        }
+        TextFormatting.TryHandleShortcut(box, e, _topLevel.PlatformSettings?.HotkeyConfiguration, allowCloze: false);
     }
 
     /// <summary> The wrapped line the cursor is on, and how many lines the editor shows. </summary>
@@ -244,20 +222,10 @@ public partial class NoteView : UserControl
 
     // --- Toolbar ---
 
-    private void Wrap(string open, string close)
+    private void Toolbar_FormatRequested(object? sender, FormatRequestedEventArgs e)
     {
-        if (_activeEditor is { } box && box.IsVisible) TextFormatting.Wrap(box, open, close);
+        if (_activeEditor is { IsVisible: true } box) TextFormatting.Apply(box, e.Tag);
     }
-
-    private void Bold_Click(object? sender, RoutedEventArgs e) => Wrap(@"\B{", "}");
-    private void Italic_Click(object? sender, RoutedEventArgs e) => Wrap(@"\I{", "}");
-    private void Underline_Click(object? sender, RoutedEventArgs e) => Wrap(@"\U{", "}");
-    private void Heading1_Click(object? sender, RoutedEventArgs e) => Wrap(@"\H1{", "}");
-    private void Heading2_Click(object? sender, RoutedEventArgs e) => Wrap(@"\H2{", "}");
-    private void Heading3_Click(object? sender, RoutedEventArgs e) => Wrap(@"\H3{", "}");
-    private void Bullet_Click(object? sender, RoutedEventArgs e) { if (_activeEditor is { IsVisible: true } box) TextFormatting.ToggleBullets(box); }
-    private void InlineMath_Click(object? sender, RoutedEventArgs e) => Wrap("$", "$");
-    private void DisplayMath_Click(object? sender, RoutedEventArgs e) => Wrap("$$", "$$");
 
     // --- Make card ---
 

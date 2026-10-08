@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-using static ReviFlash.Utilities.CardUtility;
-
 namespace ReviFlash.Models;
 
 public abstract class FlashCard(string front, string back)
@@ -28,18 +26,14 @@ public abstract class FlashCard(string front, string back)
 
     public abstract bool VerifyAnswer(object answer);
 
-    /// <summary> The label the card editor shows for this card. </summary>
-    public string CardType => this switch
-    {
-        TypeFlashCard => CARD_TYPE_TYPE,
-        FlipFlashCard { IsReversible: true } => $"{CARD_TYPE_FLIP} ↔",
-        FlipFlashCard => CARD_TYPE_FLIP,
-        ClozeFlashCard => CARD_TYPE_CLOZE,
-        MultiFlashCard => CARD_TYPE_MULTI_CHOICE,
-        MatchFlashCard => CARD_TYPE_MATCH,
-        TrueFalseFlashCard => CARD_TYPE_TRUE_FALSE,
-        _ => "Unknown"
-    };
+    /// <summary> The card type's name, as the editor's type picker lists it. </summary>
+    public abstract string TypeName { get; }
+
+    /// <summary> The label the card editor's card list shows for this card. </summary>
+    public virtual string CardType => TypeName;
+
+    /// <summary> The type label a review shows for this question. </summary>
+    public virtual string ReviewTypeLabel => ReviewLabel ?? TypeName;
 
     public bool IsMultiChoiceCard => this is MultiFlashCard;
     public bool IsMatchCard => this is MatchFlashCard;

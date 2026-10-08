@@ -1,5 +1,5 @@
-using Avalonia.Controls;
 using Avalonia.Interactivity;
+using ReviFlash.Views.Controls;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using ReviFlash.Data.Online;
@@ -7,8 +7,8 @@ using Velopack;
 
 namespace ReviFlash.Views;
 
-/// <summary> Shows a startup update downloading; the app restarts when it finishes, or the window reports a failure and can be closed. </summary>
-public partial class UpdateProgressWindow : Window
+/// <summary> Shows an update downloading; the app restarts when it finishes, or the window reports a failure and can be closed. </summary>
+public partial class UpdateProgressWindow : DialogWindow
 {
     private readonly UpdateClient? _client;
     private readonly UpdateInfo? _updateInfo;

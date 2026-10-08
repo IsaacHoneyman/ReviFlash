@@ -3,31 +3,97 @@
     xmlns:vm="using:ReviFlash.ViewModels"
     xmlns:models="using:ReviFlash.Models"
     xmlns:utilities="using:ReviFlash.Utilities"
+    xmlns:controls="using:ReviFlash.Views.Controls"
     x:Class="ReviFlash.Views.DashboardView"
     x:DataType="vm:DashboardViewModel">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://ReviFlash/Views/Controls/LibraryCard.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <UserControl.Styles>
-        <Style Selector="ToggleButton.dashboardToggle">
-            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        <!-- Library card text: the count in its badge, then the hint lines under the name. -->
+        <Style Selector="TextBlock.badgeCount">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.badgeLabel">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.cardHint">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="Margin" Value="0,6,0,0" />
+        </Style>
+
+        <!-- Sidebar stat tile: Header is the label, Content the value. -->
+        <Style Selector="HeaderedContentControl.statTile">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{DynamicResource StatTileBackground}" CornerRadius="10" Padding="16">
+                        <StackPanel>
+                            <ContentPresenter Content="{TemplateBinding Header}"
+                                FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <!-- Graph view tile, spaced by margin (the uniform grid it sits in has no spacing of its own); long values shrink to fit. -->
+        <Style Selector="HeaderedContentControl.graphTile">
+            <Setter Property="Margin" Value="7,0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
+                        <StackPanel>
+                            <ContentPresenter Content="{TemplateBinding Header}"
+                                FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                <ContentPresenter Content="{TemplateBinding Content}"
+                                    FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            </Viewbox>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="ComboBox.timePeriod">
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontSize" Value="14" />
+            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+
+        <!-- Leaves the stats or graph view. -->
+        <Style Selector="Button.exit">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Opacity" Value="0.85" />
         </Style>
-
-        <Style Selector="ToggleButton.dashboardToggle:checked">
-            <Setter Property="Background" Value="{DynamicResource GradientStart}" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
-        </Style>
-
-        <!-- Graph view tiles, spaced by margin (the uniform grid they sit in has no spacing of its own). -->
-        <Style Selector="Border.graphTile">
-            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
-            <Setter Property="CornerRadius" Value="16" />
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Margin" Value="7,0" />
+        <Style Selector="Button.exit /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
 
         <!-- Study calendar squares: empty, then the theme colour stronger with more time studied. -->
@@ -64,406 +130,138 @@
     </UserControl.Styles>
 
     <UserControl.DataTemplates>
+        <DataTemplate DataType="vm:DashboardViewModel+TimePeriodOption">
+            <TextBlock Text="{Binding Label}" />
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type models:Folder}">
-            <Border Width="286" Height="145"
-                Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource FolderCardBorder}"
-                BorderThickness="1.5" CornerRadius="20"
-                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
-                Focusable="True"
-                PointerPressed="FolderCard_Click"
-                KeyDown="FolderCard_KeyDown">
-
-                <Grid RowDefinitions="Auto, *">
-
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
-                        VerticalAlignment="Top">
-                        <Border Grid.Column="0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            Background="{DynamicResource FolderCardBorder}"
-                            CornerRadius="8" Padding="9,5"
-                            Height="28" MinHeight="28">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="{Binding ItemCount}"
-                                    FontSize="13" FontWeight="Bold"
-                                    Foreground="{DynamicResource FolderBadgeForeground}" />
-                                <TextBlock Text="Items" FontSize="11"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource FolderBadgeForeground}" />
-                            </StackPanel>
-                        </Border>
-
-                        <StackPanel Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Spacing="6">
-                            <Button Click="RenameFolder_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30" MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Rename Folder">
-                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
-                            </Button>
-
-                            <Button Click="MoveItem_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30" MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Move Folder">
-                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                            </Button>
-
-                            <Button Click="DeleteFolder_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30" MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Delete Folder (keeps its contents)">
-                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                        <Border Height="58" VerticalAlignment="Center" Padding="0,4,0,0">
-                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Path Classes="icon medium" Data="{StaticResource IconFolder}" />
-                                <TextBlock Text="{Binding Name}" FontSize="22"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}"
-                                    TextWrapping="Wrap"
-                                    TextTrimming="CharacterEllipsis"
-                                    MaxLines="2"
-                                    VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-
-                        <TextBlock FontSize="13"
-                            Foreground="{DynamicResource TextSecondary}"
-                            TextTrimming="CharacterEllipsis"
-                            MaxLines="1"
-                            Margin="0, 4, 0, 0">
-                            <Run Text="{Binding ContentsSummary}" /><Run Text="{Binding LocationSuffix}" />
-                        </TextBlock>
+            <controls:LibraryCard Title="{Binding Name}" Icon="{StaticResource IconFolder}"
+                BorderBrush="{DynamicResource FolderCardBorder}" BadgeBrush="{DynamicResource FolderCardBorder}"
+                PointerPressed="Card_Click" KeyDown="Card_KeyDown">
+                <controls:LibraryCard.Badge>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Classes="badgeCount" Text="{Binding ItemCount}" Foreground="{DynamicResource FolderBadgeForeground}" />
+                        <TextBlock Classes="badgeLabel" Text="Items" Foreground="{DynamicResource FolderBadgeForeground}" />
                     </StackPanel>
+                </controls:LibraryCard.Badge>
+                <controls:LibraryCard.Actions>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Classes="iconButton" Click="RenameFolder_Click" ToolTip.Tip="Rename Folder">
+                            <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="MoveItem_Click" ToolTip.Tip="Move to Folder">
+                            <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="DeleteFolder_Click" ToolTip.Tip="Delete Folder (keeps its contents)">
+                            <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                        </Button>
+                    </StackPanel>
+                </controls:LibraryCard.Actions>
 
-                </Grid>
-
-            </Border>
+                <TextBlock Classes="cardHint" MaxLines="1">
+                    <Run Text="{Binding ContentsSummary}" /><Run Text="{Binding LocationSuffix}" />
+                </TextBlock>
+            </controls:LibraryCard>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type models:StudyGroup}">
-            <Border Width="286" Height="145"
-                Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource GroupCardBorder}"
-                BorderThickness="1.5" CornerRadius="20"
-                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
-                Focusable="True"
-                PointerPressed="GroupCard_Click"
-                KeyDown="GroupCard_KeyDown">
-
-                <Grid RowDefinitions="Auto, *">
-
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
-                        VerticalAlignment="Top">
-                        <Border Grid.Column="0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            Background="{DynamicResource GroupCardBorder}"
-                            CornerRadius="8" Padding="9,5"
-                            Height="28" MinHeight="28">
-                            <StackPanel Orientation="Horizontal"
-                                Spacing="4">
-                                <TextBlock Text="{Binding DeckCount}"
-                                    FontSize="13" FontWeight="Bold"
-                                    Foreground="{DynamicResource GroupBadgeForeground}" />
-                                <TextBlock Text="Decks" FontSize="11"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource GroupBadgeForeground}" />
-                            </StackPanel>
-                        </Border>
-
-                        <StackPanel Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Spacing="6">
-                            <Button Click="EditGroup_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Edit Group">
-                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
-                            </Button>
-
-                            <Button Click="GroupStats_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="View Group Stats">
-                                <Path Classes="icon" Data="{StaticResource IconStats}" />
-                            </Button>
-
-                            <Button Click="MoveItem_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Move to Folder">
-                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                            </Button>
-
-                            <Button Click="DeleteGroup_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Delete Group">
-                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                        <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
-                            <TextBlock Text="{Binding Name}" FontSize="22"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextPrimary}"
-                                TextWrapping="Wrap"
-                                TextTrimming="CharacterEllipsis"
-                                MaxLines="2"
-                                VerticalAlignment="Center" />
-                        </Border>
-                        <TextBlock Text="Click to review group" FontSize="14"
-                            Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding ShowReviewHint}"
-                            Margin="0, 6, 0, 0" />
-                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="13"
-                            Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding ShowLocationHint}"
-                            TextTrimming="CharacterEllipsis"
-                            Margin="0, 6, 0, 0" />
+            <controls:LibraryCard Title="{Binding Name}"
+                BorderBrush="{DynamicResource GroupCardBorder}" BadgeBrush="{DynamicResource GroupCardBorder}"
+                PointerPressed="Card_Click" KeyDown="Card_KeyDown">
+                <controls:LibraryCard.Badge>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Classes="badgeCount" Text="{Binding DeckCount}" Foreground="{DynamicResource GroupBadgeForeground}" />
+                        <TextBlock Classes="badgeLabel" Text="Decks" Foreground="{DynamicResource GroupBadgeForeground}" />
                     </StackPanel>
+                </controls:LibraryCard.Badge>
+                <controls:LibraryCard.Actions>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Classes="iconButton" Click="EditGroup_Click" ToolTip.Tip="Edit Group">
+                            <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="GroupStats_Click" ToolTip.Tip="View Group Stats">
+                            <Path Classes="icon" Data="{StaticResource IconStats}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="MoveItem_Click" ToolTip.Tip="Move to Folder">
+                            <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="DeleteGroup_Click" ToolTip.Tip="Delete Group">
+                            <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                        </Button>
+                    </StackPanel>
+                </controls:LibraryCard.Actions>
 
-                </Grid>
-
-            </Border>
+                <StackPanel>
+                    <TextBlock Classes="cardHint" Text="Click to review group" FontSize="14" IsVisible="{Binding ShowReviewHint}" />
+                    <TextBlock Classes="cardHint" Text="{Binding FolderPath, StringFormat='in {0}'}" IsVisible="{Binding ShowLocationHint}" />
+                </StackPanel>
+            </controls:LibraryCard>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type models:FlashCardDeck}">
-            <Border Width="286" Height="145"
-                Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1.5" CornerRadius="20"
-                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
-                Focusable="True"
-                PointerPressed="DeckCard_Click"
-                KeyDown="DeckCard_KeyDown">
-
-                <Grid RowDefinitions="Auto, *">
-
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
-                        VerticalAlignment="Top">
-                        <Border Grid.Column="0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            Background="{DynamicResource BadgeBackground}"
-                            CornerRadius="8" Padding="9,5"
-                            Height="28" MinHeight="28">
-                            <StackPanel Orientation="Horizontal"
-                                Spacing="4">
-                                <TextBlock Text="{Binding CardCount}"
-                                    FontSize="13" FontWeight="Bold"
-                                    Foreground="{DynamicResource TextPrimary}" />
-                                <TextBlock Text="Cards" FontSize="11"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource TextSecondary}" />
-                            </StackPanel>
-                        </Border>
-
-                        <StackPanel Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Spacing="6">
-                            <Button Click="EditDeck_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Edit Set">
-                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
-                            </Button>
-
-                            <Button Click="DeckStats_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="View Set Stats">
-                                <Path Classes="icon" Data="{StaticResource IconStats}" />
-                            </Button>
-
-                            <Button Click="MoveItem_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Move to Folder">
-                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                            </Button>
-
-                            <Button Click="DeleteDeck_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Delete Set">
-                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                        <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
-                            <TextBlock Text="{Binding Name}" FontSize="22"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextPrimary}"
-                                TextWrapping="Wrap"
-                                TextTrimming="CharacterEllipsis"
-                                MaxLines="2"
-                                VerticalAlignment="Center" />
-                        </Border>
-                        <TextBlock Text="Click to review" FontSize="14"
-                            Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding ShowReviewHint}"
-                            Margin="0, 6, 0, 0" />
-                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="13"
-                            Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding ShowLocationHint}"
-                            TextTrimming="CharacterEllipsis"
-                            Margin="0, 6, 0, 0" />
-                        <TextBlock Text="Selected" FontSize="14"
-                            Foreground="{DynamicResource GradientStart}"
-                            IsVisible="{Binding IsSelectedForMultiReview}"
-                            Margin="0, 6, 0, 0" />
+            <controls:LibraryCard Title="{Binding Name}"
+                PointerPressed="Card_Click" KeyDown="Card_KeyDown">
+                <controls:LibraryCard.Badge>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Classes="badgeCount" Text="{Binding CardCount}" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Classes="badgeLabel" Text="Cards" Foreground="{DynamicResource TextSecondary}" />
                     </StackPanel>
+                </controls:LibraryCard.Badge>
+                <controls:LibraryCard.Actions>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Classes="iconButton" Click="EditDeck_Click" ToolTip.Tip="Edit Set">
+                            <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="DeckStats_Click" ToolTip.Tip="View Set Stats">
+                            <Path Classes="icon" Data="{StaticResource IconStats}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="MoveItem_Click" ToolTip.Tip="Move to Folder">
+                            <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="DeleteDeck_Click" ToolTip.Tip="Delete Set">
+                            <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                        </Button>
+                    </StackPanel>
+                </controls:LibraryCard.Actions>
 
-                </Grid>
-
-            </Border>
+                <StackPanel>
+                    <TextBlock Classes="cardHint" Text="Click to review" FontSize="14" IsVisible="{Binding ShowReviewHint}" />
+                    <TextBlock Classes="cardHint" Text="{Binding FolderPath, StringFormat='in {0}'}" IsVisible="{Binding ShowLocationHint}" />
+                    <TextBlock Classes="cardHint" Text="Selected" FontSize="14" Foreground="{DynamicResource GradientStart}"
+                        IsVisible="{Binding IsSelectedForMultiReview}" />
+                </StackPanel>
+            </controls:LibraryCard>
         </DataTemplate>
+
         <DataTemplate DataType="{x:Type models:Note}">
-            <Border Width="286" Height="145"
-                Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1.5" CornerRadius="20"
-                Margin="0, 0, 16, 16" Padding="16" Cursor="Hand"
-                Focusable="True"
-                PointerPressed="NoteCard_Click"
-                KeyDown="NoteCard_KeyDown">
-
-                <Grid RowDefinitions="Auto, *">
-
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *"
-                        VerticalAlignment="Top">
-                        <Border Grid.Column="0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            Background="{DynamicResource BadgeBackground}"
-                            CornerRadius="8" Padding="9,5"
-                            Height="28" MinHeight="28">
-                            <TextBlock Text="Note" FontSize="12" FontWeight="Bold"
-                                VerticalAlignment="Center"
-                                Foreground="{DynamicResource TextPrimary}" />
-                        </Border>
-
-                        <StackPanel Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Spacing="6">
-                            <Button Click="RenameNote_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Rename Note">
-                                <Path Classes="icon" Data="{StaticResource IconEdit}" />
-                            </Button>
-
-                            <Button Click="NoteStats_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="View Note Stats">
-                                <Path Classes="icon" Data="{StaticResource IconStats}" />
-                            </Button>
-
-                            <Button Click="MoveItem_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Move to Folder">
-                                <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                            </Button>
-
-                            <Button Click="DeleteNote_Click"
-                                Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                Padding="10,6" Height="30"
-                                MinHeight="30"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                ToolTip.Tip="Delete Note">
-                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                        <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
-                            <TextBlock Text="{Binding Name}" FontSize="22"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextPrimary}"
-                                TextWrapping="Wrap"
-                                TextTrimming="CharacterEllipsis"
-                                MaxLines="2"
-                                VerticalAlignment="Center" />
-                        </Border>
-                        <TextBlock Text="{Binding Summary}" FontSize="13"
-                            Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding !HasFolderPath}"
-                            TextTrimming="CharacterEllipsis"
-                            Margin="0, 6, 0, 0" />
-                        <TextBlock Text="{Binding FolderPath, StringFormat='in {0}'}" FontSize="13"
-                            Foreground="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding HasFolderPath}"
-                            TextTrimming="CharacterEllipsis"
-                            Margin="0, 6, 0, 0" />
+            <controls:LibraryCard Title="{Binding Name}"
+                PointerPressed="Card_Click" KeyDown="Card_KeyDown">
+                <controls:LibraryCard.Badge>
+                    <TextBlock Text="Note" FontSize="12" FontWeight="Bold"
+                        VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
+                </controls:LibraryCard.Badge>
+                <controls:LibraryCard.Actions>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Classes="iconButton" Click="RenameNote_Click" ToolTip.Tip="Rename Note">
+                            <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="NoteStats_Click" ToolTip.Tip="View Note Stats">
+                            <Path Classes="icon" Data="{StaticResource IconStats}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="MoveItem_Click" ToolTip.Tip="Move to Folder">
+                            <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                        </Button>
+                        <Button Classes="iconButton" Click="DeleteNote_Click" ToolTip.Tip="Delete Note">
+                            <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                        </Button>
                     </StackPanel>
+                </controls:LibraryCard.Actions>
 
-                </Grid>
-
-            </Border>
+                <StackPanel>
+                    <TextBlock Classes="cardHint" Text="{Binding Summary}" IsVisible="{Binding !HasFolderPath}" />
+                    <TextBlock Classes="cardHint" Text="{Binding FolderPath, StringFormat='in {0}'}" IsVisible="{Binding HasFolderPath}" />
+                </StackPanel>
+            </controls:LibraryCard>
         </DataTemplate>
     </UserControl.DataTemplates>
 
@@ -492,10 +290,8 @@
                 <TextBlock Text="{Binding AccountText}" FontSize="13" FontWeight="SemiBold"
                     Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"
                     MaxWidth="260" TextTrimming="CharacterEllipsis" />
-                <Button Content="Sign In" Click="SignIn_Click" IsVisible="{Binding !IsSignedIn}"
-                    Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
-                    CornerRadius="8" Padding="10,4" FontSize="12" FontWeight="SemiBold" Cursor="Hand"
-                    VerticalAlignment="Center" />
+                <Button Classes="secondary" Content="Sign In" Click="SignIn_Click" IsVisible="{Binding !IsSignedIn}"
+                    Padding="10,4" FontSize="12" VerticalAlignment="Center" />
                 <TextBlock Text="·" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                 <TextBlock Text="{x:Static utilities:TextUtility.VersionText}" FontSize="12" Foreground="{DynamicResource TextPrimary}"
                     VerticalAlignment="Center" />
@@ -547,10 +343,8 @@
                     <TextBox Grid.Column="0"
                         Text="{Binding SearchText, Mode=TwoWay}"
                         Watermark="{Binding SearchWatermark}"
-                        VerticalContentAlignment="Center"
-                        CornerRadius="8" Padding="10, 0" FontSize="14" Margin="0, 0, 12, 0"
-                        Background="{DynamicResource CardBackground}"
-                        Foreground="{DynamicResource TextPrimary}" />
+                        Classes="input" VerticalContentAlignment="Center"
+                        Padding="10, 0" Margin="0, 0, 12, 0" />
 
                     <ComboBox Grid.Column="1" x:Name="SortBox"
                         ItemsSource="{Binding SortOptions}"
@@ -559,11 +353,9 @@
                         CornerRadius="8" Margin="0,0,12,0"
                         Background="{DynamicResource CardBackground}" />
 
-                    <Button Grid.Column="2"
-                        CornerRadius="8" Padding="14, 0" FontSize="14" FontWeight="Bold"
-                        Background="{DynamicResource StatTileBackground}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" ToolTip.Tip="Create a set, note, folder or group here">
+                    <Button Grid.Column="2" Classes="secondary"
+                        Padding="14, 0" FontSize="14" FontWeight="Bold"
+                        ToolTip.Tip="Create a set, note, folder or group here">
                         <TextBlock Text="+ New" VerticalAlignment="Center" />
                         <Button.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedRight">
@@ -576,55 +368,11 @@
                     </Button>
                 </Grid>
 
-                <!-- Breadcrumb trail. -->
-                <Grid Grid.Row="1" ColumnDefinitions="Auto, *" Margin="0,0,0,14"
-                    IsVisible="{Binding IsInFolder}">
-
-                    <Button Grid.Column="0"
-                        Click="NavigateUp_Click"
-                        Content="← Back"
-                        CornerRadius="8" Padding="10, 6" FontSize="13" FontWeight="SemiBold"
-                        Background="{DynamicResource StatTileBackground}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" Margin="0,0,12,0"
-                        ToolTip.Tip="Back to the parent folder" />
-
-                    <ScrollViewer Grid.Column="1"
-                        HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Disabled">
-                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                            <Button Click="Breadcrumb_Click"
-                                Content="Main Menu"
-                                Background="Transparent"
-                                Foreground="{DynamicResource TextSecondary}"
-                                CornerRadius="6" Padding="8,5" FontSize="13" FontWeight="SemiBold"
-                                Cursor="Hand" />
-
-                            <ItemsControl ItemsSource="{Binding Breadcrumbs}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:Folder}">
-                                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                                            <TextBlock Text="/" FontSize="13"
-                                                VerticalAlignment="Center"
-                                                Foreground="{DynamicResource TextSecondary}" />
-                                            <Button Click="Breadcrumb_Click"
-                                                Content="{Binding Name}"
-                                                Background="Transparent"
-                                                Foreground="{DynamicResource TextPrimary}"
-                                                CornerRadius="6" Padding="8,5" FontSize="13" FontWeight="SemiBold"
-                                                Cursor="Hand" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
+                <controls:BreadcrumbBar Grid.Row="1" Margin="0,0,0,14"
+                    Breadcrumbs="{Binding Breadcrumbs}"
+                    IsVisible="{Binding IsInFolder}"
+                    UpRequested="Breadcrumbs_UpRequested"
+                    CrumbRequested="Breadcrumbs_CrumbRequested" />
 
                 <Grid Grid.Row="2">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -698,28 +446,20 @@
                                 </Panel>
                             </ToggleButton>
 
-
-                            <Button Grid.Column="0" Click="MultiSelectDecks_Click"
+                            <Button Classes="secondary" Click="MultiSelectDecks_Click"
                                 Content="{Binding ReviewSelectionButtonText}"
-                                CornerRadius="8" Padding="12, 8" FontSize="14" FontWeight="SemiBold"
-                                Background="{DynamicResource StatTileBackground}"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Cursor="Hand" />
+                                Padding="12, 8" FontSize="14" />
 
                             <Button Click="OpenOnlineImport_Click"
-                                CornerRadius="8" Padding="12, 8"
+                                Classes="secondary" Padding="12, 8"
                                 VerticalContentAlignment="Center"
-                                Background="{DynamicResource StatTileBackground}"
-                                Cursor="Hand"
                                 ToolTip.Tip="Import: download community decks">
                                 <Path Classes="icon" Data="{StaticResource IconDownload}" />
                             </Button>
 
                             <Button Click="OpenOnlineExport_Click"
-                                CornerRadius="8" Padding="12, 8"
+                                Classes="secondary" Padding="12, 8"
                                 VerticalContentAlignment="Center"
-                                Background="{DynamicResource StatTileBackground}"
-                                Cursor="Hand"
                                 ToolTip.Tip="Export: upload and manage your decks">
                                 <Path Classes="icon" Data="{StaticResource IconUpload}" />
                             </Button>
@@ -729,206 +469,41 @@
 
             </Grid>
 
-            <Border Grid.Column="1"
-                Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1.5"
-                CornerRadius="20"
-                Padding="20"
-                Margin="0,0,0,24">
+            <Border Grid.Column="1" Classes="card" Margin="0,0,0,24">
                 <!-- Scrolls when the window is too short for every tile, such as after F11. -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12">
-                    <Grid ColumnDefinitions="*">
-                        <TextBlock Grid.Column="0" Text="Overall Stats" FontSize="18" FontWeight="Bold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            IsVisible="{Binding !IsViewingStats}" />
-                        <TextBlock Grid.Column="0" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            IsVisible="{Binding IsViewingDeckStats}" />
-                        <TextBlock Grid.Column="0" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            IsVisible="{Binding IsViewingGroupStats}" />
-                        <TextBlock Grid.Column="0" Text="{Binding SelectedNoteForStats.Name, StringFormat='{}{0} Stats'}" FontSize="18" FontWeight="Bold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            IsVisible="{Binding IsViewingNoteStats}" />
-                    </Grid>
+                    <Panel>
+                        <TextBlock Classes="sectionTitle" Text="Overall Stats" IsVisible="{Binding !IsViewingStats}" />
+                        <TextBlock Classes="sectionTitle" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingDeckStats}" />
+                        <TextBlock Classes="sectionTitle" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingGroupStats}" />
+                        <TextBlock Classes="sectionTitle" Text="{Binding SelectedNoteForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingNoteStats}" />
+                    </Panel>
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding TimePeriods}"
-                            SelectedItem="{Binding SelectedTimePeriod}"
-                            CornerRadius="8"
-                            Height="40"
-                            Padding="12, 8" FontSize="14"
-                            Background="{DynamicResource StatTileBackground}"
-                            Foreground="{DynamicResource TextPrimary}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="vm:DashboardViewModel+TimePeriodOption">
-                                    <TextBlock Text="{Binding Label}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-
-                        <Button Grid.Column="1" Click="CloseDecKStats_Click"
-                            Background="{DynamicResource CardBackground}"
-                            BorderBrush="{DynamicResource CardBorder}"
-                            BorderThickness="1"
-                            CornerRadius="10" Padding="16,10"
-                            Height="40"
-                            IsVisible="{Binding IsViewingStats}" VerticalAlignment="Center"
-                            Cursor="Hand" Opacity="0.85">
-                            <TextBlock Text="Exit" FontSize="12" FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextPrimary}"
-                                VerticalAlignment="Center" HorizontalAlignment="Center" />
-                        </Button>
+                        <ComboBox Grid.Column="0" Classes="timePeriod"
+                            ItemsSource="{Binding TimePeriods}" SelectedItem="{Binding SelectedTimePeriod}" />
+                        <Button Grid.Column="1" Classes="exit" Content="Exit" Click="CloseDecKStats_Click"
+                            IsVisible="{Binding IsViewingStats}" />
                     </Grid>
 
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding ShowCardStats}">
-                        <StackPanel>
-                            <TextBlock Text="Total Questions"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding TotalQuestions}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding ShowCardStats}">
-                        <StackPanel>
-                            <TextBlock Text="Total Correct"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding TotalCorrect}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding ShowCardStats}">
-                        <StackPanel>
-                            <TextBlock Text="Accuracy Rate"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding ShowCardStats}">
-                        <StackPanel>
-                            <TextBlock Text="Grade"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding Grade}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="Total Time"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding TotalTimeFormatted}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
+                    <HeaderedContentControl Classes="statTile" Header="Total Questions" Content="{Binding TotalQuestions}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Total Correct" Content="{Binding TotalCorrect}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Accuracy Rate" Content="{Binding PercentageText}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Grade" Content="{Binding Grade}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Total Time" Content="{Binding TotalTimeFormatted}" />
                     <!-- Overall only: the total split into flashcards and notes. -->
-                    <Border IsVisible="{Binding ShowTimeSplit}" Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="Flashcard Time"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding FlashcardTimeFormatted}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
+                    <HeaderedContentControl Classes="statTile" Header="Flashcard Time" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                    <HeaderedContentControl Classes="statTile" Header="Notes Time" Content="{Binding NoteTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                    <HeaderedContentControl Classes="statTile" Header="Last Studied" Content="{Binding NoteLastStudiedText}" IsVisible="{Binding IsViewingNoteStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Words" Content="{Binding NoteWordsText}" IsVisible="{Binding IsViewingNoteStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Headings" Content="{Binding NoteHeadingsText}" IsVisible="{Binding IsViewingNoteStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Best Answer Streak" Content="{Binding BestAnswerStreakText}" IsVisible="{Binding IsViewingCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Best Ever Streak" Content="{Binding BestEverStreakText}" IsVisible="{Binding !IsViewingStats}" />
 
-                    <Border IsVisible="{Binding ShowTimeSplit}" Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="Notes Time"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding NoteTimeFormatted}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding IsViewingNoteStats}">
-                        <StackPanel>
-                            <TextBlock Text="Last Studied"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding NoteLastStudiedText}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border IsVisible="{Binding IsViewingNoteStats}" Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="Words"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding NoteWordsText}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border IsVisible="{Binding IsViewingNoteStats}" Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="Headings"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding NoteHeadingsText}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding IsViewingCardStats}">
-                        <StackPanel>
-                            <TextBlock Text="Best Answer Streak"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding BestAnswerStreakText}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="{DynamicResource StatTileBackground}"
-                        CornerRadius="10"
-                        Padding="16"
-                        IsVisible="{Binding !IsViewingStats}">
-                        <StackPanel>
-                            <TextBlock Text="Best Ever Streak"
-                                Foreground="{DynamicResource TextSecondary}" FontSize="12" />
-                            <TextBlock Text="{Binding BestEverStreakText}" Foreground="{DynamicResource TextPrimary}"
-                                FontSize="24" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
-
-                    <Button Click="GraphStats_Click"
+                    <Button Classes="secondary" Click="GraphStats_Click"
                         Content="Graph View"
-                        CornerRadius="10" Padding="14, 10" FontSize="14" FontWeight="SemiBold"
-                        Background="{DynamicResource StatTileBackground}"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Cursor="Hand" />
+                        CornerRadius="10" Padding="14, 10" FontSize="14" />
                 </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -946,109 +521,30 @@
                         Foreground="{DynamicResource TextSecondary}" />
                 </StackPanel>
 
-                <ComboBox Grid.Column="1"
-                    ItemsSource="{Binding TimePeriods}"
-                    SelectedItem="{Binding SelectedTimePeriod}"
-                    CornerRadius="8"
-                    Height="40"
-                    Padding="12, 8" FontSize="14"
-                    Width="240"
-                    VerticalAlignment="Center"
-                    Background="{DynamicResource StatTileBackground}"
-                    Foreground="{DynamicResource TextPrimary}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="vm:DashboardViewModel+TimePeriodOption">
-                            <TextBlock Text="{Binding Label}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                <ComboBox Grid.Column="1" Classes="timePeriod" Width="240" VerticalAlignment="Center"
+                    ItemsSource="{Binding TimePeriods}" SelectedItem="{Binding SelectedTimePeriod}" />
 
-                <Button Grid.Column="2" Click="ExitGraphView_Click"
-                    Background="{DynamicResource CardBackground}"
-                    BorderBrush="{DynamicResource CardBorder}"
-                    BorderThickness="1"
-                    CornerRadius="10" Padding="16,10"
-                    Height="40"
-                    VerticalAlignment="Center"
-                    Cursor="Hand" Opacity="0.85">
-                    <TextBlock Text="Exit" FontSize="12" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}"
-                        VerticalAlignment="Center" HorizontalAlignment="Center" />
-                </Button>
+                <Button Grid.Column="2" Classes="exit" Content="Exit" Click="ExitGraphView_Click" />
             </Grid>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="18">
                     <!-- One row of tiles; hidden ones (card stats for a note, the time split outside overall) take no space. -->
                     <UniformGrid Rows="1" Margin="-7,0">
-                        <Border Classes="graphTile" IsVisible="{Binding ShowCardStats}">
-                            <StackPanel>
-                                <TextBlock Text="Total Questions" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding TotalQuestions}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                                </Viewbox>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="graphTile" IsVisible="{Binding ShowCardStats}">
-                            <StackPanel>
-                                <TextBlock Text="Accuracy" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                                </Viewbox>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="graphTile">
-                            <StackPanel>
-                                <TextBlock Text="Total Time" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding TotalTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                                </Viewbox>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="graphTile" IsVisible="{Binding ShowTimeSplit}">
-                            <StackPanel>
-                                <TextBlock Text="Flashcards" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding FlashcardTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                                </Viewbox>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="graphTile" IsVisible="{Binding ShowTimeSplit}">
-                            <StackPanel>
-                                <TextBlock Text="Notes" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding NoteTimeFormatted}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                                </Viewbox>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="graphTile" IsVisible="{Binding ShowCardStats}">
-                            <StackPanel>
-                                <TextBlock Text="Grade" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding Grade}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                                </Viewbox>
-                            </StackPanel>
-                        </Border>
+                        <HeaderedContentControl Classes="graphTile" Header="Total Questions" Content="{Binding TotalQuestions}" IsVisible="{Binding ShowCardStats}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Accuracy" Content="{Binding PercentageText}" IsVisible="{Binding ShowCardStats}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Total Time" Content="{Binding TotalTimeFormatted}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Flashcards" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Notes" Content="{Binding NoteTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Grade" Content="{Binding Grade}" IsVisible="{Binding ShowCardStats}" />
                     </UniformGrid>
 
-                    <Border Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource CardBorder}"
-                        BorderThickness="1.5"
-                        CornerRadius="20"
-                        Padding="20"
-                        IsVisible="{Binding HasAttemptsData}">
+                    <Border Classes="card" IsVisible="{Binding HasAttemptsData}">
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Text="Attempts Chart" FontSize="18" FontWeight="Bold"
-                                        Foreground="{DynamicResource TextPrimary}" />
-                                    <TextBlock Text="Green shows correct answers, red shows incorrect answers." FontSize="12"
-                                        Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Classes="sectionTitle" Text="Attempts Chart" />
+                                    <TextBlock Classes="caption" Text="Green shows correct answers, red shows incorrect answers." />
                                 </StackPanel>
 
                                 <ComboBox Grid.Column="1" VerticalAlignment="Top"
@@ -1116,19 +612,12 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource CardBorder}"
-                        BorderThickness="1.5"
-                        CornerRadius="20"
-                        Padding="20"
-                        IsVisible="{Binding HasTimeData}">
+                    <Border Classes="card" IsVisible="{Binding HasTimeData}">
                         <StackPanel Spacing="12">
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Text="Study Time Chart" FontSize="18" FontWeight="Bold"
-                                        Foreground="{DynamicResource TextPrimary}" />
-                                    <TextBlock Text="The bar height shows total time spent studying: blue is flashcards, purple is notes." FontSize="12"
-                                        Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Classes="sectionTitle" Text="Study Time Chart" />
+                                    <TextBlock Classes="caption" Text="The bar height shows total time spent studying: blue is flashcards, purple is notes." />
                                 </StackPanel>
 
                                 <ComboBox Grid.Column="1" VerticalAlignment="Top"
@@ -1183,32 +672,18 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource CardBorder}"
-                        BorderThickness="1.5"
-                        CornerRadius="20"
-                        Padding="20"
-                        IsVisible="{Binding !HasGraphData}">
+                    <Border Classes="card" IsVisible="{Binding !HasGraphData}">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="No chart data yet" FontSize="18" FontWeight="Bold"
-                                Foreground="{DynamicResource TextPrimary}" />
-                            <TextBlock Text="Review a set or group, or spend time in a note, to fill the graph view with daily activity." FontSize="12"
-                                Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Classes="sectionTitle" Text="No chart data yet" />
+                            <TextBlock Classes="caption" Text="Review a set or group, or spend time in a note, to fill the graph view with daily activity." />
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource CardBorder}"
-                        BorderThickness="1.5"
-                        CornerRadius="20"
-                        Padding="20"
-                        IsVisible="{Binding HasTimeBreakdown}">
+                    <Border Classes="card" IsVisible="{Binding HasTimeBreakdown}">
                         <StackPanel Spacing="12">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Where Your Time Went" FontSize="18" FontWeight="Bold"
-                                    Foreground="{DynamicResource TextPrimary}" />
-                                <TextBlock Text="The sets and notes you spent the most time on in this period." FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Classes="sectionTitle" Text="Where Your Time Went" />
+                                <TextBlock Classes="caption" Text="The sets and notes you spent the most time on in this period." />
                             </StackPanel>
 
                             <ItemsControl ItemsSource="{Binding TimeBreakdown}">
@@ -1237,17 +712,11 @@
                     </Border>
 
                     <!-- Study calendar: the last year, a square per day shaded by time spent. -->
-                    <Border Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource CardBorder}"
-                        BorderThickness="1.5"
-                        CornerRadius="20"
-                        Padding="20">
+                    <Border Classes="card">
                         <StackPanel Spacing="12">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Study Calendar" FontSize="18" FontWeight="Bold"
-                                    Foreground="{DynamicResource TextPrimary}" />
-                                <TextBlock Text="{Binding HeatmapSummary}" FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Classes="sectionTitle" Text="Study Calendar" />
+                                <TextBlock Classes="caption" Text="{Binding HeatmapSummary}" />
                             </StackPanel>
 
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">

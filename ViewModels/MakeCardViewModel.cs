@@ -9,21 +9,18 @@ namespace ReviFlash.ViewModels;
 /// <summary> Makes a card from a note: the selection becomes the back (or cloze text) and the nearest heading the front. </summary>
 public partial class MakeCardViewModel : ViewModelBase
 {
-    public const string FlipType = "Flip";
-    public const string ClozeType = "Cloze";
-
     // Remembered between cards, since notes usually turn into several cards for the same set.
-    private static string _lastCardType = FlipType;
+    private static string _lastCardType = CardUtility.CARD_TYPE_FLIP;
     private static ulong? _lastDeckID;
 
-    public IReadOnlyList<string> CardTypes { get; } = [FlipType, ClozeType];
+    public IReadOnlyList<string> CardTypes { get; } = [CardUtility.CARD_TYPE_FLIP, CardUtility.CARD_TYPE_CLOZE];
 
     [NotifyPropertyChangedFor(nameof(IsFlip))]
     [NotifyPropertyChangedFor(nameof(IsCloze))]
     [ObservableProperty] private string _selectedCardType;
 
-    public bool IsFlip => SelectedCardType == FlipType;
-    public bool IsCloze => SelectedCardType == ClozeType;
+    public bool IsFlip => SelectedCardType == CardUtility.CARD_TYPE_FLIP;
+    public bool IsCloze => SelectedCardType == CardUtility.CARD_TYPE_CLOZE;
 
     [ObservableProperty] private string _front;
     [ObservableProperty] private string _back;

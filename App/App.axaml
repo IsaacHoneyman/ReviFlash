@@ -11,6 +11,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://ReviFlash/App/IconStyles.axaml" />
+        <StyleInclude Source="avares://ReviFlash/App/ControlStyles.axaml" />
     </Application.Styles>
 
     <Application.Resources>

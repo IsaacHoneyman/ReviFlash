@@ -1,60 +1,37 @@
-<Window xmlns="https://github.com/avaloniaui"
+<controls:DialogWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
         x:Class="ReviFlash.Views.TextPromptWindow"
         Title="ReviFlash"
-        Width="460" Height="230"
-        WindowStartupLocation="CenterOwner"
-        SystemDecorations="None"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaChromeHints="NoChrome"
-        TransparencyLevelHint="Transparent"
-        Background="Transparent">
+        Width="460" Height="230">
 
-    <Border Background="{DynamicResource AppBackground}"
-        Opacity="0.98"
-        BorderBrush="{DynamicResource CardBorder}"
-        BorderThickness="2"
-        CornerRadius="20"
-        Padding="24">
-
+    <Border Classes="dialogShell">
         <Grid RowDefinitions="Auto, Auto, *, Auto">
             <TextBlock x:Name="PromptText"
                 Grid.Row="0"
+                Classes="sectionTitle"
                 Text="Folder name"
-                FontSize="18"
-                FontWeight="Bold"
-                Foreground="{DynamicResource TextPrimary}"
                 TextWrapping="Wrap" />
 
             <TextBox x:Name="InputBox"
                 Grid.Row="1"
+                Classes="input"
                 Margin="0,16,0,0"
-                CornerRadius="8"
                 Padding="10,8"
                 FontSize="15"
-                KeyDown="Input_KeyDown"
-                Background="{DynamicResource CardBackground}"
-                Foreground="{DynamicResource TextPrimary}" />
+                KeyDown="Input_KeyDown" />
 
             <TextBlock x:Name="HintText"
                 Grid.Row="2"
+                Classes="caption"
                 Margin="0,10,0,0"
-                FontSize="12"
-                Foreground="{DynamicResource TextSecondary}"
                 TextWrapping="Wrap"
                 VerticalAlignment="Top" />
 
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
-                <Button Click="Cancel_Click" Content="Cancel"
-                    Background="#70FFFFFF"
-                    Foreground="{DynamicResource TextPrimary}"
-                    CornerRadius="8" Padding="20,10" FontWeight="SemiBold" Cursor="Hand" />
-
-                <Button x:Name="ConfirmButton" Click="Confirm_Click" Content="Create"
-                    Background="{DynamicResource GradientStart}"
-                    Foreground="{DynamicResource PrimaryButtonForeground}"
-                    CornerRadius="8" Padding="20,10" FontWeight="Bold" Cursor="Hand" />
+                <Button Classes="dialog secondary" Click="Cancel_Click" Content="Cancel" IsCancel="True" />
+                <Button x:Name="ConfirmButton" Classes="dialog primary" Click="Confirm_Click" Content="Create" />
             </StackPanel>
         </Grid>
     </Border>
-</Window>
+</controls:DialogWindow>

@@ -1,0 +1,63 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ReviFlash.Views.Controls">
+
+    <ControlTheme x:Key="{x:Type controls:LibraryCard}" TargetType="controls:LibraryCard">
+        <Setter Property="Width" Value="286" />
+        <Setter Property="Height" Value="145" />
+        <Setter Property="Margin" Value="0,0,16,16" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="BadgeBrush" Value="{DynamicResource BadgeBackground}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    Padding="{TemplateBinding Padding}">
+                    <Grid RowDefinitions="Auto, *">
+
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" VerticalAlignment="Top">
+                            <Border Grid.Column="0"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Background="{TemplateBinding BadgeBrush}"
+                                CornerRadius="8" Padding="9,5"
+                                Height="28" MinHeight="28">
+                                <ContentPresenter Name="PART_BadgePresenter" Content="{TemplateBinding Badge}" />
+                            </Border>
+
+                            <ContentPresenter Grid.Column="1" Name="PART_ActionsPresenter"
+                                Content="{TemplateBinding Actions}"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                            <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
+                                <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
+                                    <Path Grid.Column="0" Classes="icon medium" Margin="0,0,10,0"
+                                        Data="{TemplateBinding Icon}"
+                                        IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <TextBlock Grid.Column="1" Text="{TemplateBinding Title}"
+                                        FontSize="22" FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2"
+                                        VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+
+                            <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" />
+                        </StackPanel>
+
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+</ResourceDictionary>

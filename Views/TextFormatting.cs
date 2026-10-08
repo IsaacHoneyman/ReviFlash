@@ -9,41 +9,70 @@ namespace ReviFlash.Views;
 /// <summary> Formatting toolbar and shortcuts shared by the card editor, note blocks and the make-card dialog. </summary>
 public static class TextFormatting
 {
+    /// <summary> Bullets, select-line and wrapping shortcuts in one go; true (and handled) when the key did something. </summary>
+    public static bool TryHandleShortcut(TextBox box, KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys, bool allowCloze)
+    {
+        if (IsBulletShortcut(e, hotkeys)) ToggleBullets(box);
+        else if (IsSelectLineShortcut(e, hotkeys)) SelectLine(box);
+        else if (ShortcutFor(e, hotkeys, allowCloze) is { } pair) Wrap(box, pair.Open, pair.Close);
+        else return false;
+
+        e.Handled = true;
+        return true;
+    }
+
+    /// <summary> Wrapping for a toolbar button's Tag: Bold, Italic, Underline, Heading1-3, InlineMath, DisplayMath or Blank; null otherwise. </summary>
+    public static (string Open, string Close)? PairFor(string? tag) => tag switch
+    {
+        "Bold" => (@"\B{", "}"),
+        "Italic" => (@"\I{", "}"),
+        "Underline" => (@"\U{", "}"),
+        "Heading1" => (@"\H1{", "}"),
+        "Heading2" => (@"\H2{", "}"),
+        "Heading3" => (@"\H3{", "}"),
+        "InlineMath" => ("$", "$"),
+        "DisplayMath" => ("$$", "$$"),
+        "Blank" => (@"\C{", "}"),
+        _ => null,
+    };
+
+    /// <summary> Applies a toolbar button's Tag to the box: "Bullet" toggles bullets, anything <see cref="PairFor"/> knows wraps. </summary>
+    public static void Apply(TextBox box, string? tag)
+    {
+        if (tag == "Bullet") ToggleBullets(box);
+        else if (PairFor(tag) is { } pair) Wrap(box, pair.Open, pair.Close);
+    }
+
     /// <summary> Wrapping for Ctrl (Cmd on macOS) + B/I/U/M/1-3, Shift+M for display maths and Shift+C for a cloze blank; null otherwise. </summary>
     public static (string Open, string Close)? ShortcutFor(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys, bool allowCloze)
     {
-        var command = hotkeys?.CommandModifiers ?? KeyModifiers.Control;
-        if (!e.KeyModifiers.HasFlag(command)) return null;
+        if (!e.KeyModifiers.HasFlag(CommandKey(hotkeys))) return null;
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
 
-        return (e.Key, shift) switch
+        return PairFor((e.Key, shift) switch
         {
-            (Key.B, false) => (@"\B{", "}"),
-            (Key.I, false) => (@"\I{", "}"),
-            (Key.U, false) => (@"\U{", "}"),
-            (Key.D1 or Key.NumPad1, false) => (@"\H1{", "}"),
-            (Key.D2 or Key.NumPad2, false) => (@"\H2{", "}"),
-            (Key.D3 or Key.NumPad3, false) => (@"\H3{", "}"),
-            (Key.M, false) => ("$", "$"),
-            (Key.M, true) => ("$$", "$$"),
-            (Key.C, true) when allowCloze => (@"\C{", "}"),
+            (Key.B, false) => "Bold",
+            (Key.I, false) => "Italic",
+            (Key.U, false) => "Underline",
+            (Key.D1 or Key.NumPad1, false) => "Heading1",
+            (Key.D2 or Key.NumPad2, false) => "Heading2",
+            (Key.D3 or Key.NumPad3, false) => "Heading3",
+            (Key.M, false) => "InlineMath",
+            (Key.M, true) => "DisplayMath",
+            (Key.C, true) when allowCloze => "Blank",
             _ => null,
-        };
+        });
     }
 
     /// <summary> Ctrl (Cmd on macOS) + P: turn the selected lines into bullet points, or back. </summary>
-    public static bool IsBulletShortcut(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys)
-    {
-        var command = hotkeys?.CommandModifiers ?? KeyModifiers.Control;
-        return e.Key == Key.P && e.KeyModifiers.HasFlag(command) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-    }
+    public static bool IsBulletShortcut(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys) =>
+        e.Key == Key.P && e.KeyModifiers.HasFlag(CommandKey(hotkeys)) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
 
     /// <summary> Ctrl (Cmd on macOS) + L: select the cursor's line. </summary>
-    public static bool IsSelectLineShortcut(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys)
-    {
-        var command = hotkeys?.CommandModifiers ?? KeyModifiers.Control;
-        return e.Key == Key.L && e.KeyModifiers.HasFlag(command) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-    }
+    public static bool IsSelectLineShortcut(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys) =>
+        e.Key == Key.L && e.KeyModifiers.HasFlag(CommandKey(hotkeys)) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+
+    private static KeyModifiers CommandKey(PlatformHotkeyConfiguration? hotkeys) => hotkeys?.CommandModifiers ?? KeyModifiers.Control;
 
     /// <summary> Selects the cursor's whole line with its line break; with whole lines already selected, extends to the next line. </summary>
     public static void SelectLine(TextBox box)

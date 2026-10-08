@@ -53,10 +53,9 @@ public static class BackupManager
 
             // SQLite's backup API takes a consistent snapshot even mid-write, which copying the file does not.
             string stagedDatabase = Path.Combine(stagingDirectory, TextUtility.DatabaseFileName);
-            using (var source = DatabaseManager.GetConnection())
-            using (var target = OpenUnpooled(stagedDatabase))
+            using (var source = Db.Open())
+            using (var target = Db.OpenUnpooled(stagedDatabase))
             {
-                source.Open();
                 source.BackupDatabase(target);
             }
             if (!includeStats) RemoveStatsFromDatabase(stagedDatabase);
@@ -171,21 +170,6 @@ public static class BackupManager
         }
     }
 
-    // --- Shared Helpers ---
-
-    /// <summary> Opens a staged copy outside the pool, so the file can be deleted as soon as the connection is disposed. </summary>
-    private static SqliteConnection OpenUnpooled(string databasePath, SqliteOpenMode mode = SqliteOpenMode.ReadWriteCreate)
-    {
-        var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = mode,
-            Pooling = false
-        }.ToString());
-        connection.Open();
-        return connection;
-    }
-
     // --- Backup Helpers ---
 
     private static void AddFileToArchive(ZipArchive archive, string sourceFilePath, string entryName)
@@ -208,17 +192,8 @@ public static class BackupManager
 
     private static void RemoveStatsFromDatabase(string databasePath)
     {
-        using var connection = OpenUnpooled(databasePath);
-
-        using var command = connection.CreateCommand();
-        command.CommandText = "DROP TABLE IF EXISTS DeckStats;";
-        command.ExecuteNonQuery();
-
-        command.CommandText = "DROP TABLE IF EXISTS AnswerStreaks;";
-        command.ExecuteNonQuery();
-
-        command.CommandText = "DROP TABLE IF EXISTS NoteStats;";
-        command.ExecuteNonQuery();
+        using var connection = Db.OpenUnpooled(databasePath);
+        Db.Execute(connection, null, "DROP TABLE IF EXISTS DeckStats; DROP TABLE IF EXISTS AnswerStreaks; DROP TABLE IF EXISTS NoteStats;");
     }
 
     // --- Restore Helpers ---
@@ -237,14 +212,11 @@ public static class BackupManager
     {
         try
         {
-            using var connection = OpenUnpooled(databasePath, SqliteOpenMode.ReadOnly);
-            using var command = connection.CreateCommand();
+            using var connection = Db.OpenUnpooled(databasePath, SqliteOpenMode.ReadOnly);
 
-            command.CommandText = "PRAGMA integrity_check;";
-            if (command.ExecuteScalar() as string != "ok") throw new InvalidDataException("the database in the backup is damaged.");
+            if (Db.Scalar<string>(connection, null, "PRAGMA integrity_check;") != "ok") throw new InvalidDataException("the database in the backup is damaged.");
 
-            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('Decks', 'Cards');";
-            if (Convert.ToInt32(command.ExecuteScalar()) != 2) throw new InvalidDataException("the backup does not contain a ReviFlash library.");
+            if (!Db.TableExists(connection, "Decks") || !Db.TableExists(connection, "Cards")) throw new InvalidDataException("the backup does not contain a ReviFlash library.");
         }
         catch (SqliteException ex)
         {
@@ -315,39 +287,30 @@ public static class BackupManager
         // Only stats for decks the backup has: the rest have nothing to attach to and the foreign key would reject them.
         RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "DeckStats", ["DeckId", "CorrectCount", "TotalAttempts", "TimeTakenSeconds", "DateChecked"],
             where: "DeckId IN (SELECT ID FROM main.Decks)");
-        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "AnswerStreaks", ["TargetType", "TargetId", "BestStreak"]);
+        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "AnswerStreaks", ["TargetType", "TargetId", "BestStreak"],
+            where: $"(TargetType = '{FlashCardRepository.DeckStreakTarget}' AND TargetId IN (SELECT ID FROM main.Decks))"
+                + $" OR (TargetType = '{FlashCardRepository.GroupStreakTarget}' AND TargetId IN (SELECT ID FROM main.StudyGroups))");
         RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "NoteStats", ["NoteID", "DateStudied", "Seconds"],
             where: "NoteID IN (SELECT ID FROM main.Notes)");
     }
 
     private static void RestoreTableFromBackup(string sourceDatabasePath, string targetDatabasePath, string tableName, IReadOnlyList<string> columns, string? where = null)
     {
-        using var connection = OpenUnpooled(targetDatabasePath);
-
-        using (var attach = connection.CreateCommand())
-        {
-            attach.CommandText = "ATTACH DATABASE $source AS source;";
-            attach.Parameters.AddWithValue("$source", sourceDatabasePath);
-            attach.ExecuteNonQuery();
-        }
+        using var connection = Db.OpenUnpooled(targetDatabasePath);
+        Db.Execute(connection, null, "ATTACH DATABASE $source AS source;", ("$source", sourceDatabasePath));
 
         using (var transaction = connection.BeginTransaction())
-        using (var command = connection.CreateCommand())
         {
             string columnList = string.Join(", ", columns);
-            command.Transaction = transaction;
-            command.CommandText = $"""
+            Db.Execute(connection, transaction, $"""
                 DELETE FROM main.{tableName};
                 INSERT INTO main.{tableName} ({columnList})
                 SELECT {columnList} FROM source.{tableName}{(where is null ? "" : $" WHERE {where}")};
-                """;
-            command.ExecuteNonQuery();
+                """);
             transaction.Commit();
         }
 
-        using var detach = connection.CreateCommand();
-        detach.CommandText = "DETACH DATABASE source;";
-        detach.ExecuteNonQuery();
+        Db.Execute(connection, null, "DETACH DATABASE source;");
     }
 
     private static void RefreshOpenViewsAfterRestore()

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,12 +12,8 @@ using ReviFlash.Utilities;
 namespace ReviFlash.ViewModels;
 
 /// <summary> Cloud Manager: upload local decks and manage your own cloud decks. Only opened once signed in. </summary>
-public partial class OnlineExportViewModel : ViewModelBase
+public partial class OnlineExportViewModel : OnlineViewModelBase
 {
-    public string AccountText => $"Signed in as {AuthSession.Username}";
-
-    [ObservableProperty] private string _statusMessage = string.Empty;
-
     /// <summary> Uploads carry the folder path as the cloud description, and downloads rebuild it. </summary>
     [ObservableProperty] private bool _includeFolderInfo;
 
@@ -98,38 +93,29 @@ public partial class OnlineExportViewModel : ViewModelBase
             return;
         }
 
-        using var cts = new CancellationTokenSource();
-        _ = AnimateStatusAsync($"Uploading '{deck.Name}'", cts.Token);
-
-        try
+        await RunWithStatusAsync($"Uploading '{deck.Name}'", async () =>
         {
             var (jsonPayload, description) = BuildCloudPayload(deck);
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.UploadCloudDeckAsync(userId, deck.Name, description, cards.Count, jsonPayload, UploadAsPrivate);
 
-            cts.Cancel();
-            StatusMessage = message;
             if (success) await LoadCloudDecksAsync();
-        }
-        catch (Exception ex)
-        {
-            cts.Cancel();
-            StatusMessage = $"Upload failed: {ex.Message}";
-        }
+            return message;
+        }, "Upload failed");
     }
 
     [RelayCommand]
     private async Task ConfirmUpdateAsync()
     {
-        if (TargetCloudDeckToUpdate?.StoragePath == null) return;
+        if (TargetCloudDeckToUpdate is not { StoragePath: { } storagePath } target) return;
 
-        if (SelectedLocalDeckForUpdate == null)
+        if (SelectedLocalDeckForUpdate is not { } local)
         {
             StatusMessage = "Please select a local deck to upload.";
             return;
         }
 
-        var cards = FlashCardRepository.GetCardsForDeck(SelectedLocalDeckForUpdate.ID);
+        var cards = FlashCardRepository.GetCardsForDeck(local.ID);
         if (cards.Count == 0)
         {
             StatusMessage = "Cannot update with an empty local deck.";
@@ -138,30 +124,16 @@ public partial class OnlineExportViewModel : ViewModelBase
 
         IsSelectingUpdateDeck = false;
 
-        using var cts = new CancellationTokenSource();
-        _ = AnimateStatusAsync($"Updating '{TargetCloudDeckToUpdate.Title}'", cts.Token);
-
-        try
+        await RunWithStatusAsync($"Updating '{target.Title}'", async () =>
         {
-            var (jsonPayload, description) = BuildCloudPayload(SelectedLocalDeckForUpdate);
+            var (jsonPayload, description) = BuildCloudPayload(local);
             using var client = await SupabaseConnection.CreateAsync();
 
-            var (success, message) = await client.UpdateCloudDeckAsync(
-                TargetCloudDeckToUpdate.StoragePath,
-                SelectedLocalDeckForUpdate.Name,
-                description,
-                cards.Count,
-                jsonPayload);
+            var (success, message) = await client.UpdateCloudDeckAsync(storagePath, local.Name, description, cards.Count, jsonPayload);
 
-            cts.Cancel();
-            StatusMessage = message;
             if (success) await LoadCloudDecksAsync();
-        }
-        catch (Exception ex)
-        {
-            cts.Cancel();
-            StatusMessage = $"Update failed: {ex.Message}";
-        }
+            return message;
+        }, "Update failed");
     }
 
     [RelayCommand]
@@ -176,23 +148,14 @@ public partial class OnlineExportViewModel : ViewModelBase
             return;
         }
 
-        using var cts = new CancellationTokenSource();
-        _ = AnimateStatusAsync(makePrivate ? $"Making '{deck.Title}' private" : $"Making '{deck.Title}' public", cts.Token);
-
-        try
+        await RunWithStatusAsync(makePrivate ? $"Making '{deck.Title}' private" : $"Making '{deck.Title}' public", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.SetCloudDeckVisibilityAsync(userId, deck.StoragePath, makePrivate);
 
-            cts.Cancel();
-            StatusMessage = message;
             if (success) await LoadCloudDecksAsync();
-        }
-        catch (Exception ex)
-        {
-            cts.Cancel();
-            StatusMessage = $"Change failed: {ex.Message}";
-        }
+            return message;
+        }, "Change failed");
     }
 
     /// <summary> Brings one of your own cloud decks (public or private) onto this device. </summary>
@@ -201,10 +164,7 @@ public partial class OnlineExportViewModel : ViewModelBase
     {
         if (deck?.StoragePath == null) return;
 
-        using var cts = new CancellationTokenSource();
-        _ = AnimateStatusAsync($"Downloading '{deck.Title}'", cts.Token);
-
-        try
+        await RunWithStatusAsync($"Downloading '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
             string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
@@ -213,14 +173,8 @@ public partial class OnlineExportViewModel : ViewModelBase
             // The new copy belongs in the upload pane too.
             LocalBrowser.SetDecks(FlashCardRepository.GetAllDecks());
 
-            cts.Cancel();
-            StatusMessage = $"Downloaded '{deck.Title}' to this device.";
-        }
-        catch (Exception ex)
-        {
-            cts.Cancel();
-            StatusMessage = $"Download failed: {ex.Message}";
-        }
+            return $"Downloaded '{deck.Title}' to this device.";
+        }, "Download failed");
     }
 
     [RelayCommand]
@@ -235,23 +189,14 @@ public partial class OnlineExportViewModel : ViewModelBase
             return;
         }
 
-        using var cts = new CancellationTokenSource();
-        _ = AnimateStatusAsync($"Deleting '{deck.Title}'", cts.Token);
-
-        try
+        await RunWithStatusAsync($"Deleting '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath);
 
-            cts.Cancel();
-            StatusMessage = message;
             if (success) await LoadCloudDecksAsync();
-        }
-        catch (Exception ex)
-        {
-            cts.Cancel();
-            StatusMessage = $"Delete failed: {ex.Message}";
-        }
+            return message;
+        }, "Delete failed");
     }
 
     /// <summary> The cloud JSON plus its description: the folder path when included, otherwise empty. </summary>
@@ -280,18 +225,5 @@ public partial class OnlineExportViewModel : ViewModelBase
         foreach (var deck in remoteDecks) CloudDecks.Add(deck);
 
         RefreshCloudDecks();
-    }
-
-    private async Task AnimateStatusAsync(string baseMessage, CancellationToken token)
-    {
-        int dotCount = 1;
-        while (!token.IsCancellationRequested)
-        {
-            StatusMessage = baseMessage + new string('.', dotCount);
-            dotCount = (dotCount % 3) + 1;
-
-            try { await Task.Delay(400, token); }
-            catch (TaskCanceledException) { break; }
-        }
     }
 }

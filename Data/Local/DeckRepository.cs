@@ -1,159 +1,126 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Data.Sqlite;
 using ReviFlash.Models;
 
 namespace ReviFlash.Data.Local;
 
+/// <summary> Deck and card rows on an open connection, shared by the repositories and the importers. </summary>
 public static class DeckRepository
 {
-    // Read
+    // --- Read ---
 
-    public static string? GetDeckName(SqliteConnection connection, ulong deckId)
+    public static string? GetDeckName(SqliteConnection connection, ulong deckId) =>
+        Db.Scalar<string>(connection, null, "SELECT Name FROM Decks WHERE ID = $deckId;", ("$deckId", deckId));
+
+    /// <summary> A deck's cards in creation order, with their options and pairs. </summary>
+    public static List<FlashCard> LoadCards(SqliteConnection connection, ulong deckId)
     {
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT Name FROM Decks WHERE ID = $deckId;";
-        command.Parameters.AddWithValue("$deckId", deckId);
+        var options = Db.Query(connection, null, @"
+            SELECT o.CardID, o.OptionText, o.IsCorrect
+            FROM CardOptions o
+            INNER JOIN Cards c ON c.ID = o.CardID
+            WHERE c.DeckID = $deckId
+            ORDER BY o.CardID, o.OptionIndex ASC;",
+            reader => (CardId: (ulong)reader.GetInt64(0), Option: (reader.GetString(1), reader.GetInt32(2) == 1)),
+            ("$deckId", deckId)).ToLookup(row => row.CardId, row => row.Option);
 
-        var result = command.ExecuteScalar();
-        return result as string;
-    }
+        var pairs = Db.Query(connection, null, @"
+            SELECT p.CardID, p.LeftText, p.RightText
+            FROM MatchCardPairs p
+            INNER JOIN Cards c ON c.ID = p.CardID
+            WHERE c.DeckID = $deckId
+            ORDER BY p.CardID, p.PairIndex ASC;",
+            reader => (CardId: (ulong)reader.GetInt64(0), Pair: (reader.GetString(1), reader.GetString(2))),
+            ("$deckId", deckId)).ToLookup(row => row.CardId, row => row.Pair);
 
-    public static List<CardExportEntry> LoadDeckCards(SqliteConnection connection, ulong deckId)
-    {
-        var cards = new List<CardExportEntry>();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
+        return Db.Query(connection, null, @"
             SELECT ID, CardType, Front, Back, Answer, IsReversible
             FROM Cards
             WHERE DeckID = $deckId
-            ORDER BY ID ASC;";
-        command.Parameters.AddWithValue("$deckId", deckId);
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-        {
-            ulong cardId = (ulong)reader.GetInt64(0);
-            string cardType = reader.GetString(1);
-            string front = reader.GetString(2);
-            string back = reader.GetString(3);
-            string? answer = reader.IsDBNull(4) ? null : reader.GetString(4);
-            bool isReversible = reader.GetInt64(5) != 0;
-
-            cards.Add(cardType switch
+            ORDER BY ID ASC;",
+            reader =>
             {
-                nameof(TypeFlashCard) => new CardExportEntry(cardType, front, back, answer, null, null, null, null, null),
-                nameof(FlipFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, null, isReversible ? true : null),
-                nameof(ClozeFlashCard) => new CardExportEntry(cardType, front, back, answer, null, null, null, null, null),
-                nameof(MultiFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, LoadMultiOptions(connection, cardId), null),
-                nameof(MatchFlashCard) => new CardExportEntry(cardType, front, back, null, null, null, null, null, LoadMatchPairs(connection, cardId)),
-                nameof(TrueFalseFlashCard) => DeckTransferManager.BuildTrueFalseExportEntry(front, back, answer),
-                _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
-            });
-        }
-
-        return cards;
-    }
-
-    public static List<MultiChoiceOptionEntry> LoadMultiOptions(SqliteConnection connection, ulong cardId)
-    {
-        var options = new List<MultiChoiceOptionEntry>();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT OptionText, IsCorrect
-            FROM CardOptions
-            WHERE CardID = $cardId
-            ORDER BY OptionIndex ASC;";
-        command.Parameters.AddWithValue("$cardId", cardId);
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-        {
-            options.Add(new MultiChoiceOptionEntry(reader.GetString(0), reader.GetInt32(1) == 1));
-        }
-
-        return options;
-    }
-
-    public static List<MatchPairEntry> LoadMatchPairs(SqliteConnection connection, ulong cardId)
-    {
-        var pairs = new List<MatchPairEntry>();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT LeftText, RightText
-            FROM MatchCardPairs
-            WHERE CardID = $cardId
-            ORDER BY PairIndex ASC;";
-        command.Parameters.AddWithValue("$cardId", cardId);
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-            pairs.Add(new MatchPairEntry(reader.GetString(0), reader.GetString(1)));
-
-        return pairs;
+                ulong cardId = (ulong)reader.GetInt64(0);
+                return FlashCardFactory.CreateCard(
+                    reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.IsDBNull(4) ? null : reader.GetString(4), cardId,
+                    [.. options[cardId]], [.. pairs[cardId]], reader.GetInt64(5) != 0);
+            },
+            ("$deckId", deckId));
     }
 
     // --- Write ---
 
-    public static long InsertCard(SqliteConnection connection, SqliteTransaction transaction, long deckId, CardExportEntry card)
+    /// <param name="folderID"> Folder the deck is filed into; null for the main menu. </param>
+    public static ulong InsertDeck(SqliteConnection connection, SqliteTransaction? transaction, string name, ulong? folderID = null) =>
+        Db.Insert(connection, transaction, "INSERT INTO Decks (Name, FolderID) VALUES ($name, $folderId);",
+            ("$name", name), ("$folderId", folderID));
+
+    public static ulong InsertDeckWithCards(SqliteConnection connection, SqliteTransaction transaction, string name, ulong? folderID, IEnumerable<FlashCard> cards)
     {
-        using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = @"
+        ulong deckId = InsertDeck(connection, transaction, name, folderID);
+        foreach (var card in cards) InsertCard(connection, transaction, deckId, card);
+        return deckId;
+    }
+
+    /// <summary> Inserts the card with its options or pairs and returns its new ID. </summary>
+    public static ulong InsertCard(SqliteConnection connection, SqliteTransaction transaction, ulong deckId, FlashCard card)
+    {
+        ulong cardId = Db.Insert(connection, transaction, @"
             INSERT INTO Cards (DeckID, CardType, Front, Back, Answer, IsReversible)
-            VALUES ($deckId, $cardType, $front, $back, $answer, $isReversible);
-            SELECT last_insert_rowid();";
-        command.Parameters.AddWithValue("$deckId", deckId);
-        command.Parameters.AddWithValue("$cardType", card.CardType);
-        command.Parameters.AddWithValue("$front", card.Front);
-        command.Parameters.AddWithValue("$back", card.Back);
-        command.Parameters.AddWithValue("$answer", DeckTransferManager.BuildExportAnswerPayload(card));
-        command.Parameters.AddWithValue("$isReversible", card.IsReversible == true ? 1 : 0);
-        return (long)(command.ExecuteScalar() ?? throw new InvalidOperationException("Failed to insert card."));
+            VALUES ($deckId, $cardType, $front, $back, $answer, $isReversible);",
+            [("$deckId", deckId), .. CardValues(card)]);
+
+        InsertCardChildren(connection, transaction, cardId, card);
+        return cardId;
     }
 
-    public static void InsertMultiChoiceOption(SqliteConnection connection, SqliteTransaction transaction, long cardId, int optionIndex, MultiChoiceOptionEntry option)
+    /// <summary> Rewrites the card's row and replaces its options and pairs. </summary>
+    public static void UpdateCard(SqliteConnection connection, SqliteTransaction transaction, FlashCard card)
     {
-        using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = @"
-            INSERT INTO CardOptions (CardID, OptionIndex, OptionText, IsCorrect)
-            VALUES ($cardId, $index, $text, $isCorrect);";
-        command.Parameters.AddWithValue("$cardId", cardId);
-        command.Parameters.AddWithValue("$index", optionIndex);
-        command.Parameters.AddWithValue("$text", option.OptionText);
-        command.Parameters.AddWithValue("$isCorrect", option.IsCorrect ? 1 : 0);
-        command.ExecuteNonQuery();
+        Db.Execute(connection, transaction, @"
+            UPDATE Cards SET CardType = $cardType, Front = $front, Back = $back, Answer = $answer, IsReversible = $isReversible WHERE ID = $id;
+            DELETE FROM CardOptions WHERE CardID = $id;
+            DELETE FROM MatchCardPairs WHERE CardID = $id;",
+            [("$id", card.ID), .. CardValues(card)]);
+
+        InsertCardChildren(connection, transaction, card.ID, card);
     }
 
-    public static void InsertMatchPair(SqliteConnection connection, SqliteTransaction transaction, long cardId, int pairIndex, MatchPairEntry pair)
-    {
-        using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = @"
-            INSERT INTO MatchCardPairs (CardID, PairIndex, LeftText, RightText)
-            VALUES ($cardId, $index, $leftText, $rightText);";
-        command.Parameters.AddWithValue("$cardId", cardId);
-        command.Parameters.AddWithValue("$index", pairIndex);
-        command.Parameters.AddWithValue("$leftText", pair.LeftText);
-        command.Parameters.AddWithValue("$rightText", pair.RightText);
-        command.ExecuteNonQuery();
-    }
+    private static (string Name, object? Value)[] CardValues(FlashCard card) =>
+    [
+        ("$cardType", card.GetType().Name),
+        ("$front", card.Front),
+        ("$back", card.Back),
+        ("$answer", FlashCardFactory.BuildAnswerPayload(card)),
+        ("$isReversible", card is FlipFlashCard { IsReversible: true } ? 1 : 0),
+    ];
 
-    /// <param name="folderID"> Folder the imported deck is filed into; null for the main menu. </param>
-    public static long InsertDeck(SqliteConnection connection, SqliteTransaction transaction, string name, ulong? folderID = null)
+    private static void InsertCardChildren(SqliteConnection connection, SqliteTransaction transaction, ulong cardId, FlashCard card)
     {
-        using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = @"
-            INSERT INTO Decks (Name, FolderID)
-            VALUES ($name, $folderId);
-            SELECT last_insert_rowid();";
-        command.Parameters.AddWithValue("$name", name);
-        command.Parameters.AddWithValue("$folderId", folderID.HasValue ? folderID.Value : DBNull.Value);
-        return (long)(command.ExecuteScalar() ?? throw new InvalidOperationException("Failed to insert deck."));
+        if (card is MultiFlashCard multiCard)
+        {
+            for (int i = 0; i < multiCard.Options.Count; i++)
+            {
+                var (optionText, isCorrect) = multiCard.Options[i];
+                Db.Execute(connection, transaction, @"
+                    INSERT INTO CardOptions (CardID, OptionIndex, OptionText, IsCorrect)
+                    VALUES ($cardId, $index, $text, $isCorrect);",
+                    ("$cardId", cardId), ("$index", i), ("$text", optionText), ("$isCorrect", isCorrect ? 1 : 0));
+            }
+        }
+
+        if (card is MatchFlashCard matchCard)
+        {
+            for (int i = 0; i < matchCard.Options.Count; i++)
+            {
+                var (leftText, rightText) = matchCard.Options[i];
+                Db.Execute(connection, transaction, @"
+                    INSERT INTO MatchCardPairs (CardID, PairIndex, LeftText, RightText)
+                    VALUES ($cardId, $index, $leftText, $rightText);",
+                    ("$cardId", cardId), ("$index", i), ("$leftText", leftText), ("$rightText", rightText));
+            }
+        }
     }
 }

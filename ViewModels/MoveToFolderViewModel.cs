@@ -47,14 +47,9 @@ public partial class MoveToFolderViewModel : ViewModelBase
 
     public MoveToFolderViewModel(FolderTree tree, object item, ulong? currentFolderID)
     {
-        (ItemName, ItemKind) = item switch
-        {
-            Folder folder => (folder.Name, "Folder"),
-            StudyGroup group => (group.Name, "Group"),
-            FlashCardDeck deck => (deck.Name, "Set"),
-            Note note => (note.Name, "Note"),
-            _ => ("item", "Item"),
-        };
+        (ItemName, ItemKind) = item is LibraryItem libraryItem
+            ? (libraryItem.Name, char.ToUpperInvariant(libraryItem.Kind[0]) + libraryItem.Kind[1..])
+            : ("item", "Item");
 
         // Moving a folder into its own subtree would orphan the branch.
         var excluded = item is Folder movedFolder ? tree.SubtreeIds(movedFolder.ID) : [];

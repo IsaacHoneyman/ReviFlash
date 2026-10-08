@@ -1,10 +1,10 @@
 using System;
-using Avalonia.Controls;
 using Avalonia.Interactivity;
+using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
 
-public partial class ConfirmDialogWindow : Window
+public partial class ConfirmDialogWindow : DialogWindow
 {
     private readonly string _message = "";
     private readonly string? _messageWhenChecked;

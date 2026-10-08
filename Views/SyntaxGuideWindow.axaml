@@ -39,8 +39,7 @@
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
-                <TextBlock Text="Formatting Guide" FontSize="28" FontWeight="Bold"
-                    Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Classes="title" Text="Formatting Guide" />
                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
                     Text="The toolbar above the card fields does the common ones for you: select some text and press a button (or its shortcut). Everything here can also be typed. Each example shows what you type and how it looks; use the copy button to paste one into a card." />
             </StackPanel>
@@ -52,13 +51,13 @@
                             <StackPanel Spacing="10">
                                 <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextPrimary}" />
-                                <TextBlock Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                    TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    TextWrapping="Wrap" />
 
                                 <Grid ColumnDefinitions="170, *, *, Auto" ColumnSpacing="16" Margin="0,4,0,0">
-                                    <TextBlock Grid.Column="0" Text="What" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
-                                    <TextBlock Grid.Column="1" Text="You type" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
-                                    <TextBlock Grid.Column="2" Text="You get" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Grid.Column="0" Classes="hint" Text="What" FontWeight="Bold" />
+                                    <TextBlock Grid.Column="1" Classes="hint" Text="You type" FontWeight="Bold" />
+                                    <TextBlock Grid.Column="2" Classes="hint" Text="You get" FontWeight="Bold" />
                                 </Grid>
 
                                 <ItemsControl ItemsSource="{Binding Rows}">
@@ -94,8 +93,7 @@
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
-                <TextBlock Text="Keyboard Shortcuts" FontSize="28" FontWeight="Bold"
-                    Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Classes="title" Text="Keyboard Shortcuts" />
                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
                     Text="Where a row shows more than one key, either works. On macOS, use Cmd wherever Ctrl is shown." />
             </StackPanel>
@@ -107,8 +105,8 @@
                             <StackPanel Spacing="10">
                                 <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextPrimary}" />
-                                <TextBlock Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                    TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    TextWrapping="Wrap" />
 
                                 <ItemsControl ItemsSource="{Binding Rows}">
                                     <ItemsControl.ItemTemplate>

@@ -26,7 +26,7 @@ public sealed class HeatmapDay(DateOnly date, int seconds, bool isFuture)
     public bool IsLevel4 => Level == 4;
 
     public string Tooltip => Seconds > 0
-        ? $"{Date:ddd d MMM yyyy}: {TextUtility.FormatTime(TimeSpan.FromSeconds(Seconds))}"
+        ? $"{Date:ddd d MMM yyyy}: {TextUtility.FormatTime(Seconds)}"
         : $"{Date:ddd d MMM yyyy}: nothing studied";
 }
 
@@ -46,6 +46,6 @@ public sealed class TimeSpentItem(string name, string kind, int seconds, int mos
     public string Kind { get; } = kind;
     public int Seconds { get; } = seconds;
 
-    public string TimeText => TextUtility.FormatTime(TimeSpan.FromSeconds(Seconds));
+    public string TimeText => TextUtility.FormatTime(Seconds);
     public double BarWidth => mostSeconds > 0 ? Math.Max(4, MaxBarWidth * Seconds / mostSeconds) : 0;
 }

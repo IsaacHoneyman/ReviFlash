@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
+using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
 
@@ -67,44 +68,16 @@ public partial class DeckEditorWindow : Window
         if (e.Source is TextBox box && box.Classes.Contains("field")) _activeField = box;
     }
 
-    private void Bold_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\B{", "}");
-    private void Italic_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\I{", "}");
-    private void Underline_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\U{", "}");
-    private void Heading1_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\H1{", "}");
-    private void Heading2_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\H2{", "}");
-    private void Heading3_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\H3{", "}");
-    private void Bullet_Click(object? sender, RoutedEventArgs e) { if (_activeField is { } box) TextFormatting.ToggleBullets(box); }
-    private void InlineMath_Click(object? sender, RoutedEventArgs e) => WrapActiveField("$", "$");
-    private void DisplayMath_Click(object? sender, RoutedEventArgs e) => WrapActiveField("$$", "$$");
-    private void Blank_Click(object? sender, RoutedEventArgs e) => WrapActiveField(@"\C{", "}");
-    private void Help_Click(object? sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(this);
+    private void Toolbar_FormatRequested(object? sender, FormatRequestedEventArgs e)
+    {
+        if (_activeField is { } box) TextFormatting.Apply(box, e.Tag);
+    }
 
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
     {
         if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;
-        if (TextFormatting.IsBulletShortcut(e, PlatformSettings?.HotkeyConfiguration))
-        {
+        if (TextFormatting.TryHandleShortcut(box, e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsClozeCardType == true))
             _activeField = box;
-            TextFormatting.ToggleBullets(box);
-            e.Handled = true;
-            return;
-        }
-        if (TextFormatting.IsSelectLineShortcut(e, PlatformSettings?.HotkeyConfiguration))
-        {
-            TextFormatting.SelectLine(box);
-            e.Handled = true;
-            return;
-        }
-        if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsClozeCardType == true) is not { } pair) return;
-
-        _activeField = box;
-        WrapActiveField(pair.Open, pair.Close);
-        e.Handled = true;
-    }
-
-    private void WrapActiveField(string open, string close)
-    {
-        if (_activeField is { } box) TextFormatting.Wrap(box, open, close);
     }
 
     // --- Cards ---

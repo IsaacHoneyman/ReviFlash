@@ -10,11 +10,7 @@
     Background="{DynamicResource AppBackground}">
 
     <Window.Styles>
-        <Style Selector="TextBlock.fieldLabel">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-            <Setter Property="Margin" Value="4,4,0,0" />
-        </Style>
+        <StyleInclude Source="avares://ReviFlash/Views/Controls/FormatStyles.axaml" />
         <Style Selector="TextBox.field">
             <Setter Property="Background" Value="{DynamicResource AppBackground}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
@@ -24,20 +20,11 @@
             <Setter Property="MaxHeight" Value="180" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
-        <Style Selector="Border.preview">
-            <Setter Property="Background" Value="#15000000" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="10,8" />
-        </Style>
-        <Style Selector="views|MathText">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-        </Style>
     </Window.Styles>
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="24">
         <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
-            <TextBlock Text="Make Card" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Classes="title" Text="Make Card" />
             <TextBlock Text="From your note. Edit anything before adding it: the previews show how the card will look."
                 TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
         </StackPanel>
@@ -96,12 +83,8 @@
         <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" ColumnSpacing="10" Margin="0,16,0,0">
             <TextBlock Grid.Column="0" Text="{Binding ErrorText}" IsVisible="{Binding HasError}"
                 TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource DangerForeground}" />
-            <Button Grid.Column="1" Content="Cancel" Click="Cancel_Click" IsCancel="True"
-                CornerRadius="8" Padding="16,10" FontWeight="SemiBold"
-                Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}" Cursor="Hand" />
-            <Button Grid.Column="2" Content="Add Card" Click="Add_Click"
-                CornerRadius="8" Padding="16,10" FontWeight="Bold"
-                Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}" Cursor="Hand" />
+            <Button Grid.Column="1" Classes="secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" Padding="16,10" />
+            <Button Grid.Column="2" Classes="primary" Content="Add Card" Click="Add_Click" Padding="16,10" />
         </Grid>
     </Grid>
 </Window>

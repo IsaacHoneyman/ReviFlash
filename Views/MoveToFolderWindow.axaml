@@ -18,20 +18,13 @@
             TextTrimming="CharacterEllipsis"
             MaxLines="2" />
 
-        <TextBox Grid.Row="1"
+        <TextBox Grid.Row="1" Classes="input"
             Text="{Binding SearchText, Mode=TwoWay}"
             Watermark="Search folders..."
             Margin="0,16,0,12"
-            CornerRadius="8" Padding="10,7" FontSize="14"
-            Background="{DynamicResource CardBackground}"
-            Foreground="{DynamicResource TextPrimary}" />
+            Padding="10,7" />
 
-        <Border Grid.Row="2"
-            Background="{DynamicResource CardBackground}"
-            BorderBrush="{DynamicResource CardBorder}"
-            BorderThickness="1.5"
-            CornerRadius="16"
-            Padding="8">
+        <Border Grid.Row="2" Classes="card" CornerRadius="16" Padding="8">
             <ListBox ItemsSource="{Binding Choices}"
                 SelectedItem="{Binding SelectedChoice, Mode=TwoWay}"
                 Background="Transparent"
@@ -46,9 +39,8 @@
                                 <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextPrimary}"
                                     TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding Subtitle}" FontSize="11"
+                                <TextBlock Classes="hint" Text="{Binding Subtitle}"
                                     IsVisible="{Binding HasSubtitle}"
-                                    Foreground="{DynamicResource TextSecondary}"
                                     TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Grid>
@@ -59,18 +51,10 @@
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
             Margin="0,20,0,0" Spacing="12">
-            <Button Content="Cancel"
-                Click="Cancel_Click"
-                Background="#70FFFFFF"
-                Foreground="{DynamicResource TextPrimary}"
-                CornerRadius="8" Padding="20,10" FontWeight="SemiBold" Cursor="Hand" />
+            <Button Classes="dialog secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" />
 
-            <Button Content="Move Here"
-                Click="Move_Click"
-                IsEnabled="{Binding CanMove}"
-                Background="{DynamicResource GradientStart}"
-                Foreground="{DynamicResource PrimaryButtonForeground}"
-                CornerRadius="8" Padding="20,10" FontWeight="Bold" Cursor="Hand" />
+            <Button Classes="dialog primary" Content="Move Here" Click="Move_Click" IsDefault="True"
+                IsEnabled="{Binding CanMove}" />
         </StackPanel>
     </Grid>
 </Window>

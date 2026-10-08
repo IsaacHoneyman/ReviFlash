@@ -17,11 +17,7 @@
         </Style>
 
         <Style Selector="TextBox.field">
-            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12,10" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
 
         <!-- The reset code is typed big and spaced out; its watermark stays ordinary field text. -->
@@ -81,10 +77,7 @@
                 TextWrapping="Wrap" TextAlignment="Center" />
         </StackPanel>
 
-        <Border IsVisible="{Binding ShowTabs}"
-            Background="{DynamicResource CardBackground}"
-            BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
-            CornerRadius="10" Padding="4">
+        <Border IsVisible="{Binding ShowTabs}" Classes="card compact" Padding="4">
             <Grid ColumnDefinitions="*, *" ColumnSpacing="4">
                 <Button Grid.Column="0" Classes="tab" Classes.selected="{Binding IsSignIn}"
                     Content="Sign In" Command="{Binding ShowSignInCommand}" />
@@ -96,17 +89,17 @@
         <StackPanel Spacing="14">
             <StackPanel Spacing="6" IsVisible="{Binding IsSignUp}">
                 <TextBlock Classes="label" Text="Username" />
-                <TextBox Classes="field" Text="{Binding Username}" Watermark="Shown on the sets you share" MaxLength="24" />
+                <TextBox Classes="input field" Text="{Binding Username}" Watermark="Shown on the sets you share" MaxLength="24" />
             </StackPanel>
 
             <StackPanel Spacing="6" IsVisible="{Binding ShowEmail}">
                 <TextBlock Classes="label" Text="Email" />
-                <TextBox Classes="field" Text="{Binding Email}" Watermark="you@example.com" />
+                <TextBox Classes="input field" Text="{Binding Email}" Watermark="you@example.com" />
             </StackPanel>
 
             <StackPanel Spacing="6" IsVisible="{Binding IsResetting}">
                 <TextBlock Classes="label" Text="Reset code" />
-                <TextBox Classes="field code" Text="{Binding ResetCode}" Watermark="From the email we sent you"
+                <TextBox Classes="input field code" Text="{Binding ResetCode}" Watermark="From the email we sent you"
                     MaxLength="10" />
             </StackPanel>
 
@@ -116,12 +109,12 @@
                     <Button Grid.Column="1" Classes="link" Content="Forgot password?"
                         IsVisible="{Binding IsSignIn}" Command="{Binding ShowForgotPasswordCommand}" />
                 </Grid>
-                <TextBox Classes="field revealPasswordButton" Text="{Binding Password}" PasswordChar="•" />
+                <TextBox Classes="input field revealPasswordButton" Text="{Binding Password}" PasswordChar="•" />
             </StackPanel>
 
             <StackPanel Spacing="6" IsVisible="{Binding ShowConfirmPassword}">
                 <TextBlock Classes="label" Text="Confirm password" />
-                <TextBox Classes="field revealPasswordButton" Text="{Binding ConfirmPassword}" PasswordChar="•" />
+                <TextBox Classes="input field revealPasswordButton" Text="{Binding ConfirmPassword}" PasswordChar="•" />
             </StackPanel>
         </StackPanel>
 
@@ -130,18 +123,16 @@
             FontSize="13" TextWrapping="Wrap" TextAlignment="Center" />
 
         <!-- Enter submits whichever form is showing. -->
-        <Button Content="{Binding PrimaryActionText}" Command="{Binding SubmitCommand}" IsDefault="True"
-            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-            Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-            CornerRadius="8" Padding="12" FontSize="15" FontWeight="Bold" Cursor="Hand" />
+        <Button Classes="wide primary" Content="{Binding PrimaryActionText}" Command="{Binding SubmitCommand}" IsDefault="True"
+            Padding="12" FontSize="15" />
 
         <StackPanel IsVisible="{Binding IsRecovering}" Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
             <Button Classes="link" Content="Back to sign in" Command="{Binding ShowSignInCommand}" />
             <Button Classes="link" Content="Resend code" IsVisible="{Binding IsResetting}" Command="{Binding ResendCodeCommand}" />
         </StackPanel>
 
-        <TextBlock Text="Your local sets stay on this device. You only need an account to share or download sets."
-            FontSize="12" Foreground="{DynamicResource TextSecondary}" Opacity="0.8"
+        <TextBlock Classes="caption" Text="Your local sets stay on this device. You only need an account to share or download sets."
+            Opacity="0.8"
             TextWrapping="Wrap" TextAlignment="Center" IsVisible="{Binding ShowTabs}" />
     </StackPanel>
 </Window>

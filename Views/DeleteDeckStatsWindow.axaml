@@ -17,9 +17,7 @@
                 TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
         </StackPanel>
 
-        <Border Grid.Row="1" Background="{DynamicResource CardBackground}"
-            BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
-            CornerRadius="10" Padding="12">
+        <Border Grid.Row="1" Classes="card compact" Padding="12">
             <views:DeckFolderBrowserView DataContext="{Binding DeckBrowser}" />
         </Border>
 
@@ -29,17 +27,9 @@
             Foreground="{DynamicResource TextPrimary}" />
 
         <Grid Grid.Row="3" ColumnDefinitions="*, *" ColumnSpacing="10">
-            <Button Grid.Column="0" Content="Close" Click="Close_Click"
-                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                CornerRadius="8" Padding="12,10" FontWeight="SemiBold"
-                Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                Cursor="Hand" />
-            <Button Grid.Column="1" Content="Delete This Deck's Stats" Click="DeleteDeckStats_Click"
-                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                CornerRadius="8" Padding="12,10" FontWeight="Bold"
-                IsEnabled="{Binding SelectedDeck, Converter={x:Static ObjectConverters.IsNotNull}}"
-                Background="{DynamicResource DangerBackground}" Foreground="{DynamicResource DangerBackgroundForeground}"
-                Cursor="Hand" />
+            <Button Grid.Column="0" Classes="wide secondary" Content="Close" Click="Close_Click" IsCancel="True" />
+            <Button Grid.Column="1" Classes="wide danger" Content="Delete This Deck's Stats" Click="DeleteDeckStats_Click"
+                IsEnabled="{Binding SelectedDeck, Converter={x:Static ObjectConverters.IsNotNull}}" />
         </Grid>
 
         <TextBlock Grid.Row="4" Text="{Binding StatusMessage}"

@@ -1,4 +1,5 @@
 using System;
+using ReviFlash.Utilities;
 
 using static ReviFlash.Utilities.CardUtility;
 
@@ -12,10 +13,8 @@ public class SummaryViewModel(int score, int total, TimeSpan time, bool isPartia
     public bool IsPartialSession { get; } = isPartialSession;
     public Action? OnReturnToDashboard { get; set; }
 
-    public double Percentage => Total > 0 ? Math.Round((double)Score / Total * 100, 1) : 0;
-    public string TimeFormatted => TimeTaken.TotalHours >= 1
-        ? TimeTaken.ToString(@"hh\:mm\:ss")
-        : TimeTaken.ToString(@"mm\:ss");
+    public double Percentage => AccuracyPercent(Score, Total);
+    public string TimeFormatted => TextUtility.FormatTime(TimeTaken);
     public string SessionMarker => IsPartialSession ? "(Partial)" : "";
     public string Grade => CalculateGradeWithDefault(Score, Total);
 }

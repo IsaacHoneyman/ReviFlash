@@ -1,0 +1,156 @@
+<Styles xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Shared control looks, opted into by class. -->
+
+    <!-- Buttons -->
+
+    <Style Selector="Button.primary, Button.secondary, Button.danger, Button.success">
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Button.secondary">
+        <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource DangerBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBackgroundForeground}" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Button.success">
+        <Setter Property="Background" Value="{DynamicResource SuccessBackground}" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- Keep each button's own colours on hover and press (Fluent would turn them all grey) and just lighten a little. -->
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.secondary:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.success:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.success:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{Binding $parent[Button].Background}" />
+        <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover, Button.secondary:pointerover, Button.danger:pointerover, Button.success:pointerover">
+        <Setter Property="Opacity" Value="0.88" />
+    </Style>
+
+    <!-- Dialog footer buttons, e.g. Cancel beside the confirming action. -->
+    <Style Selector="Button.dialog">
+        <Setter Property="Padding" Value="20,10" />
+    </Style>
+
+    <!-- Full-width buttons, alone or sharing a row. -->
+    <Style Selector="Button.wide">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="12,10" />
+    </Style>
+
+    <!-- Large keyboard-driven buttons (review and its summary). Not focusable, so focus never wanders onto one. -->
+    <Style Selector="Button.action">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- Small square icon buttons on cards and list rows. -->
+    <Style Selector="Button.iconButton">
+        <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="ToggleButton.dashboardToggle">
+        <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="ToggleButton.dashboardToggle:checked">
+        <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+    </Style>
+
+    <!-- Surfaces -->
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+    <Style Selector="Border.card.compact">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+
+    <!-- One item in a list inside a card. -->
+    <Style Selector="Border.listRow">
+        <Setter Property="Background" Value="#14000000" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+
+    <!-- The whole visible body of a chromeless dialog (see DialogWindow). -->
+    <Style Selector="Border.dialogShell">
+        <Setter Property="Background" Value="{DynamicResource AppBackground}" />
+        <Setter Property="Opacity" Value="0.96" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="24" />
+    </Style>
+
+    <!-- Inputs -->
+
+    <Style Selector="TextBox.input">
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+
+    <!-- Text -->
+
+    <Style Selector="TextBlock.title">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <!-- A card's heading. -->
+    <Style Selector="TextBlock.sectionTitle">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    </Style>
+
+</Styles>

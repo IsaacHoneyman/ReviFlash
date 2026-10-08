@@ -1,4 +1,5 @@
 using System;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
@@ -30,13 +31,13 @@ public class GraphStatPointViewModel : ViewModelBase
 
     public string CorrectCountText => CorrectCount.ToString();
     public string IncorrectCountText => IncorrectCount.ToString();
-    public string AccuracyText => TotalCount > 0 ? $"{Math.Round((double)CorrectCount / TotalCount * 100, 1)}%" : "0%";
-    public string TimeText => FormatSeconds(TotalSeconds);
+    public string AccuracyText => $"{CardUtility.AccuracyPercent(CorrectCount, TotalCount)}%";
+    public string TimeText => TextUtility.FormatTime(TotalSeconds);
     public string TimeValueText => TimeText;
-    public string AttemptsTooltip => $"{Label}: {CorrectCount}/{TotalCount} correct, {FormatSeconds(TimeTakenSeconds)}";
+    public string AttemptsTooltip => $"{Label}: {CorrectCount}/{TotalCount} correct, {TextUtility.FormatTime(TimeTakenSeconds)}";
     public string TimeTooltip => NoteSeconds == 0
         ? $"{Label}: {TimeText} spent"
-        : $"{Label}: {TimeText} spent ({FormatSeconds(TimeTakenSeconds)} flashcards, {FormatSeconds(NoteSeconds)} notes)";
+        : $"{Label}: {TimeText} spent ({TextUtility.FormatTime(TimeTakenSeconds)} flashcards, {TextUtility.FormatTime(NoteSeconds)} notes)";
 
     public GraphStatPointViewModel(string label, int correctCount, int totalCount, int timeTakenSeconds, int maxAttempts, int maxTimeSeconds,
         int noteSeconds = 0)
@@ -59,7 +60,4 @@ public class GraphStatPointViewModel : ViewModelBase
         NoteBarHeight = TotalSeconds > 0
             ? (int)Math.Round((double)TimeBarHeight * noteSeconds / TotalSeconds) : 0;
     }
-
-    private static string FormatSeconds(int seconds) =>
-        TimeSpan.FromSeconds(seconds).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
 }

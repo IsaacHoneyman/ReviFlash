@@ -1,22 +1,11 @@
-<Window xmlns="https://github.com/avaloniaui"
+<controls:DialogWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
         x:Class="ReviFlash.Views.UpdateProgressWindow"
         Title="Updating ReviFlash"
-        Width="450" Height="200"
-        WindowStartupLocation="CenterOwner"
-        SystemDecorations="None"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaChromeHints="NoChrome"
-        TransparencyLevelHint="Transparent"
-        Background="Transparent">
+        Width="450" Height="200">
 
-    <Border Background="{DynamicResource AppBackground}"
-            Opacity="0.96"
-            BorderBrush="{DynamicResource CardBorder}"
-            BorderThickness="2"
-            CornerRadius="20"
-            Padding="24">
-
+    <Border Classes="dialogShell">
         <Grid RowDefinitions="*, Auto, Auto">
             <TextBlock x:Name="MessageText"
                        Text="Downloading update... 0%"
@@ -32,10 +21,8 @@
                          Minimum="0" Maximum="100" Value="0" Height="8" CornerRadius="4"
                          Foreground="{DynamicResource GradientStart}" Margin="0,16,0,0"/>
 
-            <Button x:Name="CloseButton" Grid.Row="2" Click="Close_Click" Content="Close" IsVisible="False"
-                    HorizontalAlignment="Center" Margin="0,16,0,0"
-                    Background="{DynamicResource CardBorder}" Foreground="{DynamicResource TextPrimary}"
-                    CornerRadius="8" Padding="24,10" FontWeight="Bold" Cursor="Hand"/>
+            <Button x:Name="CloseButton" Grid.Row="2" Classes="dialog secondary" Click="Close_Click" Content="Close" IsVisible="False"
+                    HorizontalAlignment="Center" Margin="0,16,0,0" />
         </Grid>
     </Border>
-</Window>
+</controls:DialogWindow>

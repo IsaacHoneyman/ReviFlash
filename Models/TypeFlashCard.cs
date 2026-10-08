@@ -1,9 +1,12 @@
 using System;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Models;
 
 public class TypeFlashCard(string front, string back, string? answer) : FlashCard(front, back)
 {
+    public override string TypeName => CardUtility.CARD_TYPE_TYPE;
+
     public string Answer { get; private set; } = NormalizeAnswer(answer, back);
     public TypeFlashCard(string front, string back) : this(front, back, null) { }
     public TypeFlashCard(string front, string back, ulong id) : this(front, back, null, id) { }

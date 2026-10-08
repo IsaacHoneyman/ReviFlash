@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using ReviFlash.Models;
 
@@ -25,23 +26,65 @@ public static class FlashCardFactory
         };
     }
 
-    public static object BuildAnswerPayload(FlashCard card)
+    /// <summary> What the card stores in the Answer column. </summary>
+    public static string? BuildAnswerPayload(FlashCard card)
     {
         return card switch
         {
-            TypeFlashCard typeCard => typeCard.Answer ?? (object)DBNull.Value,
+            TypeFlashCard typeCard => typeCard.Answer,
             ClozeFlashCard { TypeAnswer: true } => ClozeTypeAnswerPayload,
             TrueFalseFlashCard trueFalseCard => JsonSerializer.Serialize(
                 new TrueFalseAnswerPayload(trueFalseCard.CorrectAnswerIsTrue, trueFalseCard.TrueLabel, trueFalseCard.FalseLabel)),
-            _ => DBNull.Value,
+            _ => null,
         };
     }
 
-    private static TrueFalseFlashCard BuildTrueFalseCard(string front, string back, string? answerPayload, ulong id)
+    // --- Transfer ---
+
+    /// <summary> An unsaved card from an imported entry. </summary>
+    public static FlashCard FromExportEntry(CardExportEntry entry)
     {
-        var (correctAnswerIsTrue, trueLabel, falseLabel) = ParseTrueFalsePayload(answerPayload);
-        return new TrueFalseFlashCard(front, back, correctAnswerIsTrue, trueLabel, falseLabel, id);
+        return entry.CardType switch
+        {
+            nameof(TypeFlashCard) => new TypeFlashCard(entry.Front, entry.Back, entry.Answer),
+            nameof(FlipFlashCard) => new FlipFlashCard(entry.Front, entry.Back, entry.IsReversible == true),
+            nameof(ClozeFlashCard) => new ClozeFlashCard(entry.Front, entry.Back, entry.Answer == ClozeTypeAnswerPayload),
+            nameof(MultiFlashCard) => new MultiFlashCard(entry.Front, entry.Back,
+                [.. (entry.Options ?? []).Select(option => (option.OptionText, option.IsCorrect))]),
+            nameof(MatchFlashCard) => new MatchFlashCard(entry.Front, entry.Back,
+                [.. (entry.Pairs ?? []).Select(pair => (pair.LeftText, pair.RightText))]),
+            nameof(TrueFalseFlashCard) => BuildTrueFalseCard(entry.Front, entry.Back,
+                NormaliseTrueFalse(entry.CorrectAnswerIsTrue ?? true, entry.TrueLabel, entry.FalseLabel), ulong.MaxValue),
+            _ => throw new InvalidOperationException($"Unknown card type: {entry.CardType}")
+        };
     }
+
+    public static CardExportEntry ToExportEntry(FlashCard card)
+    {
+        string cardType = card.GetType().Name;
+        return card switch
+        {
+            TypeFlashCard typeCard => new CardExportEntry(cardType, card.Front, card.Back, typeCard.Answer, null, null, null, null, null),
+            FlipFlashCard flipCard => new CardExportEntry(cardType, card.Front, card.Back, null, null, null, null, null, null, flipCard.IsReversible ? true : null),
+            ClozeFlashCard => new CardExportEntry(cardType, card.Front, card.Back, BuildAnswerPayload(card), null, null, null, null, null),
+            MultiFlashCard multiCard => new CardExportEntry(cardType, card.Front, card.Back, null, null, null, null,
+                [.. multiCard.Options.Select(option => new MultiChoiceOptionEntry(option.optionText, option.isCorrect))], null),
+            MatchFlashCard matchCard => new CardExportEntry(cardType, card.Front, card.Back, null, null, null, null, null,
+                [.. matchCard.Options.Select(pair => new MatchPairEntry(pair.leftText, pair.rightText))]),
+            TrueFalseFlashCard trueFalseCard => new CardExportEntry(cardType, card.Front, card.Back, null,
+                trueFalseCard.CorrectAnswerIsTrue, trueFalseCard.TrueLabel, trueFalseCard.FalseLabel, null, null),
+            _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
+        };
+    }
+
+    // --- True/False ---
+
+    private static TrueFalseFlashCard BuildTrueFalseCard(string front, string back, string? answerPayload, ulong id) =>
+        BuildTrueFalseCard(front, back, ParseTrueFalsePayload(answerPayload), id);
+
+    private static TrueFalseFlashCard BuildTrueFalseCard(string front, string back,
+        (bool correctAnswerIsTrue, string trueLabel, string falseLabel) settings, ulong id) =>
+        new(front, back, settings.correctAnswerIsTrue, settings.trueLabel, settings.falseLabel, id);
 
     private static (bool correctAnswerIsTrue, string trueLabel, string falseLabel) ParseTrueFalsePayload(string? payload)
     {
@@ -51,24 +94,27 @@ public static class FlashCardFactory
         try
         {
             var parsed = JsonSerializer.Deserialize<TrueFalseAnswerPayload>(payload);
-            if (parsed is null)
-            {
-                return (true, "True", "False");
-            }
-
-            var trueLabel = string.IsNullOrWhiteSpace(parsed.TrueLabel) ? "True" : parsed.TrueLabel.Trim();
-            var falseLabel = string.IsNullOrWhiteSpace(parsed.FalseLabel) ? "False" : parsed.FalseLabel.Trim();
-
-            if (string.Equals(trueLabel, falseLabel, StringComparison.OrdinalIgnoreCase))
-            {
-                return (parsed.CorrectAnswerIsTrue, "True", "False");
-            }
-
-            return (parsed.CorrectAnswerIsTrue, trueLabel, falseLabel);
+            return parsed is null
+                ? (true, "True", "False")
+                : NormaliseTrueFalse(parsed.CorrectAnswerIsTrue, parsed.TrueLabel, parsed.FalseLabel);
         }
         catch (JsonException)
         {
             return (true, "True", "False");
         }
+    }
+
+    /// <summary> Blank labels fall back to True/False, and so do labels that match each other. </summary>
+    private static (bool correctAnswerIsTrue, string trueLabel, string falseLabel) NormaliseTrueFalse(bool correctAnswerIsTrue, string? trueLabel, string? falseLabel)
+    {
+        trueLabel = string.IsNullOrWhiteSpace(trueLabel) ? "True" : trueLabel.Trim();
+        falseLabel = string.IsNullOrWhiteSpace(falseLabel) ? "False" : falseLabel.Trim();
+
+        if (string.Equals(trueLabel, falseLabel, StringComparison.OrdinalIgnoreCase))
+        {
+            return (correctAnswerIsTrue, "True", "False");
+        }
+
+        return (correctAnswerIsTrue, trueLabel, falseLabel);
     }
 }

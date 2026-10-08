@@ -83,17 +83,12 @@ public partial class StudyGroupEditorViewModel : ViewModelBase
         if (_editingGroup is null)
         {
             var newGroup = new StudyGroup(trimmedName);
-            FlashCardRepository.SaveNewStudyGroup(newGroup);
-            FlashCardRepository.SetStudyGroupDecks(newGroup.ID, deckIds);
-
-            if (_targetFolderID is ulong folderID) FolderRepository.MoveStudyGroup(newGroup.ID, folderID);
-
+            FlashCardRepository.SaveNewStudyGroup(newGroup, deckIds, _targetFolderID);
             return newGroup;
         }
 
         _editingGroup.Name = trimmedName;
-        FlashCardRepository.UpdateStudyGroup(_editingGroup);
-        FlashCardRepository.SetStudyGroupDecks(_editingGroup.ID, deckIds);
+        FlashCardRepository.UpdateStudyGroup(_editingGroup, deckIds);
         return _editingGroup;
     }
 

@@ -22,28 +22,17 @@
             Margin="0,0,0,24" />
 
         <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
-            <Border Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1.5"
-                CornerRadius="20"
-                Padding="20">
+            <Border Classes="card">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <TextBlock Text="Available Decks" FontSize="20" FontWeight="Bold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="sectionTitle" Text="Available Decks" />
 
                     <views:DeckFolderBrowserView Grid.Row="1" DataContext="{Binding AvailableBrowser}" />
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1"
-                Background="{DynamicResource CardBackground}"
-                BorderBrush="{DynamicResource CardBorder}"
-                BorderThickness="1.5"
-                CornerRadius="20"
-                Padding="20">
+            <Border Grid.Column="1" Classes="card">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <TextBlock Text="Group Membership" FontSize="20" FontWeight="Bold"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Classes="sectionTitle" Text="Group Membership" />
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
                         HorizontalScrollBarVisibility="Disabled"
@@ -52,32 +41,21 @@
                         <ItemsControl ItemsSource="{Binding SelectedDecks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:FlashCardDeck">
-                                    <Border Background="#14000000"
-                                        BorderBrush="{DynamicResource CardBorder}"
-                                        BorderThickness="1"
-                                        CornerRadius="12"
-                                        Padding="14"
-                                        Margin="0,0,0,10">
+                                    <Border Classes="listRow">
                                         <Grid ColumnDefinitions="*, Auto">
                                             <StackPanel Grid.Column="0" Spacing="4">
                                                 <TextBlock Text="{Binding Name}" FontSize="18"
                                                     FontWeight="SemiBold"
                                                     Foreground="{DynamicResource TextPrimary}"
                                                     TextWrapping="Wrap" />
-                                                <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}"
-                                                    FontSize="12"
-                                                    Foreground="{DynamicResource TextSecondary}" />
+                                                <TextBlock Classes="caption" Text="{Binding CardCount, StringFormat='{}{0} cards'}" />
                                             </StackPanel>
 
-                                            <Button Grid.Column="1"
+                                            <Button Grid.Column="1" Classes="danger"
                                                 Content="Remove"
                                                 Click="RemoveDeck_Click"
-                                                Background="#90FF4444"
-                                                Foreground="{DynamicResource IconForeground}"
-                                                CornerRadius="8"
                                                 Padding="14,8"
-                                                FontWeight="SemiBold"
-                                                Cursor="Hand" />
+                                                FontWeight="SemiBold" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -90,24 +68,10 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
             Margin="0,24,0,0" Spacing="12">
-            <Button Content="Cancel"
-                Click="Cancel_Click"
-                Background="#70FFFFFF"
-                Foreground="{DynamicResource TextPrimary}"
-                CornerRadius="8"
-                Padding="20,10"
-                FontWeight="SemiBold"
-                Cursor="Hand" />
+            <Button Classes="dialog secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" />
 
-            <Button Content="Save Group"
-                Click="Save_Click"
-                IsEnabled="{Binding CanSave}"
-                Background="{DynamicResource GradientStart}"
-                Foreground="{DynamicResource PrimaryButtonForeground}"
-                CornerRadius="8"
-                Padding="20,10"
-                FontWeight="Bold"
-                Cursor="Hand" />
+            <Button Classes="dialog primary" Content="Save Group" Click="Save_Click" IsDefault="True"
+                IsEnabled="{Binding CanSave}" />
         </StackPanel>
     </Grid>
 </Window>

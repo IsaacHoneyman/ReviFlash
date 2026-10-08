@@ -3,13 +3,12 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Timers;
 using System.ComponentModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Models;
 using ReviFlash.Data.Local;
-
-using static ReviFlash.Utilities.CardUtility;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
@@ -61,7 +60,7 @@ public partial class ReviewViewModel : ViewModelBase
     private readonly Dictionary<ulong, int> _correctByDeck = [];
     private int _currentIndex = 0;
     private Stopwatch _timer = new();
-    private Timer? _displayTimer;
+    private readonly DispatcherTimer _displayTimer;
     private readonly ulong deckID = ulong.MaxValue;
     private bool _currentCardHasBeenScored;
     private bool _disposed;
@@ -140,24 +139,11 @@ public partial class ReviewViewModel : ViewModelBase
     public string ProgressCardCount => $"{CurrentNumber}/{TotalCards}";
 
     /// <summary> The question's type, after its deck's name in a study group review. </summary>
-    public string CardLabel
-    {
-        get
-        {
-            var type = CurrentCard switch
-            {
-                { ReviewLabel: { } label } => label,
-                FlipFlashCard { IsReversedCopy: true } => $"{CARD_TYPE_FLIP} · Reversed",
-                FlipFlashCard => CARD_TYPE_FLIP,
-                _ => CurrentCard.CardType,
-            };
-
-            return _deckNames is not null && _cardDeckMap!.TryGetValue(CurrentCard.ID, out var deckId)
-                && _deckNames.TryGetValue(deckId, out var deckName)
-                ? $"{deckName} · {type}"
-                : type;
-        }
-    }
+    public string CardLabel =>
+        _deckNames is not null && _cardDeckMap!.TryGetValue(CurrentCard.ID, out var deckId)
+        && _deckNames.TryGetValue(deckId, out var deckName)
+            ? $"{deckName} · {CurrentCard.ReviewTypeLabel}"
+            : CurrentCard.ReviewTypeLabel;
 
     /// <summary> The keyboard shortcuts that do something right now, shown under the card. </summary>
     public string KeyboardHint
@@ -219,15 +205,14 @@ public partial class ReviewViewModel : ViewModelBase
         LoadMultiChoiceOptionsForCurrentCard();
         LoadMatchRowsForCurrentCard();
 
-        _displayTimer = new Timer(100);
-        _displayTimer.Elapsed += (_, _) =>
+        _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+        _displayTimer.Tick += (_, _) =>
         {
             if (ShouldShowTimer)
             {
                 UpdateTimerText();
             }
         };
-        _displayTimer.AutoReset = true;
         _displayTimer.Start();
 
         UpdateTimerText();
@@ -259,8 +244,7 @@ public partial class ReviewViewModel : ViewModelBase
 
     private void UpdateTimerText()
     {
-        var elapsed = _timer.Elapsed;
-        TimerText = $"{elapsed.Hours}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}";
+        TimerText = TextUtility.FormatTime(_timer.Elapsed, alwaysShowHours: true);
     }
 
     public void Reveal()
@@ -282,10 +266,7 @@ public partial class ReviewViewModel : ViewModelBase
 
     public void CheckTypedAnswer()
     {
-        IsAnswerCorrect = CurrentCard.VerifyAnswer(UserTypedAnswer);
-        RecordCurrentCardResult(IsAnswerCorrect);
-        IsAnswerChecked = true;
-        IsAnswerRevealed = true;
+        FinishCheck(CurrentCard.VerifyAnswer(UserTypedAnswer));
     }
 
     public void CheckMultiChoiceAnswer()
@@ -299,9 +280,6 @@ public partial class ReviewViewModel : ViewModelBase
             .Where(o => o.IsSelected)
             .Select(o => o.OptionText)
             .ToList();
-
-        IsAnswerCorrect = CurrentCard.VerifyAnswer(selectedAnswers);
-        RecordCurrentCardResult(IsAnswerCorrect);
 
         SelectedWrongOptions.Clear();
         MissedCorrectOptions.Clear();
@@ -319,8 +297,7 @@ public partial class ReviewViewModel : ViewModelBase
             }
         }
 
-        IsAnswerChecked = true;
-        IsAnswerRevealed = true;
+        FinishCheck(CurrentCard.VerifyAnswer(selectedAnswers));
         OnPropertyChanged(nameof(HasSelectedWrongOptions));
         OnPropertyChanged(nameof(HasMissedCorrectOptions));
     }
@@ -337,17 +314,13 @@ public partial class ReviewViewModel : ViewModelBase
             .Select(row => (row.LeftText, rightText: row.SelectedRightText!))
             .ToList();
 
-        IsAnswerCorrect = CurrentCard.VerifyAnswer(selectedPairs);
-        RecordCurrentCardResult(IsAnswerCorrect);
-
         foreach (var row in MatchRows)
         {
             row.IsCorrect = string.Equals(row.SelectedRightText, row.CorrectRightText, StringComparison.Ordinal);
             row.IsCurrent = false;
         }
 
-        IsAnswerChecked = true;
-        IsAnswerRevealed = true;
+        FinishCheck(CurrentCard.VerifyAnswer(selectedPairs));
     }
 
     public void CheckTrueFalseAnswer(bool selectedAnswerIsTrue)
@@ -357,12 +330,16 @@ public partial class ReviewViewModel : ViewModelBase
             return;
         }
 
-        IsAnswerCorrect = trueFalseCard.VerifyAnswer(selectedAnswerIsTrue);
-        RecordCurrentCardResult(IsAnswerCorrect);
+        FinishCheck(trueFalseCard.VerifyAnswer(selectedAnswerIsTrue));
+        OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
+    }
 
+    private void FinishCheck(bool correct)
+    {
+        IsAnswerCorrect = correct;
+        RecordCurrentCardResult(correct);
         IsAnswerChecked = true;
         IsAnswerRevealed = true;
-        OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
     }
 
     public void NextCard()
@@ -412,12 +389,7 @@ public partial class ReviewViewModel : ViewModelBase
         ResetForCurrentCard();
     }
 
-    public void QuitSession()
-    {
-        _timer.Stop();
-        Dispose();
-        CompleteSession(isPartial: true);
-    }
+    public void QuitSession() => CompleteSession(isPartial: true);
 
     private void CompleteSession(bool isPartial = false)
     {
@@ -436,6 +408,7 @@ public partial class ReviewViewModel : ViewModelBase
                 .ToList();
 
             int distributedSeconds = 0;
+            var sessionStats = new List<(ulong deckID, int correct, int total, int timeTakenSeconds)>();
             for (int i = 0; i < deckResults.Count; i++)
             {
                 var (targetDeckId, attempts) = deckResults[i];
@@ -446,8 +419,10 @@ public partial class ReviewViewModel : ViewModelBase
                     : (int)((long)elapsedSeconds * attempts / totalAttempts);
 
                 distributedSeconds += deckSeconds;
-                FlashCardRepository.UpdateDeckStats(targetDeckId, correct, attempts, deckSeconds);
+                sessionStats.Add((targetDeckId, correct, attempts, deckSeconds));
             }
+
+            FlashCardRepository.UpdateDeckStats(sessionStats);
         }
 
         OnSessionComplete?.Invoke(CorrectCount, questionsAttempted, _timer.Elapsed, isPartial);
@@ -462,9 +437,7 @@ public partial class ReviewViewModel : ViewModelBase
 
         _disposed = true;
         MetaDataManager.Data.PropertyChanged -= Settings_PropertyChanged;
-        _displayTimer?.Stop();
-        _displayTimer?.Dispose();
-        _displayTimer = null;
+        _displayTimer.Stop();
     }
 
     private void RecordCurrentCardResult(bool isCorrect)

@@ -70,32 +70,19 @@ public static partial class AnkiImporter
 
     private static AnkiImportResult ImportCollection(string collectionPath)
     {
-        var connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = collectionPath,
-            Mode = SqliteOpenMode.ReadOnly,
-            Pooling = false, // so the temporary copy can be deleted straight after
-        }.ToString();
+        using var anki = Db.OpenUnpooled(collectionPath, SqliteOpenMode.ReadOnly);
 
-        using var anki = new SqliteConnection(connectionString);
-        anki.Open();
-
-        var (noteTypes, deckNames) = HasTable(anki, "notetypes") ? ReadSchema18(anki) : ReadLegacySchema(anki);
+        var (noteTypes, deckNames) = Db.TableExists(anki, "notetypes") ? ReadSchema18(anki) : ReadLegacySchema(anki);
         var notes = ReadNotes(anki);
 
         // Each note goes in the deck of its first card; Anki only makes a reverse card when it's wanted.
         var noteDecks = new Dictionary<long, long>();
         var notesWithReverse = new HashSet<long>();
-        using (var command = anki.CreateCommand())
+        foreach (var (noteId, deckId, ord) in Db.Query(anki, null, "SELECT nid, did, ord FROM cards ORDER BY nid, ord",
+            r => (r.GetInt64(0), r.GetInt64(1), r.GetInt64(2))))
         {
-            command.CommandText = "SELECT nid, did, ord FROM cards ORDER BY nid, ord";
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                var noteId = reader.GetInt64(0);
-                noteDecks.TryAdd(noteId, reader.GetInt64(1));
-                if (reader.GetInt64(2) == 1) notesWithReverse.Add(noteId);
-            }
+            noteDecks.TryAdd(noteId, deckId);
+            if (ord == 1) notesWithReverse.Add(noteId);
         }
 
         var cardsByDeck = new Dictionary<long, List<CardExportEntry>>();
@@ -131,19 +118,11 @@ public static partial class AnkiImporter
             [.. decksWithImages.Select(id => DeckName(deckNames, id)).Order()]);
     }
 
-    private static bool HasTable(SqliteConnection connection, string table)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = $name";
-        command.Parameters.AddWithValue("$name", table);
-        return (long)command.ExecuteScalar()! > 0;
-    }
-
     /// <summary> Anki 2.1.28+: note types, fields, templates and decks in tables, their settings in protobuf. </summary>
     private static (Dictionary<long, NoteType>, Dictionary<long, string[]>) ReadSchema18(SqliteConnection anki)
     {
         var noteTypes = new Dictionary<long, NoteType>();
-        foreach (var (id, name, config) in Query(anki, "SELECT id, name, config FROM notetypes",
+        foreach (var (id, name, config) in Db.Query(anki, null, "SELECT id, name, config FROM notetypes",
             r => (r.GetInt64(0), r.GetString(1), (byte[])r[2])))
         {
             // Notetype.Config field 1 is its kind: 0 normal, 1 cloze.
@@ -151,17 +130,17 @@ public static partial class AnkiImporter
             noteTypes[id] = new NoteType(name, isCloze, [], []);
         }
 
-        foreach (var (typeId, name) in Query(anki, "SELECT ntid, name FROM fields ORDER BY ntid, ord", r => (r.GetInt64(0), r.GetString(1))))
+        foreach (var (typeId, name) in Db.Query(anki, null, "SELECT ntid, name FROM fields ORDER BY ntid, ord", r => (r.GetInt64(0), r.GetString(1))))
             if (noteTypes.TryGetValue(typeId, out var type)) type.Fields.Add(name);
 
-        foreach (var (typeId, config) in Query(anki, "SELECT ntid, config FROM templates ORDER BY ntid, ord", r => (r.GetInt64(0), (byte[])r[1])))
+        foreach (var (typeId, config) in Db.Query(anki, null, "SELECT ntid, config FROM templates ORDER BY ntid, ord", r => (r.GetInt64(0), (byte[])r[1])))
         {
             // Template.Config fields 1 and 2: the question and answer formats.
             if (noteTypes.TryGetValue(typeId, out var type))
                 type.Templates.Add((Protobuf.ReadString(config, 1) ?? "", Protobuf.ReadString(config, 2) ?? ""));
         }
 
-        var decks = Query(anki, "SELECT id, name FROM decks", r => (r.GetInt64(0), r.GetString(1)))
+        var decks = Db.Query(anki, null, "SELECT id, name FROM decks", r => (r.GetInt64(0), r.GetString(1)))
             .ToDictionary(deck => deck.Item1, deck => deck.Item2.Split('\x1f'));
         return (noteTypes, decks);
     }
@@ -169,7 +148,7 @@ public static partial class AnkiImporter
     /// <summary> Older collections: note types and decks as JSON in the col table. </summary>
     private static (Dictionary<long, NoteType>, Dictionary<long, string[]>) ReadLegacySchema(SqliteConnection anki)
     {
-        var (modelsJson, decksJson) = Query(anki, "SELECT models, decks FROM col", r => (r.GetString(0), r.GetString(1))).First();
+        var (modelsJson, decksJson) = Db.Query(anki, null, "SELECT models, decks FROM col", r => (r.GetString(0), r.GetString(1))).First();
         var noteTypes = new Dictionary<long, NoteType>();
 
         using (var models = JsonDocument.Parse(modelsJson))
@@ -196,17 +175,7 @@ public static partial class AnkiImporter
     }
 
     private static List<Note> ReadNotes(SqliteConnection anki) =>
-        Query(anki, "SELECT id, mid, flds FROM notes ORDER BY id", r => new Note(r.GetInt64(0), r.GetInt64(1), r.GetString(2).Split('\x1f')));
-
-    private static List<T> Query<T>(SqliteConnection connection, string sql, Func<SqliteDataReader, T> read)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        using var reader = command.ExecuteReader();
-        var rows = new List<T>();
-        while (reader.Read()) rows.Add(read(reader));
-        return rows;
-    }
+        Db.Query(anki, null, "SELECT id, mid, flds FROM notes ORDER BY id", r => new Note(r.GetInt64(0), r.GetInt64(1), r.GetString(2).Split('\x1f')));
 
     // --- Notes to cards ---
 
@@ -293,26 +262,15 @@ public static partial class AnkiImporter
 
     private static void SaveDecks(Dictionary<long, List<CardExportEntry>> cardsByDeck, Dictionary<long, string[]> deckNames)
     {
-        // Folders first (they're created through their own repository), then all the cards in one transaction.
-        var folders = cardsByDeck.Keys.ToDictionary(id => id, id =>
+        Db.InTransaction((connection, transaction) =>
         {
-            var parents = deckNames.GetValueOrDefault(id)?[..^1] ?? [];
-            return (Folder: DeckTransferManager.EnsureFolderPath(null, parents.Select(name => name.Trim()).Where(name => name.Length > 0)),
-                Name: DeckName(deckNames, id));
+            foreach (var (ankiDeckId, cards) in cardsByDeck)
+            {
+                var parents = deckNames.GetValueOrDefault(ankiDeckId)?[..^1] ?? [];
+                var folderID = FolderRepository.EnsureFolderPath(connection, transaction, null, parents.Select(name => name.Trim()).Where(name => name.Length > 0));
+                DeckRepository.InsertDeckWithCards(connection, transaction, DeckName(deckNames, ankiDeckId), folderID, cards.Select(FlashCardFactory.FromExportEntry));
+            }
         });
-
-        using var connection = DatabaseManager.GetConnection();
-        connection.Open();
-        using var transaction = connection.BeginTransaction();
-
-        foreach (var (ankiDeckId, cards) in cardsByDeck)
-        {
-            var (folder, name) = folders[ankiDeckId];
-            var deckId = DeckRepository.InsertDeck(connection, transaction, name, folder);
-            foreach (var card in cards) DeckRepository.InsertCard(connection, transaction, deckId, card);
-        }
-
-        transaction.Commit();
     }
 
     /// <summary> The ReviFlash deck's name: the last part of the Anki deck's ("Maths::Calculus" -> "Calculus"). </summary>

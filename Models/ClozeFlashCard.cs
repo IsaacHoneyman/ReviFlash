@@ -6,6 +6,8 @@ namespace ReviFlash.Models;
 /// <summary> Text with \C{...} blanks (Front) and an optional Extra (Back); each blank group is reviewed as its own question. </summary>
 public class ClozeFlashCard : FlashCard
 {
+    public override string TypeName => CardUtility.CARD_TYPE_CLOZE;
+
     public ClozeFlashCard(string text, string extra, bool typeAnswer) : base(text, extra) { TypeAnswer = typeAnswer; }
     public ClozeFlashCard(string text, string extra, bool typeAnswer, ulong id) : this(text, extra, typeAnswer) { ID = id; }
 

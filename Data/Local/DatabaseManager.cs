@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.Data.Sqlite;
 
 namespace ReviFlash.Data.Local;
@@ -22,12 +23,9 @@ public static class DatabaseManager
         {
             Logger.LogInfo("Initializing ReviFlash local database...");
             
-            using var connection = new SqliteConnection(GetConnectionString());
-            connection.Open();
+            using var connection = Db.Open();
 
-            using var command = connection.CreateCommand();
-            
-            command.CommandText = @"
+            Db.Execute(connection, null, @"
                 PRAGMA foreign_keys = ON;
 
                 CREATE TABLE IF NOT EXISTS Folders (
@@ -122,9 +120,7 @@ public static class DatabaseManager
                     PRIMARY KEY (NoteID, DateStudied),
                     FOREIGN KEY (NoteID) REFERENCES Notes(ID) ON DELETE CASCADE
                 );
-            ";
-            
-            command.ExecuteNonQuery();
+            ");
 
             ApplyMigrations(connection);
             CreateIndexes(connection);
@@ -151,15 +147,13 @@ public static class DatabaseManager
 
     private static void CreateIndexes(SqliteConnection connection)
     {
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
+        Db.Execute(connection, null, @"
             CREATE INDEX IF NOT EXISTS IX_Folders_Parent ON Folders(ParentFolderID);
             CREATE INDEX IF NOT EXISTS IX_Decks_Folder ON Decks(FolderID);
             CREATE INDEX IF NOT EXISTS IX_StudyGroups_Folder ON StudyGroups(FolderID);
             CREATE INDEX IF NOT EXISTS IX_Cards_Deck ON Cards(DeckID);
             CREATE INDEX IF NOT EXISTS IX_Notes_Folder ON Notes(FolderID);
-        ";
-        command.ExecuteNonQuery();
+        ");
     }
 
     private static void AddColumnIfMissing(SqliteConnection connection, string table, string column, string definition)
@@ -168,24 +162,12 @@ public static class DatabaseManager
 
         Logger.LogInfo($"Migrating database: adding {table}.{column}.");
 
-        using var command = connection.CreateCommand();
-        command.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
-        command.ExecuteNonQuery();
+        Db.Execute(connection, null, $"ALTER TABLE {table} ADD COLUMN {column} {definition};");
     }
 
-    private static bool ColumnExists(SqliteConnection connection, string table, string column)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = $"PRAGMA table_info({table});";
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-        {
-            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase)) return true;
-        }
-
-        return false;
-    }
+    private static bool ColumnExists(SqliteConnection connection, string table, string column) =>
+        Db.Query(connection, null, $"PRAGMA table_info({table});", reader => reader.GetString(1))
+            .Any(name => string.Equals(name, column, StringComparison.OrdinalIgnoreCase));
 
     public static SqliteConnection GetConnection() => new(GetConnectionString());
 }

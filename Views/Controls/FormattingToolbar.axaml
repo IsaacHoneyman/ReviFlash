@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ReviFlash.Views.Controls"
+    x:Class="ReviFlash.Views.Controls.FormattingToolbar">
+
+    <UserControl.Styles>
+        <Style Selector="Border.toolbar">
+            <Setter Property="Background" Value="#15000000" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <!-- Not focusable, so clicking keeps the cursor and selection in the text being formatted -->
+        <Style Selector="Button.format">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.format TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="Rectangle.separator">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Margin" Value="4,4" />
+            <Setter Property="Fill" Value="{DynamicResource CardBorder}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Classes="toolbar">
+        <WrapPanel Orientation="Horizontal" ItemSpacing="4" LineSpacing="4">
+            <Button Classes="format" Tag="Bold" Click="Format_Click" ToolTip.Tip="Bold: \B{...}  (Ctrl+B)">
+                <TextBlock Text="B" FontWeight="Bold" />
+            </Button>
+            <Button Classes="format" Tag="Italic" Click="Format_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
+                <!-- An icon, as the app's Inter has no italic face: a slanted plain "I" reads as "/" -->
+                <Path Classes="icon" Data="{StaticResource IconItalic}" Width="9" StrokeThickness="1.7" />
+            </Button>
+            <Button Classes="format" Tag="Underline" Click="Format_Click" ToolTip.Tip="Underline: \U{...}  (Ctrl+U)">
+                <TextBlock Text="U" TextDecorations="Underline" />
+            </Button>
+            <Rectangle Classes="separator" />
+            <Button Classes="format" Tag="Heading1" Click="Format_Click" ToolTip.Tip="Heading: \H1{...}  (Ctrl+1)">
+                <TextBlock Text="H1" FontWeight="Bold" />
+            </Button>
+            <Button Classes="format" Tag="Heading2" Click="Format_Click" ToolTip.Tip="Subheading: \H2{...}  (Ctrl+2)">
+                <TextBlock Text="H2" FontWeight="Bold" />
+            </Button>
+            <Button Classes="format" Tag="Heading3" Click="Format_Click" ToolTip.Tip="Small heading: \H3{...}  (Ctrl+3)">
+                <TextBlock Text="H3" FontWeight="Bold" />
+            </Button>
+            <Button Classes="format" Tag="Bullet" Click="Format_Click" ToolTip.Tip="Bullet point: start the line with &quot;- &quot;  (Ctrl+P)">
+                <TextBlock Text="• Point" />
+            </Button>
+            <Rectangle Classes="separator" />
+            <Button Classes="format" Tag="InlineMath" Click="Format_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
+                <TextBlock Text="Maths" />
+            </Button>
+            <Button Classes="format" Tag="DisplayMath" Click="Format_Click" ToolTip.Tip="Maths on its own line: $$...$$  (Ctrl+Shift+M)">
+                <TextBlock Text="Maths Block" />
+            </Button>
+            <Button Classes="format" Tag="Blank" Click="Format_Click"
+                IsVisible="{Binding $parent[controls:FormattingToolbar].ShowBlank}"
+                ToolTip.Tip="Cloze blank: \C{...}  (Ctrl+Shift+C)">
+                <TextBlock Text="Blank" />
+            </Button>
+            <Rectangle Classes="separator" />
+            <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
+                <TextBlock Text="?" FontWeight="Bold" />
+            </Button>
+        </WrapPanel>
+    </Border>
+</UserControl>

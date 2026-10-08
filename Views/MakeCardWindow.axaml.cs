@@ -27,23 +27,8 @@ public partial class MakeCardWindow : Window
             return;
         }
 
-        if (FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("field")) return;
-        if (TextFormatting.IsBulletShortcut(e, PlatformSettings?.HotkeyConfiguration))
-        {
-            TextFormatting.ToggleBullets(box);
-            e.Handled = true;
-            return;
-        }
-        if (TextFormatting.IsSelectLineShortcut(e, PlatformSettings?.HotkeyConfiguration))
-        {
-            TextFormatting.SelectLine(box);
-            e.Handled = true;
-            return;
-        }
-        if (TextFormatting.ShortcutFor(e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsCloze == true) is not { } pair) return;
-
-        TextFormatting.Wrap(box, pair.Open, pair.Close);
-        e.Handled = true;
+        if (FocusManager?.GetFocusedElement() is TextBox box && box.Classes.Contains("field"))
+            TextFormatting.TryHandleShortcut(box, e, PlatformSettings?.HotkeyConfiguration, ViewModel?.IsCloze == true);
     }
 
     private void Blank_Click(object? sender, RoutedEventArgs e) => TextFormatting.Wrap(ClozeBox, @"\C{", "}");

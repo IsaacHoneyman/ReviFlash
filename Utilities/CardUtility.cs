@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 
 namespace ReviFlash.Utilities;
@@ -48,4 +49,8 @@ public static class CardUtility
         if (total == 0) return GRADE_UNGRADED;
         return CalculateLetterGrade((correct * 100.0) / total);
     }
+
+    /// <summary> Percentage correct to one decimal place, 0 when nothing was answered. </summary>
+    public static double AccuracyPercent(int correct, int total) =>
+        total > 0 ? Math.Round((double)correct / total * 100, 1) : 0;
 }

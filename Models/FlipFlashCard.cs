@@ -1,7 +1,11 @@
+using ReviFlash.Utilities;
+
 namespace ReviFlash.Models;
 
 public class FlipFlashCard : FlashCard
 {
+    public override string TypeName => CardUtility.CARD_TYPE_FLIP;
+
     public FlipFlashCard(string front, string back, bool isReversible = false) : base(front, back) { IsReversible = isReversible; }
     public FlipFlashCard(string front, string back, ulong id, bool isReversible = false) : this(front, back, isReversible) { ID = id; }
 
@@ -10,6 +14,9 @@ public class FlipFlashCard : FlashCard
 
     /// <summary> The back-to-front question a review session made from a reversible card. </summary>
     public bool IsReversedCopy { get; private init; }
+
+    public override string CardType => IsReversible ? $"{TypeName} ↔" : TypeName;
+    public override string ReviewTypeLabel => ReviewLabel ?? (IsReversedCopy ? $"{TypeName} · Reversed" : TypeName);
 
     /// <summary> Keeps the card ID so stats go to the card's deck. </summary>
     public FlipFlashCard CreateReversedCopy() => new(Back, Front, ID) { IsReversedCopy = true };

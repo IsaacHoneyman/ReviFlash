@@ -15,7 +15,7 @@
         <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,16">
             <Grid ColumnDefinitions="*, Auto">
                 <StackPanel Grid.Column="0" Spacing="4">
-                    <TextBlock Text="Community Flashcards" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                    <TextBlock Classes="title" Text="Community Flashcards" />
                     <TextBlock Text="Search and download public flashcard sets created by other users."
                                Foreground="{DynamicResource TextSecondary}" FontSize="14" TextWrapping="Wrap"/>
                 </StackPanel>
@@ -27,13 +27,11 @@
             </Grid>
             
             <Grid ColumnDefinitions="*, Auto, Auto" Margin="0,8,0,0">
-                <TextBox Grid.Column="0" 
+                <TextBox Grid.Column="0" Classes="input"
                          Text="{Binding SearchText}"
                          Watermark="Search by title, subject, or keywords..."
                          Height="40" VerticalContentAlignment="Center"
-                         CornerRadius="8" Padding="12,0" FontSize="14"
-                         Background="{DynamicResource CardBackground}"
-                         Foreground="{DynamicResource TextPrimary}"
+                         Padding="12,0"
                          Margin="0,0,12,0">
                     <TextBox.KeyBindings>
                         <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
@@ -46,46 +44,37 @@
                           CornerRadius="8" Width="180" Height="40" VerticalContentAlignment="Center" Margin="0,0,12,0"
                           Background="{DynamicResource CardBackground}" />
 
-                <Button Grid.Column="2" 
+                <Button Grid.Column="2" Classes="primary"
                         Content="Search" 
                         Command="{Binding SearchCommand}"
-                        CornerRadius="8" Padding="16,0" Height="40" FontSize="14" FontWeight="SemiBold"
-                        VerticalContentAlignment="Center"
-                        Background="{DynamicResource GradientStart}"
-                        Foreground="{DynamicResource PrimaryButtonForeground}"
-                        Cursor="Hand"/>
+                        Padding="16,0" Height="40" FontSize="14" FontWeight="SemiBold"
+                        VerticalContentAlignment="Center" />
             </Grid>
         </StackPanel>
 
-        <Border Grid.Row="1" Background="{DynamicResource CardBackground}" 
-                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1.5" 
-                CornerRadius="16" Padding="16">
+        <Border Grid.Row="1" Classes="card" CornerRadius="16" Padding="16">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding SearchResults}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="onlineData:FlashCardDeckMetadata">
-                            <Border Background="#14000000" 
-                                    BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" 
-                                    CornerRadius="12" Padding="16" Margin="0,0,0,12">
+                            <Border Classes="listRow" Padding="16" Margin="0,0,0,12">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <StackPanel Grid.Column="0" Spacing="4">
-                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
                                         <TextBlock Text="{Binding UploaderName, StringFormat='by {0}'}" IsVisible="{Binding HasUploaderName}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Text="{Binding Description, StringFormat='in {0}'}" IsVisible="{Binding HasDescription}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
                                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
                                             <TextBlock Text="{Binding CardCount, StringFormat='{}{0} cards'}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
                                             <TextBlock Text="{Binding DownloadCountText}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MMM dd, yyyy}'}" FontSize="12" Foreground="Gray"/>
+                                            <TextBlock Classes="caption" Text="{Binding CreatedAt, StringFormat='{}{0:MMM dd, yyyy}'}" />
                                         </StackPanel>
                                     </StackPanel>
                                     
-                                    <Button Grid.Column="1"
+                                    <Button Grid.Column="1" Classes="secondary"
                                             Command="{Binding $parent[Window].((vm:OnlineImportViewModel)DataContext).DownloadCommand}"
                                             CommandParameter="{Binding}"
                                             VerticalAlignment="Center"
-                                            Background="{DynamicResource StatTileBackground}"
-                                            Foreground="{DynamicResource TextPrimary}"
-                                            CornerRadius="8" Padding="12,10" Cursor="Hand"
+                                            Padding="12,10"
                                             ToolTip.Tip="Download">
                                         <Path Classes="icon" Data="{StaticResource IconDownload}" />
                                     </Button>

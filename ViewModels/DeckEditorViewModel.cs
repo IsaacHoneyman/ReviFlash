@@ -326,15 +326,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     {
         _suppressCardTypeDefaults = true;
 
-        SelectedCardType = card switch
-        {
-            ClozeFlashCard => CARD_TYPE_CLOZE,
-            TypeFlashCard => CARD_TYPE_TYPE,
-            MultiFlashCard => CARD_TYPE_MULTI_CHOICE,
-            MatchFlashCard => CARD_TYPE_MATCH,
-            TrueFalseFlashCard => CARD_TYPE_TRUE_FALSE,
-            _ => CARD_TYPE_FLIP,
-        };
+        SelectedCardType = card.TypeName;
         NewFront = card.Front;
         NewBack = card.Back;
         NewTypeAnswer = (card as TypeFlashCard)?.Answer ?? "";

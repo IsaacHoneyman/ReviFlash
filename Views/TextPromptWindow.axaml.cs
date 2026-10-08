@@ -1,11 +1,11 @@
-using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
 
 /// <summary> Single line text prompt, used for naming and renaming folders. </summary>
-public partial class TextPromptWindow : Window
+public partial class TextPromptWindow : DialogWindow
 {
     public TextPromptWindow()
     {
@@ -28,16 +28,10 @@ public partial class TextPromptWindow : Window
 
     private void Input_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
-        {
-            e.Handled = true;
-            Confirm();
-        }
-        else if (e.Key == Key.Escape)
-        {
-            e.Handled = true;
-            Close(null);
-        }
+        if (e.Key != Key.Enter) return;
+
+        e.Handled = true;
+        Confirm();
     }
 
     private void Confirm_Click(object sender, RoutedEventArgs e) => Confirm();

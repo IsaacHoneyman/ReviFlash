@@ -9,9 +9,6 @@ namespace ReviFlash.Utilities;
 
 public static partial class TextUtility
 {
-    [GeneratedRegex(@"(\d+)\.(\d+)\.(\d+)")]
-    public static partial Regex VersionRegex();
-
     public static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
     public static readonly JsonSerializerOptions CaseInsensitive = new() { PropertyNameCaseInsensitive = true };
 
@@ -53,13 +50,19 @@ public static partial class TextUtility
             : $"{version.Major}.{version.Minor}.{version.Build}";
     }
 
-    public static string FormatTime(TimeSpan time)
+    /// <summary> "m:ss", or "h:mm:ss" from an hour (or always, for a running clock); hours keep counting past a day. </summary>
+    public static string FormatTime(TimeSpan time, bool alwaysShowHours = false)
     {
-        return 
-        (time.TotalDays >= 1) ? $"{time.Hours + 24 * time.Days}:{time:mm\\:ss}" :
-        (time.TotalHours >= 1) ? time.ToString(@"h\:mm\:ss") :
-        time.ToString(@"m\:ss");
+        var hours = (int)time.TotalHours;
+        return hours > 0 || alwaysShowHours ? $"{hours}:{time:mm\\:ss}" : time.ToString(@"m\:ss");
     }
+
+    public static string FormatTime(int seconds, bool alwaysShowHours = false) =>
+        FormatTime(TimeSpan.FromSeconds(seconds), alwaysShowHours);
+
+    /// <summary> "1 deck", "2 decks"; pass <paramref name="plural"/> for irregular nouns. </summary>
+    public static string Plural(int count, string noun, string? plural = null) =>
+        count == 1 ? $"1 {noun}" : $"{count} {plural ?? noun + "s"}";
 
     /// <summary> A local time as "just now", "5 min ago", "today at 14:05", "yesterday", "3 Oct" or "3 Oct 2025". </summary>
     public static string FormatWhen(DateTime local)

@@ -4,6 +4,7 @@
     xmlns:models="using:ReviFlash.Models"
     xmlns:views="using:ReviFlash.Views"
     xmlns:converters="using:ReviFlash.Converters"
+    xmlns:controls="using:ReviFlash.Views.Controls"
     x:Class="ReviFlash.Views.DeckEditorWindow"
     x:DataType="vm:DeckEditorViewModel"
     Title="Deck Editor"
@@ -18,16 +19,7 @@
     </Window.Resources>
 
     <Window.Styles>
-        <Style Selector="TextBlock.fieldLabel">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-            <Setter Property="Margin" Value="4,4,0,0" />
-        </Style>
-        <Style Selector="TextBlock.hint">
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
+        <StyleInclude Source="avares://ReviFlash/Views/Controls/FormatStyles.axaml" />
         <Style Selector="TextBox.field">
             <Setter Property="Background" Value="{DynamicResource AppBackground}" />
         </Style>
@@ -38,10 +30,8 @@
         </Style>
         <!-- LaTeX preview under a field: "small" for options, pairs and labels -->
         <Style Selector="Border.preview">
-            <Setter Property="Background" Value="#15000000" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12" />
             <Setter Property="MinHeight" Value="60" />
         </Style>
@@ -62,39 +52,6 @@
             <Setter Property="Margin" Value="8,0,0,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Background" Value="#60FF4444" />
-        </Style>
-        <Style Selector="Border.toolbar">
-            <Setter Property="Background" Value="#15000000" />
-            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="4" />
-        </Style>
-        <!-- Not focusable, so clicking keeps the cursor in the field being formatted -->
-        <Style Selector="Button.format">
-            <Setter Property="Focusable" Value="False" />
-            <Setter Property="MinWidth" Value="34" />
-            <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="10,0" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Button.format TextBlock">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-        </Style>
-        <Style Selector="Rectangle.separator">
-            <Setter Property="Width" Value="1" />
-            <Setter Property="Height" Value="22" />
-            <Setter Property="Margin" Value="4,4" />
-            <Setter Property="Fill" Value="{DynamicResource CardBorder}" />
-        </Style>
-        <Style Selector="views|MathText">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
     </Window.Styles>
 
@@ -128,48 +85,7 @@
                             CornerRadius="8" />
 
                         <!-- Formatting toolbar: acts on the card field last clicked into -->
-                        <Border Classes="toolbar">
-                            <WrapPanel Orientation="Horizontal" ItemSpacing="4" LineSpacing="4">
-                                <Button Classes="format" Click="Bold_Click" ToolTip.Tip="Bold: \B{...}  (Ctrl+B)">
-                                    <TextBlock Text="B" FontWeight="Bold" />
-                                </Button>
-                                <Button Classes="format" Click="Italic_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
-                                    <!-- An icon, as the app's Inter has no italic face: a slanted plain "I" reads as "/" -->
-                                    <Path Classes="icon" Data="{StaticResource IconItalic}" Width="9" StrokeThickness="1.7" />
-                                </Button>
-                                <Button Classes="format" Click="Underline_Click" ToolTip.Tip="Underline: \U{...}  (Ctrl+U)">
-                                    <TextBlock Text="U" TextDecorations="Underline" />
-                                </Button>
-                                <Rectangle Classes="separator" />
-                                <Button Classes="format" Click="Heading1_Click" ToolTip.Tip="Heading: \H1{...}  (Ctrl+1)">
-                                    <TextBlock Text="H1" FontWeight="Bold" />
-                                </Button>
-                                <Button Classes="format" Click="Heading2_Click" ToolTip.Tip="Subheading: \H2{...}  (Ctrl+2)">
-                                    <TextBlock Text="H2" FontWeight="Bold" />
-                                </Button>
-                                <Button Classes="format" Click="Heading3_Click" ToolTip.Tip="Small heading: \H3{...}  (Ctrl+3)">
-                                    <TextBlock Text="H3" FontWeight="Bold" />
-                                </Button>
-                                <Button Classes="format" Click="Bullet_Click" ToolTip.Tip="Bullet point: start the line with &quot;- &quot;  (Ctrl+P)">
-                                    <TextBlock Text="• Point" />
-                                </Button>
-                                <Rectangle Classes="separator" />
-                                <Button Classes="format" Click="InlineMath_Click" ToolTip.Tip="Maths in the line: $...$  (Ctrl+M)">
-                                    <TextBlock Text="Maths" />
-                                </Button>
-                                <Button Classes="format" Click="DisplayMath_Click" ToolTip.Tip="Maths on its own line: $$...$$  (Ctrl+Shift+M)">
-                                    <TextBlock Text="Maths Block" />
-                                </Button>
-                                <Button Classes="format" Click="Blank_Click" IsVisible="{Binding IsClozeCardType}"
-                                    ToolTip.Tip="Cloze blank: \C{...}  (Ctrl+Shift+C)">
-                                    <TextBlock Text="Blank" />
-                                </Button>
-                                <Rectangle Classes="separator" />
-                                <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
-                                    <TextBlock Text="?" FontWeight="Bold" />
-                                </Button>
-                            </WrapPanel>
-                        </Border>
+                        <controls:FormattingToolbar ShowBlank="{Binding IsClozeCardType}" FormatRequested="Toolbar_FormatRequested" />
 
                         <TextBlock Classes="fieldLabel" Text="{Binding FrontLabel}" />
                         <TextBox Classes="field multiline" x:Name="FrontBox" Text="{Binding NewFront, Mode=TwoWay}" />
@@ -190,7 +106,7 @@
                         <StackPanel Spacing="6" IsVisible="{Binding IsClozeCardType}">
                             <CheckBox IsChecked="{Binding NewClozeTypeAnswer, Mode=TwoWay}"
                                 Content="Answer by typing the hidden text" />
-                            <TextBlock Classes="hint"
+                            <TextBlock Classes="hint" TextWrapping="Wrap"
                                 Text="Each \C{...} blank becomes its own question. Give blanks the same number, like \C1{...}, to hide them together." />
                         </StackPanel>
 
@@ -264,7 +180,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Classes="hint" Text="Tick each correct option. Users can select multiple answers during review." />
+                            <TextBlock Classes="hint" TextWrapping="Wrap" Text="Tick each correct option. Users can select multiple answers during review." />
                         </StackPanel>
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsMatchCardType}">
@@ -311,17 +227,14 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Classes="hint" Text="In review, left and right sides are shuffled and the user matches them." />
+                            <TextBlock Classes="hint" TextWrapping="Wrap" Text="In review, left and right sides are shuffled and the user matches them." />
                         </StackPanel>
 
                         <TextBlock Text="{Binding ValidationMessage}" Foreground="#FF6666"
                             TextWrapping="Wrap" FontSize="12" IsVisible="{Binding HasValidationMessage}" />
 
-                        <Button Click="AddCard_Click" Content="{Binding SaveButtonText}"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center" Margin="0,10,0,0"
-                            Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                            FontWeight="Bold" Padding="12" CornerRadius="8" />
+                        <Button Classes="primary wide" Click="AddCard_Click" Content="{Binding SaveButtonText}"
+                            Margin="0,10,0,0" Padding="12" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -332,21 +245,16 @@
                 Margin="0,0,-24,0"
                 Padding="0,0,24,0">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Loading cards..."
-                        FontSize="12" FontWeight="Bold"
-                        Foreground="{DynamicResource TextSecondary}"
+                    <TextBlock Classes="caption" Text="Loading cards..." FontWeight="Bold"
                         IsVisible="{Binding IsCardsLoading}" />
 
                     <ItemsControl ItemsSource="{Binding Cards}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:FlashCard">
-                            <Border Background="{DynamicResource CardBackground}"
-                                BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
-                                CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                            <Border Classes="card compact" Margin="0,0,0,16">
                                 <Grid ColumnDefinitions="*, Auto" RowDefinitions="*, Auto">
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding CardType}"
-                                        FontSize="11" FontWeight="Bold"
-                                        Foreground="{DynamicResource TextSecondary}"
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Classes="hint" Text="{Binding CardType}"
+                                        FontWeight="Bold"
                                         VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,8" />
 
                                     <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12" IsVisible="{Binding !IsMatchCard}">
@@ -358,8 +266,7 @@
                                         <views:MathText Text="{Binding Back}" Foreground="{DynamicResource TextSecondary}" />
 
                                         <StackPanel Spacing="6" IsVisible="{Binding IsMultiChoiceCard}">
-                                            <TextBlock Text="Options Preview" FontSize="12" FontWeight="SemiBold"
-                                                Foreground="{DynamicResource TextSecondary}" />
+                                            <TextBlock Classes="caption" Text="Options Preview" FontWeight="SemiBold" />
                                             <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto"
                                                 HorizontalScrollBarVisibility="Disabled">
                                                 <ItemsControl ItemsSource="{Binding MultiChoiceOptionsPreview}">
@@ -382,8 +289,7 @@
                                     <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="8" IsVisible="{Binding IsMatchCard}">
                                         <views:MathText Text="{Binding Front}" />
 
-                                        <TextBlock Text="Match pairs preview" FontSize="12"
-                                            Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Classes="caption" Text="Match pairs preview" />
 
                                         <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto"
                                             HorizontalScrollBarVisibility="Disabled">

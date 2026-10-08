@@ -7,6 +7,7 @@ using ReviFlash.Data.Backup.Local;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
 using ReviFlash.ViewModels;
+using static ReviFlash.Utilities.TextUtility;
 
 namespace ReviFlash.Views;
 
@@ -18,6 +19,13 @@ public partial class SettingsWindow : Window
         Closed += (_, _) => (DataContext as SettingsViewModel)?.Detach();
     }
 
+    private DashboardViewModel? Dashboard => Owner?.DataContext as DashboardViewModel;
+
+    private static void ShowStatus(TextBlock statusText, string? message)
+    {
+        statusText.Text = message;
+        statusText.IsVisible = message is not null;
+    }
 
     private async void CreateBackup_Click(object? sender, RoutedEventArgs e)
     {
@@ -32,16 +40,16 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        bool includeStats = this.FindControl<CheckBox>("IncludeStatsInBackupCheckBox")?.IsChecked == true;
+        bool includeStats = IncludeStatsInBackupCheckBox.IsChecked == true;
 
         try
         {
             BackupManager.TryCreateBackup(folders[0].Path.LocalPath, includeStats);
-            SetBackupStatus("Backup created successfully.");
+            ShowStatus(BackupStatusText, "Backup created successfully.");
         }
         catch (Exception ex)
         {
-            SetBackupStatus($"Backup failed: {ex.Message}");
+            ShowStatus(BackupStatusText, $"Backup failed: {ex.Message}");
         }
     }
 
@@ -63,24 +71,20 @@ public partial class SettingsWindow : Window
         }
 
         AnkiImportButton.IsEnabled = false;
-        SetAnkiImportStatus("Importing...");
+        ShowStatus(AnkiImportStatusText, "Importing...");
 
         try
         {
             var path = files[0].Path.LocalPath;
             var result = await Task.Run(() => AnkiImporter.Import(path));
 
-            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
-            {
-                mainVm.ReloadLibrary();
-            }
-
-            SetAnkiImportStatus(DescribeAnkiImport(result));
+            Dashboard?.ReloadLibrary();
+            ShowStatus(AnkiImportStatusText, DescribeAnkiImport(result));
         }
         catch (Exception ex)
         {
             Logger.LogError("Anki import failed", ex);
-            SetAnkiImportStatus($"Import failed: {ex.Message}");
+            ShowStatus(AnkiImportStatusText, $"Import failed: {ex.Message}");
         }
         finally
         {
@@ -96,14 +100,6 @@ public partial class SettingsWindow : Window
         if (result.Skipped > 0)
             message += $" {Plural(result.Skipped, "note")} with only images (or image occlusion) {(result.Skipped == 1 ? "was" : "were")} left out.";
         return message;
-    }
-
-    private static string Plural(int count, string noun) => $"{count} {noun}{(count == 1 ? "" : "s")}";
-
-    private void SetAnkiImportStatus(string message)
-    {
-        AnkiImportStatusText.Text = message;
-        AnkiImportStatusText.IsVisible = true;
     }
 
     private async void RestoreBackup_Click(object? sender, RoutedEventArgs e)
@@ -140,29 +136,13 @@ public partial class SettingsWindow : Window
                 vm.RefreshFromMetadata();
             }
 
-            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
-            {
-                mainVm.RefreshAfterBackupRestore();
-            }
-
-            SetBackupStatus("Backup restored successfully.");
+            Dashboard?.RefreshAfterBackupRestore();
+            ShowStatus(BackupStatusText, "Backup restored successfully.");
         }
         catch (Exception ex)
         {
-            SetBackupStatus($"Restore failed: {ex.Message}");
+            ShowStatus(BackupStatusText, $"Restore failed: {ex.Message}");
         }
-    }
-
-    private void SetBackupStatus(string message)
-    {
-        var statusText = this.FindControl<TextBlock>("BackupStatusText");
-        if (statusText == null)
-        {
-            return;
-        }
-
-        statusText.Text = message;
-        statusText.IsVisible = true;
     }
 
     private async void DeleteAllStats_Click(object? sender, RoutedEventArgs e)
@@ -178,27 +158,14 @@ public partial class SettingsWindow : Window
         }
 
         FlashCardRepository.DeleteAllStats();
-
-        if (Owner is MainWindow { DataContext: DashboardViewModel mainVm })
-        {
-            mainVm.RefreshStats();
-        }
-
-        var statusText = this.FindControl<TextBlock>("DeleteStatsStatusText");
-        if (statusText != null)
-        {
-            statusText.Text = "All flashcard stats were deleted.";
-            statusText.IsVisible = true;
-        }
+        Dashboard?.RefreshStats();
+        ShowStatus(DeleteStatsStatusText, "All flashcard stats were deleted.");
     }
 
     private async void OpenDeleteDeckStats_Click(object? sender, RoutedEventArgs e)
     {
         var window = new DeleteDeckStatsWindow();
-        window.StatsDeleted += () =>
-        {
-            if (Owner is MainWindow { DataContext: DashboardViewModel mainVm }) mainVm.RefreshStats();
-        };
+        window.StatsDeleted += () => Dashboard?.RefreshStats();
         await window.ShowDialog(this);
     }
 
@@ -213,7 +180,7 @@ public partial class SettingsWindow : Window
     private async void SignOut_Click(object? sender, RoutedEventArgs e)
     {
         await AuthSession.SignOutAsync();
-        SetAccountStatus(null);
+        ShowStatus(AccountStatusText, null);
     }
 
     private async void ChangeUsername_Click(object? sender, RoutedEventArgs e)
@@ -227,67 +194,40 @@ public partial class SettingsWindow : Window
 
         if (username.Length < min || username.Length > max)
         {
-            SetAccountStatus($"Usernames must be {min}-{max} characters.");
+            ShowStatus(AccountStatusText, $"Usernames must be {min}-{max} characters.");
             return;
         }
 
-        SetAccountStatus("Saving username...");
+        ShowStatus(AccountStatusText, "Saving username...");
         var result = await AuthSession.ChangeUsernameAsync(username);
-        SetAccountStatus(result.Success ? $"Username changed to {username}." : $"Couldn't change username: {result.Message}");
-    }
-
-    private void SetAccountStatus(string? message)
-    {
-        var statusText = this.FindControl<TextBlock>("AccountStatusText");
-        if (statusText == null) return;
-
-        statusText.Text = message;
-        statusText.IsVisible = message is not null;
+        ShowStatus(AccountStatusText, result.Success ? $"Username changed to {username}." : $"Couldn't change username: {result.Message}");
     }
 
     private async void CheckForUpdates_Click(object? sender, RoutedEventArgs e)
     {
-        var statusText = this.FindControl<TextBlock>("UpdateStatusText");
-        if (statusText != null)
-        {
-            statusText.Text = "Checking for updates...";
-            statusText.IsVisible = true;
-        }
+        ShowStatus(UpdateStatusText, "Checking for updates...");
 
         var updateClient = new UpdateClient();
         var updateInfo = await updateClient.CheckForUpdatesAsync();
 
         if (updateInfo == null)
         {
-            statusText?.Text = "You are already on the latest version.";
+            ShowStatus(UpdateStatusText, "You are already on the latest version.");
             return;
         }
 
-        statusText?.Text = $"Version {updateInfo.TargetFullRelease.Version} available!";
-        var confirmDialog = new ConfirmDialogWindow(
-        $"Version {updateInfo.TargetFullRelease.Version} is available. Download and restart now?"
-    );
+        var version = updateInfo.TargetFullRelease.Version;
+        ShowStatus(UpdateStatusText, $"Version {version} available!");
+        var confirmDialog = new ConfirmDialogWindow($"Version {version} is available. Download and restart now?");
 
-        bool confirmed = await confirmDialog.ShowDialog<bool>(this);
-
-        if (confirmed)
+        if (!await confirmDialog.ShowDialog<bool>(this))
         {
-            statusText?.Text = "Downloading update... 0%";
-
-            bool applied = await updateClient.DownloadAndApplyUpdateAsync(updateInfo, progress =>
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    statusText?.Text = $"Downloading update... {progress}%";
-                });
-            });
-
-            // Success restarts the app, so getting here means it failed.
-            if (!applied) statusText?.Text = "The update couldn't be installed. Please try again later.";
+            ShowStatus(UpdateStatusText, "Update cancelled.");
+            return;
         }
-        else
-        {
-            if (statusText != null) statusText.Text = "Update cancelled.";
-        }
+
+        // A successful update restarts the app, so the window only closes on a failure.
+        await new UpdateProgressWindow(updateClient, updateInfo).ShowDialog(this);
+        ShowStatus(UpdateStatusText, "The update couldn't be installed. Please try again later.");
     }
 }

@@ -105,11 +105,11 @@ public sealed class FolderTree
         return SubtreeIds(root).Contains(id);
     }
 
-    /// <summary> Card totals and study time roll up through the subtree; sets, groups, notes and subfolders count direct children only. </summary>
+    /// <summary> Card totals, study time and last activity roll up through the subtree; sets, groups, notes and subfolders count direct children only. </summary>
     public void ApplyCounts(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, IEnumerable<Note>? notes = null)
     {
         var deckList = decks as IReadOnlyList<FlashCardDeck> ?? [.. decks];
-        var groupList = groups as IReadOnlyList<StudyGroup> ?? [.. groups];
+        IReadOnlyList<Note> noteList = notes is null ? [] : notes as IReadOnlyList<Note> ?? [.. notes];
 
         foreach (var folder in AllFolders)
         {
@@ -127,29 +127,33 @@ public sealed class FolderTree
             if (Get(deck.FolderID) is Folder folder) folder.SetCount++;
         }
 
-        foreach (var group in groupList)
+        foreach (var group in groups)
         {
             if (Get(group.FolderID) is Folder folder) folder.GroupCount++;
         }
 
-        foreach (var note in notes ?? [])
+        foreach (var note in noteList)
         {
             if (Get(note.FolderID) is Folder folder) folder.NoteCount++;
         }
 
-        // Groups are skipped: their cards live in decks already counted.
+        // Groups are skipped: their cards and time live in decks already counted.
         foreach (var folder in AllFolders)
         {
             var subtree = SubtreeIds(folder.ID);
 
             foreach (var deck in deckList)
             {
-                if (deck.FolderID is not ulong deckFolderId || !subtree.Contains(deckFolderId)) continue;
+                if (deck.FolderID is ulong id && subtree.Contains(id)) folder.CardCount += deck.CardCount;
+            }
 
-                folder.CardCount += deck.CardCount;
-                folder.StudySeconds += deck.StudySeconds;
+            foreach (var item in deckList.Concat<LibraryItem>(noteList))
+            {
+                if (item.ContainerFolderID is not ulong id || !subtree.Contains(id)) continue;
 
-                if (deck.LastStudied is DateTime studied &&
+                folder.StudySeconds += item.StudySeconds;
+
+                if (item.SortLastActivity is DateTime studied &&
                     (folder.LastStudied is null || studied > folder.LastStudied))
                 {
                     folder.LastStudied = studied;
@@ -158,19 +162,25 @@ public sealed class FolderTree
         }
     }
 
-    /// <summary> Stamps each item with its folder path relative to <paramref name="relativeTo"/>, so deeper search results show where they came from. </summary>
-    public void ApplyPaths(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, ulong? relativeTo = null, IEnumerable<Note>? notes = null)
+    /// <summary> Stamps each item, and every folder, with its folder path relative to <paramref name="relativeTo"/>, so deeper search results show where they came from. </summary>
+    public void ApplyPaths(IEnumerable<LibraryItem> items, ulong? relativeTo = null)
     {
         string basePath = PathOf(relativeTo);
 
-        foreach (var deck in decks) deck.FolderPath = RelativePath(deck.FolderID, relativeTo, basePath);
-        foreach (var group in groups) group.FolderPath = RelativePath(group.FolderID, relativeTo, basePath);
-        foreach (var note in notes ?? []) note.FolderPath = RelativePath(note.FolderID, relativeTo, basePath);
-
-        foreach (var folder in AllFolders)
+        foreach (var item in items.Concat(AllFolders))
         {
-            folder.FolderPath = RelativePath(folder.ParentFolderID, relativeTo, basePath);
+            item.FolderPath = RelativePath(item.ContainerFolderID, relativeTo, basePath);
         }
+    }
+
+    public void ApplyPaths(IEnumerable<FlashCardDeck> decks, IEnumerable<StudyGroup> groups, ulong? relativeTo = null, IEnumerable<Note>? notes = null) =>
+        ApplyPaths(decks.Concat<LibraryItem>(groups).Concat(notes ?? []), relativeTo);
+
+    /// <summary> Breadcrumb text for a folder, or <see cref="RootLabel"/> for the main menu. </summary>
+    public string DisplayPath(ulong? folderID)
+    {
+        string path = PathOf(folderID);
+        return path.Length > 0 ? path : RootLabel;
     }
 
     private string RelativePath(ulong? folderID, ulong? relativeTo, string basePath)

@@ -1,9 +1,12 @@
 using System;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Models;
 
 public class TrueFalseFlashCard : FlashCard
 {
+    public override string TypeName => CardUtility.CARD_TYPE_TRUE_FALSE;
+
     public bool CorrectAnswerIsTrue { get; private set; }
     public string TrueLabel { get; private set; }
     public string FalseLabel { get; private set; }

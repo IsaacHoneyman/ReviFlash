@@ -11,6 +11,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
+using ReviFlash.Utilities;
+using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
 
@@ -26,6 +28,14 @@ public partial class DashboardView : UserControl
     }
 
     private Window OwnerWindow => (Window)TopLevel.GetTopLevel(this)!;
+
+    /// <summary> The library item a card or card button belongs to. </summary>
+    private static T ItemOf<T>(object sender) where T : class =>
+        (sender as Control)?.DataContext as T ?? throw new InvalidOperationException($"Control's DataContext is not a {typeof(T).Name}");
+
+    private static string CreationHint(DashboardViewModel vm) => vm.IsInFolder
+        ? $"It will be created inside {vm.FolderTree.DisplayPath(vm.CurrentFolderID)}."
+        : "It will be created on the main menu.";
 
     private void HelpButton_Click(object sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(OwnerWindow);
 
@@ -64,7 +74,7 @@ public partial class DashboardView : UserControl
             "Name your new note",
             "Create",
             "New Note",
-            vm.IsInFolder ? $"It will be created inside {vm.CurrentFolderName}." : "It will be created on the main menu.");
+            CreationHint(vm));
 
         var name = await prompt.ShowDialog<string?>(OwnerWindow);
         if (string.IsNullOrWhiteSpace(name)) return;
@@ -75,7 +85,8 @@ public partial class DashboardView : UserControl
     public async void RenameNote_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if ((sender as Control)?.DataContext is not Note note || DataContext is not DashboardViewModel vm) return;
+        var note = ItemOf<Note>(sender);
+        if (DataContext is not DashboardViewModel vm) return;
 
         var name = await new TextPromptWindow("Rename note", "Rename", note.Name).ShowDialog<string?>(OwnerWindow);
         if (string.IsNullOrWhiteSpace(name) || name == note.Name) return;
@@ -86,37 +97,17 @@ public partial class DashboardView : UserControl
     public void NoteStats_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if ((sender as Control)?.DataContext is Note note && DataContext is DashboardViewModel vm) vm.ShowNoteStats(note);
+        if (DataContext is DashboardViewModel vm) vm.ShowNoteStats(ItemOf<Note>(sender));
     }
 
     public async void DeleteNote_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if ((sender as Control)?.DataContext is not Note note || DataContext is not DashboardViewModel vm) return;
+        var note = ItemOf<Note>(sender);
+        if (DataContext is not DashboardViewModel vm) return;
 
         var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete the note '{note.Name}'?");
         if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteNote(note);
-    }
-
-    private void NoteCard_Click(object sender, PointerPressedEventArgs e)
-    {
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null) return;
-        if (DataContext is not DashboardViewModel vm || vm.IsSelectionModeActive) return;
-
-        if ((sender as Control)?.DataContext is Note note) vm.OpenNote(note);
-    }
-
-    private void NoteCard_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key is not (Key.Enter or Key.Space)) return;
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null) return;
-        if (DataContext is not DashboardViewModel vm || vm.IsSelectionModeActive) return;
-
-        if ((sender as Control)?.DataContext is Note note)
-        {
-            vm.OpenNote(note);
-            e.Handled = true;
-        }
     }
 
     public async void CreateGroup_Click(object sender, RoutedEventArgs e)
@@ -143,7 +134,7 @@ public partial class DashboardView : UserControl
             "Name your new folder",
             "Create",
             "New Folder",
-            vm.IsInFolder ? $"It will be created inside {vm.CurrentFolderName}." : "It will be created on the main menu.");
+            CreationHint(vm));
 
         var name = await prompt.ShowDialog<string?>(OwnerWindow);
         if (string.IsNullOrWhiteSpace(name)) return;
@@ -155,8 +146,7 @@ public partial class DashboardView : UserControl
     {
         e.Handled = true;
 
-        var button = (Button)sender;
-        var folder = (Folder)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a Folder"));
+        var folder = ItemOf<Folder>(sender);
 
         if (DataContext is not DashboardViewModel vm) return;
 
@@ -172,8 +162,7 @@ public partial class DashboardView : UserControl
     {
         e.Handled = true;
 
-        var button = (Button)sender;
-        var folder = (Folder)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a Folder"));
+        var folder = ItemOf<Folder>(sender);
 
         if (DataContext is not DashboardViewModel vm) return;
 
@@ -190,41 +179,25 @@ public partial class DashboardView : UserControl
         }
 
         var (folders, sets, groups, notes, cards) = FolderRepository.CountContents(vm.FolderTree.SubtreeIds(folder.ID));
-        var everything = string.Join(", ", new[] { Count(folders, "folder"), Count(sets, "set"), Count(notes, "note"), Count(groups, "group") }.Where(part => part.Length > 0));
-        var deleteMessage = $"Delete the folder '{folder.Name}' and everything in it ({everything}, {Count(cards, "card")})? This can't be undone.";
+        var everything = string.Join(", ", new[] { (folders, "folder"), (sets, "set"), (notes, "note"), (groups, "group") }
+            .Where(part => part.Item1 > 0)
+            .Select(part => TextUtility.Plural(part.Item1, part.Item2)));
+        var deleteMessage = $"Delete the folder '{folder.Name}' and everything in it ({everything}, {TextUtility.Plural(cards, "card")})? This can't be undone.";
 
         var dialog = new ConfirmDialogWindow(message, "Also delete everything inside", deleteMessage);
         if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder, withContents: dialog.IsOptionChecked);
     }
 
-    private static string Count(int count, string noun) => count switch
-    {
-        0 when noun != "card" => "",
-        1 => $"1 {noun}",
-        _ => $"{count} {noun}s",
-    };
-
     public async void MoveItem_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
 
-        var button = (Button)sender;
-        var item = button.DataContext ?? throw new InvalidOperationException("Button has no DataContext to move");
-
+        var item = ItemOf<LibraryItem>(sender);
         if (DataContext is not DashboardViewModel vm) return;
-
-        ulong? currentFolderID = item switch
-        {
-            Folder folder => folder.ParentFolderID,
-            StudyGroup group => group.FolderID,
-            FlashCardDeck deck => deck.FolderID,
-            Note note => note.FolderID,
-            _ => null,
-        };
 
         var picker = new MoveToFolderWindow
         {
-            DataContext = new MoveToFolderViewModel(vm.FolderTree, item, currentFolderID)
+            DataContext = new MoveToFolderViewModel(vm.FolderTree, item, item.ContainerFolderID)
         };
 
         var choice = await picker.ShowDialog<FolderChoice?>(OwnerWindow);
@@ -237,63 +210,15 @@ public partial class DashboardView : UserControl
         }
     }
 
-    private void FolderCard_Click(object sender, PointerPressedEventArgs e)
-    {
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
-        {
-            return;
-        }
+    private void Breadcrumbs_CrumbRequested(object? sender, CrumbRequestedEventArgs e) =>
+        (DataContext as DashboardViewModel)?.NavigateToFolder(e.Folder?.ID);
 
-        var border = (Border)sender;
-        if (border.DataContext is Folder folder && DataContext is DashboardViewModel vm)
-        {
-            vm.OpenFolder(folder);
-        }
-    }
-
-    private void FolderCard_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key is not (Key.Enter or Key.Space))
-        {
-            return;
-        }
-
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
-        {
-            return;
-        }
-
-        var border = (Border)sender;
-        if (border.DataContext is Folder folder && DataContext is DashboardViewModel vm)
-        {
-            vm.OpenFolder(folder);
-            e.Handled = true;
-        }
-    }
-
-    private void Breadcrumb_Click(object sender, RoutedEventArgs e)
-    {
-        var button = (Button)sender;
-
-        if (DataContext is DashboardViewModel vm)
-        {
-            // The main menu crumb carries no folder; everything else carries its folder.
-            vm.NavigateToFolder((button.DataContext as Folder)?.ID);
-        }
-    }
-
-    private void NavigateUp_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is DashboardViewModel vm)
-        {
-            vm.NavigateUp();
-        }
-    }
+    private void Breadcrumbs_UpRequested(object? sender, RoutedEventArgs e) =>
+        (DataContext as DashboardViewModel)?.NavigateUp();
 
     public async void EditDeck_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var selectedDeck = (FlashCardDeck)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck"));
+        var selectedDeck = ItemOf<FlashCardDeck>(sender);
 
         var editor = new DeckEditorWindow
         {
@@ -309,8 +234,7 @@ public partial class DashboardView : UserControl
 
     public async void DeleteDeck_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var selectedDeck = (FlashCardDeck)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck"));
+        var selectedDeck = ItemOf<FlashCardDeck>(sender);
         var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete '{selectedDeck.Name}' and all of its cards?");
 
         bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
@@ -324,8 +248,7 @@ public partial class DashboardView : UserControl
     public void DeckStats_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        var button = (Button)sender;
-        var selectedDeck = (FlashCardDeck)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a FlashCardDeck"));
+        var selectedDeck = ItemOf<FlashCardDeck>(sender);
 
         if (DataContext is DashboardViewModel vm)
         {
@@ -336,8 +259,7 @@ public partial class DashboardView : UserControl
     public void GroupStats_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        var button = (Button)sender;
-        var selectedGroup = (StudyGroup)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a StudyGroup"));
+        var selectedGroup = ItemOf<StudyGroup>(sender);
 
         if (DataContext is DashboardViewModel vm)
         {
@@ -347,8 +269,7 @@ public partial class DashboardView : UserControl
 
     public async void EditGroup_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var selectedGroup = (StudyGroup)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a StudyGroup"));
+        var selectedGroup = ItemOf<StudyGroup>(sender);
 
         var editor = new StudyGroupEditorWindow
         {
@@ -365,8 +286,7 @@ public partial class DashboardView : UserControl
 
     public async void DeleteGroup_Click(object sender, RoutedEventArgs e)
     {
-        var button = (Button)sender;
-        var selectedGroup = (StudyGroup)(button.DataContext ?? throw new InvalidOperationException("Button's DataContext is not a StudyGroup"));
+        var selectedGroup = ItemOf<StudyGroup>(sender);
         var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete group '{selectedGroup.Name}'?");
 
         bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
@@ -401,95 +321,48 @@ public partial class DashboardView : UserControl
         }
     }
 
-    private void DeckCard_Click(object sender, PointerPressedEventArgs e)
+    private void Card_Click(object sender, PointerPressedEventArgs e)
     {
-        // Ignore pointer events originating from action buttons inside the deck card.
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
-        {
-            return;
-        }
+        if (!IsFromCardButton(e)) OpenCard(sender);
+    }
 
-        var border = (Border)sender;
-        if (border.DataContext is FlashCardDeck deck)
+    private void Card_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is (Key.Enter or Key.Space) && !IsFromCardButton(e)) e.Handled = OpenCard(sender);
+    }
+
+    private static bool IsFromCardButton(RoutedEventArgs e) =>
+        e.Source is Control source && source.FindAncestorOfType<Button>() is not null;
+
+    /// <summary> Opens a folder or note, reviews a set or group, or toggles a set while picking sets to review. Returns whether it acted. </summary>
+    private bool OpenCard(object sender)
+    {
+        if (DataContext is not DashboardViewModel vm) return false;
+
+        switch (ItemOf<LibraryItem>(sender))
         {
-            if (DataContext is DashboardViewModel vm && vm.IsSelectionModeActive)
-            {
+            case Folder folder:
+                vm.OpenFolder(folder);
+                return true;
+
+            case FlashCardDeck deck when vm.IsSelectionModeActive:
                 vm.ToggleDeckSelection(deck);
-                return;
-            }
+                return true;
 
-            StartReviewSession(deck);
-        }
-    }
+            case FlashCardDeck deck:
+                StartReviewSession(deck);
+                return true;
 
-    private void DeckCard_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key is not (Key.Enter or Key.Space))
-        {
-            return;
-        }
+            case StudyGroup group when !vm.IsSelectionModeActive:
+                StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID), group.ID);
+                return true;
 
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
-        {
-            return;
-        }
+            case Note note when !vm.IsSelectionModeActive:
+                vm.OpenNote(note);
+                return true;
 
-        var border = (Border)sender;
-        if (border.DataContext is FlashCardDeck deck)
-        {
-            if (DataContext is DashboardViewModel vm && vm.IsSelectionModeActive)
-            {
-                vm.ToggleDeckSelection(deck);
-                e.Handled = true;
-                return;
-            }
-
-            StartReviewSession(deck);
-            e.Handled = true;
-        }
-    }
-
-    private void GroupCard_Click(object sender, PointerPressedEventArgs e)
-    {
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
-        {
-            return;
-        }
-
-        if (DataContext is DashboardViewModel vm && vm.IsSelectionModeActive)
-        {
-            return;
-        }
-
-        var border = (Border)sender;
-        if (border.DataContext is StudyGroup group)
-        {
-            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID), group.ID);
-        }
-    }
-
-    private void GroupCard_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key is not (Key.Enter or Key.Space))
-        {
-            return;
-        }
-
-        if (e.Source is Control sourceControl && sourceControl.FindAncestorOfType<Button>() is not null)
-        {
-            return;
-        }
-
-        if (DataContext is DashboardViewModel vm && vm.IsSelectionModeActive)
-        {
-            return;
-        }
-
-        var border = (Border)sender;
-        if (border.DataContext is StudyGroup group)
-        {
-            StartReviewSession(FlashCardRepository.GetDecksForStudyGroup(group.ID), group.ID);
-            e.Handled = true;
+            default:
+                return false;
         }
     }
 
@@ -555,66 +428,46 @@ public partial class DashboardView : UserControl
 
     private void StartReviewSession(FlashCardDeck deck)
     {
-        if (DataContext is not DashboardViewModel vm)
-        {
-            return;
-        }
+        if (DataContext is not DashboardViewModel vm) return;
 
         var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
         if (cards.Count == 0) return;
 
-        var reviewVM = new ReviewViewModel(cards, deck.ID)
-        {
-            // Capture vm: by the time this runs the view has been swapped for ReviewView, so its DataContext is stale.
-            OnSessionComplete = (score, total, time, isPartial) =>
-                vm.CurrentPage = new SummaryViewModel(score, total, time, isPartial)
-                {
-                    OnReturnToDashboard = () => ReturnToDashboard(vm)
-                }
-        };
-
-        vm.CurrentPage = reviewVM;
+        ShowReview(vm, new ReviewViewModel(cards, deck.ID));
     }
 
     private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks, ulong? groupId = null)
     {
-        if (DataContext is not DashboardViewModel vm)
-        {
-            return;
-        }
+        if (DataContext is not DashboardViewModel vm) return;
 
         var allCards = new List<FlashCard>();
         var cardDeckMap = new Dictionary<ulong, ulong>();
 
         foreach (var deck in decks)
         {
-            var deckCards = FlashCardRepository.GetCardsForDeck(deck.ID);
-            foreach (var card in deckCards)
+            foreach (var card in FlashCardRepository.GetCardsForDeck(deck.ID))
             {
                 allCards.Add(card);
-                if (card.ID != ulong.MaxValue)
-                {
-                    cardDeckMap[card.ID] = deck.ID;
-                }
+                if (card.ID != ulong.MaxValue) cardDeckMap[card.ID] = deck.ID;
             }
         }
 
-        if (allCards.Count == 0)
-        {
-            return;
-        }
+        if (allCards.Count == 0) return;
 
-        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap, groupId)
-        {
-            // Capture vm: by the time this runs the view has been swapped for ReviewView, so its DataContext is stale.
-            OnSessionComplete = (score, total, time, isPartial) =>
-                vm.CurrentPage = new SummaryViewModel(score, total, time, isPartial)
-                {
-                    OnReturnToDashboard = () => ReturnToDashboard(vm)
-                }
-        };
-
+        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap, groupId);
         vm.CancelSelectionMode();
+        ShowReview(vm, reviewVM);
+    }
+
+    private static void ShowReview(DashboardViewModel vm, ReviewViewModel reviewVM)
+    {
+        // Capture vm: by the time this runs the view has been swapped for ReviewView, so its DataContext is stale.
+        reviewVM.OnSessionComplete = (score, total, time, isPartial) =>
+            vm.CurrentPage = new SummaryViewModel(score, total, time, isPartial)
+            {
+                OnReturnToDashboard = () => ReturnToDashboard(vm)
+            };
+
         vm.CurrentPage = reviewVM;
     }
 

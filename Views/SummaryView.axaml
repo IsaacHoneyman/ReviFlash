@@ -21,11 +21,8 @@
                 <TextBlock Text="{Binding TimeFormatted, StringFormat='Time: {0}'}" HorizontalAlignment="Center"
                     FontSize="18" FontWeight="SemiBold"
                     Foreground="{DynamicResource TextSecondary}" />
-                <Button Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="0,20,0,0"
-                    Height="44" CornerRadius="8" FontSize="15" FontWeight="SemiBold" Cursor="Hand"
-                    Background="{DynamicResource GradientStart}" Foreground="{DynamicResource PrimaryButtonForeground}"
-                    ToolTip.Tip="Back to your decks (Enter)" />
+                <Button Classes="action primary" Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True"
+                    Margin="0,20,0,0" ToolTip.Tip="Back to your decks (Enter)" />
             </StackPanel>
         </Border>
     </Grid>
