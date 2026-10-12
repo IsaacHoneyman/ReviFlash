@@ -759,8 +759,28 @@ public partial class DashboardViewModel : FolderBrowserBase
         // A folder we were standing in may be gone after a reload.
         if (!Tree.Exists(CurrentFolderID)) CurrentFolderID = null;
 
+        if (_selectedDeckIds.RemoveWhere(id => Decks.All(d => d.ID != id)) > 0) NotifySelectionChanged();
+        ResolveStatsSelection();
+
         RefreshFolderMetadata();
         RefreshLibraryView();
+    }
+
+    /// <summary> Swaps the set, group or note whose stats are shown for its freshly loaded copy. </summary>
+    private void ResolveStatsSelection()
+    {
+        if (SelectedDeckForStats is { } deck && Decks.FirstOrDefault(d => d.ID == deck.ID) is { } freshDeck) SelectedDeckForStats = freshDeck;
+        if (SelectedGroupForStats is { } group && StudyGroups.FirstOrDefault(g => g.ID == group.ID) is { } freshGroup) SelectedGroupForStats = freshGroup;
+        if (SelectedNoteForStats is { } note && Notes.FirstOrDefault(n => n.ID == note.ID) is { } freshNote) SelectedNoteForStats = freshNote;
+    }
+
+    /// <summary> Reloads the library after an editor closes, and the stats panel with it. </summary>
+    public void ReloadAfterEdit()
+    {
+        var inGraphView = IsGraphView;
+        ReloadLibrary();
+        RefreshStatsAfterDelete();
+        IsGraphView = inGraphView;
     }
 
     public void DeleteDeck(FlashCardDeck deckToDelete)
@@ -791,7 +811,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         SetLocation(null);
 
         ReloadLibrary();
-        RefreshStats();
+        ShowOverallStats();
     }
 
     // --- Notes ---

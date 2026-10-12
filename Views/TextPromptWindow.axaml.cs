@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using ReviFlash.Views.Controls;
@@ -18,6 +19,7 @@ public partial class TextPromptWindow : DialogWindow
         ConfirmButton.Content = confirmText;
         HintText.Text = hint;
         InputBox.Text = initialText;
+        UpdateConfirmEnabled();
 
         Opened += (_, _) =>
         {
@@ -25,6 +27,10 @@ public partial class TextPromptWindow : DialogWindow
             InputBox.SelectAll();
         };
     }
+
+    private void Input_TextChanged(object? sender, TextChangedEventArgs e) => UpdateConfirmEnabled();
+
+    private void UpdateConfirmEnabled() => ConfirmButton.IsEnabled = !string.IsNullOrWhiteSpace(InputBox.Text);
 
     private void Input_KeyDown(object? sender, KeyEventArgs e)
     {

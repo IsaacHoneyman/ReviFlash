@@ -78,16 +78,41 @@ public static partial class LatexUtility
         var text = new StringBuilder();
         // One entry per open brace: 'B' / 'I' / 'U' for a format group, '1' to '3' for a heading, '{' for a literal brace.
         var braces = new Stack<char>();
+        var headings = new Stack<char>();
+        int bold = 0, italic = 0, underline = 0;
         var i = 0;
         var bullet = false;
 
-        // The innermost heading wins (a stack enumerates from the top).
-        int Heading() => braces.FirstOrDefault(char.IsAsciiDigit) is var level and not '\0' ? level - '0' : 0;
+        void Open(char kind)
+        {
+            braces.Push(kind);
+            switch (kind)
+            {
+                case 'B': bold++; break;
+                case 'I': italic++; break;
+                case 'U': underline++; break;
+                case >= '1' and <= '3': headings.Push(kind); break;
+            }
+        }
+
+        void Close()
+        {
+            switch (braces.Pop())
+            {
+                case 'B': bold--; break;
+                case 'I': italic--; break;
+                case 'U': underline--; break;
+                case >= '1' and <= '3': headings.Pop(); break;
+            }
+        }
+
+        // The innermost heading wins.
+        int Heading() => headings.Count > 0 ? headings.Peek() - '0' : 0;
 
         void FlushText()
         {
             if (text.Length == 0) return;
-            segments.Add(new TextSegment(text.ToString(), braces.Contains('B'), braces.Contains('I'), braces.Contains('U'), Heading(), bullet));
+            segments.Add(new TextSegment(text.ToString(), bold > 0, italic > 0, underline > 0, Heading(), bullet));
             text.Clear();
         }
 
@@ -128,8 +153,8 @@ public static partial class LatexUtility
 
             if (c == '\\')
             {
-                // \$ is a dollar sign and \- a dash, so a line can start with one without becoming a bullet point.
-                if (i + 1 < input.Length && input[i + 1] is '$' or '-')
+                // \$ is a dollar sign and \- a dash, so a line can start with one without becoming a bullet point; \\, \{ and \} are themselves.
+                if (i + 1 < input.Length && input[i + 1] is '$' or '-' or '\\' or '{' or '}')
                 {
                     text.Append(input[i + 1]);
                     i += 2;
@@ -140,7 +165,7 @@ public static partial class LatexUtility
                 if (ClozeUtility.TryReadOpening(input, i, out _, out var blankStart))
                 {
                     FlushText();
-                    braces.Push('B');
+                    Open('B');
                     i = blankStart;
                     continue;
                 }
@@ -148,7 +173,7 @@ public static partial class LatexUtility
                 if (TryReadFormatCommand(input, i, out var command))
                 {
                     FlushText();
-                    braces.Push(command);
+                    Open(command);
                     i += 3;
                     continue;
                 }
@@ -156,7 +181,7 @@ public static partial class LatexUtility
                 if (TryReadHeading(input, i, out var level))
                 {
                     FlushText();
-                    braces.Push(level);
+                    Open(level);
                     i += 4;
                     continue;
                 }
@@ -166,12 +191,12 @@ public static partial class LatexUtility
             {
                 if (braces.Peek() == '{') text.Append('}');
                 else FlushText();
-                braces.Pop();
+                Close();
                 i++;
                 continue;
             }
 
-            if (c == '{') braces.Push('{');
+            if (c == '{') Open('{');
 
             if (c == '\n')
             {
@@ -394,9 +419,17 @@ public static partial class LatexUtility
         {
             var found = input.IndexOf(delimiter, index, System.StringComparison.Ordinal);
             if (found < 0) return -1;
-            if (input[found - 1] != '\\') return found;
+            if (!IsEscaped(input, found, start)) return found;
             index = found + 1;
         }
         return -1;
+    }
+
+    /// <summary> True when an odd run of backslashes, no further back than <paramref name="floor"/>, comes right before <paramref name="index"/>. </summary>
+    internal static bool IsEscaped(string text, int index, int floor)
+    {
+        var backslashes = 0;
+        for (var i = index - 1; i >= floor && text[i] == '\\'; i--) backslashes++;
+        return backslashes % 2 == 1;
     }
 }

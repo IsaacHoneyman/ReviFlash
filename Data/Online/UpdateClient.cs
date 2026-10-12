@@ -5,6 +5,15 @@ using Velopack.Sources;
 
 namespace ReviFlash.Data.Online;
 
+public enum UpdateCheckStatus
+{
+    UpToDate,
+    Available,
+    Failed,
+}
+
+public sealed record UpdateCheckResult(UpdateCheckStatus Status, UpdateInfo? Info = null);
+
 public class UpdateClient
 {
     private readonly UpdateManager manager;
@@ -15,14 +24,19 @@ public class UpdateClient
         Logger.LogInfo("Github release connection initalised.");
     }
 
-    public async Task<UpdateInfo?> CheckForUpdatesAsync()
+    /// <summary> Not being installed through Velopack counts as up to date; only a failed check is Failed. </summary>
+    public async Task<UpdateCheckResult> CheckForUpdatesAsync()
     {
-        if (!manager.IsInstalled) return null;
-        try { return await manager.CheckForUpdatesAsync(); }
+        if (!manager.IsInstalled) return new UpdateCheckResult(UpdateCheckStatus.UpToDate);
+        try
+        {
+            var info = await manager.CheckForUpdatesAsync();
+            return info is null ? new UpdateCheckResult(UpdateCheckStatus.UpToDate) : new UpdateCheckResult(UpdateCheckStatus.Available, info);
+        }
         catch (Exception ex)
         {
             Logger.LogError("Failed to check for updates", ex);
-            return null;
+            return new UpdateCheckResult(UpdateCheckStatus.Failed);
         }
     }
 

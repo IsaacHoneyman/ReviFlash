@@ -18,8 +18,9 @@ public static partial class AnkiTextConverter
         var text = ConvertClozes(field);
         text = ExtractLatexBlocks(text, maths);
         text = ExtractMaths(text, maths);
-        text = ConvertHtml(text, out hadImage);
+        text = ConvertHtml(text, maths, out hadImage);
         text = RestoreMaths(text, maths);
+        text = ClozeOpenMarkRegex().Replace(text, @"\C$1{").Replace(ClozeClose, '}');
         return Tidy(text);
     }
 
@@ -38,6 +39,11 @@ public static partial class AnkiTextConverter
 
     // --- Clozes: {{c1::text::hint}} -> \C1{text} (the hint is dropped) ---
 
+    // Stand in for \C1{ and } until the HTML pass has escaped the text around them.
+    private const char ClozeOpenStart = '\u000E';
+    private const char ClozeOpenEnd = '\u000F';
+    private const char ClozeClose = '\u0010';
+
     private static string ConvertClozes(string text)
     {
         var result = new StringBuilder();
@@ -54,7 +60,7 @@ public static partial class AnkiTextConverter
             if (hint >= 0) content = content[..hint];
 
             result.Append(text, i, opening.Index - i);
-            result.Append(@"\C").Append(opening.Groups[1].Value).Append('{').Append(content).Append('}');
+            result.Append(ClozeOpenStart).Append(opening.Groups[1].Value).Append(ClozeOpenEnd).Append(content).Append(ClozeClose);
             i = end + 2;
         }
 
@@ -220,17 +226,33 @@ public static partial class AnkiTextConverter
     private static string RestoreMaths(string text, List<string> maths) =>
         MathPlaceholderRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
 
-    private static string ConvertHtml(string html, out bool hadImage)
+    private static string ConvertHtml(string html, List<string> maths, out bool hadImage)
     {
         hadImage = false;
         var output = new StringBuilder();
-        // Open tags and how many closing braces each one owes.
-        var open = new List<(string Tag, string Closing)>();
+        // Open tags, what each one closes with, and where its opening and content start in the output.
+        var open = new List<(string Tag, string Closing, int Start, int ContentStart)>();
         var i = 0;
 
         void NewLine()
         {
             if (output.Length > 0 && output[^1] != '\n') output.Append('\n');
+        }
+
+        // A "- " with nothing after it yet.
+        bool AtBareBullet() => output.Length >= 2 && output[^1] == ' ' && output[^2] == '-' && (output.Length == 2 || output[^3] == '\n');
+
+        void Close((string Tag, string Closing, int Start, int ContentStart) entry)
+        {
+            if (entry.Tag is "sup" or "sub" && output.ToString(entry.ContentStart, output.Length - entry.ContentStart) is var inner && inner.Contains(MathStart))
+            {
+                output.Length = entry.Start;
+                output.Append(MathScript(entry.Tag == "sup" ? '^' : '_', inner, maths));
+            }
+            else
+            {
+                output.Append(entry.Closing);
+            }
         }
 
         foreach (Match tag in HtmlTokenRegex().Matches(html))
@@ -250,9 +272,10 @@ public static partial class AnkiTextConverter
                 if (index >= 0)
                 {
                     // Close anything left open inside it too, innermost first.
-                    for (var j = open.Count - 1; j >= index; j--) output.Append(open[j].Closing);
+                    for (var j = open.Count - 1; j >= index; j--) Close(open[j]);
                     open.RemoveRange(index, open.Count - index);
                 }
+                if (name == "li" && AtBareBullet()) output.Length -= 2;
                 if (IsBlock(name)) NewLine();
                 continue;
             }
@@ -260,7 +283,7 @@ public static partial class AnkiTextConverter
             switch (name)
             {
                 case "br":
-                    output.Append('\n');
+                    if (!AtBareBullet()) output.Append('\n');
                     continue;
                 case "hr":
                     NewLine();
@@ -271,25 +294,57 @@ public static partial class AnkiTextConverter
                     output.Append(ImagePlaceholder);
                     continue;
                 case "li":
-                    NewLine();
-                    output.Append("- ");
+                    if (!AtBareBullet())
+                    {
+                        NewLine();
+                        output.Append("- ");
+                    }
                     break;
                 case "td" or "th":
                     if (output.Length > 0 && output[^1] is not ('\n' or ' ')) output.Append("   ");
                     break;
                 default:
-                    if (IsBlock(name)) NewLine();
+                    if (IsBlock(name) && !AtBareBullet()) NewLine();
                     break;
             }
 
             var (opening, closingText) = Formatting(name, attributes);
+            var start = output.Length;
             output.Append(opening);
-            if (!tag.Groups["self"].Success) open.Add((name, closingText));
+            if (!tag.Groups["self"].Success) open.Add((name, closingText, start, output.Length));
         }
 
         AppendText(output, html[i..]);
-        for (var j = open.Count - 1; j >= 0; j--) output.Append(open[j].Closing);
+        for (var j = open.Count - 1; j >= 0; j--) Close(open[j]);
         return output.ToString();
+    }
+
+    /// <summary> Superscript or subscript holding maths: the maths as it is, the text around it in \text. </summary>
+    private static string MathScript(char operatorChar, string content, List<string> maths)
+    {
+        var body = new StringBuilder();
+        var position = 0;
+
+        void AppendWords(string words)
+        {
+            if (words.Length > 0) body.Append(@"\text{").Append(words).Append('}');
+        }
+
+        foreach (Match placeholder in MathPlaceholderRegex().Matches(content))
+        {
+            AppendWords(content[position..placeholder.Index]);
+            var source = maths[int.Parse(placeholder.Groups[1].Value)];
+            body.Append(source switch
+            {
+                ['$', '$', .. var display, '$', '$'] => display,
+                ['$', .. var inline, '$'] => inline,
+                _ => $@"\text{{{source}}}",
+            });
+            position = placeholder.Index + placeholder.Length;
+        }
+
+        AppendWords(content[position..]);
+        return $"${operatorChar}{{{body}}}$";
     }
 
     private static bool IsBlock(string tag) =>
@@ -322,7 +377,7 @@ public static partial class AnkiTextConverter
         return (opening, new string('}', opening.Count(c => c == '{')));
     }
 
-    /// <summary> Text between tags: entities decoded, $ escaped (MathJax was already taken out), and [sound:...] dropped. </summary>
+    /// <summary> Text between tags: entities decoded, $, unmatched braces and backslashes that could be read as markup escaped (MathJax was already taken out), and [sound:...] dropped. </summary>
     private static void AppendText(StringBuilder output, string text)
     {
         if (text.Length == 0) return;
@@ -330,7 +385,36 @@ public static partial class AnkiTextConverter
         text = WebUtility.HtmlDecode(text).Replace('\u00A0', ' ');
         // Newlines in Anki's HTML source aren't shown; only tags break lines.
         text = text.Replace("\r", "").Replace('\n', ' ');
-        output.Append(text.Replace("$", @"\$"));
+        output.Append(EscapeText(text));
+    }
+
+    private static string EscapeText(string text)
+    {
+        // Braces that pair up within the text are plain; the rest would pair with the format around them.
+        var unmatched = new HashSet<int>();
+        var openBraces = new Stack<int>();
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '{') openBraces.Push(i);
+            else if (text[i] == '}' && !openBraces.TryPop(out _)) unmatched.Add(i);
+        }
+        unmatched.UnionWith(openBraces);
+
+        var output = new StringBuilder(text.Length);
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            var escape = c switch
+            {
+                '$' => true,
+                '{' or '}' => unmatched.Contains(i),
+                '\\' => i + 1 >= text.Length || !char.IsAsciiLetterOrDigit(text[i + 1]) || text[i + 1] is 'B' or 'I' or 'U' or 'H' or 'C',
+                _ => false,
+            };
+            if (escape) output.Append('\\');
+            output.Append(c);
+        }
+        return output.ToString();
     }
 
     private static string Tidy(string text)
@@ -349,6 +433,9 @@ public static partial class AnkiTextConverter
         text = ManyNewLinesRegex().Replace(text, "\n\n");
         return text.Trim();
     }
+
+    [GeneratedRegex("\u000E(\\d*)\u000F")]
+    private static partial Regex ClozeOpenMarkRegex();
 
     [GeneratedRegex(@"\{\{c(\d+)::")]
     private static partial Regex ClozeOpeningRegex();
@@ -392,8 +479,10 @@ public static partial class AnkiTextConverter
     [GeneratedRegex("\u0002(\\d+)\u0003")]
     private static partial Regex MathPlaceholderRegex();
 
-    [GeneratedRegex(@"<!--.*?-->(?<comment>)|<(?<close>/)?(?<name>[a-zA-Z][a-zA-Z0-9]*)(?<attrs>[^>]*?)(?<self>/)?>", RegexOptions.Singleline)]
-    private static partial Regex HtmlTokenRegex();
+    // Not backtracking, so a "<" with no ">" after it costs one pass over the text rather than one per "<".
+    private static readonly Regex HtmlToken = new(@"<!--.*?-->(?<comment>)|<(?<close>/)?(?<name>[a-zA-Z][a-zA-Z0-9]*)(?<attrs>[^>]*?)(?<self>/)?>", RegexOptions.Singleline | RegexOptions.NonBacktracking);
+
+    private static Regex HtmlTokenRegex() => HtmlToken;
 
     [GeneratedRegex(@"style\s*=\s*[""']([^""']*)[""']", RegexOptions.IgnoreCase)]
     private static partial Regex StyleRegex();
@@ -410,8 +499,9 @@ public static partial class AnkiTextConverter
     [GeneratedRegex(@"<br\s*/?>|</?(div|p|li|tr)\b[^>]*>", RegexOptions.IgnoreCase)]
     private static partial Regex BreakTagRegex();
 
-    [GeneratedRegex(@"<[^>]*>")]
-    private static partial Regex TagRegex();
+    private static readonly Regex Tag = new(@"<[^>]*>", RegexOptions.NonBacktracking);
+
+    private static Regex TagRegex() => Tag;
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRegex();

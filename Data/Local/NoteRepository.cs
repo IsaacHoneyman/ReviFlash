@@ -15,9 +15,9 @@ public static class NoteRepository
     public static List<Note> GetAllNotes()
     {
         return Db.Query(@"
-            SELECT n.ID, n.SyncID, n.Name, n.FolderID, n.Content, n.CreatedAt, n.UpdatedAt, COALESCE(s.Seconds, 0)
+            SELECT n.ID, n.SyncID, n.Name, n.FolderID, n.Content, n.CreatedAt, n.UpdatedAt, COALESCE(s.Seconds, 0), s.LastStudied
             FROM Notes n
-            LEFT JOIN (SELECT NoteID, SUM(Seconds) AS Seconds FROM NoteStats GROUP BY NoteID) s ON s.NoteID = n.ID
+            LEFT JOIN (SELECT NoteID, SUM(Seconds) AS Seconds, MAX(DateStudied) AS LastStudied FROM NoteStats GROUP BY NoteID) s ON s.NoteID = n.ID
             ORDER BY n.Name COLLATE NOCASE;",
             reader => new Note(
                 (ulong)reader.GetInt64(0),
@@ -29,6 +29,7 @@ public static class NoteRepository
                 ReadTime(reader.GetString(6)))
             {
                 StudySeconds = reader.GetInt32(7),
+                LastStudied = Db.ReadNullableDate(reader, 8),
             });
     }
 
@@ -40,9 +41,9 @@ public static class NoteRepository
         if (seconds <= 0) return;
 
         Db.Execute(@"
-            INSERT INTO NoteStats (NoteID, Seconds) VALUES ($id, $seconds)
+            INSERT INTO NoteStats (NoteID, Seconds, DateStudied) VALUES ($id, $seconds, $today)
             ON CONFLICT(NoteID, DateStudied) DO UPDATE SET Seconds = Seconds + excluded.Seconds;",
-            ("$id", noteID), ("$seconds", seconds));
+            ("$id", noteID), ("$seconds", seconds), ("$today", Db.Today()));
     }
 
     /// <summary> Seconds spent in one note, or all notes when null, within the time period (an SQLite date modifier). </summary>

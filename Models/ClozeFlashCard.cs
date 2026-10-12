@@ -24,7 +24,7 @@ public class ClozeFlashCard : FlashCard
             if (!string.IsNullOrWhiteSpace(Back)) answer += "\n\n" + Back;
 
             yield return TypeAnswer
-                ? new TypeFlashCard(question, answer, ClozeUtility.Answer(Front, group), ID) { ReviewLabel = CardUtility.CARD_TYPE_CLOZE }
+                ? new TypeFlashCard(question, answer, ClozeUtility.Answer(Front, group), ID) { BlankAnswers = ClozeUtility.Answers(Front, group), ReviewLabel = CardUtility.CARD_TYPE_CLOZE }
                 : new FlipFlashCard(question, answer, ID) { ReviewLabel = CardUtility.CARD_TYPE_CLOZE };
         }
     }

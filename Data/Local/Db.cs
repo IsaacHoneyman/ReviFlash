@@ -123,7 +123,7 @@ internal static class Db
 
     // --- Stats ---
 
-    /// <summary> " AND ..." conditions for an optional ID ($id in <paramref name="idCondition"/>) and an optional SQLite date-modifier period. </summary>
+    /// <summary> " AND ..." conditions for an optional ID ($id in <paramref name="idCondition"/>) and an optional SQLite date-modifier period counted back from today in local time, today included. </summary>
     public static (string Sql, (string Name, object? Value)[] Parameters) StatsFilter(string dateColumn, string? timeModifier, string? idCondition = null, ulong? id = null)
     {
         var sql = "";
@@ -136,7 +136,8 @@ internal static class Db
         }
         if (!string.IsNullOrEmpty(timeModifier))
         {
-            sql += $" AND {dateColumn} >= DATE('now', $timeModifier)";
+            sql += $" AND {dateColumn} > DATE($today, $timeModifier)";
+            parameters.Add(("$today", Today()));
             parameters.Add(("$timeModifier", timeModifier));
         }
 
@@ -144,6 +145,9 @@ internal static class Db
     }
 
     // --- Dates ---
+
+    /// <summary> Today's local date as ISO "yyyy-MM-dd" text, the form stats days are stored in. </summary>
+    public static string Today() => DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     /// <summary> A stats day, stored as ISO "yyyy-MM-dd" text. </summary>
     public static DateOnly ParseDay(string raw) => DateOnly.Parse(raw, CultureInfo.InvariantCulture);

@@ -28,6 +28,16 @@ public partial class ConfirmDialogWindow : DialogWindow
         OptionCheckBox.IsVisible = true;
     }
 
+    /// <summary> A notice with only an OK button. </summary>
+    public static ConfirmDialogWindow Notice(string message)
+    {
+        var dialog = new ConfirmDialogWindow(message);
+        dialog.CancelButton.IsVisible = false;
+        dialog.ConfirmButton.Content = "OK";
+        dialog.ConfirmButton.IsCancel = true;
+        return dialog;
+    }
+
     public bool IsOptionChecked => OptionCheckBox.IsChecked == true;
 
     private void Option_Changed(object? sender, RoutedEventArgs e)

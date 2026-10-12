@@ -22,20 +22,25 @@ public sealed class SupabaseConnection : IDisposable
 
     private readonly HttpClient _http;
 
-    public SupabaseConnection()
-    {
-        // An expired session token gets a 401 even for public reads, so fall back to the anon key.
-        var data = MetaDataManager.Data;
-        var authToken = !string.IsNullOrEmpty(data.SupabaseAccessToken) && data.SupabaseExpirationTime > DateTime.Now
-            ? data.SupabaseAccessToken
-            : AnonKey;
+    public SupabaseConnection() : this(SessionToken()) { }
 
-        _http = new HttpClient();
+    internal SupabaseConnection(string authToken, HttpMessageHandler? handler = null)
+    {
+        _http = handler is null ? new HttpClient() : new HttpClient(handler);
         _http.DefaultRequestHeaders.Add("apikey", AnonKey);
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
         _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         Logger.LogInfo("Supabase connection initalised.");
+    }
+
+    // An expired session token gets a 401 even for public reads, so fall back to the anon key.
+    private static string SessionToken()
+    {
+        var data = MetaDataManager.Data;
+        return !string.IsNullOrEmpty(data.SupabaseAccessToken) && data.SupabaseExpirationTime > DateTime.Now
+            ? data.SupabaseAccessToken
+            : AnonKey;
     }
 
     public void Dispose()
@@ -81,16 +86,14 @@ public sealed class SupabaseConnection : IDisposable
     public async Task<AuthResult> RefreshSessionAsync(string refreshToken)
     {
         var (ok, status, json) = await PostAuthAsync("token?grant_type=refresh_token", new { refresh_token = refreshToken }).ConfigureAwait(false);
-        // Only a 4xx means the token is dead; rate limits and server errors keep the session for a retry.
-        if (!ok)
-        {
-            bool rejected = status is >= 400 and < 500 and not 408 and not 429;
-            return AuthResult.Fail(ExtractErrorMessage(json), rejected);
-        }
+        if (!ok) return AuthResult.Fail(ExtractErrorMessage(json), IsRejection(status));
 
         var session = TryParseSession(json);
         return session is null ? AuthResult.Fail("Unexpected response from the server.") : AuthResult.Ok("Session refreshed.", session);
     }
+
+    /// <summary> Only a 4xx means the token is dead; rate limits, timeouts and server errors keep the session for a retry. </summary>
+    internal static bool IsRejection(int status) => status is >= 400 and < 500 and not 408 and not 429;
 
     /// <summary> Emails a one-time recovery code (the Reset Password template must include <c>{{ .Token }}</c>). </summary>
     public async Task<AuthResult> RequestPasswordResetAsync(string email)
@@ -128,10 +131,10 @@ public sealed class SupabaseConnection : IDisposable
         return userRes.Ok ? AuthResult.Ok("Username updated.") : AuthResult.Fail(ExtractErrorMessage(userRes.Body));
     }
 
-    /// <summary> Revokes this connection's session on the server. Best effort: failures are only logged. </summary>
+    /// <summary> Revokes only this device's session on the server. Best effort: failures are only logged. </summary>
     public async Task SignOutAsync()
     {
-        var res = await SendAsync(HttpMethod.Post, "auth/v1/logout").ConfigureAwait(false);
+        var res = await SendAsync(HttpMethod.Post, "auth/v1/logout?scope=local").ConfigureAwait(false);
         if (!res.Ok && res.Body is not null) Logger.LogInfo(ErrorText("Supabase logout failed", res));
     }
 
@@ -350,10 +353,9 @@ public sealed class SupabaseConnection : IDisposable
     public async Task<List<FlashCardDeckMetadata>> GetUserCloudDecksAsync(string userId)
     {
         var res = await SendAsync(HttpMethod.Get, $"rest/v1/decks?select={DeckColumns},visibility&storage_path=ilike.{Uri.EscapeDataString(userId)}/*").ConfigureAwait(false);
-        if (res.Body is null) throw new HttpRequestException(ExtractErrorMessage(null));
-        if (!res.Ok) return [];
+        if (!res.Ok) throw new HttpRequestException(ErrorText("Database Error", res));
 
-        return JsonSerializer.Deserialize<List<FlashCardDeckMetadata>>(res.Body, TextUtility.CaseInsensitive) ?? [];
+        return JsonSerializer.Deserialize<List<FlashCardDeckMetadata>>(res.Body!, TextUtility.CaseInsensitive) ?? [];
     }
 
     public async Task<List<FlashCardDeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)

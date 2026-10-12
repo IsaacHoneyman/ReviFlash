@@ -7,6 +7,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CSharpMath.Avalonia;
 using ReviFlash.Data.Local;
 using ReviFlash.Utilities;
@@ -44,13 +46,29 @@ public class MathText : Decorator
     public bool ShowErrors { get => GetValue(ShowErrorsProperty); set => SetValue(ShowErrorsProperty, value); }
     public int MaxLines { get => GetValue(MaxLinesProperty); set => SetValue(MaxLinesProperty, value); }
 
+    private static readonly TimeSpan PreviewDelay = TimeSpan.FromMilliseconds(150);
+
     private bool? _builtWithLatexFont;
+    private DispatcherTimer? _previewTimer;
 
     private Color TextColor => (Foreground as ISolidColorBrush)?.Color ?? Colors.Black;
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+
+        // An editor preview waits for a pause in typing; everything else, and the first render, applies at once.
+        if (change.Property == TextProperty && ShowErrors && Child is not null && this.IsAttachedToVisualTree())
+        {
+            _previewTimer ??= new DispatcherTimer(PreviewDelay, DispatcherPriority.Normal, (_, _) =>
+            {
+                _previewTimer!.Stop();
+                Rebuild();
+            });
+            _previewTimer.Stop();
+            _previewTimer.Start();
+            return;
+        }
 
         if (change.Property == TextProperty || change.Property == ForegroundProperty || change.Property == FontSizeProperty
             || change.Property == IsCenteredProperty || change.Property == ShowErrorsProperty || change.Property == MaxLinesProperty)
@@ -69,6 +87,11 @@ public class MathText : Decorator
     {
         base.OnDetachedFromVisualTree(e);
         MetaDataManager.Data.PropertyChanged -= Metadata_PropertyChanged;
+        if (_previewTimer is { IsEnabled: true })
+        {
+            _previewTimer.Stop();
+            Rebuild();
+        }
     }
 
     private void Metadata_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -92,6 +115,7 @@ public class MathText : Decorator
 
     private void Rebuild()
     {
+        _previewTimer?.Stop();
         _builtWithLatexFont = MetaDataManager.Data.UseLatexFontForCards;
         Child = BuildView(LatexUtility.Parse(Text));
     }
@@ -249,6 +273,8 @@ public class MathText : Decorator
             yield return new TextSegment(" (this maths can't be displayed; try removing spacing such as \\; between symbols)", false, false, Heading: math.Heading, Bullet: math.Bullet);
     }
 
+    private const int MaxCachedCrashChecks = 300;
+
     private static readonly Dictionary<string, bool> TypesetterCrashes = new();
 
     /// <summary> CSharpMath throws on some maths it parses (e.g. $a \times \; \div b$), crashing layout, so typeset once here and cache the result. </summary>
@@ -268,6 +294,7 @@ public class MathText : Decorator
             crashes = true;
         }
 
+        if (TypesetterCrashes.Count >= MaxCachedCrashChecks) TypesetterCrashes.Clear();
         return TypesetterCrashes[latex] = crashes;
     }
 

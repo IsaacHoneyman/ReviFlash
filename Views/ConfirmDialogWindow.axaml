@@ -22,7 +22,7 @@
                 Foreground="{DynamicResource TextPrimary}" IsCheckedChanged="Option_Changed" />
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
-                <Button Classes="dialog secondary" Click="Cancel_Click" Content="Cancel" IsCancel="True" />
+                <Button x:Name="CancelButton" Classes="dialog secondary" Click="Cancel_Click" Content="Cancel" IsCancel="True" />
                 <Button x:Name="ConfirmButton" Classes="dialog secondary" Click="Confirm_Click" Content="Proceed" IsDefault="True"
                     Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" FontWeight="Bold" />
             </StackPanel>

@@ -413,7 +413,7 @@
 
             <Button Classes="action secondary small" Content="Skip" Click="SkipCard_Click"
                 VerticalAlignment="Bottom" Margin="0,0,24,16"
-                IsVisible="{Binding ShouldShowSkipButton}" ToolTip.Tip="Skip this card (S)" />
+                IsVisible="{Binding CanSkip}" ToolTip.Tip="Skip this card (S)" />
         </Grid>
     </Grid>
 </UserControl>

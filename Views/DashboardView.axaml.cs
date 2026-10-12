@@ -61,7 +61,7 @@ public partial class DashboardView : UserControl
         };
         await editor.ShowDialog(OwnerWindow);
 
-        vm.ReloadLibrary();
+        vm.ReloadAfterEdit();
     }
 
     // --- Notes ---
@@ -121,7 +121,7 @@ public partial class DashboardView : UserControl
 
         await editor.ShowDialog(OwnerWindow);
 
-        vm.ReloadLibrary();
+        vm.ReloadAfterEdit();
     }
 
     // --- Folders ---
@@ -226,10 +226,7 @@ public partial class DashboardView : UserControl
         };
         await editor.ShowDialog(OwnerWindow);
 
-        if (DataContext is DashboardViewModel vm)
-        {
-            vm.ReloadLibrary();
-        }
+        (DataContext as DashboardViewModel)?.ReloadAfterEdit();
     }
 
     public async void DeleteDeck_Click(object sender, RoutedEventArgs e)
@@ -278,10 +275,7 @@ public partial class DashboardView : UserControl
 
         await editor.ShowDialog(OwnerWindow);
 
-        if (DataContext is DashboardViewModel vm)
-        {
-            vm.ReloadLibrary();
-        }
+        (DataContext as DashboardViewModel)?.ReloadAfterEdit();
     }
 
     public async void DeleteGroup_Click(object sender, RoutedEventArgs e)
@@ -388,26 +382,46 @@ public partial class DashboardView : UserControl
         StartReviewSession(vm.GetSelectedDecks());
     }
 
-    /// <summary> True once there is a ReviFlash Online session, asking the user to sign in if needed. </summary>
-    private async Task<bool> EnsureSignedInAsync()
+    private bool _checkingSignIn;
+
+    /// <summary> True once there is a ReviFlash Online session, asking the user to sign in if needed; false if the dashboard was left while checking. </summary>
+    private async Task<bool> EnsureSignedInAsync(Window owner)
     {
-        if (await AuthSession.TryRestoreAsync()) return true;
-        return await new LoginWindow().ShowDialog<bool>(OwnerWindow);
+        if (_checkingSignIn) return false;
+
+        SessionState state;
+        _checkingSignIn = true;
+        try { state = await AuthSession.TryRestoreAsync(); }
+        finally { _checkingSignIn = false; }
+
+        if (!this.IsAttachedToVisualTree()) return false;
+
+        switch (state)
+        {
+            case SessionState.Active:
+                return true;
+            case SessionState.Offline:
+                await ConfirmDialogWindow.Notice("Couldn't reach ReviFlash Online. Check your connection and try again.").ShowDialog<bool>(owner);
+                return false;
+            default:
+                return await new LoginWindow().ShowDialog<bool>(owner);
+        }
     }
 
     private async void SignIn_Click(object sender, RoutedEventArgs e)
     {
         // The account text updates itself from the stored session; nothing else to do.
-        await EnsureSignedInAsync();
+        await EnsureSignedInAsync(OwnerWindow);
     }
 
     private async void OpenOnlineImport_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
-        if (!await EnsureSignedInAsync()) return;
+        var owner = OwnerWindow;
+        if (!await EnsureSignedInAsync(owner)) return;
 
         var window = new OnlineImportWindow(vm.CurrentFolderID);
-        await window.ShowDialog(OwnerWindow);
+        await window.ShowDialog(owner);
 
         vm.ReloadLibrary();
         vm.RefreshStats();
@@ -416,11 +430,12 @@ public partial class DashboardView : UserControl
     private async void OpenOnlineExport_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
-        if (!await EnsureSignedInAsync()) return;
+        var owner = OwnerWindow;
+        if (!await EnsureSignedInAsync(owner)) return;
 
         // Your own decks can be downloaded from here, into the folder you're in.
         var window = new OnlineExportWindow(vm.CurrentFolderID);
-        await window.ShowDialog(OwnerWindow);
+        await window.ShowDialog(owner);
 
         vm.ReloadLibrary();
         vm.RefreshStats();

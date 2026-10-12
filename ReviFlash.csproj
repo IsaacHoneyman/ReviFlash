@@ -17,6 +17,9 @@
     <AvaloniaXaml Remove="**/*.axaml" />
     <AvaloniaXaml Include="**/*.axaml" Exclude="**/bin/**;**/obj/**" />
     <AvaloniaResource Include="Assets\**" />
+    <Compile Remove="ReviFlash.Tests/**" />
+    <None Remove="ReviFlash.Tests/**" />
+    <InternalsVisibleTo Include="ReviFlash.Tests" />
   </ItemGroup>
 
   <ItemGroup>

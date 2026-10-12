@@ -1,0 +1,31 @@
+Fixed text after the cursor being lost when you split a note's paragraph and left the note straight away.
+Fixed Ctrl+Z in a note emptying the paragraph, losing a paragraph you had just joined, or bringing back text that had moved to another paragraph.
+Fixed a $$ or two maths formulas side by side ($a$$b$) in a note merging every later paragraph into one.
+In a note, Delete at the end of a paragraph joins the next one onto it, Tab no longer moves to the Back button, and Page Up/Down scroll the page after Esc.
+Fixed clicking a heading in Contents while editing jumping to the wrong place, and Make Card from a selection starting with a heading now uses that heading as the front.
+Fixed maths ending in \\ (a new line) just before the closing $ showing as plain text.
+Fixed AltGr characters such as ł, ², µ and { triggering formatting shortcuts instead of typing on Windows.
+Fixed Ctrl+P adding an extra bullet point after Ctrl+L, adding a second bullet to lines that already had one, and failing to remove bullets.
+Fixed Ctrl+B and the other formatting shortcuts double-wrapping a selection that already included its markers, and Ctrl+M turning display maths inline or merging formulas.
+Study days are now recorded in your own time zone, so the calendar and "last studied" are no longer a day off late at night or early in the morning.
+Last Day now means today, and Last Week, Last 2 Weeks and the other periods cover exactly that many days including today.
+Study time is now saved even when you quit a review before answering anything.
+Fixed best answer streaks going to the wrong set when several sets are reviewed together.
+Skip is hidden once a card's answer is shown, and Retry Later is hidden when only one card is left.
+Closing the deck editor with an unsaved card now asks before discarding it.
+Fixed a set's name being saved empty, Match card placeholder text being saved onto other card types, and the formatting toolbar editing a hidden field.
+Stats, card counts and sorting now update straight away after editing a set or group, deleting stats or restoring a backup.
+"Recently studied" now sorts notes by when you last studied them, not when you last edited them.
+Restoring a backup without stats no longer moves your current stats onto different sets.
+Settings are saved safely, so a crash while saving can no longer reset them or sign you out.
+Signing out now signs out only this device, and also ends the session on the server when your sign-in had expired.
+Fixed double-clicking Upload in the Cloud Manager creating duplicate cloud sets.
+A failed password reset can be retried without a new code, and closing the window part way through no longer leaves you signed in.
+The Cloud Manager and Check for Updates now say when they can't connect, instead of showing an empty list or claiming you're up to date.
+Being offline no longer asks you to sign in again when you're already signed in.
+Anki import: nested cloze deletions, lists with paragraphs inside, superscripts and subscripts containing maths, literal braces and backslashes, and cards in filtered decks now come across correctly.
+Anki import is much faster on fields with broken HTML.
+Typed cloze answers with several blanks accept commas or spaces between them, ignore formatting, and empty blanks no longer count as blanks.
+The editor preview waits for a short pause in typing, so long cards with lots of maths stay smooth to type in.
+Rename boxes are limited to 100 characters, and their OK button is disabled while the name is blank.
+Fixed a crash opening the Cloud Manager or Community sets when signing in took a while, for example just after reconnecting.

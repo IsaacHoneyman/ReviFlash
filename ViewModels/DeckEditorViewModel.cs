@@ -52,9 +52,15 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string _deckName;
     partial void OnDeckNameChanged(string value)
     {
-        CurrentDeck.Name = value;
+        var name = value.Trim();
+        if (name.Length == 0 || name == CurrentDeck.Name) return;
+
+        CurrentDeck.Name = name;
         FlashCardRepository.UpdateDeck(CurrentDeck);
     }
+
+    /// <summary> Puts the saved name back in the box if it was cleared or left with stray spaces. </summary>
+    public void CommitDeckName() => DeckName = CurrentDeck.Name;
 
     // --- Editor fields ---
 
@@ -86,9 +92,12 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     [NotifyPropertyChangedFor(nameof(IsMatchCardType))]
     [NotifyPropertyChangedFor(nameof(IsTrueFalseCardType))]
     [ObservableProperty] private string _selectedCardType = CARD_TYPE_FLIP;
-    partial void OnSelectedCardTypeChanged(string value)
+    partial void OnSelectedCardTypeChanged(string? oldValue, string newValue)
     {
-        if (!_suppressCardTypeDefaults) ApplyCardTypeDefaults();
+        if (_suppressCardTypeDefaults) return;
+
+        if (oldValue == CARD_TYPE_MATCH) ClearMatchPlaceholder();
+        ApplyCardTypeDefaults();
     }
 
     public bool IsFlipCardType => SelectedCardType == CARD_TYPE_FLIP;
@@ -282,8 +291,8 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     /// <summary> A card of the selected type from the editor; <paramref name="id"/> is the saved card's when editing. </summary>
     private FlashCard BuildCard(ulong? id)
     {
-        var front = NewFront;
-        var back = NewBack;
+        var front = NewFront.Trim('\r', '\n');
+        var back = NewBack.Trim('\r', '\n');
         var cardId = id ?? ulong.MaxValue;
 
         FlashCard card = SelectedCardType switch
@@ -377,6 +386,12 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         _savedState = CaptureState();
     }
 
+    private void ClearMatchPlaceholder()
+    {
+        if (NewFront == CARD_TYPE_MATCH_PLACEHOLDER) NewFront = "";
+        if (NewBack == CARD_TYPE_MATCH_PLACEHOLDER) NewBack = "";
+    }
+
     /// <summary> Fills in what a newly picked card type needs, without touching anything already typed. </summary>
     private void ApplyCardTypeDefaults()
     {
@@ -454,8 +469,11 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
             .Where(p => !string.IsNullOrWhiteSpace(p.LeftText) || !string.IsNullOrWhiteSpace(p.RightText))
             .Select(p => $"{p.LeftText.Trim()}\u001F{p.RightText.Trim()}");
 
+        var front = IsMatchCardType && NewFront == CARD_TYPE_MATCH_PLACEHOLDER ? "" : NewFront;
+        var back = IsMatchCardType && NewBack == CARD_TYPE_MATCH_PLACEHOLDER ? "" : NewBack;
+
         return new EditorState(
-            SelectedCardType, NewFront, NewBack, NewTypeAnswer, NewIsReversible, NewClozeTypeAnswer,
+            SelectedCardType, front, back, NewTypeAnswer, NewIsReversible, NewClozeTypeAnswer,
             NewTrueFalseAnswerIsTrue, NewTrueOptionText, NewFalseOptionText,
             string.Join('\u001E', options), string.Join('\u001E', pairs));
     }

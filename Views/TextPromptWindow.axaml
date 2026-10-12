@@ -19,6 +19,8 @@
                 Margin="0,16,0,0"
                 Padding="10,8"
                 FontSize="15"
+                MaxLength="100"
+                TextChanged="Input_TextChanged"
                 KeyDown="Input_KeyDown" />
 
             <TextBlock x:Name="HintText"

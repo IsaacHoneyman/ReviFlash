@@ -29,6 +29,9 @@ public partial class LoginViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(PasswordLabel))]
     [ObservableProperty] private LoginMode _mode = LoginMode.SignIn;
 
+    // The verified recovery session, held until the password change succeeds; the emailed code works only once.
+    private AuthSessionData? _recoverySession;
+
     [ObservableProperty] private string _email = string.Empty;
     [ObservableProperty] private string _username = string.Empty;
     [ObservableProperty] private string _password = string.Empty;
@@ -41,6 +44,9 @@ public partial class LoginViewModel : ViewModelBase
 
     [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
     [ObservableProperty] private bool _isBusy;
+
+    partial void OnEmailChanged(string value) => _recoverySession = null;
+    partial void OnResetCodeChanged(string value) => _recoverySession = null;
 
     public bool HasStatus => StatusMessage.Length > 0;
 
@@ -94,6 +100,7 @@ public partial class LoginViewModel : ViewModelBase
     private void SwitchTo(LoginMode mode, string? status = null, bool isError = false)
     {
         Mode = mode;
+        _recoverySession = null;
         Password = string.Empty;
         ConfirmPassword = string.Empty;
         if (mode != LoginMode.ResetPassword) ResetCode = string.Empty;
@@ -176,22 +183,25 @@ public partial class LoginViewModel : ViewModelBase
 
     private async Task ResetPasswordAsync()
     {
-        AuthResult verified;
-        using (var client = new SupabaseConnection())
+        if (_recoverySession is null)
         {
-            verified = await client.VerifyRecoveryCodeAsync(Email.Trim(), ResetCode.Trim());
-        }
+            AuthResult verified;
+            using (var client = new SupabaseConnection())
+            {
+                verified = await client.VerifyRecoveryCodeAsync(Email.Trim(), ResetCode.Trim());
+            }
 
-        if (verified.Session is null)
-        {
-            SetStatus(verified.Message, isError: true);
-            return;
+            if (verified.Session is null)
+            {
+                SetStatus(verified.Message, isError: true);
+                return;
+            }
+
+            _recoverySession = verified.Session;
         }
 
         // The recovery session is what authorises the password change.
-        AuthSession.Store(verified.Session);
-
-        using var authed = new SupabaseConnection();
+        using var authed = new SupabaseConnection(_recoverySession.AccessToken);
         var updated = await authed.UpdatePasswordAsync(Password);
 
         if (!updated.Success)
@@ -200,6 +210,8 @@ public partial class LoginViewModel : ViewModelBase
             return;
         }
 
+        AuthSession.Store(_recoverySession);
+        _recoverySession = null;
         SignedIn?.Invoke();
     }
 

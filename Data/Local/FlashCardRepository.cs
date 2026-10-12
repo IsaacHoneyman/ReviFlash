@@ -223,13 +223,13 @@ public static class FlashCardRepository
             foreach (var (deckID, correct, total, timeTakenSeconds) in results)
             {
                 Db.Execute(connection, transaction, @"
-                    INSERT INTO DeckStats (DeckId, CorrectCount, TotalAttempts, TimeTakenSeconds)
-                    VALUES ($deckId, $correct, $total, $timeTakenSeconds)
+                    INSERT INTO DeckStats (DeckId, CorrectCount, TotalAttempts, TimeTakenSeconds, DateChecked)
+                    VALUES ($deckId, $correct, $total, $timeTakenSeconds, $today)
                     ON CONFLICT(DeckId, DateChecked) DO UPDATE SET
                         CorrectCount = CorrectCount + excluded.CorrectCount,
                         TotalAttempts = TotalAttempts + excluded.TotalAttempts,
                         TimeTakenSeconds = TimeTakenSeconds + excluded.TimeTakenSeconds;",
-                    ("$deckId", deckID), ("$correct", correct), ("$total", total), ("$timeTakenSeconds", timeTakenSeconds));
+                    ("$deckId", deckID), ("$correct", correct), ("$total", total), ("$timeTakenSeconds", timeTakenSeconds), ("$today", Db.Today()));
             }
         });
     }

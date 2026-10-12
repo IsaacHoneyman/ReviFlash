@@ -58,6 +58,8 @@ public partial class ReviewViewModel : ViewModelBase
     private readonly Dictionary<ulong, string>? _deckNames;
     private readonly Dictionary<ulong, int> _attemptsByDeck = [];
     private readonly Dictionary<ulong, int> _correctByDeck = [];
+    private readonly Dictionary<ulong, int> _streakByDeck = [];
+    private readonly SortedSet<ulong> _sessionDeckIds = [];
     private int _currentIndex = 0;
     private Stopwatch _timer = new();
     private readonly DispatcherTimer _displayTimer;
@@ -80,6 +82,7 @@ public partial class ReviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowBackAnswer))]
     [NotifyPropertyChangedFor(nameof(ShowBackSection))]
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [NotifyPropertyChangedFor(nameof(CanSkip))]
     [NotifyPropertyChangedFor(nameof(ShowFlipRetryLater))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerRevealed = false;
@@ -106,6 +109,7 @@ public partial class ReviewViewModel : ViewModelBase
     /// <summary> The back once answered, unless there's nothing to show (blank, or a match card's placeholder). </summary>
     public bool ShowBackSection => IsAnswerRevealed && !IsMatchCard && !string.IsNullOrWhiteSpace(CurrentCard.Back);
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
+    [NotifyPropertyChangedFor(nameof(CanSkip))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerChecked = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
@@ -127,7 +131,8 @@ public partial class ReviewViewModel : ViewModelBase
     public bool ShouldShowProgress => MetaDataManager.Data.ShowProgress;
     public bool ShouldShowSkipButton => MetaDataManager.Data.ShowSkipButton;
     public bool ShouldShowRetryLaterButton => MetaDataManager.Data.ShowRetryLaterButton;
-    public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
+    public bool CanSkip => MetaDataManager.Data.ShowSkipButton && !IsAnswerChecked && !(IsFlipCard && IsAnswerRevealed);
+    public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && TotalCards > 1 && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
     public bool ShowFlipRetryLater => IsFlipCard && CanRetryLater;
     /// <summary> Match cards get a wider card, so the items and answers can sit side by side. </summary>
     public double CardMaxWidth => IsMatchCard ? 1040 : 720;
@@ -163,7 +168,7 @@ public partial class ReviewViewModel : ViewModelBase
                 _ => "Enter: submit",
             };
 
-            return ShouldShowSkipButton && !(IsFlipCard && IsAnswerRevealed) ? $"{hint}{gap}S: skip" : hint;
+            return CanSkip ? $"{hint}{gap}S: skip" : hint;
         }
     }
 
@@ -198,6 +203,7 @@ public partial class ReviewViewModel : ViewModelBase
         if (cardDeckMap is not null)
             _deckNames = FlashCardRepository.GetAllDecks().ToDictionary(deck => deck.ID, deck => deck.Name);
         _reviewGroupId = reviewGroupId;
+        foreach (var card in _sessionCards) _sessionDeckIds.Add(GetDeckId(card));
 
         MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
         RefreshBestAnswerStreak();
@@ -230,6 +236,7 @@ public partial class ReviewViewModel : ViewModelBase
                 break;
             case nameof(AppMetaData.ShowSkipButton):
                 OnPropertyChanged(nameof(ShouldShowSkipButton));
+                OnPropertyChanged(nameof(CanSkip));
                 break;
             case nameof(AppMetaData.ShowRetryLaterButton):
                 OnPropertyChanged(nameof(ShouldShowRetryLaterButton));
@@ -358,7 +365,7 @@ public partial class ReviewViewModel : ViewModelBase
     /// <summary> Moves on without scoring this card; skipping the last one ends the review. </summary>
     public void SkipCard()
     {
-        if (!MetaDataManager.Data.ShowSkipButton)
+        if (!CanSkip)
         {
             return;
         }
@@ -375,12 +382,7 @@ public partial class ReviewViewModel : ViewModelBase
 
     public void RetryLater()
     {
-        if (!MetaDataManager.Data.ShowRetryLaterButton || _sessionCards.Count <= 1)
-        {
-            return;
-        }
-
-        if (!IsAnswerChecked && !(IsFlipCard && IsAnswerRevealed))
+        if (!CanRetryLater)
         {
             return;
         }
@@ -400,23 +402,27 @@ public partial class ReviewViewModel : ViewModelBase
         var totalAttempts = _attemptsByDeck.Values.Sum();
         int questionsAttempted = totalAttempts;
 
-        if (totalAttempts > 0)
+        if (totalAttempts > 0 || elapsedSeconds > 0)
         {
-            var deckResults = _attemptsByDeck
-                .Where(kvp => kvp.Value > 0)
-                .OrderBy(kvp => kvp.Key)
-                .ToList();
+            var deckResults = totalAttempts > 0
+                ? _attemptsByDeck
+                    .Where(kvp => kvp.Value > 0)
+                    .OrderBy(kvp => kvp.Key)
+                    .ToList()
+                : _sessionDeckIds.Select(id => KeyValuePair.Create(id, 1)).ToList();
+            var totalWeight = deckResults.Sum(kvp => kvp.Value);
 
             int distributedSeconds = 0;
             var sessionStats = new List<(ulong deckID, int correct, int total, int timeTakenSeconds)>();
             for (int i = 0; i < deckResults.Count; i++)
             {
-                var (targetDeckId, attempts) = deckResults[i];
+                var (targetDeckId, weight) = deckResults[i];
                 int correct = _correctByDeck.GetValueOrDefault(targetDeckId);
+                int attempts = _attemptsByDeck.GetValueOrDefault(targetDeckId);
 
                 int deckSeconds = i == deckResults.Count - 1
                     ? elapsedSeconds - distributedSeconds
-                    : (int)((long)elapsedSeconds * attempts / totalAttempts);
+                    : (int)((long)elapsedSeconds * weight / totalWeight);
 
                 distributedSeconds += deckSeconds;
                 sessionStats.Add((targetDeckId, correct, attempts, deckSeconds));
@@ -464,9 +470,16 @@ public partial class ReviewViewModel : ViewModelBase
         CurrentAnswerStreak = isCorrect ? CurrentAnswerStreak + 1 : 0;
 
         var (targetType, targetId) = GetBestStreakTarget();
-        if (CurrentAnswerStreak > BestAnswerStreak)
+        var targetStreak = CurrentAnswerStreak;
+        if (!_reviewGroupId.HasValue)
         {
-            BestAnswerStreak = CurrentAnswerStreak;
+            targetStreak = isCorrect ? _streakByDeck.GetValueOrDefault(targetId) + 1 : 0;
+            _streakByDeck[targetId] = targetStreak;
+        }
+
+        if (targetStreak > BestAnswerStreak)
+        {
+            BestAnswerStreak = targetStreak;
             FlashCardRepository.UpdateBestAnswerStreak(targetType, targetId, BestAnswerStreak);
         }
     }
@@ -487,11 +500,13 @@ public partial class ReviewViewModel : ViewModelBase
         return ("Deck", GetCurrentCardDeckId());
     }
 
-    private ulong GetCurrentCardDeckId()
+    private ulong GetCurrentCardDeckId() => GetDeckId(CurrentCard);
+
+    private ulong GetDeckId(FlashCard card)
     {
         if (_cardDeckMap is not null
-            && CurrentCard.ID != ulong.MaxValue
-            && _cardDeckMap.TryGetValue(CurrentCard.ID, out var mappedDeckId))
+            && card.ID != ulong.MaxValue
+            && _cardDeckMap.TryGetValue(card.ID, out var mappedDeckId))
         {
             return mappedDeckId;
         }
@@ -653,6 +668,8 @@ public partial class ReviewViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsTypeCard));
         OnPropertyChanged(nameof(IsFlipCard));
         OnPropertyChanged(nameof(ShowFlipRetryLater));
+        OnPropertyChanged(nameof(CanRetryLater));
+        OnPropertyChanged(nameof(CanSkip));
         OnPropertyChanged(nameof(IsReversedCard));
         OnPropertyChanged(nameof(IsMultiChoiceCard));
         OnPropertyChanged(nameof(IsMatchCard));

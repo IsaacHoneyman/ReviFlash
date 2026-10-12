@@ -284,28 +284,38 @@ public static class BackupManager
         string sourceDatabasePath = Path.Combine(sourceDirectory, $"{TextUtility.DatabaseFileName}.bak");
         if (!File.Exists(sourceDatabasePath)) return;
 
-        // Only stats for decks the backup has: the rest have nothing to attach to and the foreign key would reject them.
-        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "DeckStats", ["DeckId", "CorrectCount", "TotalAttempts", "TimeTakenSeconds", "DateChecked"],
-            where: "DeckId IN (SELECT ID FROM main.Decks)");
-        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "AnswerStreaks", ["TargetType", "TargetId", "BestStreak"],
-            where: $"(TargetType = '{FlashCardRepository.DeckStreakTarget}' AND TargetId IN (SELECT ID FROM main.Decks))"
-                + $" OR (TargetType = '{FlashCardRepository.GroupStreakTarget}' AND TargetId IN (SELECT ID FROM main.StudyGroups))");
-        RestoreTableFromBackup(sourceDatabasePath, targetDatabasePath, "NoteStats", ["NoteID", "DateStudied", "Seconds"],
-            where: "NoteID IN (SELECT ID FROM main.Notes)");
-    }
-
-    private static void RestoreTableFromBackup(string sourceDatabasePath, string targetDatabasePath, string tableName, IReadOnlyList<string> columns, string? where = null)
-    {
+        // Stats carry over only where the old database and the restored one agree on what they belong to: notes by SyncID, sets and groups by ID and name.
         using var connection = Db.OpenUnpooled(targetDatabasePath);
         Db.Execute(connection, null, "ATTACH DATABASE $source AS source;", ("$source", sourceDatabasePath));
 
         using (var transaction = connection.BeginTransaction())
         {
-            string columnList = string.Join(", ", columns);
             Db.Execute(connection, transaction, $"""
-                DELETE FROM main.{tableName};
-                INSERT INTO main.{tableName} ({columnList})
-                SELECT {columnList} FROM source.{tableName}{(where is null ? "" : $" WHERE {where}")};
+                DELETE FROM main.DeckStats;
+                INSERT INTO main.DeckStats (DeckId, CorrectCount, TotalAttempts, TimeTakenSeconds, DateChecked)
+                SELECT s.DeckId, s.CorrectCount, s.TotalAttempts, s.TimeTakenSeconds, s.DateChecked
+                FROM source.DeckStats s
+                JOIN source.Decks od ON od.ID = s.DeckId
+                JOIN main.Decks nd ON nd.ID = s.DeckId AND nd.Name = od.Name;
+
+                DELETE FROM main.AnswerStreaks;
+                INSERT INTO main.AnswerStreaks (TargetType, TargetId, BestStreak)
+                SELECT a.TargetType, a.TargetId, a.BestStreak
+                FROM source.AnswerStreaks a
+                JOIN source.Decks od ON a.TargetType = '{FlashCardRepository.DeckStreakTarget}' AND od.ID = a.TargetId
+                JOIN main.Decks nd ON nd.ID = a.TargetId AND nd.Name = od.Name;
+                INSERT INTO main.AnswerStreaks (TargetType, TargetId, BestStreak)
+                SELECT a.TargetType, a.TargetId, a.BestStreak
+                FROM source.AnswerStreaks a
+                JOIN source.StudyGroups og ON a.TargetType = '{FlashCardRepository.GroupStreakTarget}' AND og.ID = a.TargetId
+                JOIN main.StudyGroups ng ON ng.ID = a.TargetId AND ng.Name = og.Name;
+
+                DELETE FROM main.NoteStats;
+                INSERT INTO main.NoteStats (NoteID, DateStudied, Seconds)
+                SELECT nn.ID, s.DateStudied, s.Seconds
+                FROM source.NoteStats s
+                JOIN source.Notes ono ON ono.ID = s.NoteID
+                JOIN main.Notes nn ON nn.SyncID = ono.SyncID;
                 """);
             transaction.Commit();
         }

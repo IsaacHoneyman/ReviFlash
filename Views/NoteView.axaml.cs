@@ -122,6 +122,10 @@ public partial class NoteView : UserControl
     {
         if (box.DataContext is not NoteBlock block || !block.IsEditing) return;
 
+        // Turning undo off clears the history, so Ctrl+Z can't reach text from before this editing started.
+        box.IsUndoEnabled = false;
+        box.IsUndoEnabled = true;
+
         // The editor can still be mid-layout when it first appears; if it won't take the focus yet, try again once.
         if (!box.Focus() && retry)
         {
@@ -157,6 +161,7 @@ public partial class NoteView : UserControl
         if ((sender as Control)?.DataContext is not ContentsEntry entry || ViewModel is not { } vm) return;
 
         vm.CommitEditing();
+        UpdateLayout();
         var index = vm.Blocks.IndexOf(entry.Block);
         if (index < 0 || BlockList.ContainerFromIndex(index) is not Control container) return;
 
@@ -172,6 +177,12 @@ public partial class NoteView : UserControl
     {
         if (ViewModel is not { } vm || !IsEffectivelyVisible) return;
         if (_topLevel?.FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("blockEditor")) return;
+
+        if (e.Key == Key.Tab)
+        {
+            e.Handled = true;
+            return;
+        }
 
         if (e.Key == Key.Escape)
         {
@@ -198,6 +209,12 @@ public partial class NoteView : UserControl
         if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Back && box.SelectionStart == box.SelectionEnd && box.CaretIndex == 0)
         {
             e.Handled = vm.MergeEditingIntoPrevious();
+            return;
+        }
+
+        if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Delete && box.SelectionStart == box.SelectionEnd && box.CaretIndex == (box.Text ?? "").Length)
+        {
+            e.Handled = vm.MergeNextIntoEditing();
             return;
         }
 
@@ -238,12 +255,19 @@ public partial class NoteView : UserControl
         {
             var start = Math.Min(box.SelectionStart, box.SelectionEnd);
             var end = Math.Max(box.SelectionStart, box.SelectionEnd);
-            if (end > start) OpenMakeCard(block.Text[start..end], vm.NearestHeading(block, start));
+            if (end > start) OpenMakeCardFromSelection(block.Text[start..end], vm.NearestHeading(block, start));
             else OpenMakeCardFromBlock(block);
             return;
         }
 
         OpenMakeCard("", vm.NearestHeading(null, 0));
+    }
+
+    private void OpenMakeCardFromSelection(string selection, string? nearestHeading)
+    {
+        var (heading, body) = NoteText.SplitLeadingHeading(selection);
+        if (heading is not null) OpenMakeCard(body, heading);
+        else OpenMakeCard(selection, nearestHeading);
     }
 
     private void MakeCardFromBlock_Click(object? sender, RoutedEventArgs e)

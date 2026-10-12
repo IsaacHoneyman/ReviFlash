@@ -48,6 +48,18 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     [ObservableProperty] private SortOption? _selectedCloudSortOption;
     partial void OnSelectedCloudSortOptionChanged(SortOption? value) => RefreshCloudDecks();
 
+    /// <summary> True while an upload, update, visibility change, download or delete runs. </summary>
+    [NotifyCanExecuteChangedFor(nameof(UploadCommand), nameof(ConfirmUpdateCommand), nameof(ToggleVisibilityCommand), nameof(DownloadCommand), nameof(DeleteCommand))]
+    [ObservableProperty] private bool _isBusy;
+
+    private bool CanAct() => !IsBusy;
+
+    partial void OnIsBusyChanged(bool value)
+    {
+        LocalBrowser.IsActionEnabled = !value;
+        UpdateBrowser.IsActionEnabled = !value;
+    }
+
     /// <summary> Asks the user to confirm a destructive action; supplied by the window. </summary>
     public Func<string, Task<bool>>? ConfirmAsync { get; set; }
 
@@ -59,7 +71,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         SelectedCloudSortOption = CloudSortOptions[0];
 
         LocalBrowser.SetDecks(FlashCardRepository.GetAllDecks());
-        _ = LoadCloudDecksAsync();
+        _ = LoadInitialCloudDecksAsync();
     }
 
     [RelayCommand]
@@ -81,10 +93,10 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         IsSelectingUpdateDeck = true;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAct))]
     private async Task UploadAsync(FlashCardDeck? deck)
     {
-        if (deck == null || AuthSession.UserId is not { Length: > 0 } userId) return;
+        if (IsBusy || deck == null || AuthSession.UserId is not { Length: > 0 } userId) return;
 
         var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
         if (cards.Count == 0)
@@ -93,21 +105,21 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             return;
         }
 
-        await RunWithStatusAsync($"Uploading '{deck.Name}'", async () =>
+        await RunGuardedAsync($"Uploading '{deck.Name}'", async () =>
         {
             var (jsonPayload, description) = BuildCloudPayload(deck);
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.UploadCloudDeckAsync(userId, deck.Name, description, cards.Count, jsonPayload, UploadAsPrivate);
 
-            if (success) await LoadCloudDecksAsync();
+            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
         }, "Upload failed");
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAct))]
     private async Task ConfirmUpdateAsync()
     {
-        if (TargetCloudDeckToUpdate is not { StoragePath: { } storagePath } target) return;
+        if (IsBusy || TargetCloudDeckToUpdate is not { StoragePath: { } storagePath } target) return;
 
         if (SelectedLocalDeckForUpdate is not { } local)
         {
@@ -124,22 +136,22 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
         IsSelectingUpdateDeck = false;
 
-        await RunWithStatusAsync($"Updating '{target.Title}'", async () =>
+        await RunGuardedAsync($"Updating '{target.Title}'", async () =>
         {
             var (jsonPayload, description) = BuildCloudPayload(local);
             using var client = await SupabaseConnection.CreateAsync();
 
             var (success, message) = await client.UpdateCloudDeckAsync(storagePath, local.Name, description, cards.Count, jsonPayload);
 
-            if (success) await LoadCloudDecksAsync();
+            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
         }, "Update failed");
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAct))]
     private async Task ToggleVisibilityAsync(FlashCardDeckMetadata? deck)
     {
-        if (deck?.StoragePath == null || AuthSession.UserId is not { Length: > 0 } userId) return;
+        if (IsBusy || deck?.StoragePath == null || AuthSession.UserId is not { Length: > 0 } userId) return;
 
         bool makePrivate = !deck.IsPrivate;
         if (makePrivate && ConfirmAsync is not null &&
@@ -148,23 +160,23 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             return;
         }
 
-        await RunWithStatusAsync(makePrivate ? $"Making '{deck.Title}' private" : $"Making '{deck.Title}' public", async () =>
+        await RunGuardedAsync(makePrivate ? $"Making '{deck.Title}' private" : $"Making '{deck.Title}' public", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.SetCloudDeckVisibilityAsync(userId, deck.StoragePath, makePrivate);
 
-            if (success) await LoadCloudDecksAsync();
+            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
         }, "Change failed");
     }
 
     /// <summary> Brings one of your own cloud decks (public or private) onto this device. </summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAct))]
     private async Task DownloadAsync(FlashCardDeckMetadata? deck)
     {
-        if (deck?.StoragePath == null) return;
+        if (IsBusy || deck?.StoragePath == null) return;
 
-        await RunWithStatusAsync($"Downloading '{deck.Title}'", async () =>
+        await RunGuardedAsync($"Downloading '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
             string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
@@ -177,10 +189,10 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         }, "Download failed");
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAct))]
     private async Task DeleteAsync(FlashCardDeckMetadata? deck)
     {
-        if (deck?.StoragePath == null) return;
+        if (IsBusy || deck?.StoragePath == null) return;
 
         string downloads = deck.DownloadCount > 0 ? $" Its {deck.DownloadCountText} will be lost too." : "";
         if (ConfirmAsync is not null &&
@@ -189,12 +201,12 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             return;
         }
 
-        await RunWithStatusAsync($"Deleting '{deck.Title}'", async () =>
+        await RunGuardedAsync($"Deleting '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath);
 
-            if (success) await LoadCloudDecksAsync();
+            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
         }, "Delete failed");
     }
@@ -214,16 +226,42 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         foreach (var d in fDecks) FilteredCloudDecks.Add(d);
     }
 
-    private async Task LoadCloudDecksAsync()
+    private const string ListRefreshFailedText = "Couldn't refresh your cloud sets. Check your connection.";
+
+    private async Task RunGuardedAsync(string busyText, Func<Task<string>> work, string failPrefix)
     {
-        if (AuthSession.UserId is not { Length: > 0 } userId) return;
+        if (IsBusy) return;
 
-        using var client = await SupabaseConnection.CreateAsync();
-        var remoteDecks = await client.GetUserCloudDecksAsync(userId);
+        IsBusy = true;
+        try { await RunWithStatusAsync(busyText, work, failPrefix); }
+        finally { IsBusy = false; }
+    }
 
-        CloudDecks.Clear();
-        foreach (var deck in remoteDecks) CloudDecks.Add(deck);
+    private async Task LoadInitialCloudDecksAsync()
+    {
+        if (!await LoadCloudDecksAsync()) StatusMessage = "Couldn't load your cloud sets. Check your connection.";
+    }
 
-        RefreshCloudDecks();
+    /// <summary> False when the list couldn't be loaded; the list on screen is then left as it was. </summary>
+    private async Task<bool> LoadCloudDecksAsync()
+    {
+        if (AuthSession.UserId is not { Length: > 0 } userId) return true;
+
+        try
+        {
+            using var client = await SupabaseConnection.CreateAsync();
+            var remoteDecks = await client.GetUserCloudDecksAsync(userId);
+
+            CloudDecks.Clear();
+            foreach (var deck in remoteDecks) CloudDecks.Add(deck);
+
+            RefreshCloudDecks();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Failed to load cloud decks", ex);
+            return false;
+        }
     }
 }

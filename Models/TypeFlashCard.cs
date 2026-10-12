@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ReviFlash.Utilities;
 
 namespace ReviFlash.Models;
@@ -20,11 +22,20 @@ public class TypeFlashCard(string front, string back, string? answer) : FlashCar
         Answer = answer.Trim();
     }
 
+    /// <summary> The text of each blank when this asks for several at once; they can be typed in order with commas or spaces between. </summary>
+    public IReadOnlyList<string>? BlankAnswers { get; init; }
+
     public override bool VerifyAnswer(object answer)
     {
         if (answer is not string strAnswer) return false;
+        if (BlankAnswers is { Count: > 1 }) return SameWords(strAnswer, string.Join(' ', BlankAnswers));
         return strAnswer.Trim().Equals(Answer, StringComparison.OrdinalIgnoreCase);
     }
+
+    private static bool SameWords(string typed, string expected) =>
+        Words(typed).SequenceEqual(Words(expected), StringComparer.OrdinalIgnoreCase);
+
+    private static string[] Words(string text) => text.Split([',', ' ', '\t', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 
     private static string NormalizeAnswer(string? answer, string fallbackBack)
     {

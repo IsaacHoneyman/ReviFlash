@@ -90,7 +90,7 @@ public partial class ReviewView : UserControl
             return true;
         }
 
-        if (key == Key.S)
+        if (key == Key.S && vm.CanSkip)
         {
             vm.SkipCard();
             return true;

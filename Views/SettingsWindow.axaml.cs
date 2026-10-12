@@ -158,14 +158,14 @@ public partial class SettingsWindow : Window
         }
 
         FlashCardRepository.DeleteAllStats();
-        Dashboard?.RefreshStats();
+        Dashboard?.ReloadAfterEdit();
         ShowStatus(DeleteStatsStatusText, "All flashcard stats were deleted.");
     }
 
     private async void OpenDeleteDeckStats_Click(object? sender, RoutedEventArgs e)
     {
         var window = new DeleteDeckStatsWindow();
-        window.StatsDeleted += () => Dashboard?.RefreshStats();
+        window.StatsDeleted += () => Dashboard?.ReloadAfterEdit();
         await window.ShowDialog(this);
     }
 
@@ -208,9 +208,15 @@ public partial class SettingsWindow : Window
         ShowStatus(UpdateStatusText, "Checking for updates...");
 
         var updateClient = new UpdateClient();
-        var updateInfo = await updateClient.CheckForUpdatesAsync();
+        var check = await updateClient.CheckForUpdatesAsync();
 
-        if (updateInfo == null)
+        if (check.Status == UpdateCheckStatus.Failed)
+        {
+            ShowStatus(UpdateStatusText, "Couldn't check for updates. Check your connection.");
+            return;
+        }
+
+        if (check.Info is not { } updateInfo)
         {
             ShowStatus(UpdateStatusText, "You are already on the latest version.");
             return;

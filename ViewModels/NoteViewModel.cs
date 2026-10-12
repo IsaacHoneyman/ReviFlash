@@ -14,8 +14,7 @@ namespace ReviFlash.ViewModels;
 /// <summary> A note paragraph; RenderedText only updates when editing finishes so the maths isn't re-rendered per key. </summary>
 public partial class NoteBlock : ObservableObject
 {
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
-    [ObservableProperty] private string _text;
+    private string _text;
 
     [ObservableProperty] private string _renderedText;
     [ObservableProperty] private bool _isEditing;
@@ -23,12 +22,21 @@ public partial class NoteBlock : ObservableObject
     /// <summary> Where to put the cursor when editing starts: 0 for the start, -1 for the end. </summary>
     public int PendingCaret { get; set; } = -1;
 
+    public string Text
+    {
+        get => _text;
+        set
+        {
+            if (SetProperty(ref _text, value ?? "")) OnPropertyChanged(nameof(IsEmpty));
+        }
+    }
+
     public bool IsEmpty => string.IsNullOrWhiteSpace(Text);
 
     public NoteBlock(string text)
     {
-        _text = text;
-        _renderedText = text;
+        _text = text ?? "";
+        _renderedText = _text;
     }
 }
 
@@ -81,7 +89,7 @@ public partial class NoteViewModel : ViewModelBase
         _name = note.Name;
 
         var content = NoteRepository.GetContent(note.ID);
-        foreach (var text in NoteText.SplitBlocks(content)) AddBlock(Blocks.Count, text);
+        foreach (var text in NoteText.SplitBlocks(content)) InsertBlock(Blocks.Count, text);
 
         _statusText = string.IsNullOrWhiteSpace(content) ? "New note" : $"Edited {TextUtility.FormatWhen(note.UpdatedAt)}";
 
@@ -209,6 +217,33 @@ public partial class NoteViewModel : ViewModelBase
         return true;
     }
 
+    /// <summary> Joins the paragraph after the edited one onto it, with the cursor where the two meet. </summary>
+    public bool MergeNextIntoEditing()
+    {
+        if (EditingBlock is not { } block) return false;
+        var index = Blocks.IndexOf(block);
+        if (index < 0 || index >= Blocks.Count - 1) return false;
+
+        var next = Blocks[index + 1];
+        var before = block.Text.TrimEnd('\r', '\n');
+        var after = next.Text;
+
+        string joined;
+        int caret;
+        if (string.IsNullOrWhiteSpace(before)) (joined, caret) = (after, 0);
+        else if (string.IsNullOrWhiteSpace(after)) (joined, caret) = (before, before.Length);
+        else (joined, caret) = (before + "\n" + after, before.Length + 1);
+
+        EditingBlock = null;
+        block.IsEditing = false;
+        RemoveBlock(next);
+
+        block.Text = joined;
+        BeginEdit(block, caret);
+        RefreshContents();
+        return true;
+    }
+
     /// <summary> Edits the paragraph before the one being edited, with the cursor at its end. </summary>
     public bool EditPrevious()
     {
@@ -253,6 +288,13 @@ public partial class NoteViewModel : ViewModelBase
     }
 
     private NoteBlock AddBlock(int index, string text)
+    {
+        var block = InsertBlock(index, text);
+        if (!string.IsNullOrWhiteSpace(text)) MarkDirty();
+        return block;
+    }
+
+    private NoteBlock InsertBlock(int index, string text)
     {
         var block = new NoteBlock(text);
         block.PropertyChanged += Block_PropertyChanged;

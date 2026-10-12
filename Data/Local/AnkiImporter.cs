@@ -75,10 +75,10 @@ public static partial class AnkiImporter
         var (noteTypes, deckNames) = Db.TableExists(anki, "notetypes") ? ReadSchema18(anki) : ReadLegacySchema(anki);
         var notes = ReadNotes(anki);
 
-        // Each note goes in the deck of its first card; Anki only makes a reverse card when it's wanted.
+        // Each note goes in the deck of its first card (the home deck for cards in a filtered deck); Anki only makes a reverse card when it's wanted.
         var noteDecks = new Dictionary<long, long>();
         var notesWithReverse = new HashSet<long>();
-        foreach (var (noteId, deckId, ord) in Db.Query(anki, null, "SELECT nid, did, ord FROM cards ORDER BY nid, ord",
+        foreach (var (noteId, deckId, ord) in Db.Query(anki, null, "SELECT nid, CASE WHEN odid <> 0 THEN odid ELSE did END, ord FROM cards ORDER BY nid, ord",
             r => (r.GetInt64(0), r.GetInt64(1), r.GetInt64(2))))
         {
             noteDecks.TryAdd(noteId, deckId);

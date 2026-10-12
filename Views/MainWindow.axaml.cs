@@ -99,9 +99,9 @@ public partial class MainWindow : Window
     {
         if (!MetaDataManager.Data.CheckForUpdatesOnStartup) return;
         var updateClient = new UpdateClient();
-        var updateInfo = await updateClient.CheckForUpdatesAsync();
+        var check = await updateClient.CheckForUpdatesAsync();
 
-        if (updateInfo != null)
+        if (check.Info is { } updateInfo)
         {
             var confirmDialog = new ConfirmDialogWindow(
                 $"Version {updateInfo.TargetFullRelease.Version} is available. Download and restart now?"

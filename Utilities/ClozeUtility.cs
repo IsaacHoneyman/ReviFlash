@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,64 +11,210 @@ public static class ClozeUtility
     public const string HiddenMarker = "[...]";
 
     // Start is the backslash, End is just past the closing brace, Group is the number or a unique key when unnumbered.
-    private sealed record Blank(int Start, int End, string Group, string Content);
+    private sealed record Blank(int Start, int ContentStart, int ContentEnd, string Group)
+    {
+        public int End => ContentEnd + 1;
+    }
 
     /// <summary> Each group of blanks that becomes a question, in the order they first appear. </summary>
-    public static IReadOnlyList<string> Groups(string text) => FindBlanks(text).Select(blank => blank.Group).Distinct().ToList();
+    public static IReadOnlyList<string> Groups(string text) => FindBlanks(text).Where(blank => HasContent(text, blank)).Select(blank => blank.Group).Distinct().ToList();
 
-    public static bool HasBlanks(string text) => FindBlanks(text).Count > 0;
+    public static bool HasBlanks(string text) => FindBlanks(text).Any(blank => HasContent(text, blank));
 
     /// <summary> The question: the group's blanks shown as [...], every other blank as plain text. </summary>
-    public static string Mask(string text, string group) =>
-        Replace(text, blank => blank.Group == group ? HiddenMarker : blank.Content);
+    public static string Mask(string text, string group) => Render(text, group, reveal: false);
 
     /// <summary> The answer side: the group's blanks in bold, every other blank as plain text. </summary>
-    public static string Reveal(string text, string group) =>
-        Replace(text, blank => blank.Group == group ? $@"\B{{{blank.Content}}}" : blank.Content);
+    public static string Reveal(string text, string group) => Render(text, group, reveal: true);
 
     /// <summary> What has to be typed for the group: its blanks' text, comma separated when there are several. </summary>
-    public static string Answer(string text, string group) =>
-        string.Join(", ", FindBlanks(text).Where(blank => blank.Group == group).Select(blank => blank.Content.Trim()));
+    public static string Answer(string text, string group) => string.Join(", ", Answers(text, group));
 
-    private static string Replace(string text, System.Func<Blank, string> replacement)
+    /// <summary> The plain text of each of the group's blanks, in order. </summary>
+    public static IReadOnlyList<string> Answers(string text, string group)
     {
-        var output = new StringBuilder(text.Length);
-        var position = 0;
+        var answers = new List<string>();
+        var coveredUntil = 0;
 
         foreach (var blank in FindBlanks(text))
         {
-            output.Append(text, position, blank.Start - position).Append(replacement(blank));
-            position = blank.End;
+            if (blank.Start < coveredUntil || blank.Group != group || !HasContent(text, blank)) continue;
+            coveredUntil = blank.End;
+            answers.Add(PlainText(text[blank.ContentStart..blank.ContentEnd]).Trim());
+        }
+
+        return answers;
+    }
+
+    private static bool HasContent(string text, Blank blank) => !text.AsSpan(blank.ContentStart, blank.ContentEnd - blank.ContentStart).IsWhiteSpace();
+
+    private static string Render(string text, string group, bool reveal)
+    {
+        var blanks = FindBlanks(text);
+        var output = new StringBuilder(text.Length);
+        // The blanks being read through, innermost last: where their text ends and what closes them.
+        var open = new Stack<(int ContentEnd, string Closing, bool Target)>();
+        var targets = 0;
+        var position = 0;
+        var index = 0;
+
+        while (index < blanks.Count || open.Count > 0)
+        {
+            if (open.Count > 0 && (index >= blanks.Count || open.Peek().ContentEnd < blanks[index].Start))
+            {
+                var (contentEnd, closing, target) = open.Pop();
+                output.Append(text, position, contentEnd - position).Append(closing);
+                position = contentEnd + 1;
+                if (target) targets--;
+                continue;
+            }
+
+            var blank = blanks[index++];
+            output.Append(text, position, blank.Start - position);
+            position = blank.ContentStart;
+
+            if (blank.Group != group || targets > 0 || !HasContent(text, blank))
+            {
+                open.Push((blank.ContentEnd, "", false));
+            }
+            else if (reveal)
+            {
+                output.Append(@"\B{");
+                open.Push((blank.ContentEnd, "}", true));
+                targets++;
+            }
+            else
+            {
+                output.Append(HiddenMarker);
+                position = blank.End;
+                while (index < blanks.Count && blanks[index].Start < blank.End) index++;
+            }
         }
 
         return output.Append(text, position, text.Length - position).ToString();
     }
 
+    private static bool IsEscapable(char c) => c is '\\' or '$' or '-' or '{' or '}';
+
+    /// <summary> Blank text as it is typed: escapes undone and \B{ \I{ \U{ \H1{ and nested \C{ formatting removed; maths is kept as written. </summary>
+    private static string PlainText(string content)
+    {
+        var output = new StringBuilder(content.Length);
+        // One entry per open brace: true for a command's, false for a literal one.
+        var braces = new Stack<bool>();
+        var i = 0;
+
+        while (i < content.Length)
+        {
+            var c = content[i];
+
+            if (c == '$')
+            {
+                var delimiter = i + 1 < content.Length && content[i + 1] == '$' ? "$$" : "$";
+                var close = FindClosingDollar(content, i + delimiter.Length, delimiter);
+                if (close > i + delimiter.Length)
+                {
+                    output.Append(content, i, close + delimiter.Length - i);
+                    i = close + delimiter.Length;
+                    continue;
+                }
+            }
+            else if (c == '\\')
+            {
+                if (i + 1 < content.Length && IsEscapable(content[i + 1]))
+                {
+                    output.Append(content[i + 1]);
+                    i += 2;
+                    continue;
+                }
+
+                var commandEnd = TryReadOpening(content, i, out _, out var blankStart) ? blankStart : FormatCommandEnd(content, i);
+                if (commandEnd > 0)
+                {
+                    braces.Push(true);
+                    i = commandEnd;
+                    continue;
+                }
+            }
+            else if (c == '{')
+            {
+                braces.Push(false);
+            }
+            else if (c == '}' && braces.Count > 0 && braces.Pop())
+            {
+                i++;
+                continue;
+            }
+
+            output.Append(c);
+            i++;
+        }
+
+        return output.ToString();
+    }
+
+    /// <summary> The index just past \B{, \I{, \U{ or \H1{ to \H3{ at <paramref name="index"/>, or -1. </summary>
+    private static int FormatCommandEnd(string text, int index)
+    {
+        if (index + 2 < text.Length && text[index + 1] is 'B' or 'I' or 'U' && text[index + 2] == '{') return index + 3;
+        if (index + 3 < text.Length && text[index + 1] == 'H' && text[index + 2] is '1' or '2' or '3' && text[index + 3] == '{') return index + 4;
+        return -1;
+    }
+
+    private static int FindClosingDollar(string text, int start, string delimiter)
+    {
+        var index = start;
+        while (index < text.Length)
+        {
+            var found = text.IndexOf(delimiter, index, StringComparison.Ordinal);
+            if (found < 0) return -1;
+            if (!LatexUtility.IsEscaped(text, found, start)) return found;
+            index = found + 1;
+        }
+        return -1;
+    }
+
+    /// <summary> Every closed blank, nested ones too, in the order they start. </summary>
     private static List<Blank> FindBlanks(string text)
     {
-        var blanks = new List<Blank>();
-        var unnumbered = 0;
+        var found = new List<(int Start, string? Number, int ContentStart, int ContentEnd)>();
+        // One entry per open brace; Start is -1 for a plain brace.
+        var open = new Stack<(int Start, string? Number, int ContentStart)>();
         var i = 0;
 
         while (i < text.Length)
         {
-            if (TryReadOpening(text, i, out var number, out var contentStart))
+            var c = text[i];
+
+            if (c == '\\')
             {
-                var close = FindClosingBrace(text, contentStart);
-                if (close >= 0)
+                if (TryReadOpening(text, i, out var number, out var contentStart))
                 {
-                    var group = number ?? $"#{unnumbered++}";
-                    blanks.Add(new Blank(i, close + 1, group, text[contentStart..close]));
-                    i = close + 1;
+                    open.Push((i, number, contentStart));
+                    i = contentStart;
                     continue;
                 }
+
+                // Skip whatever a backslash escapes, so \\C or \{ is never read as the start of a blank.
+                i += i + 1 < text.Length && IsEscapable(text[i + 1]) ? 2 : 1;
+                continue;
             }
 
-            // Skip whatever a backslash escapes, so \\C or \$ is never read as the start of a blank.
-            i += text[i] == '\\' ? 2 : 1;
+            if (c == '{')
+            {
+                open.Push((-1, null, i + 1));
+            }
+            else if (c == '}' && open.Count > 0)
+            {
+                var (start, number, contentStart) = open.Pop();
+                if (start >= 0) found.Add((start, number, contentStart, i));
+            }
+            i++;
         }
 
-        return blanks;
+        found.Sort((a, b) => a.Start.CompareTo(b.Start));
+        var unnumbered = 0;
+        return found.Select(blank => new Blank(blank.Start, blank.ContentStart, blank.ContentEnd, blank.Number ?? $"#{unnumbered++}")).ToList();
     }
 
     /// <summary> \C{ or \C&lt;digits&gt;{ at <paramref name="index"/>; <paramref name="number"/> is null when unnumbered. </summary>
@@ -84,17 +231,5 @@ public static class ClozeUtility
         if (digitsEnd > index + 2) number = text[(index + 2)..digitsEnd].TrimStart('0') is { Length: > 0 } n ? n : "0";
         contentStart = digitsEnd + 1;
         return true;
-    }
-
-    private static int FindClosingBrace(string text, int start)
-    {
-        var depth = 1;
-        for (var i = start; i < text.Length; i++)
-        {
-            if (text[i] == '\\') { i++; continue; }
-            if (text[i] == '{') depth++;
-            else if (text[i] == '}' && --depth == 0) return i;
-        }
-        return -1;
     }
 }

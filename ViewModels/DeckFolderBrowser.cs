@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReviFlash.Models;
 using ReviFlash.Utilities;
@@ -20,6 +21,10 @@ public partial class DeckFolderBrowser : FolderBrowserBase
 
     /// <summary> Narrow hosts (settings) drop the sort picker to leave room for the search box. </summary>
     public bool ShowSortOptions { get; init; } = true;
+
+    /// <summary> Hosts turn the deck buttons off while their action is running. </summary>
+    [NotifyCanExecuteChangedFor(nameof(DeckActionCommand))]
+    [ObservableProperty] private bool _isActionEnabled = true;
 
     public ObservableCollection<ISearchable> Items { get; } = [];
 
@@ -67,7 +72,7 @@ public partial class DeckFolderBrowser : FolderBrowserBase
         Refresh();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsActionEnabled))]
     private void DeckAction(FlashCardDeck deck) => _onDeckAction(deck);
 
     protected override void RefreshFolderMetadata()

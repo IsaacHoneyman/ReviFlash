@@ -57,8 +57,10 @@
 
     <Grid RowDefinitions="Auto, *" Margin="32">
 
-        <TextBox Grid.Row="0"
+        <TextBox Grid.Row="0" x:Name="NameBox"
             Text="{Binding DeckName, Mode=TwoWay}"
+            MaxLength="100"
+            LostFocus="NameBox_LostFocus"
             FontSize="32" FontWeight="Bold"
             Background="Transparent" BorderThickness="0,0,0,2"
             Foreground="{DynamicResource TextPrimary}"

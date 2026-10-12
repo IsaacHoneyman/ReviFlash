@@ -83,7 +83,11 @@ public static class MetaDataManager
             Logger.LogWarning("Meta Data attempted to save NULL instance.");
             return;
         }
-        File.WriteAllText(GetFilePath(), JsonSerializer.Serialize(Data, TextUtility.Indented));        
+
+        var path = GetFilePath();
+        var temporaryPath = path + ".tmp";
+        File.WriteAllText(temporaryPath, JsonSerializer.Serialize(Data, TextUtility.Indented));
+        File.Move(temporaryPath, path, overwrite: true);
     }
 
 }

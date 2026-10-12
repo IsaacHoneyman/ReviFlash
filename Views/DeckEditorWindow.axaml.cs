@@ -1,9 +1,12 @@
 using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
 using ReviFlash.Views.Controls;
@@ -13,6 +16,9 @@ namespace ReviFlash.Views;
 public partial class DeckEditorWindow : Window
 {
     private bool _cardLoadScheduled;
+    private bool _closeConfirmed;
+    private bool _closePromptOpen;
+    private DeckEditorViewModel? _observedViewModel;
 
     /// <summary> The card field the formatting toolbar and shortcuts act on: the one last clicked into. </summary>
     private TextBox? _activeField;
@@ -23,7 +29,9 @@ public partial class DeckEditorWindow : Window
     {
         InitializeComponent();
         Opened += DeckEditorWindow_Opened;
+        Closing += DeckEditorWindow_Closing;
         Closed += DeckEditorWindow_Closed;
+        DataContextChanged += DeckEditorWindow_DataContextChanged;
 
         _activeField = FrontBox;
         EditorPanel.AddHandler(GotFocusEvent, EditorField_GotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
@@ -45,8 +53,45 @@ public partial class DeckEditorWindow : Window
         }, TimeSpan.FromMilliseconds(50));
     }
 
+    private async void DeckEditorWindow_Closing(object? sender, WindowClosingEventArgs e)
+    {
+        ViewModel?.CommitDeckName();
+        if (_closeConfirmed || ViewModel is not { } vm || vm.EditorIsBlank()) return;
+
+        e.Cancel = true;
+        if (_closePromptOpen) return;
+
+        _closePromptOpen = true;
+        try
+        {
+            if (!await ConfirmDiscardEditorAsync("Discard this card?")) return;
+        }
+        finally
+        {
+            _closePromptOpen = false;
+        }
+
+        _closeConfirmed = true;
+        Close();
+    }
+
+    private void DeckEditorWindow_DataContextChanged(object? sender, EventArgs e)
+    {
+        if (_observedViewModel is not null) _observedViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        _observedViewModel = ViewModel;
+        if (_observedViewModel is not null) _observedViewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DeckEditorViewModel.SelectedCardType)) _activeField = null;
+    }
+
+    private void NameBox_LostFocus(object? sender, RoutedEventArgs e) => ViewModel?.CommitDeckName();
+
     private void DeckEditorWindow_Closed(object? sender, EventArgs e)
     {
+        if (_observedViewModel is not null) _observedViewModel.PropertyChanged -= ViewModel_PropertyChanged;
         ViewModel?.CancelCardLoad();
         ViewModel?.Dispose();
         _cardLoadScheduled = false;
@@ -70,7 +115,16 @@ public partial class DeckEditorWindow : Window
 
     private void Toolbar_FormatRequested(object? sender, FormatRequestedEventArgs e)
     {
-        if (_activeField is { } box) TextFormatting.Apply(box, e.Tag);
+        if (ActiveVisibleField() is { } box) TextFormatting.Apply(box, e.Tag);
+    }
+
+    /// <summary> The last field clicked into if it is still on screen, else the first visible field. </summary>
+    private TextBox? ActiveVisibleField()
+    {
+        if (_activeField is { IsEffectivelyVisible: true } box && box.IsAttachedToVisualTree()) return box;
+
+        return _activeField = EditorPanel.GetVisualDescendants().OfType<TextBox>()
+            .FirstOrDefault(b => b.Classes.Contains("field") && b.IsEffectivelyVisible);
     }
 
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
