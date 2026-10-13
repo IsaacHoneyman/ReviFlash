@@ -153,6 +153,11 @@ internal static class Db
     /// <summary> Today's local date as ISO "yyyy-MM-dd" text, the form stats days are stored in. </summary>
     public static string Today() => DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
+    /// <summary> A local date and time as "yyyy-MM-dd HH:mm:ss" text, the form answer times are stored in. </summary>
+    public static string LocalTime(DateTime local) => local.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+    public static DateTime ParseLocalTime(string raw) => DateTime.ParseExact(raw, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
     /// <summary> A stats day, stored as ISO "yyyy-MM-dd" text. </summary>
     public static DateOnly ParseDay(string raw) => DateOnly.Parse(raw, CultureInfo.InvariantCulture);
 

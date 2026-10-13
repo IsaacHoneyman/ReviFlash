@@ -19,7 +19,7 @@ public class FlipFlashCard : FlashCard
     public override string ReviewTypeLabel => ReviewLabel ?? (IsReversedCopy ? $"{TypeName} · Reversed" : TypeName);
 
     /// <summary> Keeps the card ID so stats go to the card's deck. </summary>
-    public FlipFlashCard CreateReversedCopy() => new(Back, Front, ID) { IsReversedCopy = true };
+    public FlipFlashCard CreateReversedCopy() => new(Back, Front, ID) { IsReversedCopy = true, ReviewPart = "reversed" };
 
     public override bool VerifyAnswer(object answer) { return true; }
 }

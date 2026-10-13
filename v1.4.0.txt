@@ -40,3 +40,4 @@ The graph view shows a spinner while its charts load.
 In a note, Tab shows or hides the contents and Ctrl+Enter makes a card, and the Contents button is no longer coloured when the contents are showing.
 Time spent editing sets is tracked like notes time (only while you're working, pausing after 2 minutes idle), including making cards from notes, and shows as Editing Time in stats, the study time chart and the calendar.
 Folders have a stats button (or S) showing the same stats as overall for everything inside them, and your best streak sits beside the current one at the top.
+Every answer in a review is recorded against its card (which cloze blank or side, right or wrong, and how long it took), kept in backups, ready for per-card stats.

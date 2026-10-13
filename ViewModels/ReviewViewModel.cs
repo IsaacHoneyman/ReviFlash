@@ -65,6 +65,10 @@ public partial class ReviewViewModel : ViewModelBase
     private readonly DispatcherTimer _displayTimer;
     private readonly ulong deckID = ulong.MaxValue;
     private bool _currentCardHasBeenScored;
+
+    // Every answer given, saved with the session's stats; times are from when the question appeared.
+    private readonly List<CardResult> _answers = [];
+    private TimeSpan _questionShownAt;
     private bool _disposed;
 
     public FlashCard CurrentCard => _sessionCards[_currentIndex];
@@ -428,7 +432,7 @@ public partial class ReviewViewModel : ViewModelBase
                 sessionStats.Add((targetDeckId, correct, attempts, deckSeconds));
             }
 
-            FlashCardRepository.UpdateDeckStats(sessionStats);
+            FlashCardRepository.UpdateDeckStats(sessionStats, _answers);
         }
 
         OnSessionComplete?.Invoke(CorrectCount, questionsAttempted, _timer.Elapsed, isPartial);
@@ -454,6 +458,8 @@ public partial class ReviewViewModel : ViewModelBase
         }
 
         _currentCardHasBeenScored = true;
+        _answers.Add(new CardResult(CurrentCard.ID, CurrentCard.ReviewPart, DateTime.Now, isCorrect,
+            (int)Math.Round((_timer.Elapsed - _questionShownAt).TotalSeconds)));
         UpdateAnswerStreak(isCorrect);
         ulong targetDeckId = GetCurrentCardDeckId();
 
@@ -654,6 +660,7 @@ public partial class ReviewViewModel : ViewModelBase
         IsAnswerCorrect = false;
         UserTypedAnswer = "";
         _currentCardHasBeenScored = false;
+        _questionShownAt = _timer.Elapsed;
         SelectedWrongOptions.Clear();
         MissedCorrectOptions.Clear();
         LoadMultiChoiceOptionsForCurrentCard();

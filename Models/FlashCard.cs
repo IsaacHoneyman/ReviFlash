@@ -12,6 +12,9 @@ public abstract class FlashCard(string front, string back)
     /// <summary> Type label a review shows for a question made from another card, e.g. a cloze blank. </summary>
     public string? ReviewLabel { get; init; }
 
+    /// <summary> Which question of its card this is in a review: "" for the card itself, a cloze blank group ("c1"), or "reversed". </summary>
+    public string ReviewPart { get; init; } = "";
+
     public void AssignDatabaseID(ulong id)
     {
         if (ID == ulong.MaxValue) ID = id;

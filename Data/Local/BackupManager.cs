@@ -193,7 +193,7 @@ public static class BackupManager
     private static void RemoveStatsFromDatabase(string databasePath)
     {
         using var connection = Db.OpenUnpooled(databasePath);
-        Db.Execute(connection, null, "DROP TABLE IF EXISTS DeckStats; DROP TABLE IF EXISTS DeckEditStats; DROP TABLE IF EXISTS AnswerStreaks; DROP TABLE IF EXISTS NoteStats;");
+        Db.Execute(connection, null, "DROP TABLE IF EXISTS DeckStats; DROP TABLE IF EXISTS DeckEditStats; DROP TABLE IF EXISTS CardResults; DROP TABLE IF EXISTS AnswerStreaks; DROP TABLE IF EXISTS NoteStats;");
     }
 
     // --- Restore Helpers ---
@@ -304,6 +304,15 @@ public static class BackupManager
                 FROM source.DeckEditStats s
                 JOIN source.Decks od ON od.ID = s.DeckId
                 JOIN main.Decks nd ON nd.ID = s.DeckId AND nd.Name = od.Name;
+
+                DELETE FROM main.CardResults;
+                INSERT INTO main.CardResults (CardID, Part, AnsweredAt, Correct, Seconds)
+                SELECT r.CardID, r.Part, r.AnsweredAt, r.Correct, r.Seconds
+                FROM source.CardResults r
+                JOIN source.Cards oc ON oc.ID = r.CardID
+                JOIN source.Decks od ON od.ID = oc.DeckID
+                JOIN main.Cards nc ON nc.ID = r.CardID AND nc.DeckID = oc.DeckID AND nc.Front = oc.Front
+                JOIN main.Decks nd ON nd.ID = nc.DeckID AND nd.Name = od.Name;
 
                 DELETE FROM main.AnswerStreaks;
                 INSERT INTO main.AnswerStreaks (TargetType, TargetId, BestStreak)

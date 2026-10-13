@@ -269,14 +269,25 @@ public static class FlashCardRepository
     public static void UpdateDeck(FlashCardDeck deck) =>
         Db.Execute("UPDATE Decks SET Name = $name WHERE ID = $id;", ("$name", deck.Name), ("$id", deck.ID));
 
-    /// <summary> Adds a review session's results to today's stats, one entry per deck. </summary>
-    public static void UpdateDeckStats(IReadOnlyCollection<(ulong deckID, int correct, int total, int timeTakenSeconds)> results)
+    /// <summary> Adds a review session's results to today's stats, one entry per deck, along with each answer given. </summary>
+    public static void UpdateDeckStats(IReadOnlyCollection<(ulong deckID, int correct, int total, int timeTakenSeconds)> results,
+        IReadOnlyCollection<CardResult>? answers = null)
     {
         foreach (var result in results) ValidateDeckId(result.deckID);
-        if (results.Count == 0) return;
+        if (results.Count == 0 && (answers is null || answers.Count == 0)) return;
 
         Db.InTransaction((connection, transaction) =>
         {
+            foreach (var answer in answers ?? [])
+            {
+                Db.Execute(connection, transaction, @"
+                    INSERT INTO CardResults (CardID, Part, AnsweredAt, Correct, Seconds)
+                    SELECT $cardId, $part, $answeredAt, $correct, $seconds
+                    WHERE EXISTS (SELECT 1 FROM Cards WHERE ID = $cardId);",
+                    ("$cardId", answer.CardID), ("$part", answer.Part), ("$answeredAt", Db.LocalTime(answer.AnsweredAt)),
+                    ("$correct", answer.Correct ? 1 : 0), ("$seconds", answer.Seconds));
+            }
+
             foreach (var (deckID, correct, total, timeTakenSeconds) in results)
             {
                 Db.Execute(connection, transaction, @"
@@ -290,6 +301,12 @@ public static class FlashCardRepository
             }
         });
     }
+
+    /// <summary> Every answer given for a card, oldest first. </summary>
+    public static List<CardResult> GetCardResults(ulong cardID) =>
+        Db.Query("SELECT CardID, Part, AnsweredAt, Correct, Seconds FROM CardResults WHERE CardID = $id ORDER BY AnsweredAt, ID;",
+            reader => new CardResult((ulong)reader.GetInt64(0), reader.GetString(1), Db.ParseLocalTime(reader.GetString(2)), reader.GetInt32(3) == 1, reader.GetInt32(4)),
+            ("$id", cardID));
 
     public static void UpdateCard(FlashCard card) =>
         Db.InTransaction((connection, transaction) => DeckRepository.UpdateCard(connection, transaction, card));
@@ -329,7 +346,7 @@ public static class FlashCardRepository
     public static void DeleteAllStats()
     {
         Db.InTransaction((connection, transaction) =>
-            Db.Execute(connection, transaction, "DELETE FROM DeckStats; DELETE FROM DeckEditStats; DELETE FROM AnswerStreaks;"));
+            Db.Execute(connection, transaction, "DELETE FROM DeckStats; DELETE FROM DeckEditStats; DELETE FROM CardResults; DELETE FROM AnswerStreaks;"));
     }
 
     public static void DeleteStatsForDeck(ulong deckID)
@@ -339,6 +356,7 @@ public static class FlashCardRepository
         Db.InTransaction((connection, transaction) => Db.Execute(connection, transaction, @"
             DELETE FROM DeckStats WHERE DeckID = $id;
             DELETE FROM DeckEditStats WHERE DeckId = $id;
+            DELETE FROM CardResults WHERE CardID IN (SELECT ID FROM Cards WHERE DeckID = $id);
             DELETE FROM AnswerStreaks WHERE TargetType = $type AND TargetId = $id;",
             ("$type", DeckStreakTarget), ("$id", deckID)));
     }

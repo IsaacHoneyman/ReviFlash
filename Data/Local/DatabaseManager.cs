@@ -121,6 +121,17 @@ public static class DatabaseManager
                     FOREIGN KEY (NoteID) REFERENCES Notes(ID) ON DELETE CASCADE
                 );
 
+                -- Every answer given in a review. Part says which question of the card it was: a cloze blank group (c1, c2...) or reversed.
+                CREATE TABLE IF NOT EXISTS CardResults (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CardID INTEGER NOT NULL,
+                    Part TEXT NOT NULL DEFAULT '',
+                    AnsweredAt TEXT NOT NULL,
+                    Correct INTEGER NOT NULL,
+                    Seconds INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY (CardID) REFERENCES Cards(ID) ON DELETE CASCADE
+                );
+
                 -- Time spent editing each set per day.
                 CREATE TABLE IF NOT EXISTS DeckEditStats (
                     DeckId INTEGER NOT NULL,
@@ -162,6 +173,7 @@ public static class DatabaseManager
             CREATE INDEX IF NOT EXISTS IX_StudyGroups_Folder ON StudyGroups(FolderID);
             CREATE INDEX IF NOT EXISTS IX_Cards_Deck ON Cards(DeckID);
             CREATE INDEX IF NOT EXISTS IX_Notes_Folder ON Notes(FolderID);
+            CREATE INDEX IF NOT EXISTS IX_CardResults_Card ON CardResults(CardID);
         ");
     }
 
