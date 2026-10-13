@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ReviFlash.Data.Backup.Local;
@@ -177,9 +178,27 @@ public partial class SettingsWindow : Window
         await new LoginWindow().ShowDialog<bool>(this);
     }
 
+    /// <summary> Disables <paramref name="button"/> and shows <paramref name="spinner"/> while <paramref name="work"/> runs. </summary>
+    private static async Task<T> RunBusyAsync<T>(object? button, Arc spinner, Func<Task<T>> work)
+    {
+        if (button is Button b) b.IsEnabled = false;
+        spinner.IsVisible = true;
+
+        try { return await work(); }
+        finally
+        {
+            spinner.IsVisible = false;
+            if (button is Button done) done.IsEnabled = true;
+        }
+    }
+
+    private static Task RunBusyAsync(object? button, Arc spinner, Func<Task> work) =>
+        RunBusyAsync(button, spinner, async () => { await work(); return true; });
+
     private async void SignOut_Click(object? sender, RoutedEventArgs e)
     {
-        await AuthSession.SignOutAsync();
+        ShowStatus(AccountStatusText, "Signing out...");
+        await RunBusyAsync(sender, AccountSpinner, AuthSession.SignOutAsync);
         ShowStatus(AccountStatusText, null);
     }
 
@@ -199,7 +218,7 @@ public partial class SettingsWindow : Window
         }
 
         ShowStatus(AccountStatusText, "Saving username...");
-        var result = await AuthSession.ChangeUsernameAsync(username);
+        var result = await RunBusyAsync(sender, AccountSpinner, () => AuthSession.ChangeUsernameAsync(username));
         ShowStatus(AccountStatusText, result.Success ? $"Username changed to {username}." : $"Couldn't change username: {result.Message}");
     }
 
@@ -208,7 +227,7 @@ public partial class SettingsWindow : Window
         ShowStatus(UpdateStatusText, "Checking for updates...");
 
         var updateClient = new UpdateClient();
-        var check = await updateClient.CheckForUpdatesAsync();
+        var check = await RunBusyAsync(sender, UpdateSpinner, updateClient.CheckForUpdatesAsync);
 
         if (check.Status == UpdateCheckStatus.Failed)
         {

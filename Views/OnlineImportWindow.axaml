@@ -53,6 +53,11 @@
         </StackPanel>
 
         <Border Grid.Row="1" Classes="card" CornerRadius="16" Padding="16">
+          <Panel>
+            <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsSearching}">
+                <Arc Classes="spinner large" IsVisible="{Binding IsSearching}" HorizontalAlignment="Center" />
+                <TextBlock Classes="caption" Text="Searching..." HorizontalAlignment="Center" />
+            </StackPanel>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding SearchResults}">
                     <ItemsControl.ItemTemplate>
@@ -84,6 +89,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
+          </Panel>
         </Border>
 
         <Grid Grid.Row="2" ColumnDefinitions="Auto, *" Margin="0,16,0,0">
@@ -93,8 +99,19 @@
                           Foreground="{DynamicResource TextSecondary}" FontSize="13"
                           ToolTip.Tip="If the uploader included folder information, rebuild their folders inside the one you're saving to." />
             </StackPanel>
-            <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
-                       HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="16,0,0,0" />
+            <DockPanel Grid.Column="1" HorizontalAlignment="Right" Margin="16,0,0,0">
+                <!-- A search already shows its spinner over the results. -->
+                <Arc DockPanel.Dock="Left" Classes="spinner" Margin="0,0,8,0">
+                    <Arc.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="IsWorking" />
+                            <Binding Path="!IsSearching" />
+                        </MultiBinding>
+                    </Arc.IsVisible>
+                </Arc>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
         </Grid>
     </Grid>
 </Window>

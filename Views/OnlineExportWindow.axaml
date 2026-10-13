@@ -50,6 +50,12 @@
                                       CornerRadius="8" Width="180" Height="36" VerticalContentAlignment="Center" Background="{DynamicResource AppBackground}" />
                         </Grid>
 
+                        <StackPanel Grid.Row="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    IsVisible="{Binding IsLoadingCloudDecks}">
+                            <Arc Classes="spinner large" IsVisible="{Binding IsLoadingCloudDecks}" HorizontalAlignment="Center" />
+                            <TextBlock Classes="caption" Text="Loading your cloud sets..." HorizontalAlignment="Center" />
+                        </StackPanel>
+
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
                             <ItemsControl ItemsSource="{Binding FilteredCloudDecks}">
                                 <ItemsControl.ItemTemplate>
@@ -109,8 +115,11 @@
             <CheckBox Grid.Column="1" IsChecked="{Binding UploadAsPrivate}" Content="Upload as private"
                       Foreground="{DynamicResource TextSecondary}" FontSize="13"
                       ToolTip.Tip="Private decks don't appear in community search. Use them to move decks between your own devices." />
-            <TextBlock Grid.Column="2" Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
-                       HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="16,0,0,0" />
+            <DockPanel Grid.Column="2" HorizontalAlignment="Right" Margin="16,0,0,0">
+                <Arc DockPanel.Dock="Left" Classes="spinner" IsVisible="{Binding IsWorking}" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
         </Grid>
     </Grid>
     <!-- Overlay: pick the local deck that overwrites a cloud deck. -->

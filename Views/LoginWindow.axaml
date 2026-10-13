@@ -123,8 +123,13 @@
             FontSize="13" TextWrapping="Wrap" TextAlignment="Center" />
 
         <!-- Enter submits whichever form is showing. -->
-        <Button Classes="wide primary" Content="{Binding PrimaryActionText}" Command="{Binding SubmitCommand}" IsDefault="True"
-            Padding="12" FontSize="15" />
+        <Button Classes="wide primary" Command="{Binding SubmitCommand}" IsDefault="True"
+            Padding="12" FontSize="15">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <Arc Classes="spinner" IsVisible="{Binding IsBusy}" Stroke="{Binding $parent[Button].Foreground}" />
+                <TextBlock Text="{Binding PrimaryActionText}" />
+            </StackPanel>
+        </Button>
 
         <StackPanel IsVisible="{Binding IsRecovering}" Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
             <Button Classes="link" Content="Back to sign in" Command="{Binding ShowSignInCommand}" />

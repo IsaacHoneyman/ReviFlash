@@ -382,18 +382,10 @@ public partial class DashboardView : UserControl
         StartReviewSession(vm.GetSelectedDecks());
     }
 
-    private bool _checkingSignIn;
-
-    /// <summary> True once there is a ReviFlash Online session, asking the user to sign in if needed; false if the dashboard was left while checking. </summary>
-    private async Task<bool> EnsureSignedInAsync(Window owner)
+    /// <summary> True once there is a ReviFlash Online session, asking the user to sign in if needed; false if a check was already running or the dashboard was left while checking. </summary>
+    private async Task<bool> EnsureSignedInAsync(Window owner, DashboardViewModel vm, DashboardViewModel.OnlineEntry entry)
     {
-        if (_checkingSignIn) return false;
-
-        SessionState state;
-        _checkingSignIn = true;
-        try { state = await AuthSession.TryRestoreAsync(); }
-        finally { _checkingSignIn = false; }
-
+        if (await vm.CheckSignInAsync(entry) is not { } state) return false;
         if (!this.IsAttachedToVisualTree()) return false;
 
         switch (state)
@@ -411,14 +403,14 @@ public partial class DashboardView : UserControl
     private async void SignIn_Click(object sender, RoutedEventArgs e)
     {
         // The account text updates itself from the stored session; nothing else to do.
-        await EnsureSignedInAsync(OwnerWindow);
+        if (DataContext is DashboardViewModel vm) await EnsureSignedInAsync(OwnerWindow, vm, DashboardViewModel.OnlineEntry.SignIn);
     }
 
     private async void OpenOnlineImport_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
         var owner = OwnerWindow;
-        if (!await EnsureSignedInAsync(owner)) return;
+        if (!await EnsureSignedInAsync(owner, vm, DashboardViewModel.OnlineEntry.Import)) return;
 
         var window = new OnlineImportWindow(vm.CurrentFolderID);
         await window.ShowDialog(owner);
@@ -431,7 +423,7 @@ public partial class DashboardView : UserControl
     {
         if (DataContext is not DashboardViewModel vm) return;
         var owner = OwnerWindow;
-        if (!await EnsureSignedInAsync(owner)) return;
+        if (!await EnsureSignedInAsync(owner, vm, DashboardViewModel.OnlineEntry.Export)) return;
 
         // Your own decks can be downloaded from here, into the folder you're in.
         var window = new OnlineExportWindow(vm.CurrentFolderID);

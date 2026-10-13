@@ -4,6 +4,7 @@ using ReviFlash.Data.Local;
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using static ReviFlash.Utilities.CardUtility;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -39,6 +40,27 @@ public partial class DashboardViewModel : FolderBrowserBase
 
     public bool IsSignedIn => AuthSession.IsSignedIn;
     public string AccountText => IsSignedIn ? $"Welcome, {AuthSession.Username}" : "Guest";
+
+    public enum OnlineEntry { SignIn, Import, Export }
+
+    /// <summary> The button whose sign-in check is running, or null when none is. </summary>
+    [NotifyPropertyChangedFor(nameof(IsCheckingSignIn), nameof(IsCheckingSignInForSignIn), nameof(IsCheckingSignInForImport), nameof(IsCheckingSignInForExport))]
+    [ObservableProperty] private OnlineEntry? _signInCheckFor;
+
+    public bool IsCheckingSignIn => SignInCheckFor is not null;
+    public bool IsCheckingSignInForSignIn => SignInCheckFor == OnlineEntry.SignIn;
+    public bool IsCheckingSignInForImport => SignInCheckFor == OnlineEntry.Import;
+    public bool IsCheckingSignInForExport => SignInCheckFor == OnlineEntry.Export;
+
+    /// <summary> Restores the online session for <paramref name="entry"/>; null when another check is already running. </summary>
+    public async Task<SessionState?> CheckSignInAsync(OnlineEntry entry, Func<Task<SessionState>>? restore = null)
+    {
+        if (IsCheckingSignIn) return null;
+
+        SignInCheckFor = entry;
+        try { return await (restore ?? AuthSession.TryRestoreAsync)(); }
+        finally { SignInCheckFor = null; }
+    }
 
     [NotifyPropertyChangedFor(nameof(IsSelectionModeActive))]
     [NotifyPropertyChangedFor(nameof(IsReviewSelectionMode))]

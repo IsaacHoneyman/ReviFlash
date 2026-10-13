@@ -54,6 +54,9 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
     private bool CanAct() => !IsBusy;
 
+    /// <summary> True until the first fetch of your cloud sets finishes. </summary>
+    [ObservableProperty] private bool _isLoadingCloudDecks;
+
     partial void OnIsBusyChanged(bool value)
     {
         LocalBrowser.IsActionEnabled = !value;
@@ -239,7 +242,11 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
     private async Task LoadInitialCloudDecksAsync()
     {
-        if (!await LoadCloudDecksAsync()) StatusMessage = "Couldn't load your cloud sets. Check your connection.";
+        IsLoadingCloudDecks = true;
+        bool loaded = await LoadCloudDecksAsync();
+        IsLoadingCloudDecks = false;
+
+        if (!loaded) StatusMessage = "Couldn't load your cloud sets. Check your connection.";
     }
 
     /// <summary> False when the list couldn't be loaded; the list on screen is then left as it was. </summary>

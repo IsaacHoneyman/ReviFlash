@@ -131,7 +131,10 @@
 
                     <Button Classes="wide secondary" Content="Check for Updates Now" Click="CheckForUpdates_Click" />
 
-                    <TextBlock x:Name="UpdateStatusText" Classes="note" IsVisible="False" />
+                    <DockPanel>
+                        <Arc x:Name="UpdateSpinner" DockPanel.Dock="Left" Classes="spinner" IsVisible="False" Margin="0,0,8,0" />
+                        <TextBlock x:Name="UpdateStatusText" Classes="note" IsVisible="False" />
+                    </DockPanel>
                 </StackPanel>
             </Border>
 
@@ -155,7 +158,10 @@
                     <TextBlock Classes="caption" Text="Sign in to share decks, keep private copies, and download community decks."
                         IsVisible="{Binding !IsSignedIn}" TextWrapping="Wrap" />
 
-                    <TextBlock x:Name="AccountStatusText" Classes="note" IsVisible="False" />
+                    <DockPanel>
+                        <Arc x:Name="AccountSpinner" DockPanel.Dock="Left" Classes="spinner" IsVisible="False" Margin="0,0,8,0" />
+                        <TextBlock x:Name="AccountStatusText" Classes="note" IsVisible="False" />
+                    </DockPanel>
                 </StackPanel>
             </Border>
 

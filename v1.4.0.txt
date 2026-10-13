@@ -29,3 +29,4 @@ Typed cloze answers with several blanks accept commas or spaces between them, ig
 The editor preview waits for a short pause in typing, so long cards with lots of maths stay smooth to type in.
 Rename boxes are limited to 100 characters, and their OK button is disabled while the name is blank.
 Fixed a crash opening the Cloud Manager or Community sets when signing in took a while, for example just after reconnecting.
+Online actions show a spinner while they run, and the Community, Cloud Manager and Sign In buttons can no longer be clicked again while ReviFlash Online is checking your sign-in.

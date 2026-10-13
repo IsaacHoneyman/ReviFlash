@@ -290,8 +290,13 @@
                 <TextBlock Text="{Binding AccountText}" FontSize="13" FontWeight="SemiBold"
                     Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"
                     MaxWidth="260" TextTrimming="CharacterEllipsis" />
-                <Button Classes="secondary" Content="Sign In" Click="SignIn_Click" IsVisible="{Binding !IsSignedIn}"
-                    Padding="10,4" FontSize="12" VerticalAlignment="Center" />
+                <Button Classes="secondary" Click="SignIn_Click" IsVisible="{Binding !IsSignedIn}" IsEnabled="{Binding !IsCheckingSignIn}"
+                    Padding="10,4" FontSize="12" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Arc Classes="spinner" IsVisible="{Binding IsCheckingSignInForSignIn}" Width="12" Height="12" StrokeThickness="2" />
+                        <TextBlock Text="Sign In" />
+                    </StackPanel>
+                </Button>
                 <TextBlock Text="·" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                 <TextBlock Text="{x:Static utilities:TextUtility.VersionText}" FontSize="12" Foreground="{DynamicResource TextPrimary}"
                     VerticalAlignment="Center" />
@@ -450,18 +455,24 @@
                                 Content="{Binding ReviewSelectionButtonText}"
                                 Padding="12, 8" FontSize="14" />
 
-                            <Button Click="OpenOnlineImport_Click"
+                            <Button Click="OpenOnlineImport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
                                 Classes="secondary" Padding="12, 8"
                                 VerticalContentAlignment="Center"
                                 ToolTip.Tip="Import: download community decks">
-                                <Path Classes="icon" Data="{StaticResource IconDownload}" />
+                                <Panel>
+                                    <Path Classes="icon" Data="{StaticResource IconDownload}" IsVisible="{Binding !IsCheckingSignInForImport}" />
+                                    <Arc Classes="spinner" IsVisible="{Binding IsCheckingSignInForImport}" HorizontalAlignment="Center" />
+                                </Panel>
                             </Button>
 
-                            <Button Click="OpenOnlineExport_Click"
+                            <Button Click="OpenOnlineExport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
                                 Classes="secondary" Padding="12, 8"
                                 VerticalContentAlignment="Center"
                                 ToolTip.Tip="Export: upload and manage your decks">
-                                <Path Classes="icon" Data="{StaticResource IconUpload}" />
+                                <Panel>
+                                    <Path Classes="icon" Data="{StaticResource IconUpload}" IsVisible="{Binding !IsCheckingSignInForExport}" />
+                                    <Arc Classes="spinner" IsVisible="{Binding IsCheckingSignInForExport}" HorizontalAlignment="Center" />
+                                </Panel>
                             </Button>
                         </StackPanel>
                     </Border>
