@@ -48,6 +48,16 @@ public class MathText : Decorator
 
     private static readonly TimeSpan PreviewDelay = TimeSpan.FromMilliseconds(150);
 
+    /// <summary> A preview that built and laid out within a frame redraws on every key; a slower one waits for a pause in typing. </summary>
+    public static readonly TimeSpan LivePreviewLimit = TimeSpan.FromMilliseconds(16);
+
+    public static bool WaitsForPause(TimeSpan lastBuild) => lastBuild > LivePreviewLimit;
+
+    // How long the last build took, counting its first layout, where the maths is typeset.
+    private TimeSpan _lastBuildCost;
+    private readonly System.Diagnostics.Stopwatch _buildClock = new();
+    private bool _measuringBuild;
+
     private bool? _builtWithLatexFont;
     private DispatcherTimer? _previewTimer;
 
@@ -57,8 +67,8 @@ public class MathText : Decorator
     {
         base.OnPropertyChanged(change);
 
-        // An editor preview waits for a pause in typing; everything else, and the first render, applies at once.
-        if (change.Property == TextProperty && ShowErrors && Child is not null && this.IsAttachedToVisualTree())
+        // A slow editor preview waits for a pause in typing; everything else, and the first render, applies at once.
+        if (change.Property == TextProperty && ShowErrors && Child is not null && this.IsAttachedToVisualTree() && WaitsForPause(_lastBuildCost))
         {
             _previewTimer ??= new DispatcherTimer(PreviewDelay, DispatcherPriority.Normal, (_, _) =>
             {
@@ -102,7 +112,14 @@ public class MathText : Decorator
     /// <summary> With IsCentered, text is centred only while every paragraph fits on one line; alignment doesn't move line breaks, so one measure decides. </summary>
     protected override Size MeasureOverride(Size availableSize)
     {
+        if (_measuringBuild) _buildClock.Start();
         var size = base.MeasureOverride(availableSize);
+        if (_measuringBuild)
+        {
+            _buildClock.Stop();
+            _measuringBuild = false;
+            _lastBuildCost = _buildClock.Elapsed;
+        }
         if (!IsCentered || Child is not Panel panel) return size;
 
         // A list reads as a list, so any bullet point keeps everything left-aligned too.
@@ -117,7 +134,11 @@ public class MathText : Decorator
     {
         _previewTimer?.Stop();
         _builtWithLatexFont = MetaDataManager.Data.UseLatexFontForCards;
+
+        _buildClock.Restart();
         Child = BuildView(LatexUtility.Parse(Text));
+        _buildClock.Stop();
+        _measuringBuild = true;
     }
 
     /// <summary> One file per face: given the whole folder, Avalonia picks the first file (bold) for every weight. </summary>

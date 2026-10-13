@@ -26,7 +26,7 @@ Being offline no longer asks you to sign in again when you're already signed in.
 Anki import: nested cloze deletions, lists with paragraphs inside, superscripts and subscripts containing maths, literal braces and backslashes, and cards in filtered decks now come across correctly.
 Anki import is much faster on fields with broken HTML.
 Typed cloze answers with several blanks accept commas or spaces between them, ignore formatting, and empty blanks no longer count as blanks.
-The editor preview waits for a short pause in typing, so long cards with lots of maths stay smooth to type in.
+The editor preview updates as you type, and only waits for a short pause in typing on cards with enough maths to make it slow, so long cards stay smooth to type in.
 Rename boxes are limited to 100 characters, and their OK button is disabled while the name is blank.
 Fixed a crash opening the Cloud Manager or Community sets when signing in took a while, for example just after reconnecting.
 Online actions show a spinner while they run, and the Community, Cloud Manager and Sign In buttons can no longer be clicked again while ReviFlash Online is checking your sign-in.
