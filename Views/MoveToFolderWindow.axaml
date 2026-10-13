@@ -19,7 +19,7 @@
             MaxLines="2" />
 
         <TextBox Grid.Row="1" Classes="input"
-            Text="{Binding SearchText, Mode=TwoWay}"
+            Text="{Binding SearchText, Mode=TwoWay, Delay=120}"
             Watermark="Search folders..."
             Margin="0,16,0,12"
             Padding="10,7" />

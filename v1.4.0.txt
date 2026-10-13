@@ -30,3 +30,11 @@ The editor preview waits for a short pause in typing, so long cards with lots of
 Rename boxes are limited to 100 characters, and their OK button is disabled while the name is blank.
 Fixed a crash opening the Cloud Manager or Community sets when signing in took a while, for example just after reconnecting.
 Online actions show a spinner while they run, and the Community, Cloud Manager and Sign In buttons can no longer be clicked again while ReviFlash Online is checking your sign-in.
+Search waits for a short pause in typing, so typing a word no longer redraws the library on every letter.
+Fixed long names on library cards being cut off at a word with no "…".
+F or Ctrl+F jumps to search, and the arrow keys move between library cards; Tab no longer moves around the main window.
+E, M, S and Delete edit, move, show stats for or delete the highlighted card, and Ctrl+N creates a set, note, folder or group.
+Esc always backs out a step: it closes Settings, Help, Login, the card editor and the cloud windows, leaves a note, clears the search, leaves a folder, and on the main menu asks before quitting.
+F1 shows every keyboard shortcut, and on the main menu F2 opens Settings and F3 opens the graph view.
+The graph view shows a spinner while its charts load.
+In a note, Tab shows or hides the contents and Ctrl+Enter makes a card, and the Contents button is no longer coloured when the contents are showing.

@@ -63,16 +63,15 @@
                 VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis"
                 Foreground="{DynamicResource TextSecondary}" />
 
-            <ToggleButton Grid.Column="3" IsChecked="{Binding ShowContents, Mode=TwoWay}" Focusable="False"
-                Classes="dashboardToggle" Height="36" VerticalAlignment="Center"
-                Padding="14,0" VerticalContentAlignment="Center"
-                ToolTip.Tip="Show or hide the contents, made from the note's headings">
+            <Button Grid.Column="3" Classes="secondary" Click="ToggleContents_Click" Focusable="False"
+                Padding="14,0" Height="36" FontSize="14" VerticalContentAlignment="Center"
+                ToolTip.Tip="Show or hide the contents, made from the note's headings (Tab)">
                 <TextBlock Text="Contents" />
-            </ToggleButton>
+            </Button>
 
             <Button Grid.Column="4" Classes="primary" Click="MakeCard_Click" Focusable="False"
                 Padding="14,0" Height="36" FontSize="14" VerticalContentAlignment="Center"
-                ToolTip.Tip="Make a flashcard from the selected text (or the paragraph you're editing)">
+                ToolTip.Tip="Make a flashcard from the selected text (or the paragraph you're editing) (Ctrl+Enter)">
                 <TextBlock Text="Make Card" />
             </Button>
         </Grid>

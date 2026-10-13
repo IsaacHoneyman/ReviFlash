@@ -28,6 +28,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             DisableAvaloniaDataAnnotationValidation();
+            Shortcuts.FocusWindowsOnActivate();
             desktop.MainWindow = new MainWindow { DataContext = new DashboardViewModel() };
         }
 

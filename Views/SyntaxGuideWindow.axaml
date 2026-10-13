@@ -34,6 +34,31 @@
         </Style>
     </Window.Styles>
 
+    <Window.DataTemplates>
+        <DataTemplate x:DataType="views:ShortcutRow">
+            <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="0,8">
+                <Grid ColumnDefinitions="220, *" ColumnSpacing="16">
+                    <ItemsControl Grid.Column="0" ItemsSource="{Binding Keys}" VerticalAlignment="Center">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemSpacing="6" LineSpacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Border Classes="key">
+                                    <TextBlock Text="{Binding}" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Grid.Column="1" Text="{Binding Action}" TextWrapping="Wrap"
+                        VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.DataTemplates>
+
     <TabControl x:Name="Tabs" Margin="16,8,16,0">
     <TabItem Header="Formatting">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
@@ -108,29 +133,16 @@
                                 <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                     TextWrapping="Wrap" />
 
-                                <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl ItemsSource="{Binding Rows}" />
+
+                                <ItemsControl ItemsSource="{Binding Subsections}" IsVisible="{Binding Subsections, Converter={x:Static ObjectConverters.IsNotNull}}">
                                     <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="views:ShortcutRow">
-                                            <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="0,8">
-                                                <Grid ColumnDefinitions="220, *" ColumnSpacing="16">
-                                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding Keys}" VerticalAlignment="Center">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <WrapPanel ItemSpacing="6" LineSpacing="4" />
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate x:DataType="x:String">
-                                                                <Border Classes="key">
-                                                                    <TextBlock Text="{Binding}" />
-                                                                </Border>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Action}" TextWrapping="Wrap"
-                                                        VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
-                                                </Grid>
-                                            </Border>
+                                        <DataTemplate x:DataType="views:ShortcutSection">
+                                            <StackPanel Spacing="10" Margin="0,12,0,0">
+                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}" />
+                                                <ItemsControl ItemsSource="{Binding Rows}" />
+                                            </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
+using ReviFlash.Views.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ReviFlash.Data.Backup.Local;
@@ -17,6 +17,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        Shortcuts.CloseOnEscape(this);
         Closed += (_, _) => (DataContext as SettingsViewModel)?.Detach();
     }
 
@@ -179,7 +180,7 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary> Disables <paramref name="button"/> and shows <paramref name="spinner"/> while <paramref name="work"/> runs. </summary>
-    private static async Task<T> RunBusyAsync<T>(object? button, Arc spinner, Func<Task<T>> work)
+    private static async Task<T> RunBusyAsync<T>(object? button, BusySpinner spinner, Func<Task<T>> work)
     {
         if (button is Button b) b.IsEnabled = false;
         spinner.IsVisible = true;
@@ -192,7 +193,7 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private static Task RunBusyAsync(object? button, Arc spinner, Func<Task> work) =>
+    private static Task RunBusyAsync(object? button, BusySpinner spinner, Func<Task> work) =>
         RunBusyAsync(button, spinner, async () => { await work(); return true; });
 
     private async void SignOut_Click(object? sender, RoutedEventArgs e)

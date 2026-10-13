@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
     xmlns:vm="using:ReviFlash.ViewModels"
     x:Class="ReviFlash.Views.SettingsWindow"
     x:DataType="vm:SettingsViewModel"
@@ -132,7 +133,7 @@
                     <Button Classes="wide secondary" Content="Check for Updates Now" Click="CheckForUpdates_Click" />
 
                     <DockPanel>
-                        <Arc x:Name="UpdateSpinner" DockPanel.Dock="Left" Classes="spinner" IsVisible="False" Margin="0,0,8,0" />
+                        <controls:BusySpinner x:Name="UpdateSpinner" DockPanel.Dock="Left" IsVisible="False" Margin="0,0,8,0" />
                         <TextBlock x:Name="UpdateStatusText" Classes="note" IsVisible="False" />
                     </DockPanel>
                 </StackPanel>
@@ -159,7 +160,7 @@
                         IsVisible="{Binding !IsSignedIn}" TextWrapping="Wrap" />
 
                     <DockPanel>
-                        <Arc x:Name="AccountSpinner" DockPanel.Dock="Left" Classes="spinner" IsVisible="False" Margin="0,0,8,0" />
+                        <controls:BusySpinner x:Name="AccountSpinner" DockPanel.Dock="Left" IsVisible="False" Margin="0,0,8,0" />
                         <TextBlock x:Name="AccountStatusText" Classes="note" IsVisible="False" />
                     </DockPanel>
                 </StackPanel>

@@ -64,6 +64,26 @@ public static partial class TextUtility
     public static string Plural(int count, string noun, string? plural = null) =>
         count == 1 ? $"1 {noun}" : $"{count} {plural ?? noun + "s"}";
 
+    public const string Ellipsis = "…";
+
+    /// <summary> <paramref name="text"/> if it <paramref name="fits"/>, otherwise its longest start that fits with an ellipsis on the end. </summary>
+    public static string TrimToFit(string text, Func<string, bool> fits)
+    {
+        if (fits(text)) return text;
+
+        int low = 0, high = text.Length - 1;
+        while (low < high)
+        {
+            int mid = (low + high + 1) / 2;
+            if (fits(WithEllipsis(text, mid))) low = mid;
+            else high = mid - 1;
+        }
+
+        return WithEllipsis(text, low);
+    }
+
+    private static string WithEllipsis(string text, int length) => text[..length].TrimEnd() + Ellipsis;
+
     /// <summary> A local time as "just now", "5 min ago", "today at 14:05", "yesterday", "3 Oct" or "3 Oct 2025". </summary>
     public static string FormatWhen(DateTime local)
     {

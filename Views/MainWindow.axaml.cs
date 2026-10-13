@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Loaded += MainWindow_Loaded;
+        AddHandler(KeyDownEvent, Blocking_KeyDown, RoutingStrategies.Tunnel);
 
         _swirlTimer.Tick += (_, _) => StepSwirl();
         MetaDataManager.Data.PropertyChanged += Metadata_PropertyChanged;
@@ -116,9 +118,21 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary> Keys never reach the page behind an open dialog, and Tab doesn't move around the main window (a note uses it for its contents). </summary>
+    private void Blocking_KeyDown(object? sender, KeyEventArgs e)
+    {
+        bool tabMovesFocus = e.Key == Key.Tab && (DataContext as DashboardViewModel)?.CurrentPage is not NoteViewModel;
+        if (tabMovesFocus || OwnedWindows.Any(window => window is not SyntaxGuideWindow)) e.Handled = true;
+    }
+
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.F11)
+        if (e.Key == Key.F1)
+        {
+            SyntaxGuideWindow.ShowFor(this, HelpTab.KeyboardShortcuts);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F11)
         {
             if (WindowState == WindowState.FullScreen)
             {

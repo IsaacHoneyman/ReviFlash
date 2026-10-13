@@ -293,7 +293,7 @@
                 <Button Classes="secondary" Click="SignIn_Click" IsVisible="{Binding !IsSignedIn}" IsEnabled="{Binding !IsCheckingSignIn}"
                     Padding="10,4" FontSize="12" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Arc Classes="spinner" IsVisible="{Binding IsCheckingSignInForSignIn}" Width="12" Height="12" StrokeThickness="2" />
+                        <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForSignIn}" Width="12" Height="12" StrokeThickness="2" />
                         <TextBlock Text="Sign In" />
                     </StackPanel>
                 </Button>
@@ -345,8 +345,8 @@
                         </Style>
                     </Grid.Styles>
 
-                    <TextBox Grid.Column="0"
-                        Text="{Binding SearchText, Mode=TwoWay}"
+                    <TextBox Grid.Column="0" x:Name="SearchBox"
+                        Text="{Binding SearchText, Mode=TwoWay, Delay=120}"
                         Watermark="{Binding SearchWatermark}"
                         Classes="input" VerticalContentAlignment="Center"
                         Padding="10, 0" Margin="0, 0, 12, 0" />
@@ -358,9 +358,9 @@
                         CornerRadius="8" Margin="0,0,12,0"
                         Background="{DynamicResource CardBackground}" />
 
-                    <Button Grid.Column="2" Classes="secondary"
+                    <Button Grid.Column="2" x:Name="NewButton" Classes="secondary"
                         Padding="14, 0" FontSize="14" FontWeight="Bold"
-                        ToolTip.Tip="Create a set, note, folder or group here">
+                        ToolTip.Tip="Create a set, note, folder or group here (Ctrl+N)">
                         <TextBlock Text="+ New" VerticalAlignment="Center" />
                         <Button.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedRight">
@@ -383,7 +383,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                         Margin="0,0,-16,0"
                         Padding="0,0,16,0">
-                        <ItemsControl ItemsSource="{Binding DashboardItems}">
+                        <ItemsControl x:Name="LibraryItems" ItemsSource="{Binding DashboardItems}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel HorizontalAlignment="Left" />
@@ -461,7 +461,7 @@
                                 ToolTip.Tip="Import: download community decks">
                                 <Panel>
                                     <Path Classes="icon" Data="{StaticResource IconDownload}" IsVisible="{Binding !IsCheckingSignInForImport}" />
-                                    <Arc Classes="spinner" IsVisible="{Binding IsCheckingSignInForImport}" HorizontalAlignment="Center" />
+                                    <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForImport}" HorizontalAlignment="Center" />
                                 </Panel>
                             </Button>
 
@@ -471,7 +471,7 @@
                                 ToolTip.Tip="Export: upload and manage your decks">
                                 <Panel>
                                     <Path Classes="icon" Data="{StaticResource IconUpload}" IsVisible="{Binding !IsCheckingSignInForExport}" />
-                                    <Arc Classes="spinner" IsVisible="{Binding IsCheckingSignInForExport}" HorizontalAlignment="Center" />
+                                    <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForExport}" HorizontalAlignment="Center" />
                                 </Panel>
                             </Button>
                         </StackPanel>
@@ -793,5 +793,13 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
+
+        <Border x:Name="GraphLoading" Classes="card" IsVisible="False" Padding="32,24"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Spacing="12">
+                <controls:BusySpinner Classes="large" HorizontalAlignment="Center" />
+                <TextBlock Classes="caption" Text="Loading graphs..." HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

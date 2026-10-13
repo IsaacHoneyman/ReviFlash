@@ -28,6 +28,7 @@ public partial class DeckEditorWindow : Window
     public DeckEditorWindow()
     {
         InitializeComponent();
+        Shortcuts.CloseOnEscape(this);
         Opened += DeckEditorWindow_Opened;
         Closing += DeckEditorWindow_Closing;
         Closed += DeckEditorWindow_Closed;

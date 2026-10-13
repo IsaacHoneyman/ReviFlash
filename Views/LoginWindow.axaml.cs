@@ -9,6 +9,7 @@ public partial class LoginWindow : Window
     public LoginWindow()
     {
         InitializeComponent();
+        Shortcuts.CloseOnEscape(this);
 
         var vm = new LoginViewModel();
         vm.SignedIn += () => Close(true);

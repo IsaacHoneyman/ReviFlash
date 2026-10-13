@@ -1,4 +1,5 @@
 using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -28,6 +29,192 @@ public partial class DashboardView : UserControl
     }
 
     private Window OwnerWindow => (Window)TopLevel.GetTopLevel(this)!;
+
+    private TopLevel? _topLevel;
+    private bool _confirmingQuit;
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        // On the window, so the library keys work wherever the focus is; controls that use a key themselves get it first.
+        _topLevel = TopLevel.GetTopLevel(this);
+        _topLevel?.AddHandler(KeyDownEvent, Library_KeyDown, RoutingStrategies.Bubble);
+        _topLevel?.AddHandler(KeyDownEvent, Arrow_KeyDown, RoutingStrategies.Tunnel);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        _topLevel?.RemoveHandler(KeyDownEvent, Library_KeyDown);
+        _topLevel?.RemoveHandler(KeyDownEvent, Arrow_KeyDown);
+        _topLevel = null;
+    }
+
+    // --- Keys ---
+
+    /// <summary> Arrows from no focus or a card move between cards, ahead of Avalonia's own arrow navigation to the nearest button. </summary>
+    private void Arrow_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyModifiers != KeyModifiers.None || MoveFor(e.Key) is not { } move) return;
+        if (DataContext is not DashboardViewModel { IsGraphView: false } || !IsEffectivelyVisible) return;
+
+        var focused = _topLevel?.FocusManager?.GetFocusedElement();
+        if (focused is not null && FocusedCardIndex(focused) < 0) return;
+
+        MoveCardFocus(move);
+        e.Handled = true;
+    }
+
+    /// <summary> F2 settings, F3 opens the graph view, F or Ctrl+F search, Ctrl+N new, E/Delete/M/S act on the focused card, Esc backs out a step. </summary>
+    private void Library_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || DataContext is not DashboardViewModel vm || !IsEffectivelyVisible) return;
+
+        var hotkeys = _topLevel?.PlatformSettings?.HotkeyConfiguration;
+        var focused = _topLevel?.FocusManager?.GetFocusedElement();
+
+        if (Shortcuts.IsCommand(e, Key.F, hotkeys) || (Shortcuts.IsPlain(e, Key.F) && focused is not TextBox))
+        {
+            FocusSearch();
+        }
+        else if (Shortcuts.IsPlain(e, Key.F2))
+        {
+            SettingsButton_Click(this, new RoutedEventArgs());
+        }
+        else if (Shortcuts.IsPlain(e, Key.F3))
+        {
+            if (!vm.IsGraphView) OpenGraphView(vm);
+        }
+        else if (Shortcuts.IsCommand(e, Key.N, hotkeys))
+        {
+            NewButton.Flyout?.ShowAt(NewButton);
+        }
+        else if (Shortcuts.IsPlain(e, Key.Escape))
+        {
+            if (focused == SearchBox && vm.IsSearching) vm.SearchText = "";
+            else if (focused == SearchBox) FocusCard(0);
+            else if (!vm.BackOut()) ConfirmQuit();
+        }
+        else if (focused == SearchBox && Shortcuts.IsPlain(e, Key.Down))
+        {
+            FocusCard(0);
+        }
+        else if (focused is TextBox || vm.IsGraphView || e.KeyModifiers != KeyModifiers.None)
+        {
+            return;
+        }
+        else if (FocusedCardIndex(focused) is var index and >= 0 && LibraryItems.ContainerFromIndex(index) is { } container)
+        {
+            if (!RunCardShortcut(CardIn(container), e.Key)) return;
+        }
+        else
+        {
+            return;
+        }
+
+        e.Handled = true;
+    }
+
+    private static GridMove? MoveFor(Key key) => key switch
+    {
+        Key.Left => GridMove.Left,
+        Key.Right => GridMove.Right,
+        Key.Up => GridMove.Up,
+        Key.Down => GridMove.Down,
+        Key.Home => GridMove.First,
+        Key.End => GridMove.Last,
+        _ => null,
+    };
+
+    private void FocusSearch()
+    {
+        SearchBox.Focus(NavigationMethod.Tab);
+        SearchBox.SelectAll();
+    }
+
+    private void MoveCardFocus(GridMove move)
+    {
+        int target = GridNavigation.Move(FocusedCardIndex(_topLevel?.FocusManager?.GetFocusedElement()), LibraryItems.ItemCount, CardColumns(), move);
+
+        if (target < 0) FocusSearch();
+        else FocusCard(target);
+    }
+
+    private void FocusCard(int index)
+    {
+        if (LibraryItems.ContainerFromIndex(index) is not { } container || CardIn(container) is not { } card) return;
+
+        card.Focus(NavigationMethod.Directional);
+        card.BringIntoView();
+    }
+
+    private static LibraryCard? CardIn(Control container) =>
+        container as LibraryCard ?? container.GetVisualDescendants().OfType<LibraryCard>().FirstOrDefault();
+
+    /// <summary> The library position of the card holding <paramref name="focused"/>, or -1. </summary>
+    private int FocusedCardIndex(IInputElement? focused)
+    {
+        for (var control = focused as Visual; control is not null; control = control.GetVisualParent())
+        {
+            if (control is Control c && LibraryItems.IndexFromContainer(c) is var index and >= 0) return index;
+        }
+
+        return -1;
+    }
+
+    /// <summary> Cards on the first row: every row holds the same number. </summary>
+    private int CardColumns()
+    {
+        if (LibraryItems.ContainerFromIndex(0) is not { } first) return 1;
+
+        int columns = 1;
+        while (LibraryItems.ContainerFromIndex(columns) is { } next && Math.Abs(next.Bounds.Top - first.Bounds.Top) < 1) columns++;
+        return columns;
+    }
+
+    /// <summary> E edits or renames, Delete deletes, M moves and S shows stats for the card's item; false when the key does nothing for it. </summary>
+    private bool RunCardShortcut(LibraryCard? card, Key key)
+    {
+        if (card is null) return false;
+        var args = new RoutedEventArgs();
+
+        switch (card.DataContext, key)
+        {
+            case (_, Key.M): MoveItem_Click(card, args); break;
+
+            case (Folder, Key.E): RenameFolder_Click(card, args); break;
+            case (Folder, Key.Delete): DeleteFolder_Click(card, args); break;
+
+            case (FlashCardDeck, Key.E): EditDeck_Click(card, args); break;
+            case (FlashCardDeck, Key.Delete): DeleteDeck_Click(card, args); break;
+            case (FlashCardDeck, Key.S): DeckStats_Click(card, args); break;
+
+            case (StudyGroup, Key.E): EditGroup_Click(card, args); break;
+            case (StudyGroup, Key.Delete): DeleteGroup_Click(card, args); break;
+            case (StudyGroup, Key.S): GroupStats_Click(card, args); break;
+
+            case (Note, Key.E): RenameNote_Click(card, args); break;
+            case (Note, Key.Delete): DeleteNote_Click(card, args); break;
+            case (Note, Key.S): NoteStats_Click(card, args); break;
+
+            default: return false;
+        }
+
+        return true;
+    }
+
+    private async void ConfirmQuit()
+    {
+        if (_confirmingQuit) return;
+
+        _confirmingQuit = true;
+        try
+        {
+            var owner = OwnerWindow;
+            if (await new ConfirmDialogWindow("Quit ReviFlash?").ShowDialog<bool>(owner)) owner.Close();
+        }
+        finally { _confirmingQuit = false; }
+    }
 
     /// <summary> The library item a card or card button belongs to. </summary>
     private static T ItemOf<T>(object sender) where T : class =>
@@ -301,10 +488,29 @@ public partial class DashboardView : UserControl
 
     public void GraphStats_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is DashboardViewModel vm)
-        {
-            vm.EnterGraphView();
-        }
+        if (DataContext is DashboardViewModel vm) OpenGraphView(vm);
+    }
+
+    /// <summary> The graphs take a moment to build, so a spinner is drawn first and stays up until they're on screen. </summary>
+    private async void OpenGraphView(DashboardViewModel vm)
+    {
+        if (GraphLoading.IsVisible) return;
+
+        GraphLoading.IsVisible = true;
+        await NextFrameAsync();
+
+        vm.EnterGraphView();
+        await NextFrameAsync();
+
+        GraphLoading.IsVisible = false;
+    }
+
+    private Task NextFrameAsync()
+    {
+        var frame = new TaskCompletionSource();
+        if (_topLevel is null) frame.SetResult();
+        else _topLevel.RequestAnimationFrame(_ => frame.TrySetResult());
+        return frame.Task;
     }
 
     public void ExitGraphView_Click(object sender, RoutedEventArgs e)

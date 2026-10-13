@@ -156,6 +156,11 @@ public partial class NoteView : UserControl
 
     // --- Contents ---
 
+    private void ToggleContents_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.ShowContents = !vm.ShowContents;
+    }
+
     private void ContentsEntry_Click(object? sender, RoutedEventArgs e)
     {
         if ((sender as Control)?.DataContext is not ContentsEntry entry || ViewModel is not { } vm) return;
@@ -172,17 +177,34 @@ public partial class NoteView : UserControl
 
     // --- Keys ---
 
-    /// <summary> While editing: Esc finishes, Up/Down on the first/last line move between paragraphs, Backspace at the start joins, shortcuts format. </summary>
+    /// <summary> Tab shows or hides the contents, Ctrl+Enter makes a card, and Esc leaves the note when nothing is being typed. While editing: Esc finishes, Up/Down on the first/last line move between paragraphs, Backspace at the start joins, shortcuts format. </summary>
     private void Note_KeyDown(object? sender, KeyEventArgs e)
     {
         if (ViewModel is not { } vm || !IsEffectivelyVisible) return;
-        if (_topLevel?.FocusManager?.GetFocusedElement() is not TextBox box || !box.Classes.Contains("blockEditor")) return;
 
-        if (e.Key == Key.Tab)
+        var focused = _topLevel?.FocusManager?.GetFocusedElement();
+        if (focused is not TextBox && Shortcuts.IsPlain(e, Key.Escape))
         {
+            vm.Close();
             e.Handled = true;
             return;
         }
+
+        if (Shortcuts.IsPlain(e, Key.Tab))
+        {
+            vm.ShowContents = !vm.ShowContents;
+            e.Handled = true;
+            return;
+        }
+
+        if (Shortcuts.IsCommand(e, Key.Enter, _topLevel?.PlatformSettings?.HotkeyConfiguration))
+        {
+            MakeCard_Click(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
+        if (focused is not TextBox box || !box.Classes.Contains("blockEditor")) return;
 
         if (e.Key == Key.Escape)
         {
@@ -226,7 +248,7 @@ public partial class NoteView : UserControl
             return;
         }
 
-        TextFormatting.TryHandleShortcut(box, e, _topLevel.PlatformSettings?.HotkeyConfiguration, allowCloze: false);
+        TextFormatting.TryHandleShortcut(box, e, _topLevel?.PlatformSettings?.HotkeyConfiguration, allowCloze: false);
     }
 
     /// <summary> The wrapped line the cursor is on, and how many lines the editor shows. </summary>

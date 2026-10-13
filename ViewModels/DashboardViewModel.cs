@@ -707,6 +707,19 @@ public partial class DashboardViewModel : FolderBrowserBase
         BeginSelectionMode(DeckSelectionMode.Review);
     }
 
+    /// <summary> Esc on the main menu: undoes one step (picking sets, the graph, item stats, the search, then the open folder); false when there was nothing to undo. </summary>
+    public bool BackOut()
+    {
+        if (IsSelectionModeActive) CancelSelectionMode();
+        else if (IsGraphView) ExitGraphView();
+        else if (IsViewingStats) ShowOverallStats();
+        else if (IsSearching) SearchText = "";
+        else if (IsInFolder) NavigateUp();
+        else return false;
+
+        return true;
+    }
+
     public void CancelSelectionMode()
     {
         SelectionMode = DeckSelectionMode.None;

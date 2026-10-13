@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
         xmlns:vm="using:ReviFlash.ViewModels"
         xmlns:models="using:ReviFlash.Models"
         xmlns:onlineData="using:ReviFlash.Data.Online"
@@ -55,7 +56,7 @@
         <Border Grid.Row="1" Classes="card" CornerRadius="16" Padding="16">
           <Panel>
             <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsSearching}">
-                <Arc Classes="spinner large" IsVisible="{Binding IsSearching}" HorizontalAlignment="Center" />
+                <controls:BusySpinner Classes="large" IsVisible="{Binding IsSearching}" HorizontalAlignment="Center" />
                 <TextBlock Classes="caption" Text="Searching..." HorizontalAlignment="Center" />
             </StackPanel>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -101,14 +102,14 @@
             </StackPanel>
             <DockPanel Grid.Column="1" HorizontalAlignment="Right" Margin="16,0,0,0">
                 <!-- A search already shows its spinner over the results. -->
-                <Arc DockPanel.Dock="Left" Classes="spinner" Margin="0,0,8,0">
-                    <Arc.IsVisible>
+                <controls:BusySpinner DockPanel.Dock="Left" Margin="0,0,8,0">
+                    <controls:BusySpinner.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
                             <Binding Path="IsWorking" />
                             <Binding Path="!IsSearching" />
                         </MultiBinding>
-                    </Arc.IsVisible>
-                </Arc>
+                    </controls:BusySpinner.IsVisible>
+                </controls:BusySpinner>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>

@@ -21,7 +21,7 @@
                 <TextBlock Text="{Binding TimeFormatted, StringFormat='Time: {0}'}" HorizontalAlignment="Center"
                     FontSize="18" FontWeight="SemiBold"
                     Foreground="{DynamicResource TextSecondary}" />
-                <Button Classes="action primary" Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True"
+                <Button Classes="action primary" Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True" IsCancel="True"
                     Margin="0,20,0,0" ToolTip.Tip="Back to your decks (Enter)" />
             </StackPanel>
         </Border>

@@ -43,7 +43,7 @@
                                     <Path Grid.Column="0" Classes="icon medium" Margin="0,0,10,0"
                                         Data="{TemplateBinding Icon}"
                                         IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                    <TextBlock Grid.Column="1" Text="{TemplateBinding Title}"
+                                    <controls:ClampedTextBlock Grid.Column="1" Text="{TemplateBinding Title}"
                                         FontSize="22" FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimary}"
                                         TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2"

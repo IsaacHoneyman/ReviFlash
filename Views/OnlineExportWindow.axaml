@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
         xmlns:vm="using:ReviFlash.ViewModels"
         xmlns:models="using:ReviFlash.Models"
         xmlns:onlineData="using:ReviFlash.Data.Online"
@@ -43,7 +44,7 @@
 
                     <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="10">
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0" Classes="input" Text="{Binding CloudSearchText, Mode=TwoWay}" Watermark="Search your cloud decks..."
+                            <TextBox Grid.Column="0" Classes="input" Text="{Binding CloudSearchText, Mode=TwoWay, Delay=120}" Watermark="Search your cloud decks..."
                                      Height="36" VerticalContentAlignment="Center"
                                      Padding="10,0" Background="{DynamicResource AppBackground}" />
                             <ComboBox Grid.Column="1" ItemsSource="{Binding CloudSortOptions}" SelectedItem="{Binding SelectedCloudSortOption}"
@@ -52,7 +53,7 @@
 
                         <StackPanel Grid.Row="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center"
                                     IsVisible="{Binding IsLoadingCloudDecks}">
-                            <Arc Classes="spinner large" IsVisible="{Binding IsLoadingCloudDecks}" HorizontalAlignment="Center" />
+                            <controls:BusySpinner Classes="large" IsVisible="{Binding IsLoadingCloudDecks}" HorizontalAlignment="Center" />
                             <TextBlock Classes="caption" Text="Loading your cloud sets..." HorizontalAlignment="Center" />
                         </StackPanel>
 
@@ -116,7 +117,7 @@
                       Foreground="{DynamicResource TextSecondary}" FontSize="13"
                       ToolTip.Tip="Private decks don't appear in community search. Use them to move decks between your own devices." />
             <DockPanel Grid.Column="2" HorizontalAlignment="Right" Margin="16,0,0,0">
-                <Arc DockPanel.Dock="Left" Classes="spinner" IsVisible="{Binding IsWorking}" Margin="0,0,8,0" />
+                <controls:BusySpinner DockPanel.Dock="Left" IsVisible="{Binding IsWorking}" Margin="0,0,8,0" />
                 <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>

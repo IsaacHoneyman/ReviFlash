@@ -11,7 +11,7 @@ public sealed record GuideSection(string Title, string? Note, IReadOnlyList<Guid
 /// <summary> A shortcut: any one of <paramref name="Keys"/> does <paramref name="Action"/>. </summary>
 public sealed record ShortcutRow(IReadOnlyList<string> Keys, string Action);
 
-public sealed record ShortcutSection(string Title, string? Note, IReadOnlyList<ShortcutRow> Rows);
+public sealed record ShortcutSection(string Title, string? Note, IReadOnlyList<ShortcutRow> Rows, IReadOnlyList<ShortcutSection>? Subsections = null);
 
 public enum HelpTab { Formatting, KeyboardShortcuts }
 
@@ -79,13 +79,26 @@ public partial class SyntaxGuideWindow : Window
         new("Anywhere", null,
         [
             new(["F11"], "Switch between fullscreen and a window"),
+            new(["F1"], "Show this list of shortcuts"),
+            new(["Esc"], "Go back a step: close the window, stop editing, or leave the page"),
+            new(["Enter"], "Proceed in a dialog, or Finish on the Session Complete screen"),
         ]),
-        new("Main menu", null,
+        new("Main menu", "Card keys act on the card with the highlight; use the arrows to move it.",
         [
-            new(["Tab"], "Move between folders, sets and groups"),
-            new(["Enter", "Space"], "Open the selected folder, or start reviewing the selected set or group"),
+            new(["F", "Ctrl+F"], "Search"),
+            new(["←", "↑", "→", "↓"], "Move between cards"),
+            new(["Home", "End"], "Go to the first or last card"),
+            new(["Enter", "Space"], "Open a folder or note, or start reviewing a set or group"),
+            new(["E"], "Edit a set or group, or rename a folder or note"),
+            new(["M"], "Move the card to another folder"),
+            new(["S"], "Show the card's stats"),
+            new(["Delete"], "Delete the card (asks first)"),
+            new(["Ctrl+N"], "Create a set, note, folder or group"),
+            new(["F2"], "Open Settings"),
+            new(["F3"], "Open the graph view"),
+            new(["Esc"], "Clear the search, close stats or the graph, stop picking sets, then leave the folder; on the main menu, quit"),
         ]),
-        new("Card editor", "In a card field. Using a formatting shortcut again on text that already has it removes it.",
+        new("Formatting", "In card fields and note paragraphs. Using a formatting shortcut again on text that already has it removes it.",
         [
             new(["Ctrl+B"], "Bold"),
             new(["Ctrl+I"], "Italic"),
@@ -99,19 +112,15 @@ public partial class SyntaxGuideWindow : Window
             new(["Ctrl+Shift+M"], "Maths on its own line"),
             new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),
         ]),
-        new("Notes", "Click a paragraph to edit it. The formatting shortcuts above work in it too.",
+        new("Notes", "Click a paragraph to edit it.",
         [
-            new(["Esc"], "Finish editing the paragraph"),
+            new(["Esc"], "Finish editing the paragraph, or go back to the library when not editing"),
+            new(["Tab"], "Show or hide the contents"),
+            new(["Ctrl+Enter"], "Make a card from the selected text or the paragraph being edited, then again to add it"),
             new(["↑"], "On its first line: edit the paragraph before"),
             new(["↓"], "On its last line: edit the paragraph after"),
             new(["Enter ×2"], "A blank line starts a new paragraph"),
             new(["Backspace"], "At its start: join it onto the paragraph before"),
-        ]),
-        new("Make Card", null,
-        [
-            new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),
-            new(["Ctrl+Enter"], "Add the card"),
-            new(["Esc"], "Cancel"),
         ]),
         new("Reviews", "A hint under each card shows the keys that work right now. While typing an answer, only Enter and Esc work.",
         [
@@ -124,24 +133,22 @@ public partial class SyntaxGuideWindow : Window
             new(["R"], "Retry the card later"),
             new(["S"], "Skip the card"),
             new(["Esc"], "Quit the review"),
-        ]),
-        new("Match cards", null,
+        ],
         [
-            new(["1–9"], "Give the selected item that answer"),
-            new(["↑", "↓", "←", "→"], "Move between items"),
-            new(["Backspace", "Delete"], "Undo the last answer given"),
-            new(["Enter"], "Check the answers"),
-        ]),
-        new("Dialogs", null,
-        [
-            new(["Enter"], "Proceed, or Finish on the Session Complete screen"),
-            new(["Esc"], "Cancel"),
+            new("Match cards", null,
+            [
+                new(["1–9"], "Give the selected item that answer"),
+                new(["↑", "↓", "←", "→"], "Move between items"),
+                new(["Backspace", "Delete"], "Undo the last answer given"),
+                new(["Enter"], "Check the answers"),
+            ]),
         ]),
     ];
 
     public SyntaxGuideWindow()
     {
         InitializeComponent();
+        Shortcuts.CloseOnEscape(this);
         DataContext = this;
     }
 

@@ -17,5 +17,12 @@ public partial class OnlineExportWindow : Window
             ConfirmAsync = message => new ConfirmDialogWindow(message).ShowDialog<bool>(this),
         };
         DataContext = vm;
+
+        Shortcuts.CloseOnEscape(this, () =>
+        {
+            if (!vm.IsSelectingUpdateDeck) return false;
+            vm.IsSelectingUpdateDeck = false;
+            return true;
+        });
     }
 }

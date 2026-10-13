@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
     xmlns:vm="using:ReviFlash.ViewModels"
     x:Class="ReviFlash.Views.LoginWindow"
     x:DataType="vm:LoginViewModel"
@@ -126,7 +127,7 @@
         <Button Classes="wide primary" Command="{Binding SubmitCommand}" IsDefault="True"
             Padding="12" FontSize="15">
             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                <Arc Classes="spinner" IsVisible="{Binding IsBusy}" Stroke="{Binding $parent[Button].Foreground}" />
+                <controls:BusySpinner IsVisible="{Binding IsBusy}" Stroke="{Binding $parent[Button].Foreground}" />
                 <TextBlock Text="{Binding PrimaryActionText}" />
             </StackPanel>
         </Button>
