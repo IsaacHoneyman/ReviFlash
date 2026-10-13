@@ -40,8 +40,14 @@ public partial class MakeCardViewModel : ViewModelBase
 
     public DeckFolderBrowser DeckBrowser { get; }
 
+    /// <summary> Time spent making the card, saved as editing time for the set it's added to; dropped if no card is added. </summary>
+    public ActiveTimeCounter EditingTime { get; }
+    private ulong? _addedToDeckID;
+
     public MakeCardViewModel(string selection, string? heading)
     {
+        EditingTime = new ActiveTimeCounter(seconds => _addedToDeckID is ulong deckID && DeckEditorViewModel.SaveEditingTime(deckID, seconds));
+
         _selectedCardType = _lastCardType;
         _front = heading ?? "";
         _back = selection;
@@ -85,6 +91,7 @@ public partial class MakeCardViewModel : ViewModelBase
         }
 
         FlashCardRepository.SaveNewCard(card, deck.ID);
+        _addedToDeckID = deck.ID;
         _lastCardType = SelectedCardType;
         _lastDeckID = deck.ID;
         return deck.Name;

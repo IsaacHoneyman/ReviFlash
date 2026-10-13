@@ -19,6 +19,7 @@ public partial class DeckEditorWindow : Window
     private bool _closeConfirmed;
     private bool _closePromptOpen;
     private DeckEditorViewModel? _observedViewModel;
+    private ActiveTimeTracking? _editingTracking;
 
     /// <summary> The card field the formatting toolbar and shortcuts act on: the one last clicked into. </summary>
     private TextBox? _activeField;
@@ -41,6 +42,12 @@ public partial class DeckEditorWindow : Window
 
     private void DeckEditorWindow_Opened(object? sender, EventArgs e)
     {
+        if (ViewModel is { } editing && _editingTracking is null)
+        {
+            editing.EditingTime.Start();
+            _editingTracking = ActiveTimeTracking.Attach(this, editing.EditingTime);
+        }
+
         if (ViewModel is not { } vm || _cardLoadScheduled) return;
 
         vm.PrepareForCardLoad();
@@ -93,6 +100,8 @@ public partial class DeckEditorWindow : Window
     private void DeckEditorWindow_Closed(object? sender, EventArgs e)
     {
         if (_observedViewModel is not null) _observedViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        _editingTracking?.Dispose();
+        _editingTracking = null;
         ViewModel?.CancelCardLoad();
         ViewModel?.Dispose();
         _cardLoadScheduled = false;

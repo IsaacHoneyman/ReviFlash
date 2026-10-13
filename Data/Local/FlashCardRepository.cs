@@ -12,6 +12,7 @@ public static class FlashCardRepository
     internal const string DeckStreakTarget = "Deck", GroupStreakTarget = "Group";
 
     private const string GroupDecksCondition = "DeckId IN (SELECT DeckID FROM StudyGroupDecks WHERE StudyGroupID = $id)";
+    private const string FolderDecksCondition = $"DeckId IN (SELECT ID FROM Decks WHERE FolderID IN {Db.FolderSubtreeIds})";
 
     private static void ValidateDeckId(ulong deckID)
     {
@@ -148,6 +149,13 @@ public static class FlashCardRepository
     public static List<(DateOnly date, int correct, int total, int timeTakenSeconds)> GetStudyGroupStatsByDate(ulong groupID, string? timeModifier = null) =>
         GetDeckStatsByDate(Db.StatsFilter("DateChecked", timeModifier, GroupDecksCondition, groupID));
 
+    /// <summary> Review stats for every set in a folder and its subfolders. </summary>
+    public static (int correct, int total, int timeTakenSeconds) GetFolderStats(ulong folderID, string? timeModifier = null) =>
+        GetDeckStatsTotals(Db.StatsFilter("DateChecked", timeModifier, FolderDecksCondition, folderID));
+
+    public static List<(DateOnly date, int correct, int total, int timeTakenSeconds)> GetFolderStatsByDate(ulong folderID, string? timeModifier = null) =>
+        GetDeckStatsByDate(Db.StatsFilter("DateChecked", timeModifier, FolderDecksCondition, folderID));
+
     private static (int correct, int total, int timeTakenSeconds) GetDeckStatsTotals((string Sql, (string Name, object? Value)[] Parameters) filter)
     {
         return Db.Query(@"
@@ -180,6 +188,55 @@ public static class FlashCardRepository
     {
         var filter = Db.StatsFilter("DateChecked", timeModifier);
         return Db.Query("SELECT DeckId, COALESCE(SUM(TimeTakenSeconds), 0) FROM DeckStats WHERE 1=1" + filter.Sql + " GROUP BY DeckId;",
+            reader => ((ulong)reader.GetInt64(0), reader.GetInt32(1)),
+            filter.Parameters);
+    }
+
+    // --- Editing time ---
+
+    /// <summary> Adds time spent editing a set to today's total. </summary>
+    public static void AddEditingTime(ulong deckID, int seconds)
+    {
+        if (seconds <= 0) return;
+
+        Db.Execute(@"
+            INSERT INTO DeckEditStats (DeckId, Seconds, DateEdited) VALUES ($id, $seconds, $today)
+            ON CONFLICT(DeckId, DateEdited) DO UPDATE SET Seconds = Seconds + excluded.Seconds;",
+            ("$id", deckID), ("$seconds", seconds), ("$today", Db.Today()));
+    }
+
+    /// <summary> Seconds spent editing one set, or every set when null, within the time period. </summary>
+    public static int GetEditingSeconds(ulong? deckID, string? timeModifier) =>
+        GetEditingSeconds(Db.StatsFilter("DateEdited", timeModifier, "DeckId = $id", deckID));
+
+    public static int GetStudyGroupEditingSeconds(ulong groupID, string? timeModifier) =>
+        GetEditingSeconds(Db.StatsFilter("DateEdited", timeModifier, GroupDecksCondition, groupID));
+
+    public static int GetFolderEditingSeconds(ulong folderID, string? timeModifier) =>
+        GetEditingSeconds(Db.StatsFilter("DateEdited", timeModifier, FolderDecksCondition, folderID));
+
+    private static int GetEditingSeconds((string Sql, (string Name, object? Value)[] Parameters) filter) =>
+        Db.Scalar<int>("SELECT COALESCE(SUM(Seconds), 0) FROM DeckEditStats WHERE 1=1" + filter.Sql + ";", filter.Parameters);
+
+    /// <summary> Editing seconds per day, oldest first, for one set, or every set when null. </summary>
+    public static List<(DateOnly date, int seconds)> GetEditingTimeByDate(ulong? deckID, string? timeModifier) =>
+        GetEditingTimeByDate(Db.StatsFilter("DateEdited", timeModifier, "DeckId = $id", deckID));
+
+    public static List<(DateOnly date, int seconds)> GetStudyGroupEditingTimeByDate(ulong groupID, string? timeModifier) =>
+        GetEditingTimeByDate(Db.StatsFilter("DateEdited", timeModifier, GroupDecksCondition, groupID));
+
+    public static List<(DateOnly date, int seconds)> GetFolderEditingTimeByDate(ulong folderID, string? timeModifier) =>
+        GetEditingTimeByDate(Db.StatsFilter("DateEdited", timeModifier, FolderDecksCondition, folderID));
+
+    private static List<(DateOnly date, int seconds)> GetEditingTimeByDate((string Sql, (string Name, object? Value)[] Parameters) filter) =>
+        Db.Query("SELECT DateEdited, SUM(Seconds) FROM DeckEditStats WHERE 1=1" + filter.Sql + " GROUP BY DateEdited ORDER BY DateEdited;",
+            reader => (Db.ParseDay(reader.GetString(0)), reader.GetInt32(1)),
+            filter.Parameters);
+
+    public static List<(ulong deckID, int seconds)> GetEditingTimeByDeck(string? timeModifier)
+    {
+        var filter = Db.StatsFilter("DateEdited", timeModifier);
+        return Db.Query("SELECT DeckId, SUM(Seconds) FROM DeckEditStats WHERE 1=1" + filter.Sql + " GROUP BY DeckId;",
             reader => ((ulong)reader.GetInt64(0), reader.GetInt32(1)),
             filter.Parameters);
     }
@@ -272,7 +329,7 @@ public static class FlashCardRepository
     public static void DeleteAllStats()
     {
         Db.InTransaction((connection, transaction) =>
-            Db.Execute(connection, transaction, "DELETE FROM DeckStats; DELETE FROM AnswerStreaks;"));
+            Db.Execute(connection, transaction, "DELETE FROM DeckStats; DELETE FROM DeckEditStats; DELETE FROM AnswerStreaks;"));
     }
 
     public static void DeleteStatsForDeck(ulong deckID)
@@ -281,6 +338,7 @@ public static class FlashCardRepository
 
         Db.InTransaction((connection, transaction) => Db.Execute(connection, transaction, @"
             DELETE FROM DeckStats WHERE DeckID = $id;
+            DELETE FROM DeckEditStats WHERE DeckId = $id;
             DELETE FROM AnswerStreaks WHERE TargetType = $type AND TargetId = $id;",
             ("$type", DeckStreakTarget), ("$id", deckID)));
     }

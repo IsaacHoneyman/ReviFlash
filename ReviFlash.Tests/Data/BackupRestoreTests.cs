@@ -44,6 +44,40 @@ public class BackupRestoreTests
     }
 
     [Fact]
+    public void Restoring_a_stats_less_backup_keeps_editing_time_only_for_the_same_set()
+    {
+        string zip;
+        using (var first = new TestDatabase())
+        {
+            Db.Execute("INSERT INTO Decks (Name) VALUES ('Biology'), ('Shared');");
+            zip = CreateStatsLessBackup();
+        }
+
+        using var second = new TestDatabase();
+        Db.Execute("INSERT INTO Decks (Name) VALUES ('Chemistry'), ('Shared');");
+        Db.Execute("INSERT INTO DeckEditStats (DeckId, DateEdited, Seconds) VALUES (1, '2026-01-01', 30), (2, '2026-01-01', 60);");
+
+        Restore(zip, second);
+
+        Assert.Equal([(2L, 60L)], Db.Query("SELECT DeckId, Seconds FROM DeckEditStats;", r => (r.GetInt64(0), r.GetInt64(1))));
+    }
+
+    [Fact]
+    public void A_backup_without_stats_leaves_out_editing_time()
+    {
+        using var database = new TestDatabase();
+        Db.Execute("INSERT INTO Decks (Name) VALUES ('Set');");
+        Db.Execute("INSERT INTO DeckEditStats (DeckId, DateEdited, Seconds) VALUES (1, '2026-01-01', 30);");
+
+        var zip = CreateStatsLessBackup();
+
+        var extracted = Path.Combine(TestEnvironment.DataRoot, $"extracted-{Guid.NewGuid():N}.db");
+        using (var archive = ZipFile.OpenRead(zip)) archive.GetEntry("reviflash.db")!.ExtractToFile(extracted);
+        using var connection = Db.OpenUnpooled(extracted);
+        Assert.Equal(0, Db.Scalar<int>(connection, null, "SELECT COUNT(*) FROM sqlite_master WHERE name = 'DeckEditStats';"));
+    }
+
+    [Fact]
     public void Restoring_a_stats_less_backup_keeps_group_streaks_only_when_id_and_name_match()
     {
         string zip;

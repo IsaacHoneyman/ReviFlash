@@ -52,22 +52,14 @@ public partial class NoteViewModel : ViewModelBase
 {
     private static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(1);
 
-    // Study time stops counting after this long with no typing, clicking or scrolling.
-    private static readonly TimeSpan IdleAfter = TimeSpan.FromMinutes(2);
-    private const int StudyTickSeconds = 5;
-    private const int StudyFlushSeconds = 60;
-
     private readonly Note _note;
     private readonly Action _onClose;
     private readonly DispatcherTimer _saveTimer;
-    private readonly DispatcherTimer _studyTimer;
     private bool _dirty;
     private bool _closed;
-    private DateTime _lastActivity = DateTime.Now;
-    private int _unsavedStudySeconds;
 
-    /// <summary> Set by the view from its window, so time only counts while ReviFlash is the focused window. </summary>
-    public bool IsWindowActive { get; set; } = true;
+    /// <summary> Time studying the note: counts while the window is focused and in use. </summary>
+    public ActiveTimeCounter StudyTime { get; }
 
     public ObservableCollection<NoteBlock> Blocks { get; } = [];
     public ObservableCollection<ContentsEntry> Contents { get; } = [];
@@ -96,35 +88,25 @@ public partial class NoteViewModel : ViewModelBase
         _saveTimer = new DispatcherTimer { Interval = SaveDelay };
         _saveTimer.Tick += (_, _) => SaveNow();
 
-        _studyTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(StudyTickSeconds) };
-        _studyTimer.Tick += (_, _) => StudyTick();
-        _studyTimer.Start();
+        StudyTime = new ActiveTimeCounter(SaveStudyTime);
+        StudyTime.Start();
 
         RefreshContents();
     }
 
     // --- Study time ---
 
-    /// <summary> Typing, clicking or scrolling in the note: keeps its study time counting. </summary>
-    public void NoteActivity() => _lastActivity = DateTime.Now;
-
-    private void StudyTick()
+    private bool SaveStudyTime(int seconds)
     {
-        if (IsWindowActive && DateTime.Now - _lastActivity < IdleAfter) _unsavedStudySeconds += StudyTickSeconds;
-        if (_unsavedStudySeconds >= StudyFlushSeconds) FlushStudyTime();
-    }
-
-    private void FlushStudyTime()
-    {
-        if (_unsavedStudySeconds <= 0) return;
         try
         {
-            NoteRepository.AddStudyTime(_note.ID, _unsavedStudySeconds);
-            _unsavedStudySeconds = 0;
+            NoteRepository.AddStudyTime(_note.ID, seconds);
+            return true;
         }
         catch (Exception ex)
         {
             Logger.LogError("Saving note study time failed", ex);
+            return false;
         }
     }
 
@@ -399,8 +381,7 @@ public partial class NoteViewModel : ViewModelBase
         CommitEditing();
         CommitName();
         SaveNow();
-        _studyTimer.Stop();
-        FlushStudyTime();
+        StudyTime.Stop();
         _closed = true;
         _onClose();
     }
@@ -411,7 +392,6 @@ public partial class NoteViewModel : ViewModelBase
         if (EditingBlock is not null) CommitEditing();
         CommitName();
         SaveNow();
-        _studyTimer.Stop();
-        FlushStudyTime();
+        StudyTime.Stop();
     }
 }

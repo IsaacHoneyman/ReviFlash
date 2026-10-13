@@ -120,6 +120,15 @@ public static class DatabaseManager
                     PRIMARY KEY (NoteID, DateStudied),
                     FOREIGN KEY (NoteID) REFERENCES Notes(ID) ON DELETE CASCADE
                 );
+
+                -- Time spent editing each set per day.
+                CREATE TABLE IF NOT EXISTS DeckEditStats (
+                    DeckId INTEGER NOT NULL,
+                    DateEdited DATE NOT NULL DEFAULT (CURRENT_DATE),
+                    Seconds INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (DeckId, DateEdited),
+                    FOREIGN KEY (DeckId) REFERENCES Decks(Id) ON DELETE CASCADE
+                );
             ");
 
             ApplyMigrations(connection);

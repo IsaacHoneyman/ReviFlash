@@ -123,6 +123,10 @@ internal static class Db
 
     // --- Stats ---
 
+    /// <summary> The IDs of folder $id and every folder inside it, for use in an IN (...) condition. </summary>
+    public const string FolderSubtreeIds =
+        "(WITH RECURSIVE subtree(id) AS (SELECT $id UNION SELECT f.ID FROM Folders f JOIN subtree ON f.ParentFolderID = subtree.id) SELECT id FROM subtree)";
+
     /// <summary> " AND ..." conditions for an optional ID ($id in <paramref name="idCondition"/>) and an optional SQLite date-modifier period counted back from today in local time, today included. </summary>
     public static (string Sql, (string Name, object? Value)[] Parameters) StatsFilter(string dateColumn, string? timeModifier, string? idCondition = null, ulong? id = null)
     {

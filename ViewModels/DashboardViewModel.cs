@@ -15,7 +15,7 @@ namespace ReviFlash.ViewModels;
 
 public partial class DashboardViewModel : FolderBrowserBase
 {
-    public enum StatsScope { Overall, Deck, Group, Note, }
+    public enum StatsScope { Overall, Deck, Group, Note, Folder, }
     public enum DeckSelectionMode { None, Review, }
 
     // Ordering within a mixed list: folders, then groups, then sets, then notes.
@@ -138,14 +138,22 @@ public partial class DashboardViewModel : FolderBrowserBase
     [NotifyPropertyChangedFor(nameof(NoteTimeFormatted))]
     [ObservableProperty] private int _noteTimeSeconds = 0;
 
-    public string TotalTimeFormatted => TextUtility.FormatTime(TotalTimeSeconds + NoteTimeSeconds);
+    /// <summary> Time spent editing sets (the set, the group's sets, or every set being viewed). </summary>
+    [NotifyPropertyChangedFor(nameof(TotalTimeFormatted))]
+    [NotifyPropertyChangedFor(nameof(EditingTimeFormatted))]
+    [ObservableProperty] private int _editingTimeSeconds = 0;
+
+    public int AllTimeSeconds => TotalTimeSeconds + NoteTimeSeconds + EditingTimeSeconds;
+    public string TotalTimeFormatted => TextUtility.FormatTime(AllTimeSeconds);
     public string FlashcardTimeFormatted => TextUtility.FormatTime(TotalTimeSeconds);
     public string NoteTimeFormatted => TextUtility.FormatTime(NoteTimeSeconds);
+    public string EditingTimeFormatted => TextUtility.FormatTime(EditingTimeSeconds);
 
     /// <summary> Whose stats are shown: everything, or the set, group or note selected for stats. </summary>
     [NotifyPropertyChangedFor(nameof(IsViewingDeckStats))]
     [NotifyPropertyChangedFor(nameof(IsViewingGroupStats))]
     [NotifyPropertyChangedFor(nameof(IsViewingNoteStats))]
+    [NotifyPropertyChangedFor(nameof(IsViewingFolderStats))]
     [NotifyPropertyChangedFor(nameof(IsViewingStats))]
     [NotifyPropertyChangedFor(nameof(IsViewingCardStats))]
     [NotifyPropertyChangedFor(nameof(ShowCardStats))]
@@ -157,13 +165,14 @@ public partial class DashboardViewModel : FolderBrowserBase
     public bool IsViewingDeckStats => CurrentStatsScope == StatsScope.Deck;
     public bool IsViewingGroupStats => CurrentStatsScope == StatsScope.Group;
     public bool IsViewingNoteStats => CurrentStatsScope == StatsScope.Note;
+    public bool IsViewingFolderStats => CurrentStatsScope == StatsScope.Folder;
     public bool IsViewingStats => CurrentStatsScope != StatsScope.Overall;
     /// <summary> A set or group: the stats that only flashcards have, like the best answer streak. </summary>
     public bool IsViewingCardStats => IsViewingDeckStats || IsViewingGroupStats;
     /// <summary> Questions, accuracy and grade: everywhere except a note's stats. </summary>
     public bool ShowCardStats => !IsViewingNoteStats;
-    /// <summary> Flashcard and notes time shown separately: only in the overall stats. </summary>
-    public bool ShowTimeSplit => !IsViewingStats;
+    /// <summary> Notes time beside the total: overall and for a folder, which can hold both sets and notes. </summary>
+    public bool ShowTimeSplit => CurrentStatsScope is StatsScope.Overall or StatsScope.Folder;
 
     [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
@@ -174,6 +183,9 @@ public partial class DashboardViewModel : FolderBrowserBase
     [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
     [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
     [ObservableProperty] private Note? _selectedNoteForStats = null;
+    [NotifyPropertyChangedFor(nameof(CurrentStatsTitle))]
+    [NotifyPropertyChangedFor(nameof(GraphViewTitle))]
+    [ObservableProperty] private ulong? _selectedFolderForStats = null;
 
     [ObservableProperty] private string _noteWordsText = "";
     [ObservableProperty] private string _noteHeadingsText = "";
@@ -184,6 +196,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         StatsScope.Deck => SelectedDeckForStats?.Name,
         StatsScope.Group => SelectedGroupForStats?.Name,
         StatsScope.Note => SelectedNoteForStats?.Name,
+        StatsScope.Folder => Tree.Get(SelectedFolderForStats)?.Name,
         _ => null,
     } ?? "Overall";
 
@@ -275,6 +288,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
         NoteTimeSeconds = NoteRepository.GetStudySeconds(null, timeModifier);
+        EditingTimeSeconds = FlashCardRepository.GetEditingSeconds(null, timeModifier);
         TotalCardCount = FlashCardRepository.GetCardCount();
         BestAnswerStreakText = "0";
         Percentage = AccuracyPercent(correct, total);
@@ -295,6 +309,9 @@ public partial class DashboardViewModel : FolderBrowserBase
             case StatsScope.Note when SelectedNoteForStats is { } note:
                 ShowNoteStats(note);
                 break;
+            case StatsScope.Folder when SelectedFolderForStats is { } folderID:
+                ShowFolderStats(folderID);
+                break;
             default:
                 LoadStats();
                 break;
@@ -313,6 +330,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         Percentage = 0;
         Grade = GRADE_UNGRADED;
         TotalTimeSeconds = 0;
+        EditingTimeSeconds = 0;
         NoteTimeSeconds = NoteRepository.GetStudySeconds(note.ID, SelectedTimePeriod?.TimeModifier);
         NoteWordsText = NoteText.WordCount(content).ToString("N0");
         NoteHeadingsText = NoteText.Headings(content).Count.ToString();
@@ -328,6 +346,29 @@ public partial class DashboardViewModel : FolderBrowserBase
         return day.Year == today.Year ? day.ToString("d MMM") : day.ToString("d MMM yyyy");
     }
 
+    /// <summary> Like the overall stats, for everything in a folder and its subfolders. </summary>
+    public void ShowFolderStats(ulong folderID)
+    {
+        IsGraphView = false;
+        SelectedFolderForStats = folderID;
+        CurrentStatsScope = StatsScope.Folder;
+
+        var timeModifier = SelectedTimePeriod?.TimeModifier;
+        var (correct, total, timeTakenSeconds) = FlashCardRepository.GetFolderStats(folderID, timeModifier);
+        var subtree = Tree.SubtreeIds(folderID);
+
+        TotalQuestions = total;
+        TotalCorrect = correct;
+        TotalTimeSeconds = timeTakenSeconds;
+        NoteTimeSeconds = NoteRepository.GetFolderStudySeconds(folderID, timeModifier);
+        EditingTimeSeconds = FlashCardRepository.GetFolderEditingSeconds(folderID, timeModifier);
+        TotalCardCount = Decks.Where(deck => deck.FolderID is ulong id && subtree.Contains(id)).Sum(deck => deck.CardCount);
+        BestAnswerStreakText = "0";
+        Percentage = AccuracyPercent(correct, total);
+        Grade = CalculateGradeWithDefault(correct, total);
+        RefreshGraphStats();
+    }
+
     public void ShowDeckStats(FlashCardDeck deck)
     {
         IsGraphView = false;
@@ -340,6 +381,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         TotalCorrect = correct;
         TotalTimeSeconds = timeTakenSeconds;
         NoteTimeSeconds = 0;
+        EditingTimeSeconds = FlashCardRepository.GetEditingSeconds(deck.ID, timeModifier);
         TotalCardCount = deck.CardCount;
         BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Deck", deck.ID).ToString();
         Percentage = percentage;
@@ -359,6 +401,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         TotalQuestions = totalQuestions;
         TotalCorrect = totalCorrect;
         TotalTimeSeconds = totalSeconds;
+        EditingTimeSeconds = FlashCardRepository.GetStudyGroupEditingSeconds(group.ID, SelectedTimePeriod?.TimeModifier);
         TotalCardCount = FlashCardRepository.GetStudyGroupCardCount(group.ID);
         BestAnswerStreakText = FlashCardRepository.GetBestAnswerStreak("Group", group.ID).ToString();
         Percentage = AccuracyPercent(totalCorrect, totalQuestions);
@@ -374,6 +417,7 @@ public partial class DashboardViewModel : FolderBrowserBase
             StatsScope.Deck => SelectedDeckForStats is { } deck && Decks.All(d => d.ID != deck.ID),
             StatsScope.Group => SelectedGroupForStats is { } group && StudyGroups.All(g => g.ID != group.ID),
             StatsScope.Note => SelectedNoteForStats is { } note && Notes.All(n => n.ID != note.ID),
+            StatsScope.Folder => !Tree.Exists(SelectedFolderForStats),
             _ => false,
         };
 
@@ -388,6 +432,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         SelectedDeckForStats = null;
         SelectedGroupForStats = null;
         SelectedNoteForStats = null;
+        SelectedFolderForStats = null;
         LoadStats();
     }
 
@@ -409,6 +454,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         // Discard anomalies where attempts are 0
         var validRows = GetDailyStatsForCurrentScope(timeModifier).Where(r => r.total > 0).ToList();
         var noteRows = GetDailyNoteTimeForCurrentScope(timeModifier);
+        var editingRows = GetDailyEditingTimeForCurrentScope(timeModifier);
 
         var attemptsRows = GroupRows(validRows, SelectedAttemptsGrouping).ToList();
         int maxAttempts = attemptsRows.Count == 0 ? 0 : attemptsRows.Max(row => row.total);
@@ -422,22 +468,33 @@ public partial class DashboardViewModel : FolderBrowserBase
                 maxAttempts,
                 0))); // maxTime not relevant for attempts chart
 
-        // Study time: flashcards and notes by day, then grouped, so each bar can show both.
-        var timeByDay = new SortedDictionary<DateOnly, (int cards, int notes)>();
-        foreach (var row in validRows) timeByDay[row.date] = (row.timeTakenSeconds, 0);
+        // Study time: reviewing, notes and editing by day, then grouped, so each bar can show all three.
+        var timeByDay = new SortedDictionary<DateOnly, (int cards, int notes, int editing)>();
+        foreach (var row in validRows) timeByDay[row.date] = (row.timeTakenSeconds, 0, 0);
         foreach (var (date, seconds) in noteRows)
-            timeByDay[date] = timeByDay.TryGetValue(date, out var day) ? (day.cards, day.notes + seconds) : (0, seconds);
+        {
+            var day = timeByDay.GetValueOrDefault(date);
+            timeByDay[date] = (day.cards, day.notes + seconds, day.editing);
+        }
+        foreach (var (date, seconds) in editingRows)
+        {
+            var day = timeByDay.GetValueOrDefault(date);
+            timeByDay[date] = (day.cards, day.notes, day.editing + seconds);
+        }
 
         var timeRows = timeByDay
-            .Where(day => day.Value.cards + day.Value.notes > 0)
+            .Where(day => day.Value.cards + day.Value.notes + day.Value.editing > 0)
             .GroupBy(day => Period(day.Key, SelectedTimeGrouping))
             .OrderBy(group => group.Key.Start)
-            .Select(group => (group.Key.Label, cards: group.Sum(day => day.Value.cards), notes: group.Sum(day => day.Value.notes)))
+            .Select(group => (group.Key.Label,
+                cards: group.Sum(day => day.Value.cards),
+                notes: group.Sum(day => day.Value.notes),
+                editing: group.Sum(day => day.Value.editing)))
             .ToList();
-        int maxTime = timeRows.Count == 0 ? 0 : timeRows.Max(row => row.cards + row.notes);
+        int maxTime = timeRows.Count == 0 ? 0 : timeRows.Max(row => row.cards + row.notes + row.editing);
 
         TimeGraphPoints = new ObservableCollection<GraphStatPointViewModel>(
-            timeRows.Select(row => new GraphStatPointViewModel(row.Label, 0, 0, row.cards, 0, maxTime, row.notes)));
+            timeRows.Select(row => new GraphStatPointViewModel(row.Label, 0, 0, row.cards, 0, maxTime, row.notes, row.editing)));
 
         GraphDateRangeText = timeByDay.Count == 0
             ? "No study history recorded yet."
@@ -468,6 +525,17 @@ public partial class DashboardViewModel : FolderBrowserBase
     {
         StatsScope.Overall => NoteRepository.GetStudyTimeByDate(null, timeModifier),
         StatsScope.Note when SelectedNoteForStats != null => NoteRepository.GetStudyTimeByDate(SelectedNoteForStats.ID, timeModifier),
+        StatsScope.Folder when SelectedFolderForStats is ulong folderID => NoteRepository.GetFolderStudyTimeByDate(folderID, timeModifier),
+        _ => [],
+    };
+
+    /// <summary> Time spent editing sets per day: every set overall, the set or the group's sets in their stats, none for a note. </summary>
+    private List<(DateOnly date, int seconds)> GetDailyEditingTimeForCurrentScope(string? timeModifier) => CurrentStatsScope switch
+    {
+        StatsScope.Overall => FlashCardRepository.GetEditingTimeByDate(null, timeModifier),
+        StatsScope.Deck when SelectedDeckForStats != null => FlashCardRepository.GetEditingTimeByDate(SelectedDeckForStats.ID, timeModifier),
+        StatsScope.Group when SelectedGroupForStats != null => FlashCardRepository.GetStudyGroupEditingTimeByDate(SelectedGroupForStats.ID, timeModifier),
+        StatsScope.Folder when SelectedFolderForStats is ulong folderID => FlashCardRepository.GetFolderEditingTimeByDate(folderID, timeModifier),
         _ => [],
     };
 
@@ -479,7 +547,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         var secondsByDay = new Dictionary<DateOnly, int>();
         foreach (var row in GetDailyStatsForCurrentScope(lastYear).Where(r => r.total > 0))
             secondsByDay[row.date] = secondsByDay.GetValueOrDefault(row.date) + row.timeTakenSeconds;
-        foreach (var (date, seconds) in GetDailyNoteTimeForCurrentScope(lastYear))
+        foreach (var (date, seconds) in GetDailyNoteTimeForCurrentScope(lastYear).Concat(GetDailyEditingTimeForCurrentScope(lastYear)))
             secondsByDay[date] = secondsByDay.GetValueOrDefault(date) + seconds;
 
         var today = DateOnly.FromDateTime(DateTime.Today);
@@ -510,17 +578,23 @@ public partial class DashboardViewModel : FolderBrowserBase
             : $"{TextUtility.FormatTime(totalSeconds)} over {TextUtility.Plural(activeDays, "day")} in the last year";
     }
 
-    /// <summary> The sets and notes with the most time spent in the chosen period (overall stats only). </summary>
+    /// <summary> The sets and notes with the most time spent in the chosen period: overall, or within a folder. </summary>
     private void RefreshTimeBreakdown(string? timeModifier)
     {
         TimeBreakdown.Clear();
 
-        if (CurrentStatsScope == StatsScope.Overall)
+        if (CurrentStatsScope is StatsScope.Overall or StatsScope.Folder)
         {
-            var deckNames = Decks.ToDictionary(deck => deck.ID, deck => deck.Name);
-            var noteNames = Notes.ToDictionary(note => note.ID, note => note.Name);
+            var subtree = SelectedFolderForStats is ulong folderID && IsViewingFolderStats ? Tree.SubtreeIds(folderID) : null;
+            bool Counts(ulong? folder) => subtree is null || (folder is ulong id && subtree.Contains(id));
 
+            var deckNames = Decks.Where(deck => Counts(deck.FolderID)).ToDictionary(deck => deck.ID, deck => deck.Name);
+            var noteNames = Notes.Where(note => Counts(note.ContainerFolderID)).ToDictionary(note => note.ID, note => note.Name);
+
+            // A set's time is its reviewing and editing together.
             var items = FlashCardRepository.GetStudyTimeByDeck(timeModifier)
+                .Concat(FlashCardRepository.GetEditingTimeByDeck(timeModifier))
+                .GroupBy(row => row.deckID, (deckID, rows) => (deckID, seconds: rows.Sum(row => row.seconds)))
                 .Where(row => row.seconds > 0 && deckNames.ContainsKey(row.deckID))
                 .Select(row => (name: deckNames[row.deckID], kind: "Set", row.seconds))
                 .Concat(NoteRepository.GetStudyTimeByNote(timeModifier)
@@ -578,6 +652,7 @@ public partial class DashboardViewModel : FolderBrowserBase
         {
             StatsScope.Deck when SelectedDeckForStats != null => FlashCardRepository.GetStatsByDate(SelectedDeckForStats.ID, timeModifier),
             StatsScope.Group when SelectedGroupForStats != null => FlashCardRepository.GetStudyGroupStatsByDate(SelectedGroupForStats.ID, timeModifier),
+            StatsScope.Folder when SelectedFolderForStats is ulong folderID => FlashCardRepository.GetFolderStatsByDate(folderID, timeModifier),
             StatsScope.Note => [],
             _ => FlashCardRepository.GetStatsByDate(null, timeModifier)
         };
@@ -628,6 +703,10 @@ public partial class DashboardViewModel : FolderBrowserBase
         Tree.ApplyCounts(Decks, StudyGroups, Notes);
         Tree.ApplyPaths(Decks.Concat<LibraryItem>(StudyGroups).Concat(Notes), CurrentFolderID);
         base.RefreshFolderMetadata();
+
+        // A folder being viewed in stats may have been renamed.
+        OnPropertyChanged(nameof(CurrentStatsTitle));
+        OnPropertyChanged(nameof(GraphViewTitle));
     }
 
     // --- Folder navigation ---

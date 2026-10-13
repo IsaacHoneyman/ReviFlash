@@ -14,7 +14,21 @@ public partial class MakeCardWindow : Window
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, Shortcut_KeyDown, RoutingStrategies.Tunnel);
+
+        Opened += (_, _) =>
+        {
+            if (ViewModel is not { } vm) return;
+            vm.EditingTime.Start();
+            _editingTracking = ActiveTimeTracking.Attach(this, vm.EditingTime);
+        };
+        Closed += (_, _) =>
+        {
+            _editingTracking?.Dispose();
+            ViewModel?.EditingTime.Stop();
+        };
     }
+
+    private ActiveTimeTracking? _editingTracking;
 
     /// <summary> The formatting shortcuts in the card's fields, plus Ctrl+Enter to add the card. </summary>
     private void Shortcut_KeyDown(object? sender, KeyEventArgs e)

@@ -62,6 +62,21 @@ public static class NoteRepository
             filter.Parameters);
     }
 
+    /// <summary> Seconds spent in every note in a folder and its subfolders. </summary>
+    public static int GetFolderStudySeconds(ulong folderID, string? timeModifier)
+    {
+        var filter = FolderStatsFilter(folderID, timeModifier);
+        return Db.Scalar<int>("SELECT COALESCE(SUM(Seconds), 0) FROM NoteStats WHERE 1=1" + filter.Sql + ";", filter.Parameters);
+    }
+
+    public static List<(DateOnly date, int seconds)> GetFolderStudyTimeByDate(ulong folderID, string? timeModifier)
+    {
+        var filter = FolderStatsFilter(folderID, timeModifier);
+        return Db.Query("SELECT DateStudied, SUM(Seconds) FROM NoteStats WHERE 1=1" + filter.Sql + " GROUP BY DateStudied ORDER BY DateStudied;",
+            reader => (Db.ParseDay(reader.GetString(0)), reader.GetInt32(1)),
+            filter.Parameters);
+    }
+
     public static List<(ulong noteID, int seconds)> GetStudyTimeByNote(string? timeModifier)
     {
         var filter = StatsFilter(null, timeModifier);
@@ -75,6 +90,9 @@ public static class NoteRepository
 
     private static (string Sql, (string Name, object? Value)[] Parameters) StatsFilter(ulong? noteID, string? timeModifier) =>
         Db.StatsFilter("DateStudied", timeModifier, "NoteID = $id", noteID);
+
+    private static (string Sql, (string Name, object? Value)[] Parameters) FolderStatsFilter(ulong folderID, string? timeModifier) =>
+        Db.StatsFilter("DateStudied", timeModifier, $"NoteID IN (SELECT ID FROM Notes WHERE FolderID IN {Db.FolderSubtreeIds})", folderID);
 
     public static string GetContent(ulong noteID) =>
         Db.Scalar<string>("SELECT Content FROM Notes WHERE ID = $id;", ("$id", noteID)) ?? "";

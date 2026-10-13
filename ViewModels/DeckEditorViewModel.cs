@@ -117,10 +117,14 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string _validationMessage = "";
     public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
 
+    /// <summary> Time spent editing the set: counts while the window is focused and in use. </summary>
+    public ActiveTimeCounter EditingTime { get; }
+
     public DeckEditorViewModel(FlashCardDeck deck)
     {
         CurrentDeck = deck;
         _deckName = deck.Name;
+        EditingTime = new ActiveTimeCounter(seconds => SaveEditingTime(deck.ID, seconds));
 
         MetaDataManager.Data.PropertyChanged += Settings_PropertyChanged;
 
@@ -141,6 +145,22 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
         _disposed = true;
         MetaDataManager.Data.PropertyChanged -= Settings_PropertyChanged;
+        EditingTime.Stop();
+    }
+
+    /// <summary> Records editing time against a set; false (keeping the time for another try) if it couldn't be saved. </summary>
+    public static bool SaveEditingTime(ulong deckID, int seconds)
+    {
+        try
+        {
+            FlashCardRepository.AddEditingTime(deckID, seconds);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Saving set editing time failed", ex);
+            return false;
+        }
     }
 
     // --- Card list ---

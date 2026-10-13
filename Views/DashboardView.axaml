@@ -149,6 +149,9 @@
                         <Button Classes="iconButton" Click="RenameFolder_Click" ToolTip.Tip="Rename Folder">
                             <Path Classes="icon" Data="{StaticResource IconEdit}" />
                         </Button>
+                        <Button Classes="iconButton" Click="FolderStats_Click" ToolTip.Tip="View Folder Stats">
+                            <Path Classes="icon" Data="{StaticResource IconStats}" />
+                        </Button>
                         <Button Classes="iconButton" Click="MoveItem_Click" ToolTip.Tip="Move to Folder">
                             <Path Classes="icon" Data="{StaticResource IconFolder}" />
                         </Button>
@@ -280,6 +283,8 @@
                         <TextBlock Text="{Binding StreakText}" FontSize="13"
                             FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
                             VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding BestEverStreakText, StringFormat='Best {0}'}" FontSize="13"
+                            Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -489,6 +494,7 @@
                         <TextBlock Classes="sectionTitle" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingDeckStats}" />
                         <TextBlock Classes="sectionTitle" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingGroupStats}" />
                         <TextBlock Classes="sectionTitle" Text="{Binding SelectedNoteForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingNoteStats}" />
+                        <TextBlock Classes="sectionTitle" Text="{Binding CurrentStatsTitle, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingFolderStats}" />
                     </Panel>
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
@@ -503,14 +509,14 @@
                     <HeaderedContentControl Classes="statTile" Header="Accuracy Rate" Content="{Binding PercentageText}" IsVisible="{Binding ShowCardStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Grade" Content="{Binding Grade}" IsVisible="{Binding ShowCardStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Total Time" Content="{Binding TotalTimeFormatted}" />
-                    <!-- Overall only: the total split into flashcards and notes. -->
-                    <HeaderedContentControl Classes="statTile" Header="Flashcard Time" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                    <!-- The total split up: reviewing and editing for everything but a note, and notes overall or for a folder. -->
+                    <HeaderedContentControl Classes="statTile" Header="Review Time" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Editing Time" Content="{Binding EditingTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Notes Time" Content="{Binding NoteTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
                     <HeaderedContentControl Classes="statTile" Header="Last Studied" Content="{Binding NoteLastStudiedText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Words" Content="{Binding NoteWordsText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Headings" Content="{Binding NoteHeadingsText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Best Answer Streak" Content="{Binding BestAnswerStreakText}" IsVisible="{Binding IsViewingCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Best Ever Streak" Content="{Binding BestEverStreakText}" IsVisible="{Binding !IsViewingStats}" />
 
                     <Button Classes="secondary" Click="GraphStats_Click"
                         Content="Graph View"
@@ -545,7 +551,8 @@
                         <HeaderedContentControl Classes="graphTile" Header="Total Questions" Content="{Binding TotalQuestions}" IsVisible="{Binding ShowCardStats}" />
                         <HeaderedContentControl Classes="graphTile" Header="Accuracy" Content="{Binding PercentageText}" IsVisible="{Binding ShowCardStats}" />
                         <HeaderedContentControl Classes="graphTile" Header="Total Time" Content="{Binding TotalTimeFormatted}" />
-                        <HeaderedContentControl Classes="graphTile" Header="Flashcards" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Reviewing" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
+                        <HeaderedContentControl Classes="graphTile" Header="Editing" Content="{Binding EditingTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
                         <HeaderedContentControl Classes="graphTile" Header="Notes" Content="{Binding NoteTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
                         <HeaderedContentControl Classes="graphTile" Header="Grade" Content="{Binding Grade}" IsVisible="{Binding ShowCardStats}" />
                     </UniformGrid>
@@ -628,7 +635,7 @@
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Spacing="4">
                                     <TextBlock Classes="sectionTitle" Text="Study Time Chart" />
-                                    <TextBlock Classes="caption" Text="The bar height shows total time spent studying: blue is flashcards, purple is notes." />
+                                    <TextBlock Classes="caption" Text="The bar height shows total time spent: blue is reviewing, amber is editing sets, purple is notes." />
                                 </StackPanel>
 
                                 <ComboBox Grid.Column="1" VerticalAlignment="Top"
@@ -662,16 +669,17 @@
                                                         Foreground="{DynamicResource TextPrimary}" />
                                                 </StackPanel>
 
-                                                <!-- Flashcard time, with note time stacked at the bottom. -->
+                                                <!-- Reviewing time, with editing and then note time stacked at the bottom. -->
                                                 <Border Height="160" VerticalAlignment="Bottom" HorizontalAlignment="Center">
                                                     <Border Width="28" Height="{Binding TimeBarHeight}"
                                                         CornerRadius="6" ClipToBounds="True" Background="#FF4AA3FF"
                                                         VerticalAlignment="Bottom"
                                                         IsVisible="{Binding HasTime}"
                                                         ToolTip.Tip="{Binding TimeTooltip}">
-                                                        <Border Height="{Binding NoteBarHeight}"
-                                                            Background="#FFB57BFF"
-                                                            VerticalAlignment="Bottom" />
+                                                        <StackPanel VerticalAlignment="Bottom">
+                                                            <Border Height="{Binding EditingBarHeight}" Background="#FFFFB547" />
+                                                            <Border Height="{Binding NoteBarHeight}" Background="#FFB57BFF" />
+                                                        </StackPanel>
                                                     </Border>
                                                 </Border>
 

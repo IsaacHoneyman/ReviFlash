@@ -17,6 +17,7 @@ public partial class NoteView : UserControl
     /// <summary> The paragraph editor with the cursor in it, for the toolbar, shortcuts and Make Card. </summary>
     private TextBox? _activeEditor;
     private TopLevel? _topLevel;
+    private ActiveTimeTracking? _studyTracking;
 
     private NoteViewModel? ViewModel => DataContext as NoteViewModel;
 
@@ -33,39 +34,16 @@ public partial class NoteView : UserControl
         _topLevel?.AddHandler(KeyDownEvent, Note_KeyDown, RoutingStrategies.Tunnel);
 
         // Typing, clicking and scrolling anywhere in the window keep the note's study time counting.
-        _topLevel?.AddHandler(KeyDownEvent, Activity_KeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
-        _topLevel?.AddHandler(PointerPressedEvent, Activity_PointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
-        _topLevel?.AddHandler(PointerWheelChangedEvent, Activity_PointerWheelChanged, RoutingStrategies.Tunnel, handledEventsToo: true);
-
-        if (_topLevel is Window window)
-        {
-            window.PropertyChanged += Window_PropertyChanged;
-            if (ViewModel is { } vm) vm.IsWindowActive = window.IsActive;
-        }
+        if (ViewModel is { } vm) _studyTracking = ActiveTimeTracking.Attach(_topLevel, vm.StudyTime);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
         _topLevel?.RemoveHandler(KeyDownEvent, Note_KeyDown);
-        _topLevel?.RemoveHandler(KeyDownEvent, Activity_KeyDown);
-        _topLevel?.RemoveHandler(PointerPressedEvent, Activity_PointerPressed);
-        _topLevel?.RemoveHandler(PointerWheelChangedEvent, Activity_PointerWheelChanged);
-        if (_topLevel is Window window) window.PropertyChanged -= Window_PropertyChanged;
+        _studyTracking?.Dispose();
+        _studyTracking = null;
         _topLevel = null;
-    }
-
-    // --- Study time ---
-
-    private void Activity_KeyDown(object? sender, KeyEventArgs e) => ViewModel?.NoteActivity();
-    private void Activity_PointerPressed(object? sender, PointerPressedEventArgs e) => ViewModel?.NoteActivity();
-    private void Activity_PointerWheelChanged(object? sender, PointerWheelEventArgs e) => ViewModel?.NoteActivity();
-
-    // IsActive rather than the Activated event, which is raised before IsActive is updated.
-    private void Window_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-    {
-        if (e.Property == Window.IsActiveProperty && sender is Window window && ViewModel is { } vm)
-            vm.IsWindowActive = window.IsActive;
     }
 
     private Window? OwnerWindow => TopLevel.GetTopLevel(this) as Window;

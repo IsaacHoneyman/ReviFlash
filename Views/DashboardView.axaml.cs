@@ -184,6 +184,7 @@ public partial class DashboardView : UserControl
 
             case (Folder, Key.E): RenameFolder_Click(card, args); break;
             case (Folder, Key.Delete): DeleteFolder_Click(card, args); break;
+            case (Folder, Key.S): FolderStats_Click(card, args); break;
 
             case (FlashCardDeck, Key.E): EditDeck_Click(card, args); break;
             case (FlashCardDeck, Key.Delete): DeleteDeck_Click(card, args); break;
@@ -438,6 +439,12 @@ public partial class DashboardView : UserControl
         {
             vm.ShowDeckStats(selectedDeck);
         }
+    }
+
+    public void FolderStats_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (DataContext is DashboardViewModel vm) vm.ShowFolderStats(ItemOf<Folder>(sender).ID);
     }
 
     public void GroupStats_Click(object sender, RoutedEventArgs e)
