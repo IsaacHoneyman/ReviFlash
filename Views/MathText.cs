@@ -246,6 +246,8 @@ public class MathText : Decorator
         return paragraph;
     }
 
+    private static readonly FontFamily CodeFont = new("Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace");
+
     private Run CreateRun(TextSegment text)
     {
         var bold = text.Bold || text.Heading > 0;
@@ -255,7 +257,8 @@ public class MathText : Decorator
             FontStyle = text.Italic ? FontStyle.Italic : FontStyle.Normal,
             TextDecorations = text.Underline ? Avalonia.Media.TextDecorations.Underline : null,
         };
-        if (_builtWithLatexFont == true) run.FontFamily = LatinModernFaces[(bold ? 1 : 0) + (text.Italic ? 2 : 0)];
+        if (text.Code) run.FontFamily = CodeFont;
+        else if (_builtWithLatexFont == true) run.FontFamily = LatinModernFaces[(bold ? 1 : 0) + (text.Italic ? 2 : 0)];
         return run;
     }
 

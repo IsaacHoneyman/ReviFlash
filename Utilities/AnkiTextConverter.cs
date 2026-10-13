@@ -175,12 +175,12 @@ public static partial class AnkiTextConverter
         return InnerMathRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
     }
 
-    /// <summary> Text commands and what they become: \B{ / \I{ / \U{ / \H1{ for styling, or a plain group to unwrap. </summary>
+    /// <summary> Text commands and what they become: \B{ / \I{ / \U{ / \T{ / \H1{ for styling, or a plain group to unwrap. </summary>
     private static readonly (string Command, string Replacement)[] LatexTextCommands =
     [
         ("section", @"\H1{"), ("subsection", @"\H2{"), ("subsubsection", @"\H3{"),
         ("textbf", @"\B{"), ("textit", @"\I{"), ("emph", @"\I{"), ("textsl", @"\I{"), ("underline", @"\U{"),
-        ("texttt", "{"), ("textrm", "{"), ("textsf", "{"), ("textup", "{"), ("textnormal", "{"), ("text", "{"), ("mbox", "{"),
+        ("texttt", @"\T{"), ("textrm", "{"), ("textsf", "{"), ("textup", "{"), ("textnormal", "{"), ("text", "{"), ("mbox", "{"),
     ];
 
     private static readonly (string Escaped, string Literal)[] LatexEscapes =
@@ -364,6 +364,7 @@ public static partial class AnkiTextConverter
         var bold = tag is "b" or "strong" or "h4" or "h5" or "h6";
         var italic = tag is "i" or "em";
         var underline = tag == "u";
+        var code = tag is "code" or "tt" or "kbd" or "samp";
 
         if (StyleRegex().Match(attributes) is { Success: true } style)
         {
@@ -373,7 +374,7 @@ public static partial class AnkiTextConverter
             underline |= UnderlineStyleRegex().IsMatch(css);
         }
 
-        var opening = heading + (bold ? @"\B{" : "") + (italic ? @"\I{" : "") + (underline ? @"\U{" : "");
+        var opening = heading + (bold ? @"\B{" : "") + (italic ? @"\I{" : "") + (underline ? @"\U{" : "") + (code ? @"\T{" : "");
         return (opening, new string('}', opening.Count(c => c == '{')));
     }
 
@@ -408,7 +409,7 @@ public static partial class AnkiTextConverter
             {
                 '$' => true,
                 '{' or '}' => unmatched.Contains(i),
-                '\\' => i + 1 >= text.Length || !char.IsAsciiLetterOrDigit(text[i + 1]) || text[i + 1] is 'B' or 'I' or 'U' or 'H' or 'C',
+                '\\' => i + 1 >= text.Length || !char.IsAsciiLetterOrDigit(text[i + 1]) || text[i + 1] is 'B' or 'I' or 'U' or 'T' or 'H' or 'C',
                 _ => false,
             };
             if (escape) output.Append('\\');
@@ -469,11 +470,11 @@ public static partial class AnkiTextConverter
     [GeneratedRegex(@"\s*\\item\b\s*")]
     private static partial Regex LatexItemRegex();
 
-    // Commands other than ours (\B, \I, \U, \H1, \C1) and the $ escape.
-    [GeneratedRegex(@"\\(?![BIU]\{|H[1-3]\{|C\d*\{)[a-zA-Z]+\*?\s*")]
+    // Commands other than ours (\B, \I, \U, \T, \H1, \C1) and the $ escape.
+    [GeneratedRegex(@"\\(?![BIUT]\{|H[1-3]\{|C\d*\{)[a-zA-Z]+\*?\s*")]
     private static partial Regex UnknownCommandRegex();
 
-    [GeneratedRegex(@"\\(?:[BIU]|H[1-3]|C\d*)$")]
+    [GeneratedRegex(@"\\(?:[BIUT]|H[1-3]|C\d*)$")]
     private static partial Regex OurCommandRegex();
 
     [GeneratedRegex("\u0002(\\d+)\u0003")]
@@ -512,6 +513,6 @@ public static partial class AnkiTextConverter
     [GeneratedRegex(@"\n{3,}")]
     private static partial Regex ManyNewLinesRegex();
 
-    [GeneratedRegex(@"\\(?:[BIU]|H[1-3])\{\s*\}")]
+    [GeneratedRegex(@"\\(?:[BIUT]|H[1-3])\{\s*\}")]
     private static partial Regex EmptyFormatRegex();
 }

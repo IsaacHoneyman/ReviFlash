@@ -23,12 +23,13 @@ public static class TextFormatting
         return true;
     }
 
-    /// <summary> Wrapping for a toolbar button's Tag: Bold, Italic, Underline, Heading1-3, InlineMath, DisplayMath or Blank; null otherwise. </summary>
+    /// <summary> Wrapping for a toolbar button's Tag: Bold, Italic, Underline, Code, Heading1-3, InlineMath, DisplayMath or Blank; null otherwise. </summary>
     public static (string Open, string Close)? PairFor(string? tag) => tag switch
     {
         "Bold" => (@"\B{", "}"),
         "Italic" => (@"\I{", "}"),
         "Underline" => (@"\U{", "}"),
+        "Code" => (@"\T{", "}"),
         "Heading1" => (@"\H1{", "}"),
         "Heading2" => (@"\H2{", "}"),
         "Heading3" => (@"\H3{", "}"),
@@ -45,7 +46,7 @@ public static class TextFormatting
         else if (PairFor(tag) is { } pair) Wrap(box, pair.Open, pair.Close);
     }
 
-    /// <summary> Wrapping for Ctrl (Cmd on macOS) + B/I/U/M/1-3, Shift+M for display maths and Shift+C for a cloze blank; null otherwise. </summary>
+    /// <summary> Wrapping for Ctrl (Cmd on macOS) + B/I/U/T/M/1-3, Shift+M for display maths and Shift+C for a cloze blank; null otherwise. </summary>
     public static (string Open, string Close)? ShortcutFor(KeyEventArgs e, PlatformHotkeyConfiguration? hotkeys, bool allowCloze)
     {
         if (!HasCommandKey(e, hotkeys)) return null;
@@ -56,6 +57,7 @@ public static class TextFormatting
             (Key.B, false) => "Bold",
             (Key.I, false) => "Italic",
             (Key.U, false) => "Underline",
+            (Key.T, false) => "Code",
             (Key.D1 or Key.NumPad1, false) => "Heading1",
             (Key.D2 or Key.NumPad2, false) => "Heading2",
             (Key.D3 or Key.NumPad3, false) => "Heading3",

@@ -47,6 +47,9 @@
             <Button Classes="format" Tag="Underline" Click="Format_Click" ToolTip.Tip="Underline: \U{...}  (Ctrl+U)">
                 <TextBlock Text="U" TextDecorations="Underline" />
             </Button>
+            <Button Classes="format" Tag="Code" Click="Format_Click" ToolTip.Tip="Code: \T{...}  (Ctrl+T)">
+                <TextBlock Text="T" FontFamily="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+            </Button>
             <Rectangle Classes="separator" />
             <Button Classes="format" Tag="Heading1" Click="Format_Click" ToolTip.Tip="Heading: \H1{...}  (Ctrl+1)">
                 <TextBlock Text="H1" FontWeight="Bold" />

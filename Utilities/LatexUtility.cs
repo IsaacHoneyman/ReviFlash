@@ -8,7 +8,7 @@ namespace ReviFlash.Utilities;
 public abstract record CardSegment;
 
 /// <summary> Literal text with the \B / \I / \U styling, \H1 to \H3 heading level and bullet point it sits in. </summary>
-public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false, int Heading = 0, bool Bullet = false) : CardSegment;
+public sealed record TextSegment(string Text, bool Bold, bool Italic, bool Underline = false, int Heading = 0, bool Bullet = false, bool Code = false) : CardSegment;
 
 /// <summary> Maths ready for CSharpMath, plus what the user typed for falling back to. </summary>
 public sealed record MathSegment(string Latex, string Source, bool Display, int Heading = 0, bool Bullet = false) : CardSegment;
@@ -38,6 +38,9 @@ public static partial class LatexUtility
 
     [GeneratedRegex(@"(\\[a-zA-Z]+)\*")]
     private static partial Regex StarredCommandRegex();
+
+    [GeneratedRegex(@"\\(texttt|textsf|T)(?![a-zA-Z])\s*\{")]
+    private static partial Regex TextFontRegex();
 
     [GeneratedRegex(@"\\([a-zA-Z]+)(?![a-zA-Z])")]
     private static partial Regex MathCommandRegex();
@@ -76,10 +79,10 @@ public static partial class LatexUtility
         if (string.IsNullOrEmpty(input)) return segments;
 
         var text = new StringBuilder();
-        // One entry per open brace: 'B' / 'I' / 'U' for a format group, '1' to '3' for a heading, '{' for a literal brace.
+        // One entry per open brace: 'B' / 'I' / 'U' / 'T' for a format group, '1' to '3' for a heading, '{' for a literal brace.
         var braces = new Stack<char>();
         var headings = new Stack<char>();
-        int bold = 0, italic = 0, underline = 0;
+        int bold = 0, italic = 0, underline = 0, code = 0;
         var i = 0;
         var bullet = false;
 
@@ -91,6 +94,7 @@ public static partial class LatexUtility
                 case 'B': bold++; break;
                 case 'I': italic++; break;
                 case 'U': underline++; break;
+                case 'T': code++; break;
                 case >= '1' and <= '3': headings.Push(kind); break;
             }
         }
@@ -102,6 +106,7 @@ public static partial class LatexUtility
                 case 'B': bold--; break;
                 case 'I': italic--; break;
                 case 'U': underline--; break;
+                case 'T': code--; break;
                 case >= '1' and <= '3': headings.Pop(); break;
             }
         }
@@ -112,7 +117,7 @@ public static partial class LatexUtility
         void FlushText()
         {
             if (text.Length == 0) return;
-            segments.Add(new TextSegment(text.ToString(), bold > 0, italic > 0, underline > 0, Heading(), bullet));
+            segments.Add(new TextSegment(text.ToString(), bold > 0, italic > 0, underline > 0, Heading(), bullet, code > 0));
             text.Clear();
         }
 
@@ -224,10 +229,49 @@ public static partial class LatexUtility
         result = PmodRegex().Replace(result, @"\;(\mathrm{mod}\;$1)");
         result = NegationRegex().Replace(result, match => match.Groups[1].Value == "=" ? @"\neq" : @"\notin");
         result = StarredCommandRegex().Replace(result, "$1{}*");
+        result = RewriteTextFonts(result);
         result = RewriteOldMatrices(result);
         result = PadTables(result);
         return MathCommandRegex().Replace(result, match =>
             MathRewrites.TryGetValue(match.Groups[1].Value, out var rewrite) ? rewrite : match.Value);
+    }
+
+    /// <summary> \T{...} and \texttt{...} become \mathtt, and \textsf{...} \mathsf, with their spaces kept, since maths mode drops plain spaces. </summary>
+    private static string RewriteTextFonts(string math)
+    {
+        var matches = TextFontRegex().Matches(math);
+        for (var m = matches.Count - 1; m >= 0; m--)
+        {
+            var match = matches[m];
+            int start = match.Index + match.Length, depth = 1, end = start;
+            for (; end < math.Length && depth > 0; end++)
+            {
+                if (math[end] == '\\') { end++; continue; }
+                if (math[end] == '{') depth++;
+                else if (math[end] == '}') depth--;
+            }
+
+            var bodyEnd = depth == 0 ? end - 1 : math.Length;
+            var body = EscapeSpaces(math[start..bodyEnd]);
+            var font = match.Groups[1].Value == "textsf" ? "sf" : "tt";
+            math = math[..match.Index] + $"\\math{font}{{" + body + math[bodyEnd..];
+        }
+        return math;
+    }
+
+    private static string EscapeSpaces(string text)
+    {
+        var escaped = new StringBuilder(text.Length);
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '\\' && i + 1 < text.Length)
+            {
+                escaped.Append(text, i, 2);
+                i++;
+            }
+            else escaped.Append(text[i] == ' ' ? "\\ " : text[i].ToString());
+        }
+        return escaped.ToString();
     }
 
     /// <summary> AvaloniaMath's \matrix{a & b \\ c & d} and \pmatrix{...} become matrix environments. </summary>
@@ -382,13 +426,13 @@ public static partial class LatexUtility
         return -1;
     }
 
-    /// <summary> \B{, \I{ or \U{, with the letter not part of a longer command name. </summary>
+    /// <summary> \B{, \I{, \U{ or \T{, with the letter not part of a longer command name. </summary>
     private static bool TryReadFormatCommand(string input, int index, out char command)
     {
         command = default;
         if (index + 2 >= input.Length) return false;
         var name = input[index + 1];
-        if (name is not ('B' or 'I' or 'U') || input[index + 2] != '{') return false;
+        if (name is not ('B' or 'I' or 'U' or 'T') || input[index + 2] != '{') return false;
         command = name;
         return true;
     }

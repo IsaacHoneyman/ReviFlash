@@ -152,6 +152,19 @@ public class LatexUtilityTests
         Assert.Equal(@"a \mathbf{b}", LatexUtility.ToMathLatex(@"a \B{b}"));
     }
 
+    [Theory]
+    [InlineData(@"\texttt{int main}", @"\mathtt{int\ main}")]
+    [InlineData(@"\textsf{a b}", @"\mathsf{a\ b}")]
+    [InlineData(@"x + \texttt{f(x)} = 1", @"x + \mathtt{f(x)} = 1")]
+    [InlineData(@"\texttt{already\ escaped}", @"\mathtt{already\ escaped}")]
+    [InlineData(@"\texttt{a {b c} d}", @"\mathtt{a\ {b\ c}\ d}")]
+    [InlineData(@"\texttt{a} b \texttt{c d}", @"\mathtt{a} b \mathtt{c\ d}")]
+    [InlineData(@"\texttt{unclosed x", @"\mathtt{unclosed\ x")]
+    public void ToMathLatex_turns_text_fonts_into_maths_fonts_that_keep_spaces(string input, string expected)
+    {
+        Assert.Equal(expected, LatexUtility.ToMathLatex(input));
+    }
+
     [Fact]
     public void ToMathLatex_pads_matrices()
     {
