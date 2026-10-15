@@ -245,6 +245,12 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         Cards.Remove(card);
     }
 
+    public void CopyCard(FlashCard card, FlashCardDeck target)
+    {
+        var copy = FlashCardRepository.CopyCard(card, target.ID);
+        if (target.ID == CurrentDeck.ID) Cards.Add(copy);
+    }
+
     // --- Saving ---
 
     /// <summary> Saves the editor as a new card, or over the card being edited (which may change its type). </summary>
@@ -481,8 +487,19 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
     // --- Unsaved changes ---
 
-    /// <summary> True when nothing has changed since the editor was last cleared or loaded. </summary>
-    public bool EditorIsBlank() => CaptureState() == _savedState;
+    /// <summary> True when the editor holds something its card type would save that differs from what was last cleared or loaded. </summary>
+    public bool HasUnsavedWork()
+    {
+        var state = CaptureState();
+        return state != _savedState && HasContent(state);
+    }
+
+    private bool HasContent(EditorState state) =>
+        !string.IsNullOrWhiteSpace(state.Front) || !string.IsNullOrWhiteSpace(state.Back)
+        || IsTypeCardType && !string.IsNullOrWhiteSpace(state.TypeAnswer)
+        || IsMultiChoiceCardType && state.Options.Length > 0
+        || IsMatchCardType && state.Pairs.Length > 0
+        || IsTrueFalseCardType && (state.TrueOptionText.Trim() != TRUE_LABEL || state.FalseOptionText.Trim() != FALSE_LABEL);
 
     /// <summary> The editor's contents in a form records can compare (blank option and pair rows ignored). </summary>
     private sealed record EditorState(

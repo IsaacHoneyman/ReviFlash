@@ -319,6 +319,17 @@ public static class FlashCardRepository
         Db.Execute("UPDATE Cards SET DeckID = $deckId WHERE ID = $id;", ("$deckId", deckID), ("$id", cardID));
     }
 
+    /// <summary> Saves a copy of a card into a deck, with no answer history, and returns the copy. </summary>
+    public static FlashCard CopyCard(FlashCard card, ulong deckID)
+    {
+        ValidateDeckId(deckID);
+
+        ulong copyID = Db.InTransaction((connection, transaction) => DeckRepository.InsertCard(connection, transaction, deckID, card));
+
+        using var connection = Db.Open();
+        return DeckRepository.LoadCards(connection, deckID).Single(copy => copy.ID == copyID);
+    }
+
     public static void UpdateBestAnswerStreak(string targetType, ulong targetId, int bestStreak)
     {
         Db.Execute(@"

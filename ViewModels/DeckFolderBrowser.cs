@@ -17,7 +17,7 @@ public partial class DeckFolderBrowser : FolderBrowserBase
     private HashSet<ulong> _foldersWithDecks = [];
 
     /// <summary> Label on each deck's button, e.g. "Add" or "Upload". </summary>
-    public string ActionText { get; }
+    [ObservableProperty] private string _actionText;
 
     /// <summary> Narrow hosts (settings) drop the sort picker to leave room for the search box. </summary>
     public bool ShowSortOptions { get; init; } = true;
@@ -35,7 +35,7 @@ public partial class DeckFolderBrowser : FolderBrowserBase
 
     public DeckFolderBrowser(string actionText, Action<FlashCardDeck> onDeckAction)
     {
-        ActionText = actionText;
+        _actionText = actionText;
         _onDeckAction = onDeckAction;
         ReloadTree();
     }

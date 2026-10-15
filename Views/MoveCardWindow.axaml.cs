@@ -6,7 +6,10 @@ using ReviFlash.ViewModels;
 
 namespace ReviFlash.Views;
 
-/// <summary> Asks which set to move a card into. Closes with the chosen deck, or null. </summary>
+/// <summary> The set a card goes to, and whether it is copied there rather than moved. </summary>
+public sealed record MoveCardChoice(FlashCardDeck Deck, bool Copy);
+
+/// <summary> Asks which set to move or copy a card into. Closes with a <see cref="MoveCardChoice"/>, or null. </summary>
 public partial class MoveCardWindow : Window
 {
     public MoveCardWindow() : this(null) { }
@@ -16,9 +19,9 @@ public partial class MoveCardWindow : Window
         InitializeComponent();
         Shortcuts.CloseOnEscape(this);
 
-        var browser = new DeckFolderBrowser("Move", deck => Close(deck)) { ShowSortOptions = false };
-        browser.SetDecks(FlashCardRepository.GetAllDecks().FindAll(deck => deck.ID != currentDeck?.ID));
-        DataContext = browser;
+        var vm = new MoveCardViewModel(FlashCardRepository.GetAllDecks(), currentDeck?.ID ?? 0);
+        vm.DeckChosen += deck => Close(new MoveCardChoice(deck, vm.IsCopy));
+        DataContext = vm;
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(null);

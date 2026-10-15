@@ -80,11 +80,11 @@ public class DeckEditorViewModelTests
         var editor = NewEditor();
 
         editor.SelectedCardType = CARD_TYPE_FLIP;
-        Assert.True(editor.EditorIsBlank());
+        Assert.False(editor.HasUnsavedWork());
         editor.SelectedCardType = CARD_TYPE_MATCH;
         editor.SelectedCardType = CARD_TYPE_FLIP;
 
-        Assert.True(editor.EditorIsBlank());
+        Assert.False(editor.HasUnsavedWork());
     }
 
     [Fact]
@@ -107,11 +107,11 @@ public class DeckEditorViewModelTests
     {
         using var database = new TestDatabase();
         var editor = NewEditor();
-        Assert.True(editor.EditorIsBlank());
+        Assert.False(editor.HasUnsavedWork());
 
         editor.NewFront = "draft";
 
-        Assert.False(editor.EditorIsBlank());
+        Assert.True(editor.HasUnsavedWork());
     }
 
     private static FlashCardDeck NewDeck(string name)
@@ -169,7 +169,7 @@ public class DeckEditorViewModelTests
         editor.MoveCard(card, target);
 
         Assert.False(editor.IsEditing(card));
-        Assert.True(editor.EditorIsBlank());
+        Assert.False(editor.HasUnsavedWork());
         Assert.Equal("Save Card", editor.SaveButtonText);
     }
 
@@ -186,5 +186,103 @@ public class DeckEditorViewModelTests
 
         Assert.Single(editor.Cards);
         Assert.Single(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID));
+    }
+
+    [Fact]
+    public void Clearing_a_card_being_edited_leaves_nothing_unsaved()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.BeginEditCard(card);
+
+        editor.NewFront = "";
+        editor.NewBack = "  ";
+
+        Assert.False(editor.HasUnsavedWork());
+    }
+
+    [Fact]
+    public void An_empty_editor_has_nothing_unsaved_whatever_its_card_type()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+
+        foreach (var type in editor.AvailableCardTypes)
+        {
+            editor.SelectedCardType = type;
+            Assert.False(editor.HasUnsavedWork(), type);
+        }
+
+        editor.NewIsReversible = true;
+        editor.NewFront = " ";
+        Assert.False(editor.HasUnsavedWork());
+    }
+
+    [Fact]
+    public void Editing_a_loaded_card_is_unsaved_work()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.BeginEditCard(card);
+        Assert.False(editor.HasUnsavedWork());
+
+        editor.NewBack = "B";
+
+        Assert.True(editor.HasUnsavedWork());
+    }
+
+    [Fact]
+    public void Changed_true_false_labels_are_unsaved_work()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        editor.SelectedCardType = CARD_TYPE_TRUE_FALSE;
+
+        editor.NewTrueOptionText = "Yes";
+
+        Assert.True(editor.HasUnsavedWork());
+    }
+
+    [Fact]
+    public void Copying_a_card_to_another_set_leaves_the_original_and_starts_without_history()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor("From");
+        var target = NewDeck("To");
+        var card = new MultiFlashCard("Pick one", "", [("yes", true), ("no", false)]);
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.Cards.Add(card);
+        Db.Execute("INSERT INTO CardResults (CardID, Part, AnsweredAt, Correct, Seconds) VALUES ($id, '', '2026-10-01 09:00:00', 1, 4);", ("$id", card.ID));
+
+        editor.CopyCard(card, target);
+
+        Assert.Single(editor.Cards);
+        Assert.Single(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID));
+        var copy = Assert.IsType<MultiFlashCard>(Assert.Single(FlashCardRepository.GetCardsForDeck(target.ID)));
+        Assert.NotEqual(card.ID, copy.ID);
+        Assert.Equal([("yes", true), ("no", false)], copy.Options);
+        Assert.Empty(FlashCardRepository.GetCardResults(copy.ID));
+        Assert.Single(FlashCardRepository.GetCardResults(card.ID));
+    }
+
+    [Fact]
+    public void Copying_a_card_into_its_own_set_adds_it_to_the_list()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        var card = new FlipFlashCard("Q", "A", isReversible: true);
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.Cards.Add(card);
+
+        editor.CopyCard(card, editor.CurrentDeck);
+
+        Assert.Equal(2, editor.Cards.Count);
+        var copy = Assert.IsType<FlipFlashCard>(editor.Cards[1]);
+        Assert.Equal(("Q", "A", true), (copy.Front, copy.Back, copy.IsReversible));
+        Assert.Equal(2, FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID).Count);
     }
 }

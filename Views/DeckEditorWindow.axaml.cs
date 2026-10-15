@@ -64,7 +64,7 @@ public partial class DeckEditorWindow : Window
     private async void DeckEditorWindow_Closing(object? sender, WindowClosingEventArgs e)
     {
         ViewModel?.CommitDeckName();
-        if (_closeConfirmed || ViewModel is not { } vm || vm.EditorIsBlank()) return;
+        if (_closeConfirmed || ViewModel is not { } vm || !vm.HasUnsavedWork()) return;
 
         e.Cancel = true;
         if (_closePromptOpen) return;
@@ -112,7 +112,7 @@ public partial class DeckEditorWindow : Window
     /// <summary> True if the editor has nothing unsaved, or the user agrees to lose it. </summary>
     private async Task<bool> ConfirmDiscardEditorAsync(string message)
     {
-        if (ViewModel is not { } vm || vm.EditorIsBlank()) return true;
+        if (ViewModel is not { } vm || !vm.HasUnsavedWork()) return true;
         return await new ConfirmDialogWindow(message).ShowDialog<bool>(this);
     }
 
@@ -164,24 +164,31 @@ public partial class DeckEditorWindow : Window
             ViewModel?.BeginEditCard(card);
     }
 
-    private async void CopyCard_Click(object sender, RoutedEventArgs e)
+    private async void NewCardFromThis_Click(object sender, RoutedEventArgs e)
     {
         if (CardOf(sender) is not { } card) return;
+        if (!await ConfirmDiscardEditorAsync("Replace the card you're working on with a new card based on this one?")) return;
 
-        if (await ConfirmDiscardEditorAsync("Current editor contains unsaved content. Overwrite with copied card?"))
-            ViewModel?.CopyCardToEditor(card);
+        ViewModel?.CopyCardToEditor(card);
+        FrontBox.Focus();
+        FrontBox.CaretIndex = FrontBox.Text?.Length ?? 0;
     }
 
     private async void MoveCard_Click(object sender, RoutedEventArgs e)
     {
         if (CardOf(sender) is not { } card || ViewModel is not { } vm) return;
 
-        var target = await new MoveCardWindow(vm.CurrentDeck).ShowDialog<FlashCardDeck?>(this);
-        if (target is null) return;
+        if (await new MoveCardWindow(vm.CurrentDeck).ShowDialog<MoveCardChoice?>(this) is not { } choice) return;
+
+        if (choice.Copy)
+        {
+            vm.CopyCard(card, choice.Deck);
+            return;
+        }
 
         if (vm.IsEditing(card) && !await ConfirmDiscardEditorAsync("Discard your changes to this card and move it?")) return;
 
-        vm.MoveCard(card, target);
+        vm.MoveCard(card, choice.Deck);
     }
 
     private void AddOption_Click(object? sender, RoutedEventArgs e) => ViewModel?.AddOptionRow();

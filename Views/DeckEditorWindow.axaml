@@ -320,14 +320,14 @@
                                         <Button Click="MoveCard_Click"
                                             Background="{DynamicResource BadgeBackground}" CornerRadius="8"
                                             Padding="10,8"
-                                            ToolTip.Tip="Move Card to Another Set">
+                                            ToolTip.Tip="Move or Copy to a Set">
                                             <Path Classes="icon editorAction" Data="{StaticResource IconMove}" />
                                         </Button>
 
-                                        <Button Click="CopyCard_Click"
+                                        <Button Click="NewCardFromThis_Click"
                                             Background="{DynamicResource BadgeBackground}" CornerRadius="8"
                                             Padding="10,8"
-                                            ToolTip.Tip="Duplicate Card">
+                                            ToolTip.Tip="New Card From This">
                                             <Path Classes="icon editorAction" Data="{StaticResource IconCopy}" />
                                         </Button>
 
