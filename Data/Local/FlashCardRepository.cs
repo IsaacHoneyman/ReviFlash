@@ -311,6 +311,14 @@ public static class FlashCardRepository
     public static void UpdateCard(FlashCard card) =>
         Db.InTransaction((connection, transaction) => DeckRepository.UpdateCard(connection, transaction, card));
 
+    /// <summary> Moves a card to another deck, keeping its answer history. </summary>
+    public static void MoveCard(ulong cardID, ulong deckID)
+    {
+        ValidateDeckId(deckID);
+
+        Db.Execute("UPDATE Cards SET DeckID = $deckId WHERE ID = $id;", ("$deckId", deckID), ("$id", cardID));
+    }
+
     public static void UpdateBestAnswerStreak(string targetType, ulong targetId, int bestStreak)
     {
         Db.Execute(@"

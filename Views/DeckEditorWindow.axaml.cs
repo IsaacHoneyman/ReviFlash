@@ -172,6 +172,18 @@ public partial class DeckEditorWindow : Window
             ViewModel?.CopyCardToEditor(card);
     }
 
+    private async void MoveCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (CardOf(sender) is not { } card || ViewModel is not { } vm) return;
+
+        var target = await new MoveCardWindow(vm.CurrentDeck).ShowDialog<FlashCardDeck?>(this);
+        if (target is null) return;
+
+        if (vm.IsEditing(card) && !await ConfirmDiscardEditorAsync("Discard your changes to this card and move it?")) return;
+
+        vm.MoveCard(card, target);
+    }
+
     private void AddOption_Click(object? sender, RoutedEventArgs e) => ViewModel?.AddOptionRow();
 
     private void RemoveOption_Click(object? sender, RoutedEventArgs e)

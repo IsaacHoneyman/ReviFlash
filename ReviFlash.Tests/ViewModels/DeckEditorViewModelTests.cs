@@ -113,4 +113,78 @@ public class DeckEditorViewModelTests
 
         Assert.False(editor.EditorIsBlank());
     }
+
+    private static FlashCardDeck NewDeck(string name)
+    {
+        var deck = new FlashCardDeck(name);
+        FlashCardRepository.SaveNewDeck(deck);
+        return deck;
+    }
+
+    [Fact]
+    public void Moving_a_card_takes_it_and_its_options_to_the_other_set()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor("From");
+        var target = NewDeck("To");
+        var card = new MultiFlashCard("Pick one", "", [("yes", true), ("no", false)]);
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.Cards.Add(card);
+
+        editor.MoveCard(card, target);
+
+        Assert.Empty(editor.Cards);
+        Assert.Empty(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID));
+        var moved = Assert.IsType<MultiFlashCard>(Assert.Single(FlashCardRepository.GetCardsForDeck(target.ID)));
+        Assert.Equal(card.ID, moved.ID);
+        Assert.Equal([("yes", true), ("no", false)], moved.Options);
+    }
+
+    [Fact]
+    public void Moving_a_card_keeps_its_answer_history()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor("From");
+        var target = NewDeck("To");
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        Db.Execute("INSERT INTO CardResults (CardID, Part, AnsweredAt, Correct, Seconds) VALUES ($id, '', '2026-10-01 09:00:00', 1, 4);", ("$id", card.ID));
+
+        editor.MoveCard(card, target);
+
+        Assert.Single(FlashCardRepository.GetCardResults(card.ID));
+    }
+
+    [Fact]
+    public void Moving_the_card_being_edited_clears_the_editor()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor("From");
+        var target = NewDeck("To");
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.Cards.Add(card);
+        editor.BeginEditCard(card);
+
+        editor.MoveCard(card, target);
+
+        Assert.False(editor.IsEditing(card));
+        Assert.True(editor.EditorIsBlank());
+        Assert.Equal("Save Card", editor.SaveButtonText);
+    }
+
+    [Fact]
+    public void Moving_a_card_into_its_own_set_does_nothing()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor("Set");
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.Cards.Add(card);
+
+        editor.MoveCard(card, editor.CurrentDeck);
+
+        Assert.Single(editor.Cards);
+        Assert.Single(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID));
+    }
 }

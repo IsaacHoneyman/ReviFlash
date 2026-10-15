@@ -42,3 +42,5 @@ Time spent editing sets is tracked like notes time (only while you're working, p
 Folders have a stats button (or S) showing the same stats as overall for everything inside them, and your best streak sits beside the current one at the top.
 Every answer in a review is recorded against its card (which cloze blank or side, right or wrong, and how long it took), kept in backups, ready for per-card stats.
 New \T{...} code style (Ctrl+T or the toolbar) shows text in a typewriter font, also inside maths, and maths supports \texttt{...} and \textsf{...} with their spaces kept. Anki code formatting comes across as \T.
+The deck editor shows a spinner while its cards load, and the Front and Back boxes grow with what you type.
+Cards in the deck editor have a Move button that moves the card to another set, along with its answer history.

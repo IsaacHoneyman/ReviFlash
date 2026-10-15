@@ -228,9 +228,20 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
     public void DeleteCard(FlashCard card)
     {
-        if (_editingCard?.ID == card.ID) ClearEditor();
+        if (IsEditing(card)) ClearEditor();
 
         FlashCardRepository.DeleteCard(card.ID);
+        Cards.Remove(card);
+    }
+
+    public bool IsEditing(FlashCard card) => _editingCard?.ID == card.ID;
+
+    public void MoveCard(FlashCard card, FlashCardDeck target)
+    {
+        if (target.ID == CurrentDeck.ID) return;
+        if (IsEditing(card)) ClearEditor();
+
+        FlashCardRepository.MoveCard(card.ID, target.ID);
         Cards.Remove(card);
     }
 
