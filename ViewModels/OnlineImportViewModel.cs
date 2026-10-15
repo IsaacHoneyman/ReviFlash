@@ -9,7 +9,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary> Community Flashcards: search public decks and download them. Only opened once signed in. </summary>
+/// <summary> Community: search public sets or notes and download them. Only opened once signed in. </summary>
 public partial class OnlineImportViewModel : OnlineViewModelBase
 {
     /// <summary> Where downloads land, e.g. "Saving to Year 1 / Algorithms". </summary>
@@ -22,6 +22,28 @@ public partial class OnlineImportViewModel : OnlineViewModelBase
     [ObservableProperty] private bool _includeFolderInfo;
 
     public ObservableCollection<FlashCardDeckMetadata> SearchResults { get; } = [];
+
+    /// <summary> Searches public notes rather than sets. </summary>
+    [NotifyPropertyChangedFor(nameof(ShowSets), nameof(IsNotesSelected), nameof(SearchWatermark))]
+    [ObservableProperty] private bool _showNotes;
+    partial void OnShowNotesChanged(bool value) => _ = SearchAsync();
+
+    // Bound to toggle buttons, so clicking the selected one keeps it selected.
+    public bool ShowSets
+    {
+        get => !ShowNotes;
+        set { if (value) ShowNotes = false; else OnPropertyChanged(); }
+    }
+
+    public bool IsNotesSelected
+    {
+        get => ShowNotes;
+        set { if (value) ShowNotes = true; else OnPropertyChanged(); }
+    }
+
+    public string SearchWatermark => ShowNotes ? "Search notes by title or uploader..." : "Search sets by title or uploader...";
+
+    private CloudKind Kind => ShowNotes ? CloudKind.Notes : CloudKind.Sets;
 
     /// <summary> Cloud orderings, most downloaded first, applied to what the server returns. </summary>
     public List<SortOption> SortOptions { get; } = SearchUtility.CreateCloudSortOptions();
@@ -51,11 +73,16 @@ public partial class OnlineImportViewModel : OnlineViewModelBase
     {
         IsSearching = true;
         SearchResults.Clear();
+        var kind = Kind;
+        var noun = ShowNotes ? "note" : "set";
 
-        await RunWithStatusAsync("Searching public flashcards", async () =>
+        await RunWithStatusAsync(ShowNotes ? "Searching public notes" : "Searching public sets", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
-            var results = await client.GetPublicDecksAsync(SearchText, limit: 25);
+            var results = await client.GetPublicDecksAsync(SearchText, limit: 25, kind);
+
+            // Switched between sets and notes while searching: that search has replaced this one.
+            if (kind != Kind) return StatusMessage;
 
             _rawResults.Clear();
             _rawResults.AddRange(results);
@@ -63,11 +90,11 @@ public partial class OnlineImportViewModel : OnlineViewModelBase
             ApplyOrdering();
 
             return SearchResults.Count == 0
-                ? "No decks found matching your search."
-                : $"Found {TextUtility.Plural(SearchResults.Count, "deck")}.";
+                ? $"No {noun}s found matching your search."
+                : $"Found {TextUtility.Plural(SearchResults.Count, noun)}.";
         }, "Search failed");
 
-        IsSearching = false;
+        if (kind == Kind) IsSearching = false;
     }
 
     [RelayCommand]
@@ -79,16 +106,20 @@ public partial class OnlineImportViewModel : OnlineViewModelBase
             return;
         }
 
+        var kind = Kind;
         await RunWithStatusAsync($"Downloading '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
-            string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
-            DeckTransferManager.TryImportCloudDeck(json, _targetFolderID, IncludeFolderInfo);
+            string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath, kind);
+            if (kind == CloudKind.Notes) DeckTransferManager.TryImportCloudNote(json, _targetFolderID, IncludeFolderInfo);
+            else DeckTransferManager.TryImportCloudDeck(json, _targetFolderID, IncludeFolderInfo);
 
-            // Counting is a bonus: the deck is already imported, so a failure here is only logged.
-            if (await client.RecordDownloadAsync(deck.Id) is int downloads) deck.DownloadCount = downloads;
+            // Counting is a bonus: it's already imported, so a failure here is only logged.
+            if (await client.RecordDownloadAsync(deck.Id, kind) is int downloads) deck.DownloadCount = downloads;
 
-            return $"Successfully imported '{deck.Title}'! You can now review it.";
+            return kind == CloudKind.Notes
+                ? $"Downloaded '{deck.Title}'. Open it from the main menu."
+                : $"Successfully imported '{deck.Title}'! You can now review it.";
         }, "Import failed");
     }
 

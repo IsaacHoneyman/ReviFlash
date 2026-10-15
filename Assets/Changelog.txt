@@ -6,6 +6,10 @@
 - Images are kept in backups, and Anki import now brings images across.
 - Sets with images can't be uploaded to the cloud yet.
 
+\H2{Notes in the cloud}
+- Upload notes like sets: the Cloud Manager and Community have a \B{Sets / Notes} switch.
+- Keep a note private to move it between your own computers, or share it publicly for others to find and download.
+
 \H2{Keyboard shortcuts everywhere}
 - On the main menu, the arrow keys move between cards, F or Ctrl+F jumps to search and Ctrl+N creates a set, note, folder or group.
 - E, M, S and Delete edit, move, show stats for or delete the highlighted card.

@@ -463,7 +463,7 @@
                             <Button Click="OpenOnlineImport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
                                 Classes="secondary" Padding="12, 8"
                                 VerticalContentAlignment="Center"
-                                ToolTip.Tip="Import: download community decks">
+                                ToolTip.Tip="Community: download shared sets and notes">
                                 <Panel>
                                     <Path Classes="icon" Data="{StaticResource IconDownload}" IsVisible="{Binding !IsCheckingSignInForImport}" />
                                     <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForImport}" HorizontalAlignment="Center" />
@@ -473,7 +473,7 @@
                             <Button Click="OpenOnlineExport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
                                 Classes="secondary" Padding="12, 8"
                                 VerticalContentAlignment="Center"
-                                ToolTip.Tip="Export: upload and manage your decks">
+                                ToolTip.Tip="Cloud Manager: upload and manage your sets and notes">
                                 <Panel>
                                     <Path Classes="icon" Data="{StaticResource IconUpload}" IsVisible="{Binding !IsCheckingSignInForExport}" />
                                     <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForExport}" HorizontalAlignment="Center" />

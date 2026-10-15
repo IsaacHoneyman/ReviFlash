@@ -19,11 +19,13 @@
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,24">
             <StackPanel Grid.Column="0" Spacing="4">
                 <TextBlock Text="Cloud Manager" Foreground="{DynamicResource TextPrimary}" FontSize="32" FontWeight="Bold"/>
-                <TextBlock Text="Upload your sets, and manage the ones you've shared or kept private." Foreground="{DynamicResource TextSecondary}" FontSize="16"/>
+                <TextBlock Text="Upload your sets and notes, and manage the ones you've shared or kept private." Foreground="{DynamicResource TextSecondary}" FontSize="16"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <TextBlock Text="{Binding AccountText}" Foreground="{DynamicResource TextSecondary}" FontSize="14" VerticalAlignment="Center"
+                <ToggleButton Classes="dashboardToggle" Content="Sets" IsChecked="{Binding ShowSets, Mode=TwoWay}" />
+                <ToggleButton Classes="dashboardToggle" Content="Notes" IsChecked="{Binding IsNotesSelected, Mode=TwoWay}" />
+                <TextBlock Text="{Binding AccountText}" Margin="8,0,0,0" Foreground="{DynamicResource TextSecondary}" FontSize="14" VerticalAlignment="Center"
                            ToolTip.Tip="Sign out from Settings."/>
             </StackPanel>
         </Grid>
@@ -44,7 +46,7 @@
 
                     <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="10">
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                            <TextBox Grid.Column="0" Classes="input" Text="{Binding CloudSearchText, Mode=TwoWay, Delay=120}" Watermark="Search your cloud decks..."
+                            <TextBox Grid.Column="0" Classes="input" Text="{Binding CloudSearchText, Mode=TwoWay, Delay=120}" Watermark="{Binding CloudSearchWatermark}"
                                      Height="36" VerticalContentAlignment="Center"
                                      Padding="10,0" Background="{DynamicResource AppBackground}" />
                             <ComboBox Grid.Column="1" ItemsSource="{Binding CloudSortOptions}" SelectedItem="{Binding SelectedCloudSortOption}"
@@ -54,7 +56,7 @@
                         <StackPanel Grid.Row="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center"
                                     IsVisible="{Binding IsLoadingCloudDecks}">
                             <controls:BusySpinner Classes="large" IsVisible="{Binding IsLoadingCloudDecks}" HorizontalAlignment="Center" />
-                            <TextBlock Classes="caption" Text="Loading your cloud sets..." HorizontalAlignment="Center" />
+                            <TextBlock Classes="caption" Text="{Binding LoadingText}" HorizontalAlignment="Center" />
                         </StackPanel>
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-16,0" Padding="0,0,16,0">
@@ -67,10 +69,10 @@
                                                     <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
                                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                                         <Border IsVisible="{Binding IsPrivate}" Background="{DynamicResource StatTileBackground}" CornerRadius="6" Padding="6,1"
-                                                                ToolTip.Tip="Only you can see this deck. It isn't listed in community search.">
+                                                                ToolTip.Tip="Only you can see this. It isn't listed in community search.">
                                                             <TextBlock Text="Private" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
                                                         </Border>
-                                                        <TextBlock Classes="caption" Text="{Binding CardCount, StringFormat='{}{0} cards'}" VerticalAlignment="Center" />
+                                                        <TextBlock Classes="caption" Text="{Binding SizeText}" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding DownloadCountText}" IsVisible="{Binding !IsPrivate}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                                     </StackPanel>
                                                     <TextBlock Classes="hint" Text="{Binding Description, StringFormat='in {0}'}"
@@ -83,7 +85,7 @@
                                                         <Path Classes="icon" Data="{StaticResource IconDownload}" />
                                                     </Button>
                                                     <Button Classes="iconButton" Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).SetupUpdateCommand}" CommandParameter="{Binding}"
-                                                            ToolTip.Tip="Update from a deck on this device">
+                                                            ToolTip.Tip="Update from one on this device">
                                                         <Path Classes="icon" Data="{StaticResource IconUpload}" />
                                                     </Button>
                                                     <Button Classes="iconButton" Command="{Binding $parent[Window].((vm:OnlineExportViewModel)DataContext).ToggleVisibilityCommand}" CommandParameter="{Binding}"
@@ -112,10 +114,10 @@
         <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="20" Margin="0,16,0,0">
             <CheckBox Grid.Column="0" IsChecked="{Binding IncludeFolderInfo}" Content="Include folder information"
                       Foreground="{DynamicResource TextSecondary}" FontSize="13"
-                      ToolTip.Tip="Uploads carry the deck's folder path, and downloads rebuild it." />
+                      ToolTip.Tip="Uploads carry their folder path, and downloads rebuild it." />
             <CheckBox Grid.Column="1" IsChecked="{Binding UploadAsPrivate}" Content="Upload as private"
                       Foreground="{DynamicResource TextSecondary}" FontSize="13"
-                      ToolTip.Tip="Private decks don't appear in community search. Use them to move decks between your own devices." />
+                      ToolTip.Tip="Private uploads don't appear in community search. Use them to move sets and notes between your own devices." />
             <DockPanel Grid.Column="2" HorizontalAlignment="Right" Margin="16,0,0,0">
                 <controls:BusySpinner DockPanel.Dock="Left" IsVisible="{Binding IsWorking}" Margin="0,0,8,0" />
                 <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
@@ -123,23 +125,23 @@
             </DockPanel>
         </Grid>
     </Grid>
-    <!-- Overlay: pick the local deck that overwrites a cloud deck. -->
+    <!-- Overlay: pick the local set or note that overwrites a cloud copy. -->
     <Grid Background="#B3000000" IsVisible="{Binding IsSelectingUpdateDeck}">
         <Border Classes="card" Padding="32"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 Width="600" Height="560">
             <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" RowSpacing="12">
 
-                <TextBlock Grid.Row="0" Text="Select Local Deck" FontSize="24" FontWeight="Bold"
+                <TextBlock Grid.Row="0" Text="{Binding UpdateTitle}" FontSize="24" FontWeight="Bold"
                            Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
 
-                <TextBlock Grid.Row="1" Text="Choose which local flashcard set you want to push to the cloud to overwrite this backup."
+                <TextBlock Grid.Row="1" Text="{Binding UpdateHint}"
                            Foreground="{DynamicResource TextSecondary}" FontSize="14"
                            TextWrapping="Wrap" TextAlignment="Center" />
 
                 <views:DeckFolderBrowserView Grid.Row="2" DataContext="{Binding UpdateBrowser}" />
 
-                <TextBlock Grid.Row="3" Text="{Binding SelectedLocalDeckForUpdate.Name, StringFormat='Selected: {0}', FallbackValue='No deck selected'}"
+                <TextBlock Grid.Row="3" Text="{Binding SelectedLocalItemForUpdate.Name, StringFormat='Selected: {0}', FallbackValue='Nothing selected'}"
                            Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold"
                            HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
 

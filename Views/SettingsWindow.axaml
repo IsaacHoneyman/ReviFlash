@@ -114,7 +114,7 @@
                     <TextBlock Classes="heading" Text="Import from Anki" FontSize="13" />
 
                     <TextBlock Classes="note"
-                        Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, cloze, type-in and reversed cards all come across, and sub-decks become folders. Images and sounds aren't supported yet: cards with images are marked [image]." />
+                        Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, images, cloze, type-in and reversed cards all come across, and sub-decks become folders. Sounds are left out." />
 
                     <Button x:Name="AnkiImportButton" Classes="wide secondary" Content="Import Anki Deck" Click="ImportAnki_Click" />
 

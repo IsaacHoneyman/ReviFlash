@@ -216,16 +216,16 @@ public sealed class SupabaseConnection : IDisposable
         ? ExtractErrorMessage(null)
         : $"{label}: {(HttpStatusCode)reply.Status} - {ExtractErrorMessage(reply.Body)}";
 
-    private const string DeckColumns = "id,owner_id,title,description,storage_path,card_count,download_count,version,created_at,updated_at";
+    private static string Columns(CloudKind kind) => $"id,owner_id,title,description,storage_path,{kind.SizeColumn},download_count,version,created_at,updated_at";
 
     private static string EscapeKey(string key) => string.Join('/', key.Split('/').Select(s => Uri.EscapeDataString(s)));
 
-    private static string StorageObject(string storagePath) => $"storage/v1/object/decks/{EscapeKey(storagePath)}";
+    private static string StorageObject(CloudKind kind, string storagePath) => $"storage/v1/object/{kind.Bucket}/{EscapeKey(storagePath)}";
 
-    private static string DeckRow(string storagePath) => $"rest/v1/decks?storage_path=eq.{Uri.EscapeDataString(storagePath)}";
+    private static string Row(CloudKind kind, string storagePath) => $"rest/v1/{kind.Table}?storage_path=eq.{Uri.EscapeDataString(storagePath)}";
 
-    /// <summary> The deck file body, typed application/json without a charset. </summary>
-    private static StringContent DeckFileContent(string jsonPayload)
+    /// <summary> The file body, typed application/json without a charset. </summary>
+    private static StringContent FileContent(string jsonPayload)
     {
         var content = new StringContent(jsonPayload, Encoding.UTF8);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -236,58 +236,62 @@ public sealed class SupabaseConnection : IDisposable
 
     // --- Upload ---
 
-    /// <summary> A fresh, unguessable file name: the bucket is public, so a private deck is hidden only by its name. </summary>
+    /// <summary> A fresh, unguessable file name: the bucket is public, so a private item is hidden only by its name. </summary>
     private static string NewStoragePath(string userId) => $"{userId}/{Guid.NewGuid():N}.json";
 
-    public async Task<(bool Success, string Message)> UploadCloudDeckAsync(string userId, string title, string description, int cardCount, string jsonPayload, bool isPrivate)
+    /// <param name="size"> Cards in a set, or words in a note. </param>
+    public async Task<(bool Success, string Message)> UploadCloudDeckAsync(string userId, string title, string description, int size, string jsonPayload, bool isPrivate, CloudKind? kind = null)
     {
+        kind ??= CloudKind.Sets;
         string fileName = NewStoragePath(userId);
 
-        var storageRes = await SendAsync(HttpMethod.Post, StorageObject(fileName), content: DeckFileContent(jsonPayload)).ConfigureAwait(false);
+        var storageRes = await SendAsync(HttpMethod.Post, StorageObject(kind, fileName), content: FileContent(jsonPayload)).ConfigureAwait(false);
         if (!storageRes.Ok) return (false, ErrorText("Storage Error", storageRes));
 
-        var dbPayload = new
+        var dbPayload = new Dictionary<string, object>
         {
-            title,
-            description,
-            storage_path = fileName,
-            card_count = cardCount,
-            visibility = isPrivate ? PrivateVisibility : PublicVisibility
+            ["title"] = title,
+            ["description"] = description,
+            ["storage_path"] = fileName,
+            [kind.SizeColumn] = size,
+            ["visibility"] = isPrivate ? PrivateVisibility : PublicVisibility,
         };
 
-        var dbRes = await SendAsync(HttpMethod.Post, "rest/v1/decks", dbPayload, prefer: "return=minimal").ConfigureAwait(false);
-        if (dbRes.Ok) return (true, isPrivate ? "Deck uploaded privately!" : "Deck uploaded successfully!");
+        var dbRes = await SendAsync(HttpMethod.Post, $"rest/v1/{kind.Table}", dbPayload, prefer: "return=minimal").ConfigureAwait(false);
+        if (dbRes.Ok) return (true, isPrivate ? $"{kind.Noun} uploaded privately!" : $"{kind.Noun} uploaded successfully!");
 
         return (false, ErrorText("Database Error", dbRes));
     }
 
-    public async Task<(bool Success, string Message)> UpdateCloudDeckAsync(string storagePath, string title, string description, int cardCount, string jsonPayload)
+    public async Task<(bool Success, string Message)> UpdateCloudDeckAsync(string storagePath, string title, string description, int size, string jsonPayload, CloudKind? kind = null)
     {
-        var storageRes = await SendAsync(HttpMethod.Put, StorageObject(storagePath), content: DeckFileContent(jsonPayload)).ConfigureAwait(false);
+        kind ??= CloudKind.Sets;
+        var storageRes = await SendAsync(HttpMethod.Put, StorageObject(kind, storagePath), content: FileContent(jsonPayload)).ConfigureAwait(false);
         if (!storageRes.Ok) return (false, ErrorText("Storage Update Error", storageRes));
 
-        var dbPayload = new
+        var dbPayload = new Dictionary<string, object>
         {
-            title,
-            description,
-            card_count = cardCount,
-            updated_at = DateTimeOffset.UtcNow.ToString("o")
+            ["title"] = title,
+            ["description"] = description,
+            [kind.SizeColumn] = size,
+            ["updated_at"] = DateTimeOffset.UtcNow.ToString("o"),
         };
 
-        var dbRes = await SendAsync(HttpMethod.Patch, DeckRow(storagePath), dbPayload).ConfigureAwait(false);
-        if (dbRes.Ok) return (true, "Deck updated successfully!");
+        var dbRes = await SendAsync(HttpMethod.Patch, Row(kind, storagePath), dbPayload).ConfigureAwait(false);
+        if (dbRes.Ok) return (true, $"{kind.Noun} updated successfully!");
 
         return (false, ErrorText("Database Update Error", dbRes));
     }
 
-    /// <summary> Lists or unlists a deck; going private also renames the file, since its public name was visible to everyone. </summary>
-    public async Task<(bool Success, string Message)> SetCloudDeckVisibilityAsync(string userId, string storagePath, bool makePrivate)
+    /// <summary> Lists or unlists an item; going private also renames the file, since its public name was visible to everyone. </summary>
+    public async Task<(bool Success, string Message)> SetCloudDeckVisibilityAsync(string userId, string storagePath, bool makePrivate, CloudKind? kind = null)
     {
+        kind ??= CloudKind.Sets;
         string newPath = makePrivate ? NewStoragePath(userId) : storagePath;
 
         if (makePrivate)
         {
-            var moveRes = await MoveStorageFileAsync(storagePath, newPath).ConfigureAwait(false);
+            var moveRes = await MoveStorageFileAsync(kind, storagePath, newPath).ConfigureAwait(false);
             if (!moveRes.Ok) return (false, ErrorText("Storage Error", moveRes));
         }
 
@@ -297,50 +301,54 @@ public sealed class SupabaseConnection : IDisposable
             storage_path = newPath
         };
 
-        var dbRes = await SendAsync(HttpMethod.Patch, DeckRow(storagePath), dbPayload).ConfigureAwait(false);
+        var dbRes = await SendAsync(HttpMethod.Patch, Row(kind, storagePath), dbPayload).ConfigureAwait(false);
         if (!dbRes.Ok)
         {
             // Put the file back so the row still points at it.
-            if (makePrivate) await MoveStorageFileAsync(newPath, storagePath).ConfigureAwait(false);
+            if (makePrivate) await MoveStorageFileAsync(kind, newPath, storagePath).ConfigureAwait(false);
             return (false, ErrorText("Database Error", dbRes));
         }
 
-        return (true, makePrivate ? "Deck is now private." : "Deck is now public.");
+        return (true, makePrivate ? $"{kind.Noun} is now private." : $"{kind.Noun} is now public.");
     }
 
-    private Task<Reply> MoveStorageFileAsync(string fromPath, string toPath) =>
-        SendAsync(HttpMethod.Post, "storage/v1/object/move", new { bucketId = "decks", sourceKey = fromPath, destinationKey = toPath });
+    private Task<Reply> MoveStorageFileAsync(CloudKind kind, string fromPath, string toPath) =>
+        SendAsync(HttpMethod.Post, "storage/v1/object/move", new { bucketId = kind.Bucket, sourceKey = fromPath, destinationKey = toPath });
 
-    public async Task<(bool Success, string Message)> DeleteCloudDeckAsync(string storagePath)
+    public async Task<(bool Success, string Message)> DeleteCloudDeckAsync(string storagePath, CloudKind? kind = null)
     {
+        kind ??= CloudKind.Sets;
+
         // Row first: a failed file delete then leaves an orphaned file, not a listing with nothing behind it.
-        var dbRes = await SendAsync(HttpMethod.Delete, DeckRow(storagePath)).ConfigureAwait(false);
+        var dbRes = await SendAsync(HttpMethod.Delete, Row(kind, storagePath)).ConfigureAwait(false);
         if (!dbRes.Ok) return (false, ErrorText("Database Delete Error", dbRes));
 
-        var storageRes = await SendAsync(HttpMethod.Delete, StorageObject(storagePath)).ConfigureAwait(false);
+        var storageRes = await SendAsync(HttpMethod.Delete, StorageObject(kind, storagePath)).ConfigureAwait(false);
         if (!storageRes.Ok) return (false, ErrorText("Storage Delete Error", storageRes));
 
-        return (true, "Deck deleted successfully.");
+        return (true, $"{kind.Noun} deleted successfully.");
     }
 
     // --- Find --- 
 
-    public async Task<string> DownloadCloudDeckJsonAsync(string storagePath, string bucket = "decks")
+    public async Task<string> DownloadCloudDeckJsonAsync(string storagePath, CloudKind? kind = null)
     {
+        kind ??= CloudKind.Sets;
         if (string.IsNullOrWhiteSpace(storagePath)) throw new ArgumentNullException(nameof(storagePath));
-        var key = storagePath.StartsWith(bucket + "/", StringComparison.OrdinalIgnoreCase)
-            ? storagePath[(bucket.Length + 1)..]
+        var key = storagePath.StartsWith(kind.Bucket + "/", StringComparison.OrdinalIgnoreCase)
+            ? storagePath[(kind.Bucket.Length + 1)..]
             : storagePath;
 
-        var res = await SendAsync(HttpMethod.Get, $"storage/v1/object/public/{bucket}/{EscapeKey(key)}").ConfigureAwait(false);
+        var res = await SendAsync(HttpMethod.Get, $"storage/v1/object/public/{kind.Bucket}/{EscapeKey(key)}").ConfigureAwait(false);
         if (!res.Ok) throw new HttpRequestException(ErrorText("Download Error", res));
         return res.Body!;
     }
 
     /// <summary> Counts a download once per signed-in user (never the owner); returns the new total, or null on failure. </summary>
-    public async Task<int?> RecordDownloadAsync(Guid deckId)
+    public async Task<int?> RecordDownloadAsync(Guid id, CloudKind? kind = null)
     {
-        var res = await SendAsync(HttpMethod.Post, "rest/v1/rpc/record_deck_download", new { p_deck_id = deckId }).ConfigureAwait(false);
+        kind ??= CloudKind.Sets;
+        var res = await SendAsync(HttpMethod.Post, $"rest/v1/rpc/{kind.DownloadFunction}", new Dictionary<string, object> { [kind.DownloadParameter] = id }).ConfigureAwait(false);
         if (!res.Ok)
         {
             if (res.Body is not null) Logger.LogInfo(ErrorText("Recording download failed", res));
@@ -350,18 +358,21 @@ public sealed class SupabaseConnection : IDisposable
         return int.TryParse(res.Body, out var count) ? count : null;
     }
 
-    public async Task<List<FlashCardDeckMetadata>> GetUserCloudDecksAsync(string userId)
+    public async Task<List<FlashCardDeckMetadata>> GetUserCloudDecksAsync(string userId, CloudKind? kind = null)
     {
-        var res = await SendAsync(HttpMethod.Get, $"rest/v1/decks?select={DeckColumns},visibility&storage_path=ilike.{Uri.EscapeDataString(userId)}/*").ConfigureAwait(false);
+        kind ??= CloudKind.Sets;
+        var res = await SendAsync(HttpMethod.Get, $"rest/v1/{kind.Table}?select={Columns(kind)},visibility&storage_path=ilike.{Uri.EscapeDataString(userId)}/*").ConfigureAwait(false);
         if (!res.Ok) throw new HttpRequestException(ErrorText("Database Error", res));
 
         return JsonSerializer.Deserialize<List<FlashCardDeckMetadata>>(res.Body!, TextUtility.CaseInsensitive) ?? [];
     }
 
-    public async Task<List<FlashCardDeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25)
+    public async Task<List<FlashCardDeckMetadata>> GetPublicDecksAsync(string searchText = "", int limit = 25, CloudKind? kind = null)
     {
-        // search_public_decks (a Supabase SQL function) matches title or uploader name, most downloaded first.
-        var path = $"rest/v1/rpc/search_public_decks?select={DeckColumns},owner:profiles(display_name)&p_limit={limit}";
+        kind ??= CloudKind.Sets;
+
+        // The search function (on the server) matches title or uploader name, most downloaded first.
+        var path = $"rest/v1/rpc/{kind.SearchFunction}?select={Columns(kind)},owner:profiles(display_name)&p_limit={limit}";
         if (!string.IsNullOrWhiteSpace(searchText))
         {
             path += $"&p_query={Uri.EscapeDataString(searchText.Trim())}";
@@ -372,6 +383,13 @@ public sealed class SupabaseConnection : IDisposable
 
         return JsonSerializer.Deserialize<List<FlashCardDeckMetadata>>(res.Body!, TextUtility.CaseInsensitive) ?? [];
     }
+}
+
+/// <summary> Sets and notes each have their own table, file bucket and server functions. </summary>
+public sealed record CloudKind(string Table, string Bucket, string SearchFunction, string DownloadFunction, string DownloadParameter, string SizeColumn, string Noun)
+{
+    public static readonly CloudKind Sets = new("decks", "decks", "search_public_decks", "record_deck_download", "p_deck_id", "card_count", "Deck");
+    public static readonly CloudKind Notes = new("notes", "notes", "search_public_notes", "record_note_download", "p_note_id", "word_count", "Note");
 }
 
 /// <summary> A signed-in Supabase session as the app stores it. </summary>

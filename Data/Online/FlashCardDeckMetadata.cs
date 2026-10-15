@@ -15,6 +15,12 @@ public partial class FlashCardDeckMetadata : ObservableObject, ISearchable
     [JsonPropertyName("storage_path")] public string? StoragePath { get; set; }
     [JsonPropertyName("card_count")] public int CardCount { get; set; }
 
+    /// <summary> Set only on notes, which have words rather than cards. </summary>
+    [JsonPropertyName("word_count")] public int? WordCount { get; set; }
+
+    [JsonIgnore] public bool IsNote => WordCount is not null;
+    [JsonIgnore] public string SizeText => WordCount is { } words ? TextUtility.Plural(words, "word") : TextUtility.Plural(CardCount, "card");
+
     /// <summary> 'public' (listed in community search) or 'private' (only its owner sees it). </summary>
     [JsonPropertyName("visibility")] public string? Visibility { get; set; }
 
@@ -47,8 +53,8 @@ public partial class FlashCardDeckMetadata : ObservableObject, ISearchable
     // --- Search ---
 
     [JsonIgnore] public string SearchName => Title ?? string.Empty;
-    [JsonIgnore] public IEnumerable<string?> SearchKeywords => [CardCount.ToString(), Description, UploaderName, .. Tags ?? []];
-    [JsonIgnore] public int SortCardCount => CardCount;
+    [JsonIgnore] public IEnumerable<string?> SearchKeywords => [(WordCount ?? CardCount).ToString(), Description, UploaderName, .. Tags ?? []];
+    [JsonIgnore] public int SortCardCount => WordCount ?? CardCount;
     [JsonIgnore] public int SortDownloads => DownloadCount;
 
     // Cloud decks have no local study history, so the recency sort uses their last publish time.

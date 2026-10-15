@@ -11,7 +11,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.ViewModels;
 
-/// <summary> Cloud Manager: upload local decks and manage your own cloud decks. Only opened once signed in. </summary>
+/// <summary> Cloud Manager: upload local sets or notes and manage your own cloud copies. Only opened once signed in. </summary>
 public partial class OnlineExportViewModel : OnlineViewModelBase
 {
     /// <summary> Uploads carry the folder path as the cloud description, and downloads rebuild it. </summary>
@@ -20,12 +20,48 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     /// <summary> New uploads stay out of community search, visible only to their owner. </summary>
     [ObservableProperty] private bool _uploadAsPrivate;
 
-    /// <summary> Folder your own decks are downloaded into; null for the main menu. </summary>
+    /// <summary> Folder your own sets and notes are downloaded into; null for the main menu. </summary>
     private readonly ulong? _targetFolderID;
 
     [ObservableProperty] private bool _isSelectingUpdateDeck;
     [ObservableProperty] private FlashCardDeckMetadata? _targetCloudDeckToUpdate;
-    [ObservableProperty] private FlashCardDeck? _selectedLocalDeckForUpdate;
+    [ObservableProperty] private LibraryItem? _selectedLocalItemForUpdate;
+
+    /// <summary> Both panes show notes rather than sets. </summary>
+    [NotifyPropertyChangedFor(nameof(ShowSets), nameof(IsNotesSelected), nameof(ItemNoun), nameof(ItemsNoun), nameof(CloudSearchWatermark),
+        nameof(LoadingText), nameof(UpdateTitle), nameof(UpdateHint))]
+    [ObservableProperty] private bool _showNotes;
+    partial void OnShowNotesChanged(bool value)
+    {
+        IsSelectingUpdateDeck = false;
+        CloudSearchText = "";
+        ShowLocalItems();
+        CloudDecks.Clear();
+        FilteredCloudDecks.Clear();
+        _ = LoadInitialCloudDecksAsync();
+    }
+
+    // Bound to toggle buttons, so clicking the selected one keeps it selected.
+    public bool ShowSets
+    {
+        get => !ShowNotes;
+        set { if (value) ShowNotes = false; else OnPropertyChanged(); }
+    }
+
+    public bool IsNotesSelected
+    {
+        get => ShowNotes;
+        set { if (value) ShowNotes = true; else OnPropertyChanged(); }
+    }
+
+    private CloudKind Kind => ShowNotes ? CloudKind.Notes : CloudKind.Sets;
+
+    public string ItemNoun => ShowNotes ? "note" : "set";
+    public string ItemsNoun => ShowNotes ? "notes" : "sets";
+    public string CloudSearchWatermark => $"Search your cloud {ItemsNoun}...";
+    public string LoadingText => $"Loading your cloud {ItemsNoun}...";
+    public string UpdateTitle => ShowNotes ? "Select Local Note" : "Select Local Set";
+    public string UpdateHint => $"Choose which {ItemNoun} on this device should replace the one in the cloud.";
 
     private string _cloudSearchText = string.Empty;
     public string CloudSearchText
@@ -34,10 +70,10 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         set { SetProperty(ref _cloudSearchText, value); RefreshCloudDecks(); }
     }
 
-    /// <summary> Local decks to upload, browsed by folder like the main menu. </summary>
+    /// <summary> Local sets or notes to upload, browsed by folder like the main menu. </summary>
     public DeckFolderBrowser LocalBrowser { get; }
 
-    /// <summary> Local deck picker inside the "update a cloud deck" overlay. </summary>
+    /// <summary> Local picker inside the "update a cloud copy" overlay. </summary>
     public DeckFolderBrowser UpdateBrowser { get; }
 
     public ObservableCollection<FlashCardDeckMetadata> CloudDecks { get; } = [];
@@ -54,7 +90,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
     private bool CanAct() => !IsBusy;
 
-    /// <summary> True until the first fetch of your cloud sets finishes. </summary>
+    /// <summary> True until the first fetch of your cloud copies finishes. </summary>
     [ObservableProperty] private bool _isLoadingCloudDecks;
 
     partial void OnIsBusyChanged(bool value)
@@ -69,12 +105,20 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     public OnlineExportViewModel(ulong? targetFolderID = null)
     {
         _targetFolderID = targetFolderID;
-        LocalBrowser = new DeckFolderBrowser("Upload", deck => UploadCommand.Execute(deck));
-        UpdateBrowser = new DeckFolderBrowser("Select", deck => SelectedLocalDeckForUpdate = deck);
+        LocalBrowser = new DeckFolderBrowser("Upload", (LibraryItem item) => UploadCommand.Execute(item));
+        UpdateBrowser = new DeckFolderBrowser("Select", (LibraryItem item) => SelectedLocalItemForUpdate = item);
         SelectedCloudSortOption = CloudSortOptions[0];
 
-        LocalBrowser.SetDecks(FlashCardRepository.GetAllDecks());
+        ShowLocalItems();
         _ = LoadInitialCloudDecksAsync();
+    }
+
+    private void ShowLocalItems() => ShowLocalItems(LocalBrowser);
+
+    private void ShowLocalItems(DeckFolderBrowser browser)
+    {
+        if (ShowNotes) browser.SetNotes(NoteRepository.GetAllNotes());
+        else browser.SetDecks(FlashCardRepository.GetAllDecks());
     }
 
     [RelayCommand]
@@ -88,36 +132,26 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     {
         if (deck == null) return;
         TargetCloudDeckToUpdate = deck;
-        SelectedLocalDeckForUpdate = null;
+        SelectedLocalItemForUpdate = null;
 
-        // Fresh deck objects: the upload pane stamps its own relative "in ..." labels on its copies.
+        // Fresh objects: the upload pane stamps its own relative "in ..." labels on its copies.
         UpdateBrowser.NavigateTo(null);
-        UpdateBrowser.SetDecks(FlashCardRepository.GetAllDecks());
+        ShowLocalItems(UpdateBrowser);
         IsSelectingUpdateDeck = true;
     }
 
     [RelayCommand(CanExecute = nameof(CanAct))]
-    private async Task UploadAsync(FlashCardDeck? deck)
+    private async Task UploadAsync(LibraryItem? item)
     {
-        if (IsBusy || deck == null || AuthSession.UserId is not { Length: > 0 } userId) return;
+        if (IsBusy || item == null || AuthSession.UserId is not { Length: > 0 } userId) return;
 
-        var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
-        if (cards.Count == 0)
-        {
-            StatusMessage = "Cannot upload an empty deck.";
-            return;
-        }
-        if (DeckTransferManager.HasImages(cards))
-        {
-            StatusMessage = ImagesCantUploadText(deck.Name);
-            return;
-        }
+        if (PrepareUpload(item) is not { } upload) return;
+        var kind = Kind;
 
-        await RunGuardedAsync($"Uploading '{deck.Name}'", async () =>
+        await RunGuardedAsync($"Uploading '{item.Name}'", async () =>
         {
-            var (jsonPayload, description) = BuildCloudPayload(deck);
             using var client = await SupabaseConnection.CreateAsync();
-            var (success, message) = await client.UploadCloudDeckAsync(userId, deck.Name, description, cards.Count, jsonPayload, UploadAsPrivate);
+            var (success, message) = await client.UploadCloudDeckAsync(userId, item.Name, upload.Description, upload.Size, upload.Json, UploadAsPrivate, kind);
 
             if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
@@ -129,32 +163,21 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     {
         if (IsBusy || TargetCloudDeckToUpdate is not { StoragePath: { } storagePath } target) return;
 
-        if (SelectedLocalDeckForUpdate is not { } local)
+        if (SelectedLocalItemForUpdate is not { } local)
         {
-            StatusMessage = "Please select a local deck to upload.";
+            StatusMessage = $"Please select a {ItemNoun} on this device to upload.";
             return;
         }
 
-        var cards = FlashCardRepository.GetCardsForDeck(local.ID);
-        if (cards.Count == 0)
-        {
-            StatusMessage = "Cannot update with an empty local deck.";
-            return;
-        }
-        if (DeckTransferManager.HasImages(cards))
-        {
-            StatusMessage = ImagesCantUploadText(local.Name);
-            return;
-        }
+        if (PrepareUpload(local) is not { } upload) return;
+        var kind = Kind;
 
         IsSelectingUpdateDeck = false;
 
         await RunGuardedAsync($"Updating '{target.Title}'", async () =>
         {
-            var (jsonPayload, description) = BuildCloudPayload(local);
             using var client = await SupabaseConnection.CreateAsync();
-
-            var (success, message) = await client.UpdateCloudDeckAsync(storagePath, local.Name, description, cards.Count, jsonPayload);
+            var (success, message) = await client.UpdateCloudDeckAsync(storagePath, local.Name, upload.Description, upload.Size, upload.Json, kind);
 
             if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
@@ -173,30 +196,33 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             return;
         }
 
+        var kind = Kind;
         await RunGuardedAsync(makePrivate ? $"Making '{deck.Title}' private" : $"Making '{deck.Title}' public", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
-            var (success, message) = await client.SetCloudDeckVisibilityAsync(userId, deck.StoragePath, makePrivate);
+            var (success, message) = await client.SetCloudDeckVisibilityAsync(userId, deck.StoragePath, makePrivate, kind);
 
             if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
         }, "Change failed");
     }
 
-    /// <summary> Brings one of your own cloud decks (public or private) onto this device. </summary>
+    /// <summary> Brings one of your own cloud sets or notes (public or private) onto this device. </summary>
     [RelayCommand(CanExecute = nameof(CanAct))]
     private async Task DownloadAsync(FlashCardDeckMetadata? deck)
     {
         if (IsBusy || deck?.StoragePath == null) return;
 
+        var kind = Kind;
         await RunGuardedAsync($"Downloading '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
-            string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath);
-            DeckTransferManager.TryImportCloudDeck(json, _targetFolderID, IncludeFolderInfo);
+            string json = await client.DownloadCloudDeckJsonAsync(deck.StoragePath, kind);
+            if (kind == CloudKind.Notes) DeckTransferManager.TryImportCloudNote(json, _targetFolderID, IncludeFolderInfo);
+            else DeckTransferManager.TryImportCloudDeck(json, _targetFolderID, IncludeFolderInfo);
 
             // The new copy belongs in the upload pane too.
-            LocalBrowser.SetDecks(FlashCardRepository.GetAllDecks());
+            if (kind == Kind) ShowLocalItems();
 
             return $"Downloaded '{deck.Title}' to this device.";
         }, "Download failed");
@@ -214,21 +240,51 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             return;
         }
 
+        var kind = Kind;
         await RunGuardedAsync($"Deleting '{deck.Title}'", async () =>
         {
             using var client = await SupabaseConnection.CreateAsync();
-            var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath);
+            var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath, kind);
 
             if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
             return message;
         }, "Delete failed");
     }
 
-    /// <summary> The cloud JSON plus its description: the folder path when included, otherwise empty. </summary>
-    private (string Json, string Description) BuildCloudPayload(FlashCardDeck deck)
+    /// <summary> What an upload sends for a set or note, or null with <see cref="OnlineViewModelBase.StatusMessage"/> saying why it can't go. </summary>
+    internal CloudUpload? PrepareUpload(LibraryItem item)
     {
-        List<string> folderPath = IncludeFolderInfo ? DeckTransferManager.GetFolderPathNames(deck.FolderID) : [];
-        return (DeckTransferManager.GenerateCloudExportJson(deck.ID, folderPath), string.Join(FolderTree.PathSeparator, folderPath));
+        List<string> folderPath = IncludeFolderInfo ? DeckTransferManager.GetFolderPathNames(item.ContainerFolderID) : [];
+        var description = string.Join(FolderTree.PathSeparator, folderPath);
+
+        if (item is Note note)
+        {
+            var content = NoteRepository.GetContent(note.ID);
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                StatusMessage = "Cannot upload an empty note.";
+                return null;
+            }
+            if (ImageToken.Shows(content))
+            {
+                StatusMessage = ImagesCantUploadText(note.Name, "notes");
+                return null;
+            }
+            return new CloudUpload(DeckTransferManager.GenerateCloudNoteJson(note.Name, content, folderPath), description, NoteText.WordCount(content));
+        }
+
+        var cards = FlashCardRepository.GetCardsForDeck(item.ID);
+        if (cards.Count == 0)
+        {
+            StatusMessage = "Cannot upload an empty set.";
+            return null;
+        }
+        if (DeckTransferManager.HasImages(cards))
+        {
+            StatusMessage = ImagesCantUploadText(item.Name, "sets");
+            return null;
+        }
+        return new CloudUpload(DeckTransferManager.GenerateCloudExportJson(item.ID, folderPath), description, cards.Count);
     }
 
     private void RefreshCloudDecks()
@@ -239,10 +295,10 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         foreach (var d in fDecks) FilteredCloudDecks.Add(d);
     }
 
-    private const string ListRefreshFailedText = "Couldn't refresh your cloud sets. Check your connection.";
+    private string ListRefreshFailedText => $"Couldn't refresh your cloud {ItemsNoun}. Check your connection.";
 
-    private static string ImagesCantUploadText(string deckName) =>
-        $"'{deckName}' has images, and sets with images can't be uploaded yet: the images would stay on this computer. Back the set up from Settings to keep it safe.";
+    private static string ImagesCantUploadText(string name, string kinds) =>
+        $"'{name}' has images, and {kinds} with images can't be uploaded yet: the images would stay on this computer. Back it up from Settings to keep it safe.";
 
     private async Task RunGuardedAsync(string busyText, Func<Task<string>> work, string failPrefix)
     {
@@ -259,7 +315,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         bool loaded = await LoadCloudDecksAsync();
         IsLoadingCloudDecks = false;
 
-        if (!loaded) StatusMessage = "Couldn't load your cloud sets. Check your connection.";
+        if (!loaded) StatusMessage = $"Couldn't load your cloud {ItemsNoun}. Check your connection.";
     }
 
     /// <summary> False when the list couldn't be loaded; the list on screen is then left as it was. </summary>
@@ -267,10 +323,14 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     {
         if (AuthSession.UserId is not { Length: > 0 } userId) return true;
 
+        var kind = Kind;
         try
         {
             using var client = await SupabaseConnection.CreateAsync();
-            var remoteDecks = await client.GetUserCloudDecksAsync(userId);
+            var remoteDecks = await client.GetUserCloudDecksAsync(userId, kind);
+
+            // Switched between sets and notes while this was loading: the other list is on screen now.
+            if (kind != Kind) return true;
 
             CloudDecks.Clear();
             foreach (var deck in remoteDecks) CloudDecks.Add(deck);
@@ -280,8 +340,11 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         }
         catch (Exception ex)
         {
-            Logger.LogError("Failed to load cloud decks", ex);
+            Logger.LogError($"Failed to load cloud {kind.Table}", ex);
             return false;
         }
     }
 }
+
+/// <summary> An upload's file, its description (the folder path, or empty) and size (cards or words). </summary>
+internal sealed record CloudUpload(string Json, string Description, int Size);

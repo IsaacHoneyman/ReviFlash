@@ -71,13 +71,7 @@ public static class DeckTransferManager
 
         var flashCards = cards.Select(FlashCardFactory.FromExportEntry).ToList();
 
-        // Uploads without a FolderPath land directly in the target folder.
-        List<string> folderNames = recreateFolders && root.TryGetProperty("FolderPath", out var pathProp) && pathProp.ValueKind == JsonValueKind.Array
-            ? [.. pathProp.EnumerateArray()
-                .Where(name => name.ValueKind == JsonValueKind.String)
-                .Select(name => name.GetString()!.Trim())
-                .Where(name => name.Length > 0)]
-            : [];
+        var folderNames = FolderNames(root, recreateFolders);
 
         DatabaseManager.InitDatabase();
 
@@ -86,5 +80,40 @@ public static class DeckTransferManager
             var folderID = FolderRepository.EnsureFolderPath(connection, transaction, targetFolderID, folderNames);
             DeckRepository.InsertDeckWithCards(connection, transaction, deckName, folderID, flashCards);
         });
+    }
+
+    /// <summary> The uploader's folder names to rebuild; none when not wanted or the upload has none, so it lands in the target folder. </summary>
+    private static List<string> FolderNames(JsonElement root, bool recreateFolders) =>
+        recreateFolders && root.TryGetProperty("FolderPath", out var pathProp) && pathProp.ValueKind == JsonValueKind.Array
+            ? [.. pathProp.EnumerateArray()
+                .Where(name => name.ValueKind == JsonValueKind.String)
+                .Select(name => name.GetString()!.Trim())
+                .Where(name => name.Length > 0)]
+            : [];
+
+    // --- Notes ---
+
+    public static string GenerateCloudNoteJson(string name, string content, IReadOnlyList<string> folderPath) =>
+        JsonSerializer.Serialize(new { ExportVersion = 1, Kind = "note", NoteName = name, FolderPath = folderPath, Content = content }, TextUtility.Indented);
+
+    /// <summary> Adds a downloaded note as a new note in the target folder (null for the main menu), optionally rebuilding the uploader's folders beneath it. </summary>
+    public static Models.Note TryImportCloudNote(string jsonPayload, ulong? targetFolderID = null, bool recreateFolders = false)
+    {
+        using var document = JsonDocument.Parse(jsonPayload);
+        var root = document.RootElement;
+
+        if (!root.TryGetProperty("Content", out var contentProp) || contentProp.ValueKind != JsonValueKind.String)
+            throw new InvalidDataException("The downloaded note has no readable text.");
+
+        var name = root.TryGetProperty("NoteName", out var nameProp) && nameProp.ValueKind == JsonValueKind.String && nameProp.GetString() is { } given && given.Trim().Length > 0
+            ? given.Trim() : "Imported Note";
+        var folderNames = FolderNames(root, recreateFolders);
+
+        DatabaseManager.InitDatabase();
+
+        var folderID = Db.InTransaction((connection, transaction) => FolderRepository.EnsureFolderPath(connection, transaction, targetFolderID, folderNames));
+        var note = NoteRepository.CreateNote(name, folderID);
+        NoteRepository.SaveContent(note.ID, contentProp.GetString()!);
+        return note;
     }
 }
