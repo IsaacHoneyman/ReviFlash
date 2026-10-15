@@ -27,7 +27,7 @@ jobs:
 
       - name: Convert icon to .icns
         run: |
-          sips -s format png Assets/ReviFlashLogo.ico --out icon.png
+          cp Assets/ReviFlashLogo.png icon.png
           mkdir ReviFlash.iconset
           for size in 16 32 128 256 512; do
             sips -z $size $size icon.png --out ReviFlash.iconset/icon_${size}x${size}.png

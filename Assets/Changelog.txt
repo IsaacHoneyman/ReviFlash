@@ -36,6 +36,7 @@
 - Signing out only signs out this device, and being offline no longer asks you to sign in again.
 
 \H2{Also}
+- A new app icon, sharp at every size.
 - A changelog in Help, which opens after each update (you can turn that off in Settings).
 - Anki import handles nested clozes, lists, braces and filtered decks better, and is much faster on messy fields.
 - Typed cloze answers with several blanks accept commas or spaces between them.

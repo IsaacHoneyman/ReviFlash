@@ -53,3 +53,4 @@ An image in a cloze blank stays hidden until the answer is shown; a typed cloze 
 Images are included in backups, and images no card or note uses any more are removed when ReviFlash starts.
 Anki import brings images across instead of marking them [image]; only images missing from the file or in a format ReviFlash can't read are still marked.
 Sets with images can't be uploaded to the cloud yet, and Upload says why.
+A new app icon, sharp at every size on Windows, macOS and Linux.
