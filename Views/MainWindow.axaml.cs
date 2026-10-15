@@ -12,6 +12,7 @@ using ReviFlash.Models;
 using ReviFlash.ViewModels;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Views;
 
@@ -99,6 +100,10 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object? sender, RoutedEventArgs e)
     {
+        if (ChangelogUtility.ShouldShowAfterUpdate(MetaDataManager.VersionBeforeLaunch, TextUtility.VersionText,
+                MetaDataManager.Data.ShowWhatsNewAfterUpdate, ChangelogUtility.HasNotesFor(TextUtility.VersionNumber)))
+            SyntaxGuideWindow.ShowFor(this, HelpTab.WhatsNew);
+
         if (!MetaDataManager.Data.CheckForUpdatesOnStartup) return;
         var updateClient = new UpdateClient();
         var check = await updateClient.CheckForUpdatesAsync();

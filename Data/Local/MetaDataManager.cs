@@ -11,6 +11,9 @@ public static class MetaDataManager
 {
     public static AppMetaData Data { get; private set; } = null!;
 
+    /// <summary> The version that last ran, e.g. "Version 1.3.3"; the current one on a fresh install. </summary>
+    public static string VersionBeforeLaunch { get; private set; } = "";
+
     private static string GetFilePath()
     {
         return TextUtility.MetadataPath;
@@ -30,6 +33,7 @@ public static class MetaDataManager
         data.LastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
 
         SettingsViewModel.ApplyTheme(data, data.Theme);
+        VersionBeforeLaunch = data.Version;
         data.Version = TextUtility.VersionText;
         Data = data;
         SaveMetaData();

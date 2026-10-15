@@ -16,7 +16,8 @@
     <Folder Include="Models\" />
     <AvaloniaXaml Remove="**/*.axaml" />
     <AvaloniaXaml Include="**/*.axaml" Exclude="**/bin/**;**/obj/**" />
-    <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\Changelog.txt" />
+    <EmbeddedResource Include="Assets\Changelog.txt" LogicalName="ReviFlash.Changelog.txt" />
     <Compile Remove="ReviFlash.Tests/**" />
     <None Remove="ReviFlash.Tests/**" />
     <InternalsVisibleTo Include="ReviFlash.Tests" />

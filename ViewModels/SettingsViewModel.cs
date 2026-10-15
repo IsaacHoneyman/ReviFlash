@@ -86,6 +86,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private bool _showBackgroundSwirl;
     [ObservableProperty] private bool _useLatexFontForCards;
     [ObservableProperty] private bool _checkForUpdatesOnStartup;
+    [ObservableProperty] private bool _showWhatsNewAfterUpdate;
 
     public SettingsViewModel()
     {
@@ -102,6 +103,7 @@ public partial class SettingsViewModel : ViewModelBase
         _showBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
         _useLatexFontForCards = MetaDataManager.Data.UseLatexFontForCards;
         _checkForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
+        _showWhatsNewAfterUpdate = MetaDataManager.Data.ShowWhatsNewAfterUpdate;
     }
 
     /// <summary> Stops listening to the app-wide metadata; call when the window closes. </summary>
@@ -132,6 +134,7 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnShowBackgroundSwirlChanged(bool value) => Save(data => data.ShowBackgroundSwirl = value);
     partial void OnUseLatexFontForCardsChanged(bool value) => Save(data => data.UseLatexFontForCards = value);
     partial void OnCheckForUpdatesOnStartupChanged(bool value) => Save(data => data.CheckForUpdatesOnStartup = value);
+    partial void OnShowWhatsNewAfterUpdateChanged(bool value) => Save(data => data.ShowWhatsNewAfterUpdate = value);
 
     private static void Save(Action<AppMetaData> apply)
     {
@@ -165,5 +168,6 @@ public partial class SettingsViewModel : ViewModelBase
         ShowBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
         UseLatexFontForCards = MetaDataManager.Data.UseLatexFontForCards;
         CheckForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
+        ShowWhatsNewAfterUpdate = MetaDataManager.Data.ShowWhatsNewAfterUpdate;
     }
 }

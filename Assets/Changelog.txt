@@ -1,0 +1,136 @@
+=== 1.4.0
+\H2{Keyboard shortcuts everywhere}
+- On the main menu, the arrow keys move between cards, F or Ctrl+F jumps to search and Ctrl+N creates a set, note, folder or group.
+- E, M, S and Delete edit, move, show stats for or delete the highlighted card.
+- Esc always backs out a step, and on the main menu asks before quitting.
+- F1 shows every shortcut, F2 opens Settings and F3 opens the graph view.
+- In a note, Tab shows or hides the contents and Ctrl+Enter makes a card.
+
+\H2{Deck editor}
+- Move or copy a card to any set. Moving keeps its answer history; copying makes a fresh card, even in the same set.
+- \B{New Card From This} starts a new card from an existing one.
+- The Front and Back boxes grow as you type, and a spinner shows while cards load.
+- The preview updates as you type, and only waits for a pause on cards with lots of maths.
+- It only asks before discarding a card when there's something to lose.
+
+\H2{Stats}
+- Time spent editing sets is tracked like notes time, and shows as Editing Time in stats, the study time chart and the calendar.
+- Folders have their own stats button, covering everything inside them.
+- Your best answer streak sits beside your current one.
+- Every answer is now recorded against its card, ready for per-card stats.
+- Study days are recorded in your own time zone, and Last Day, Last Week and the other periods cover exactly that many days including today.
+
+\H2{Formatting}
+- A new code style (Ctrl+T or the toolbar) shows text in a typewriter font, also inside maths.
+- Many fixes to formatting shortcuts, bullet points, maths and undo in notes.
+
+\H2{Online}
+- Online actions show a spinner while they run, and say clearly when they can't connect.
+- Signing out only signs out this device, and being offline no longer asks you to sign in again.
+
+\H2{Also}
+- This What's New tab, which opens after each update (you can turn that off in Settings).
+- Anki import handles nested clozes, lists, braces and filtered decks better, and is much faster on messy fields.
+- Typed cloze answers with several blanks accept commas or spaces between them.
+- Over 50 other fixes, from search speed to settings that can no longer be lost in a crash.
+
+=== 1.3.3
+- Searching is faster in a big library, and a folder found by search shows where it lives.
+- Esc closes the Move to Folder, Study Group, Delete Stats and rename windows.
+- Folder study time now includes time in notes.
+
+=== 1.3.2
+- Ctrl+L selects the line you're on; press it again to take in the next line too.
+- In a note, Backspace at the start of a paragraph joins it onto the one before.
+
+=== 1.3.1
+- Bullet points: start a line with "- " to make one, in notes and cards. The \B{• Point} button or Ctrl+P turns selected lines into bullet points or back.
+- Lists in Anki decks import as bullet points.
+
+=== 1.3.0
+\H2{Lecture notes}
+- Write notes next to your flashcards from \B{+ New → Note}, with the same formatting, headings and maths as cards.
+- Click a paragraph to edit it; notes save themselves as you type.
+- A Contents panel lists the note's headings, and \B{Make Card} turns selected text into a card in any set.
+
+\H2{Stats}
+- Time in notes is counted, and overall stats show Total Time split into flashcards and notes.
+- Every note has its own stats, and the graph view gains Where Your Time Went and a Study Calendar.
+
+\H2{Also}
+- Headings in notes and cards, with H1–H3 toolbar buttons and Ctrl+1/2/3.
+- A Help button with the Formatting Guide and a Keyboard Shortcuts list.
+- ReviFlash opens about 2.5 times faster, and the background swirl uses far less CPU.
+
+=== 1.2.2
+- Fixed italic text at the end of a line being cut off.
+
+=== 1.2.1
+- Match cards in reviews have a cleaner layout: the items sit on the left with the answers to place on the right, and the results list each pair on its own line, so long answers no longer overlap.
+
+=== 1.2.0
+\H2{Import from Anki}
+- Bring your Anki decks across from \B{Settings → Import from Anki}, from any Anki version.
+- Formatting, maths, cloze deletions, "type in the answer" cards and reversed cards come across, and sub-decks become folders.
+- Images aren't supported yet: cards with images keep their text and are marked [image].
+
+\H2{New card options}
+- \B{Cloze} cards: wrap the parts to hide in \T{\\C\{...\}} and each blank becomes its own question. Blanks with the same number are hidden together, they work inside maths, and you can reveal or type the answer.
+- Flip cards can be asked both ways: tick "Also ask in reverse".
+- Underlined text with \T{\\U\{...\}}.
+
+\H2{Card editor}
+- A formatting toolbar above the card fields, with shortcuts: Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+M, Ctrl+Shift+M and Ctrl+Shift+C.
+- A \B{Formatting Guide} with examples of formatting, cloze blanks and maths next to how they look.
+
+\H2{Reviews}
+- Fully keyboard driven: Space shows the answer, ← and → mark it, number keys pick options, Enter moves on, S skips, R retries later and Esc quits.
+- Match cards are answered by picking answer chips instead of drop-down menus.
+- A wider card with bigger text, and maths sized to match the text around it.
+- Skipping the last card ends the review, and Enter finishes from the results screen.
+
+\H2{Also}
+- Deleting a folder can also delete everything inside it.
+- The LaTeX font option uses Latin Modern for card text, with bold, italic and underline all working.
+- Confirmation dialogs: Enter proceeds and Esc cancels.
+
+=== 1.1.1
+\H2{macOS}
+- ReviFlash runs on Macs with Apple Silicon (M1 and later), with the same automatic updates as Windows and Linux.
+
+\H2{Maths}
+- Maths flows inline with the text around it and wraps with it, and looks the same in the editor previews and reviews.
+- \T{\$\$...\$\$} shows maths centred on its own line, while \T{\$...\$} stays inline.
+- Many more LaTeX commands and matrix layouts work, such as bmatrix, cases and aligned.
+- Bold and italic text with \T{\\B\{...\}} and \T{\\I\{...\}}, which also work inside maths.
+- Maths that can't be shown appears as typed in reviews, with the error in the editor preview.
+- A \B{LaTeX Font for Card Text} option in Settings → Appearance.
+
+=== 1.1.0
+\H2{Accounts}
+- One sign-in for all online features, and you stay signed in until you sign out.
+- The main menu shows who you're signed in as, and Settings has an Account section.
+- Forgotten passwords can be reset with a code sent by email.
+
+\H2{Sharing}
+- Upload a deck as private, or switch your decks between public and private. Private decks are the way to move sets between your devices.
+- Your cloud decks have buttons to download, update, make private or public, and delete.
+- Community decks show who uploaded them and how often they've been downloaded, and you can sort by most downloaded.
+- Folders come along with uploads and downloads, and are used for picking sets in the group editor.
+
+\H2{Backups and settings}
+- Backups no longer contain your sign-in, are checked before restoring, and restoring asks first.
+- Deleting one deck's stats has its own window, browsed by folder.
+
+\H2{Also}
+- Updates show their download progress, and a failed update says so.
+- Proper icons for ✕, ✓, + and ↔, so they look the same on every system.
+- Many fixes, including unreadable Danger Zone buttons on some themes and restoring backups.
+
+=== 1.0.0
+- The first release of ReviFlash: flashcards that trust you to choose what to study.
+- Flip, Type to Answer, Multiple Choice, Match and True/False cards, with LaTeX maths.
+- Study Groups to review several sets together.
+- Share sets online: upload your own and download community sets.
+- Detailed stats with grades, session timing and charts.
+- Automatic updates.

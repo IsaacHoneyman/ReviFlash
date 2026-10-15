@@ -22,6 +22,7 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private bool _showBackgroundSwirl;
     [ObservableProperty] private bool _useLatexFontForCards;
     [ObservableProperty] private bool _checkForUpdatesOnStartup = true;
+    [ObservableProperty] private bool _showWhatsNewAfterUpdate = true;
     [ObservableProperty] private string _databasePath = TextUtility.DatabasePath;
     [ObservableProperty] private string? _supabaseAccessToken;
     [ObservableProperty] private string? _supabaseRefreshToken;
@@ -46,6 +47,7 @@ public partial class AppMetaData : ObservableObject
         ShowBackgroundSwirl = other.ShowBackgroundSwirl;
         UseLatexFontForCards = other.UseLatexFontForCards;
         CheckForUpdatesOnStartup = other.CheckForUpdatesOnStartup;
+        ShowWhatsNewAfterUpdate = other.ShowWhatsNewAfterUpdate;
         DatabasePath = other.DatabasePath;
         SupabaseAccessToken = other.SupabaseAccessToken;
         SupabaseRefreshToken = other.SupabaseRefreshToken;

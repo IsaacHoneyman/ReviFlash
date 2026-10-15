@@ -32,7 +32,9 @@ public static partial class TextUtility
     public static string MetadataPath => Path.Combine(AppDataDirectory, MetadataFileName);
     public static string DatabasePath => Path.Combine(AppDataDirectory, DatabaseFileName);
 
-    public static string VersionText => $"Version {GetAssemblyVersionText()}";
+    public static string VersionText => $"Version {VersionNumber}";
+
+    public static string VersionNumber => GetAssemblyVersionText();
 
     private static string GetAssemblyVersionText()
     {

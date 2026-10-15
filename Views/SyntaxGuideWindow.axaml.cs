@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Views;
 
@@ -13,12 +14,14 @@ public sealed record ShortcutRow(IReadOnlyList<string> Keys, string Action);
 
 public sealed record ShortcutSection(string Title, string? Note, IReadOnlyList<ShortcutRow> Rows, IReadOnlyList<ShortcutSection>? Subsections = null);
 
-public enum HelpTab { Formatting, KeyboardShortcuts }
+public enum HelpTab { Formatting, KeyboardShortcuts, WhatsNew }
 
-/// <summary> Help: card syntax with each example beside its rendering, plus every keyboard shortcut. </summary>
+/// <summary> Help: card syntax with each example beside its rendering, every keyboard shortcut, and what's new in each version. </summary>
 public partial class SyntaxGuideWindow : Window
 {
     private static SyntaxGuideWindow? _open;
+
+    public IReadOnlyList<ReleaseNotes> ReleaseNotes => ChangelogUtility.Bundled;
 
     public IReadOnlyList<GuideSection> Sections { get; } =
     [
