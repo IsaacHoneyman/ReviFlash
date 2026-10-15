@@ -96,11 +96,12 @@ public partial class SettingsWindow : Window
 
     private static string DescribeAnkiImport(AnkiImportResult result)
     {
-        var message = $"Imported {Plural(result.Cards, "card")} into {Plural(result.Decks, "deck")}.";
-        if (result.CardsWithImages > 0)
-            message += $" {Plural(result.CardsWithImages, "card")} had images, which aren't supported yet; they're marked [image] in {string.Join(", ", result.DecksWithImages)}.";
+        var message = $"Imported {Plural(result.Cards, "card")} into {Plural(result.Decks, "deck")}";
+        message += result.Images > 0 ? $", with {Plural(result.Images, "image")}." : ".";
+        if (result.CardsWithMissingImages > 0)
+            message += $" {Plural(result.CardsWithMissingImages, "card")} had images missing from the file or in a format ReviFlash can't read; they're marked [image] in {string.Join(", ", result.DecksWithMissingImages)}.";
         if (result.Skipped > 0)
-            message += $" {Plural(result.Skipped, "note")} with only images (or image occlusion) {(result.Skipped == 1 ? "was" : "were")} left out.";
+            message += $" {Plural(result.Skipped, "note")} with nothing to ask but a missing image (or image occlusion) {(result.Skipped == 1 ? "was" : "were")} left out.";
         return message;
     }
 

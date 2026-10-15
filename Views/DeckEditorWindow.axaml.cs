@@ -38,6 +38,14 @@ public partial class DeckEditorWindow : Window
         _activeField = FrontBox;
         EditorPanel.AddHandler(GotFocusEvent, EditorField_GotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(KeyDownEvent, Shortcut_KeyDown, RoutingStrategies.Tunnel);
+        ImageInsertion.Attach(EditorPanel, TakesImages, ShowImageError);
+    }
+
+    private static bool TakesImages(TextBox box) => box.Classes.Contains("field") && !box.Classes.Contains("noImages");
+
+    private void ShowImageError(string message)
+    {
+        if (ViewModel is { } vm) vm.ValidationMessage = message;
     }
 
     private void DeckEditorWindow_Opened(object? sender, EventArgs e)
@@ -125,7 +133,14 @@ public partial class DeckEditorWindow : Window
 
     private void Toolbar_FormatRequested(object? sender, FormatRequestedEventArgs e)
     {
-        if (ActiveVisibleField() is { } box) TextFormatting.Apply(box, e.Tag);
+        if (ActiveVisibleField() is not { } box) return;
+
+        if (e.Tag == "Image")
+        {
+            if (TakesImages(box)) _ = ImageInsertion.PickAsync(box, ShowImageError);
+            else ShowImageError("The typed answer can't hold an image.");
+        }
+        else TextFormatting.Apply(box, e.Tag);
     }
 
     /// <summary> The last field clicked into if it is still on screen, else the first visible field. </summary>

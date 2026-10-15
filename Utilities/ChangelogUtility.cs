@@ -8,7 +8,7 @@ namespace ReviFlash.Utilities;
 /// <summary> One version's notes, written in card formatting. </summary>
 public sealed record ReleaseNotes(string Version, string Body);
 
-/// <summary> The What's New notes shipped in Assets/Changelog.txt: each version starts with a "=== 1.4.0" line, newest first. </summary>
+/// <summary> The changelog shipped in Assets/Changelog.txt: each version starts with a "=== 1.4.0" line, newest first. </summary>
 public static class ChangelogUtility
 {
     private const string VersionMarker = "=== ";
@@ -49,7 +49,7 @@ public static class ChangelogUtility
 
     public static bool HasNotesFor(string version) => Bundled.Any(notes => notes.Version == version);
 
-    /// <summary> What's New opens once after an update: never on a fresh install, nor for a version with no notes. </summary>
+    /// <summary> The changelog opens once after an update: never on a fresh install, nor for a version with no notes. </summary>
     public static bool ShouldShowAfterUpdate(string previousVersion, string currentVersion, bool enabled, bool hasNotes) =>
         enabled && hasNotes && previousVersion != currentVersion;
 

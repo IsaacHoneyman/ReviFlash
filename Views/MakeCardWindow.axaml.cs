@@ -14,6 +14,10 @@ public partial class MakeCardWindow : Window
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, Shortcut_KeyDown, RoutingStrategies.Tunnel);
+        ImageInsertion.Attach(FieldsPanel, box => box.Classes.Contains("field"), message =>
+        {
+            if (ViewModel is { } vm) vm.ErrorText = message;
+        });
 
         Opened += (_, _) =>
         {

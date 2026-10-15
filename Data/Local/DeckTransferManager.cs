@@ -15,6 +15,28 @@ public static class DeckTransferManager
     public static List<string> GetFolderPathNames(ulong? folderID) =>
         FolderTree.Load().AncestorChain(folderID).Select(folder => folder.Name).ToList();
 
+    /// <summary> True when any card shows an image, which can't travel with an upload yet. </summary>
+    public static bool HasImages(IEnumerable<Models.FlashCard> cards) => cards.Any(card => TextsOf(card).Any(ImageToken.Shows));
+
+    private static IEnumerable<string> TextsOf(Models.FlashCard card)
+    {
+        yield return card.Front;
+        yield return card.Back;
+        switch (card)
+        {
+            case Models.MultiFlashCard multi:
+                foreach (var (text, _) in multi.Options) yield return text;
+                break;
+            case Models.MatchFlashCard match:
+                foreach (var (left, right) in match.Options) { yield return left; yield return right; }
+                break;
+            case Models.TrueFalseFlashCard trueFalse:
+                yield return trueFalse.TrueLabel;
+                yield return trueFalse.FalseLabel;
+                break;
+        }
+    }
+
     /// <param name="folderPath"> Folder names (outermost first) to travel with the upload; empty to leave them out. </param>
     public static string GenerateCloudExportJson(ulong deckId, IReadOnlyList<string> folderPath)
     {

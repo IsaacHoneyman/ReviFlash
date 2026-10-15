@@ -156,11 +156,11 @@
     </ScrollViewer>
     </TabItem>
 
-    <TabItem Header="What's New">
+    <TabItem Header="Changelog">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
-                <TextBlock Classes="title" Text="What's New" />
+                <TextBlock Classes="title" Text="Changelog" />
                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
                     Text="The changes in each version of ReviFlash, newest first." />
             </StackPanel>

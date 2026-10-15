@@ -289,6 +289,8 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         if (IsClozeCardType)
         {
             if (!ClozeUtility.HasBlanks(NewFront)) return @"Mark at least one blank with \C{...}.";
+            if (NewClozeTypeAnswer && ClozeUtility.AnyBlankHasImage(NewFront))
+                return "A blank that hides an image can't be typed. Untick \"Answer by typing\", or move the image out of the blank.";
         }
         else if (string.IsNullOrWhiteSpace(NewFront) || string.IsNullOrWhiteSpace(NewBack))
         {

@@ -15,7 +15,10 @@ public sealed record MathSegment(string Latex, string Source, bool Display, int 
 
 public sealed record LineBreakSegment : CardSegment;
 
-/// <summary> Card text to render segments: outside maths only \B, \I, \U, \H1 to \H3, "- " bullets, \$, \- and \C{...} are special; maths is rewritten for CSharpMath. </summary>
+/// <summary> A stored image on a line of its own: <paramref name="WidthPercent"/> of the width when given, else its own size if that fits. </summary>
+public sealed record ImageSegment(string Name, int? WidthPercent = null) : CardSegment;
+
+/// <summary> Card text to render segments: outside maths only \B, \I, \U, \H1 to \H3, "- " bullets, \$, \-, \C{...} and \img{...} are special; maths is rewritten for CSharpMath. </summary>
 public static partial class LatexUtility
 {
     [GeneratedRegex(@"\\(?:big|Big|bigg|Bigg)[lrm]?(?![a-zA-Z])")]
@@ -163,6 +166,14 @@ public static partial class LatexUtility
                 {
                     text.Append(input[i + 1]);
                     i += 2;
+                    continue;
+                }
+
+                if (ImageToken.TryRead(input, i, out var image, out var afterImage))
+                {
+                    FlushText();
+                    segments.Add(image);
+                    i = afterImage;
                     continue;
                 }
 

@@ -115,7 +115,7 @@
 
                         <StackPanel Spacing="6" IsVisible="{Binding IsTypeCardType}">
                             <TextBlock Classes="fieldLabel" Text="Typed Answer (Accepted Input)" />
-                            <TextBox Classes="field" Text="{Binding NewTypeAnswer, Mode=TwoWay}" Height="40"
+                            <TextBox Classes="field noImages" Text="{Binding NewTypeAnswer, Mode=TwoWay}" Height="40"
                                 Watermark="What the user must type" />
                             <Border Classes="preview small" IsVisible="{Binding ShowAdditionalFieldLatexPreviews}">
                                 <views:MathText Text="{Binding NewTypeAnswer}" ShowErrors="True" />

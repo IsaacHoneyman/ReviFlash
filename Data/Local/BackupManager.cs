@@ -14,6 +14,8 @@ namespace ReviFlash.Data.Backup.Local;
 
 public static class BackupManager
 {
+    private const string ImageEntryPrefix = "images/";
+
     // --- Entry ---
 
     public static void TryCreateBackup(string destinationFolder, bool includeStats = true)
@@ -66,6 +68,8 @@ public static class BackupManager
                 AddFileToArchive(archive, stagedMetadata, TextUtility.MetadataFileName);
                 AddFileToArchive(archive, stagedDatabase, TextUtility.DatabaseFileName);
                 AddTextEntryToArchive(archive, "backup-manifest.json", JsonSerializer.Serialize(new BackupManifest(includeStats)));
+                foreach (var name in ImageStore.StoredNames())
+                    AddFileToArchive(archive, Path.Combine(ImageStore.Folder, name), ImageEntryPrefix + name, CompressionLevel.NoCompression);
             }
 
             File.Move(partialZipPath, zipFilePath, overwrite: true);
@@ -123,6 +127,9 @@ public static class BackupManager
             var restoredMetadata = ReadMetadataFromPath(stagedMetadata);
             ValidateDatabase(stagedDatabase);
 
+            // Named by their contents, so they join the images already here without replacing any.
+            RestoreImages(archive);
+
             BackupExistingFile(metadataPath, stagingDirectory, $"{TextUtility.MetadataFileName}.bak");
             BackupExistingFile(databasePath, stagingDirectory, $"{TextUtility.DatabaseFileName}.bak");
 
@@ -172,9 +179,9 @@ public static class BackupManager
 
     // --- Backup Helpers ---
 
-    private static void AddFileToArchive(ZipArchive archive, string sourceFilePath, string entryName)
+    private static void AddFileToArchive(ZipArchive archive, string sourceFilePath, string entryName, CompressionLevel compression = CompressionLevel.Optimal)
     {
-        var entry = archive.CreateEntry(entryName);
+        var entry = archive.CreateEntry(entryName, compression);
 
         using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var entryStream = entry.Open();
@@ -221,6 +228,20 @@ public static class BackupManager
         catch (SqliteException ex)
         {
             throw new InvalidDataException($"the database in the backup could not be read ({ex.Message}).", ex);
+        }
+    }
+
+    /// <summary> Copies in the backup's images that aren't here yet; entries with names the store wouldn't make are ignored. </summary>
+    private static void RestoreImages(ZipArchive archive)
+    {
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.FullName.StartsWith(ImageEntryPrefix, StringComparison.Ordinal)) continue;
+            if (ImageStore.PathOf(entry.FullName[ImageEntryPrefix.Length..]) is not { } path || File.Exists(path)) continue;
+
+            Directory.CreateDirectory(ImageStore.Folder);
+            entry.ExtractToFile(path + ".partial", overwrite: true);
+            File.Move(path + ".partial", path, overwrite: true);
         }
     }
 

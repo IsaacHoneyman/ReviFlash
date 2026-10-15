@@ -24,6 +24,12 @@ public partial class NoteView : UserControl
     public NoteView()
     {
         InitializeComponent();
+        ImageInsertion.Attach(BlockList, box => box.Classes.Contains("blockEditor"), ShowImageError);
+    }
+
+    private void ShowImageError(string message)
+    {
+        if (ViewModel is { } vm) vm.StatusText = message;
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -241,7 +247,10 @@ public partial class NoteView : UserControl
 
     private void Toolbar_FormatRequested(object? sender, FormatRequestedEventArgs e)
     {
-        if (_activeEditor is { IsVisible: true } box) TextFormatting.Apply(box, e.Tag);
+        if (_activeEditor is not { IsVisible: true } box) return;
+
+        if (e.Tag == "Image") _ = ImageInsertion.PickAsync(box, ShowImageError);
+        else TextFormatting.Apply(box, e.Tag);
     }
 
     // --- Make card ---

@@ -7,22 +7,26 @@ using System.Text.RegularExpressions;
 
 namespace ReviFlash.Utilities;
 
-/// <summary> Turns an Anki field (HTML, MathJax, [latex]...[/latex], {{c1::...}} clozes) into card text; images become "[image]". </summary>
+/// <summary> Turns an Anki field (HTML, MathJax, [latex]...[/latex], {{c1::...}} clozes) into card text; images become \img tokens, or "[image]" when they can't come across. </summary>
 public static partial class AnkiTextConverter
 {
     public const string ImagePlaceholder = "[image]";
 
-    public static string Convert(string field, out bool hadImage)
+    /// <param name="storeImage"> Stores an image by its file name in the package and returns its stored name, or null when it can't. </param>
+    /// <param name="missedImage"> True when an image had to be left as "[image]". </param>
+    public static string Convert(string field, Func<string, string?>? storeImage, out bool missedImage)
     {
         var maths = new List<string>();
         var text = ConvertClozes(field);
         text = ExtractLatexBlocks(text, maths);
         text = ExtractMaths(text, maths);
-        text = ConvertHtml(text, maths, out hadImage);
+        text = ConvertHtml(text, maths, storeImage, out missedImage);
         text = RestoreMaths(text, maths);
         text = ClozeOpenMarkRegex().Replace(text, @"\C$1{").Replace(ClozeClose, '}');
         return Tidy(text);
     }
+
+    public static string Convert(string field, out bool missedImage) => Convert(field, null, out missedImage);
 
     public static string Convert(string field) => Convert(field, out _);
 
@@ -226,9 +230,9 @@ public static partial class AnkiTextConverter
     private static string RestoreMaths(string text, List<string> maths) =>
         MathPlaceholderRegex().Replace(text, match => maths[int.Parse(match.Groups[1].Value)]);
 
-    private static string ConvertHtml(string html, List<string> maths, out bool hadImage)
+    private static string ConvertHtml(string html, List<string> maths, Func<string, string?>? storeImage, out bool missedImage)
     {
-        hadImage = false;
+        missedImage = false;
         var output = new StringBuilder();
         // Open tags, what each one closes with, and where its opening and content start in the output.
         var open = new List<(string Tag, string Closing, int Start, int ContentStart)>();
@@ -290,8 +294,16 @@ public static partial class AnkiTextConverter
                     output.Append('\n');
                     continue;
                 case "img":
-                    hadImage = true;
-                    output.Append(ImagePlaceholder);
+                    if (ImageSource(attributes) is { } source && storeImage?.Invoke(source) is { } stored)
+                    {
+                        NewLine();
+                        output.Append(ImageToken.Format(stored)).Append('\n');
+                    }
+                    else
+                    {
+                        missedImage = true;
+                        output.Append(ImagePlaceholder);
+                    }
                     continue;
                 case "li":
                     if (!AtBareBullet())
@@ -434,6 +446,22 @@ public static partial class AnkiTextConverter
         text = ManyNewLinesRegex().Replace(text, "\n\n");
         return text.Trim();
     }
+
+    /// <summary> An img tag's src, decoded; null when it has none. </summary>
+    private static string? ImageSource(string attributes)
+    {
+        var match = ImageSourceRegex().Match(attributes);
+        if (!match.Success) return null;
+
+        var value = match.Groups["double"].Success ? match.Groups["double"].Value
+            : match.Groups["single"].Success ? match.Groups["single"].Value
+            : match.Groups["bare"].Value;
+        value = WebUtility.HtmlDecode(value).Trim();
+        return value.Length > 0 ? value : null;
+    }
+
+    [GeneratedRegex(@"\bsrc\s*=\s*(?:""(?<double>[^""]*)""|'(?<single>[^']*)'|(?<bare>[^\s""'>]+))", RegexOptions.IgnoreCase)]
+    private static partial Regex ImageSourceRegex();
 
     [GeneratedRegex("\u000E(\\d*)\u000F")]
     private static partial Regex ClozeOpenMarkRegex();

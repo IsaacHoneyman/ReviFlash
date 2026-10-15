@@ -100,9 +100,20 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object? sender, RoutedEventArgs e)
     {
+        var cleanupStart = DateTime.Now;
+        _ = System.Threading.Tasks.Task.Run(() =>
+        {
+            try
+            {
+                var removed = ImageStore.RemoveUnused(cleanupStart);
+                if (removed > 0) Logger.LogInfo($"Removed {removed} unused images.");
+            }
+            catch (Exception ex) { Logger.LogError("Removing unused images failed.", ex); }
+        });
+
         if (ChangelogUtility.ShouldShowAfterUpdate(MetaDataManager.VersionBeforeLaunch, TextUtility.VersionText,
-                MetaDataManager.Data.ShowWhatsNewAfterUpdate, ChangelogUtility.HasNotesFor(TextUtility.VersionNumber)))
-            SyntaxGuideWindow.ShowFor(this, HelpTab.WhatsNew);
+                MetaDataManager.Data.ShowChangelogAfterUpdate, ChangelogUtility.HasNotesFor(TextUtility.VersionNumber)))
+            SyntaxGuideWindow.ShowFor(this, HelpTab.Changelog);
 
         if (!MetaDataManager.Data.CheckForUpdatesOnStartup) return;
         var updateClient = new UpdateClient();

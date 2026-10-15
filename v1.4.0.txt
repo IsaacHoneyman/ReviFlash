@@ -47,4 +47,9 @@ Cards in the deck editor have a Move or Copy button: moving takes the card to an
 The deck editor's Duplicate button is now New Card From This, which starts a new card from that one with the cursor in the Front box.
 Fixed the deck editor asking before discarding an empty card, for example after clearing a card you were editing or changing the card type.
 The Cloud Manager's private and public icons are redrawn so they no longer look squashed.
-Help has a new What's New tab listing the changes in each version, and it opens by itself after an update (Settings → Updates to turn that off).
+Help has a new Changelog tab listing the changes in each version, and it opens by itself after an update (Settings → Updates to turn that off).
+Images in cards and notes: paste one with Ctrl+V, drag an image file in, or use the new Image button. Each sits on its own line at its own size (smaller if it doesn't fit), and \img[50%]{...} makes it that share of the width.
+An image in a cloze blank stays hidden until the answer is shown; a typed cloze can't hide an image.
+Images are included in backups, and images no card or note uses any more are removed when ReviFlash starts.
+Anki import brings images across instead of marking them [image]; only images missing from the file or in a format ReviFlash can't read are still marked.
+Sets with images can't be uploaded to the cloud yet, and Upload says why.

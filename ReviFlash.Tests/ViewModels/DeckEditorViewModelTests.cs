@@ -114,6 +114,26 @@ public class DeckEditorViewModelTests
         Assert.True(editor.HasUnsavedWork());
     }
 
+    [Fact]
+    public void A_typed_cloze_can_not_hide_an_image_but_a_revealed_one_can()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        editor.SelectedCardType = CARD_TYPE_CLOZE;
+        editor.NewFront = @"The mascot is \C{\img{0123456789abcdef0123456789abcdef.webp}}";
+        editor.NewClozeTypeAnswer = true;
+
+        editor.AddNewCard();
+
+        Assert.Contains("can't be typed", editor.ValidationMessage);
+        Assert.Empty(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID));
+
+        editor.NewClozeTypeAnswer = false;
+        editor.AddNewCard();
+
+        Assert.Single(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID));
+    }
+
     private static FlashCardDeck NewDeck(string name)
     {
         var deck = new FlashCardDeck(name);

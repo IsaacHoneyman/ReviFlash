@@ -46,16 +46,16 @@ public class ChangelogUtilityTests
     [InlineData("Version 1.4.0", "Version 1.4.0", true, true, false)]
     [InlineData("Version 1.3.3", "Version 1.4.0", false, true, false)]
     [InlineData("Version 1.3.3", "Version 1.4.0", true, false, false)]
-    public void Whats_new_opens_once_after_an_update(string previous, string current, bool enabled, bool hasNotes, bool expected)
+    public void The_changelog_opens_once_after_an_update(string previous, string current, bool enabled, bool hasNotes, bool expected)
     {
         Assert.Equal(expected, ChangelogUtility.ShouldShowAfterUpdate(previous, current, enabled, hasNotes));
     }
 
     [Fact]
-    public void Settings_saved_before_the_option_existed_show_whats_new()
+    public void Settings_saved_before_the_option_existed_show_the_changelog()
     {
         var settings = JsonSerializer.Deserialize<AppMetaData>("""{ "Version": "Version 1.3.3" }""");
 
-        Assert.True(settings!.ShowWhatsNewAfterUpdate);
+        Assert.True(settings!.ShowChangelogAfterUpdate);
     }
 }

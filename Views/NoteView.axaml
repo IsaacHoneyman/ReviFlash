@@ -125,6 +125,7 @@
                                             <Panel>
                                                 <views:MathText Text="{Binding RenderedText}" FontSize="16"
                                                     Foreground="{DynamicResource TextPrimary}"
+                                                    MaxImageHeight="Infinity"
                                                     IsVisible="{Binding !IsEmpty}" />
                                                 <TextBlock Text="Empty paragraph: click to write" FontSize="15" FontStyle="Italic"
                                                     Foreground="{DynamicResource TextSecondary}"

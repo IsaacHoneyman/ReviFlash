@@ -39,12 +39,17 @@ public class MathText : Decorator
     public static readonly StyledProperty<int> MaxLinesProperty =
         AvaloniaProperty.Register<MathText, int>(nameof(MaxLines));
 
+    /// <summary> Tallest an image is drawn; notes lift this so images can show at full size. </summary>
+    public static readonly StyledProperty<double> MaxImageHeightProperty =
+        AvaloniaProperty.Register<MathText, double>(nameof(MaxImageHeight), 400);
+
     public string? Text { get => GetValue(TextProperty); set => SetValue(TextProperty, value); }
     public IBrush? Foreground { get => GetValue(ForegroundProperty); set => SetValue(ForegroundProperty, value); }
     public double FontSize { get => GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
     public bool IsCentered { get => GetValue(IsCenteredProperty); set => SetValue(IsCenteredProperty, value); }
     public bool ShowErrors { get => GetValue(ShowErrorsProperty); set => SetValue(ShowErrorsProperty, value); }
     public int MaxLines { get => GetValue(MaxLinesProperty); set => SetValue(MaxLinesProperty, value); }
+    public double MaxImageHeight { get => GetValue(MaxImageHeightProperty); set => SetValue(MaxImageHeightProperty, value); }
 
     private static readonly TimeSpan PreviewDelay = TimeSpan.FromMilliseconds(150);
 
@@ -81,7 +86,8 @@ public class MathText : Decorator
         }
 
         if (change.Property == TextProperty || change.Property == ForegroundProperty || change.Property == FontSizeProperty
-            || change.Property == IsCenteredProperty || change.Property == ShowErrorsProperty || change.Property == MaxLinesProperty)
+            || change.Property == IsCenteredProperty || change.Property == ShowErrorsProperty || change.Property == MaxLinesProperty
+            || change.Property == MaxImageHeightProperty)
             Rebuild();
     }
 
@@ -172,6 +178,13 @@ public class MathText : Decorator
             // With a line limit only the first paragraph is shown, cut off within it.
             if (MaxLines > 0 && panel.Children.Count > 0 && paragraph is null) break;
 
+            if (segment is ImageSegment image && MaxLines == 0)
+            {
+                paragraph = null;
+                panel.Children.Add(CreateImage(image));
+                continue;
+            }
+
             if (segment is MathSegment { Display: true } display)
             {
                 paragraph = null;
@@ -215,12 +228,65 @@ public class MathText : Decorator
             }
             else
             {
-                paragraph.Inlines!.Add(segment is TextSegment text ? CreateRun(text) : new LineBreak());
+                paragraph.Inlines!.Add(segment switch
+                {
+                    TextSegment text => CreateRun(text),
+                    ImageSegment => CreateRun(new TextSegment("[image]", false, true)),
+                    _ => new LineBreak(),
+                });
             }
         }
 
         return panel;
     }
+
+    /// <summary> The image at its share of the width when sized, else its own size scaled down to fit; or a note that it's missing. </summary>
+    private Control CreateImage(ImageSegment image)
+    {
+        if (ImageCache.Get(image.Name) is not { } bitmap) return CreateMissingImage(image.Name);
+
+        var view = new Image
+        {
+            Source = bitmap,
+            Stretch = Stretch.Uniform,
+            StretchDirection = image.WidthPercent is null ? StretchDirection.DownOnly : StretchDirection.Both,
+            MaxHeight = MaxImageHeight,
+            HorizontalAlignment = IsCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left,
+        };
+        var margin = new Thickness(0, FontSize * 0.4);
+        if (image.WidthPercent is not { } percent)
+        {
+            view.Margin = margin;
+            return view;
+        }
+
+        // Star columns give the image its share of whatever width the text has.
+        var rest = 100 - percent;
+        var columns = IsCentered ? $"{rest / 2.0}*, {percent}*, {rest / 2.0}*" : $"{percent}*, {rest}*";
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions(columns), Margin = margin };
+        Grid.SetColumn(view, IsCentered ? 1 : 0);
+        row.Children.Add(view);
+        return row;
+    }
+
+    private Control CreateMissingImage(string name) => new Border
+    {
+        BorderBrush = Foreground,
+        BorderThickness = new Thickness(1),
+        CornerRadius = new CornerRadius(6),
+        Padding = new Thickness(10, 6),
+        Margin = new Thickness(0, FontSize * 0.4),
+        Opacity = 0.6,
+        HorizontalAlignment = IsCentered ? HorizontalAlignment.Center : HorizontalAlignment.Left,
+        Child = new TextBlock
+        {
+            Text = ShowErrors ? $"Image not found: {name}" : "Image not found",
+            FontSize = FontSize * 0.9,
+            FontStyle = FontStyle.Italic,
+            Foreground = Foreground,
+            TextWrapping = TextWrapping.Wrap,
+        },
+    };
 
     /// <summary> A bullet point: the bullet, then the point's text, wrapping under itself rather than under the bullet. </summary>
     private Grid CreateBulletRow(TextBlock paragraph, int heading)

@@ -1,6 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
+using ReviFlash.Data.Local;
 using ReviFlash.Utilities;
 
 namespace ReviFlash.Views;
@@ -14,9 +18,9 @@ public sealed record ShortcutRow(IReadOnlyList<string> Keys, string Action);
 
 public sealed record ShortcutSection(string Title, string? Note, IReadOnlyList<ShortcutRow> Rows, IReadOnlyList<ShortcutSection>? Subsections = null);
 
-public enum HelpTab { Formatting, KeyboardShortcuts, WhatsNew }
+public enum HelpTab { Formatting, KeyboardShortcuts, Changelog }
 
-/// <summary> Help: card syntax with each example beside its rendering, every keyboard shortcut, and what's new in each version. </summary>
+/// <summary> Help: card syntax with each example beside its rendering, every keyboard shortcut, and the changelog. </summary>
 public partial class SyntaxGuideWindow : Window
 {
     private static SyntaxGuideWindow? _open;
@@ -48,6 +52,8 @@ public partial class SyntaxGuideWindow : Window
             new("Hidden together", @"\C1{Na} and \C1{Cl} make \C2{salt}."),
             new("Inside maths", @"$\frac{d}{dx} \sin x = \C{\cos x}$"),
         ]),
+        new("Images", @"Add an image with the Image button, by pasting one (Ctrl+V), or by dragging an image file in. It goes in as \img{...} on a line of its own, at its own size (smaller if it doesn't fit). A size like [50%] makes it exactly that share of the width, from 1% to 100%. An image inside a cloze blank stays hidden until the answer is shown.",
+            ImageExamples()),
         new("Maths basics", @"These all go inside $...$ (or $$...$$).",
         [
             new("Powers and subscripts", @"$x^2$, $a_n$, $e^{i\pi}$"),
@@ -117,6 +123,7 @@ public partial class SyntaxGuideWindow : Window
             new(["Ctrl+M"], "Maths in the line"),
             new(["Ctrl+Shift+M"], "Maths on its own line"),
             new(["Ctrl+Shift+C"], "Cloze blank (Cloze cards)"),
+            new(["Ctrl+V"], "Paste an image, or text as usual"),
         ]),
         new("Notes", "Click a paragraph to edit it.",
         [
@@ -150,6 +157,24 @@ public partial class SyntaxGuideWindow : Window
             ]),
         ]),
     ];
+
+    /// <summary> Examples using the ReviFlash logo, stored like any added image; none if it can't be stored. </summary>
+    private static List<GuideRow> ImageExamples()
+    {
+        try
+        {
+            using var logo = AssetLoader.Open(new Uri("avares://ReviFlash/Assets/ReviFlashLogo.ico"));
+            using var bytes = new MemoryStream();
+            logo.CopyTo(bytes);
+            var name = ImageStore.Add(bytes.ToArray());
+            return [new("An image", ImageToken.Format(name)), new("A quarter of the width", ImageToken.Format(name, 25))];
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Couldn't store the example image for the formatting guide.", ex);
+            return [];
+        }
+    }
 
     public SyntaxGuideWindow()
     {

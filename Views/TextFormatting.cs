@@ -255,7 +255,7 @@ public static class TextFormatting
         return -1;
     }
 
-    private static void Select(TextBox box, int start, int end)
+    internal static void Select(TextBox box, int start, int end)
     {
         // Caret first: moving it collapses any selection.
         box.CaretIndex = end;

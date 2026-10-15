@@ -107,6 +107,11 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             StatusMessage = "Cannot upload an empty deck.";
             return;
         }
+        if (DeckTransferManager.HasImages(cards))
+        {
+            StatusMessage = ImagesCantUploadText(deck.Name);
+            return;
+        }
 
         await RunGuardedAsync($"Uploading '{deck.Name}'", async () =>
         {
@@ -134,6 +139,11 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         if (cards.Count == 0)
         {
             StatusMessage = "Cannot update with an empty local deck.";
+            return;
+        }
+        if (DeckTransferManager.HasImages(cards))
+        {
+            StatusMessage = ImagesCantUploadText(local.Name);
             return;
         }
 
@@ -230,6 +240,9 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     }
 
     private const string ListRefreshFailedText = "Couldn't refresh your cloud sets. Check your connection.";
+
+    private static string ImagesCantUploadText(string deckName) =>
+        $"'{deckName}' has images, and sets with images can't be uploaded yet: the images would stay on this computer. Back the set up from Settings to keep it safe.";
 
     private async Task RunGuardedAsync(string busyText, Func<Task<string>> work, string failPrefix)
     {

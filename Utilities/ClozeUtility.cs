@@ -21,6 +21,10 @@ public static class ClozeUtility
 
     public static bool HasBlanks(string text) => FindBlanks(text).Any(blank => HasContent(text, blank));
 
+    /// <summary> True when a blank hides an image, which can't be answered by typing. </summary>
+    public static bool AnyBlankHasImage(string text) =>
+        FindBlanks(text).Any(blank => ImageToken.Shows(text[blank.ContentStart..blank.ContentEnd]));
+
     /// <summary> The question: the group's blanks shown as [...], every other blank as plain text. </summary>
     public static string Mask(string text, string group) => Render(text, group, reveal: false);
 

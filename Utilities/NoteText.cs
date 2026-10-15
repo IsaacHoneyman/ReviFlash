@@ -91,11 +91,11 @@ public static partial class NoteText
 
     public static string? LastHeading(string text) => Headings(text).LastOrDefault()?.Source;
 
-    /// <summary> Words in the note, not counting formatting commands or maths delimiters. </summary>
+    /// <summary> Words in the note, not counting formatting commands, images or maths delimiters. </summary>
     public static int WordCount(string? content)
     {
         if (string.IsNullOrWhiteSpace(content)) return 0;
-        var plain = MarkupRegex().Replace(BulletRegex().Replace(content, ""), " ");
+        var plain = MarkupRegex().Replace(BulletRegex().Replace(ImageToken.TokenRegex().Replace(content, " "), ""), " ");
         return plain.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
     }
 

@@ -1,4 +1,11 @@
 === 1.4.0
+\H2{Images}
+- Add images to cards and notes: paste one with Ctrl+V, drag an image file in, or use the new \B{Image} button.
+- Images sit on their own line, and a size like [50%] makes one that share of the width.
+- An image in a cloze blank stays hidden until the answer is shown.
+- Images are kept in backups, and Anki import now brings images across.
+- Sets with images can't be uploaded to the cloud yet.
+
 \H2{Keyboard shortcuts everywhere}
 - On the main menu, the arrow keys move between cards, F or Ctrl+F jumps to search and Ctrl+N creates a set, note, folder or group.
 - E, M, S and Delete edit, move, show stats for or delete the highlighted card.
@@ -29,7 +36,7 @@
 - Signing out only signs out this device, and being offline no longer asks you to sign in again.
 
 \H2{Also}
-- This What's New tab, which opens after each update (you can turn that off in Settings).
+- A changelog in Help, which opens after each update (you can turn that off in Settings).
 - Anki import handles nested clozes, lists, braces and filtered decks better, and is much faster on messy fields.
 - Typed cloze answers with several blanks accept commas or spaces between them.
 - Over 50 other fixes, from search speed to settings that can no longer be lost in a crash.

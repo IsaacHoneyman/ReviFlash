@@ -76,6 +76,11 @@
                 <TextBlock Text="Blank" />
             </Button>
             <Rectangle Classes="separator" />
+            <Button Classes="format" Tag="Image" Click="Format_Click"
+                ToolTip.Tip="Add an image from a file (or paste one with Ctrl+V, or drag one in). \img[50%]{...} sets its width.">
+                <TextBlock Text="Image" />
+            </Button>
+            <Rectangle Classes="separator" />
             <Button Classes="format" Click="Help_Click" ToolTip.Tip="Formatting and LaTeX guide">
                 <TextBlock Text="?" FontWeight="Bold" />
             </Button>

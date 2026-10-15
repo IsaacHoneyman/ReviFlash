@@ -130,8 +130,8 @@
                         <CheckBox IsChecked="{Binding CheckForUpdatesOnStartup}" />
                     </HeaderedContentControl>
 
-                    <HeaderedContentControl Classes="settingRow" Header="Show what's new after an update">
-                        <CheckBox IsChecked="{Binding ShowWhatsNewAfterUpdate}" />
+                    <HeaderedContentControl Classes="settingRow" Header="Show the changelog after an update">
+                        <CheckBox IsChecked="{Binding ShowChangelogAfterUpdate}" />
                     </HeaderedContentControl>
 
                     <Button Classes="wide secondary" Content="Check for Updates Now" Click="CheckForUpdates_Click" />
