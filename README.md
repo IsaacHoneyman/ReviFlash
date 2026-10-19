@@ -6,11 +6,7 @@ Maths renders properly, inline with your text: fractions, integrals, matrices an
 
 ![The ReviFlash main menu](docs/images/main-menu.png)
 
-| Maths that renders properly | Lecture notes next to your cards |
-| :---: | :---: |
-| ![A review card with aligned working](docs/images/review-maths.png) | ![A lecture note with a contents panel](docs/images/lecture-notes.png) |
-| **Stats for every set, folder and note** | **Themes, or make your own** |
-| ![Charts of answers and study time](docs/images/stats.png) | ![The Themes window](docs/images/themes.png) |
+[See everything ReviFlash can do ↓](#features)
 
 **Coming from Anki?** Import your `.apkg` decks straight in. Formatting, MathJax and `[latex]` maths, images, cloze deletions, type-in answers and reversed cards all come across, and sub-decks become folders.
 
@@ -72,19 +68,65 @@ A clean-up release: everything looks and works the same way in every window, and
 - Images and display maths no longer get extra blank lines around them.
 - Over 20 more fixes, from stale Community results to deleted folders lingering in stats.
 
-## Key Features
+## Features
 
-- **Built for Exams**: No due cards or review backlog. Study any set, folder or study group whenever you like, see your grade for it, and use Retry Later to bring back the cards you got wrong.
-- **Maths That Renders Properly**: Inline `$...$` and display `$$...$$` LaTeX, including fractions, sums, integrals, matrices, `cases` and aligned working, in the editor previews, reviews and notes, with a built-in Formatting Guide.
-- **Lecture Notes**: Write notes with headings, LaTeX and images next to your flashcards, jump around them with a contents panel, and turn any part of them into a card.
-- **Card Types for STEM**: Flip (optionally asked both ways), Cloze, Type-to-Answer, Multiple Choice, Match, and True/False.
-- **Anki Import**: Bring in `.apkg` decks with their maths, images, clozes and sub-decks intact.
-- **Themes**: Pick from 18 built-in themes or make your own from three colours, with readable text guaranteed.
-- **Keyboard-Driven Reviews**: Answer, mark, skip and move on without touching the mouse.
-- **Folders & Study Groups**: Organise sets and notes into folders, and group sets from different topics into Study Groups to review them together.
-- **Share Sets and Notes Online**: Upload your sets and notes as public or private, then update, download or delete them from any device, protected by Row-Level Security. Browse and search other users' public sets and notes and download them straight into your library.
-- **Backups**: Create and restore full local backups of your library, notes, images and settings, with or without your stats.
-- **In-Depth Analytics**: Detailed statistics, a grade for each set, time spent on flashcards and notes, performance charts and a year-long study calendar, so you can see which topics need more work before the exam.
+### Maths that renders properly
+Write LaTeX between `$...$` in a line of text, or `$$...$$` on its own line: fractions, sums, integrals, limits, matrices, `cases` and aligned working all render, in the editor's live preview, in reviews and in notes. A built-in Formatting Guide lists everything you can use, with examples.
+
+![A review card showing aligned working](docs/images/review-maths.png)
+
+### Six card types, written by you
+- **Flip**: a question and an answer, optionally asked both ways round.
+- **Cloze**: hide parts of a sentence or formula. Each blank becomes its own question, blanks with the same number are hidden together, and you can choose to type the answer.
+- **Type to Answer**: type the answer and ReviFlash checks it, ignoring case and extra spaces.
+- **Multiple Choice**: one or more correct options.
+- **Match**: pair up items from two columns.
+- **True/False**: with your own labels if you like, such as "Closed" and "Not closed".
+
+The set editor has a formatting toolbar (bold, italic, underline, code, headings, bullet points, maths and images) and a live preview under every field. Move or copy cards between sets, or start a new card from an existing one.
+
+![The set editor with a live maths preview](docs/images/set-editor.png)
+
+### Images in cards and notes
+Paste an image with Ctrl+V, drag one in, or use the Image button. Size it with a percentage of the width, and hide one inside a cloze blank until the answer is shown. Images are kept in your backups, and come across when you import from Anki.
+
+![A card with an image](docs/images/review-image.png)
+
+### Lecture notes next to your cards
+Write notes with headings, maths and images. A contents panel lets you jump around long notes, and Ctrl+Enter turns what you're writing into a card in any set. ReviFlash tracks your time spent on notes alongside your reviews.
+
+![A lecture note with its contents panel](docs/images/lecture-notes.png)
+
+### Study your way
+- There are no due cards and no backlog: study any set, folder or study group whenever you like.
+- Put sets from different topics into a **study group**, or pick several with **Select Multiple**, to review them together.
+- Use **Retry Later** to bring back the cards you got wrong, and finish with a grade for the session.
+- Organise everything into folders, and search your whole library from the main menu.
+- New installs start with a **Welcome!** folder: a tour of every card type and a Read Me on how to use the app.
+
+### Stats for everything
+Every set, group, folder and note has its own stats: questions answered, accuracy, a grade, and time spent reviewing, editing and reading notes. Graph View shows how they change over time, with a year-long study calendar and a breakdown of where your time went.
+
+![Charts of answers and study time](docs/images/stats.png)
+
+### Share and sync online (optional)
+With a free account you can:
+- Upload sets and notes as **public** or **private**, then update, download or delete them from any device. Private uploads are an easy way to move your work between computers.
+- Browse and search **Community** for other people's public sets and notes, and download them straight into your library, folders and all.
+
+Everything is protected by Row-Level Security, and nothing is uploaded unless you upload it. Sets and notes with images can't be uploaded yet.
+
+### Anki import and backups
+- **Anki import**: bring in `.apkg` decks with their formatting, MathJax and `[latex]` maths, images, clozes, type-in answers and reversed cards. Sub-decks become folders.
+- **Backups**: create and restore a full backup of your library, notes, images, settings and themes, with or without your stats.
+
+### Themes, or make your own
+Choose from 18 built-in themes, or make up to 12 of your own from a background and two accents. ReviFlash works out the rest and keeps text readable, and you can change any single colour if you want. An optional animated background swirl follows your theme.
+
+![The Themes window](docs/images/themes.png)
+
+### Keyboard-driven
+Answer, mark, skip and retry cards without touching the mouse. On the main menu, the arrow keys move between cards and single keys edit, move, show stats for or delete them. Press **F1** anywhere for the full list of shortcuts.
 
 ## Tech Stack
 
