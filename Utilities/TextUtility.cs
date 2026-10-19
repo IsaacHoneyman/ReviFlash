@@ -15,10 +15,10 @@ public static partial class TextUtility
     public const string MetadataFileName = "metadata.json";
     public const string DatabaseFileName = "reviflash.db";
 
-    private static readonly string AppDataDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "ReviFlash"
-    );
+    /// <summary> REVIFLASH_DATA_DIR overrides the folder, so tests get their own on every OS (Windows and macOS ignore XDG_DATA_HOME). </summary>
+    private static readonly string AppDataDirectory = Environment.GetEnvironmentVariable("REVIFLASH_DATA_DIR") is { Length: > 0 } overridden
+        ? overridden
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReviFlash");
 
     static TextUtility()
     {

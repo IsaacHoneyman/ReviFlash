@@ -11,6 +11,7 @@ internal static class TestEnvironment
     internal static void Init()
     {
         Directory.CreateDirectory(DataRoot);
+        Environment.SetEnvironmentVariable("REVIFLASH_DATA_DIR", Path.Combine(DataRoot, "ReviFlash"));
         Environment.SetEnvironmentVariable("XDG_DATA_HOME", DataRoot);
         Environment.SetEnvironmentVariable("LOCALAPPDATA", DataRoot);
         Environment.SetEnvironmentVariable("HOME", DataRoot);
