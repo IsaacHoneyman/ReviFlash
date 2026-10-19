@@ -6,70 +6,39 @@ using ReviFlash.Models;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
 using System;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ReviFlash.ViewModels;
 
 public partial class SettingsViewModel : ViewModelBase
 {
+    // Round the colour wheel from the pinks (Vaporwave, the default, first) through reds, oranges, greens and blues to purples, then the greys.
     private static readonly Dictionary<string, ThemeVariant> ThemeMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Pinks & Violets
         { "Vaporwave", AppThemes.Vaporwave },
         { "Synthwave", AppThemes.Synthwave },
-        { "Midnight Rose", AppThemes.MidnightRose },        
         { "Sakura", AppThemes.Sakura },
-
-        // Neutrals & Monochromes
-        { "Eclipse", AppThemes.Eclipse },
-        { "Graphite", AppThemes.Graphite },
-        { "Midnight Slate", AppThemes.MidnightSlate },
-        { "Focus", AppThemes.Focus },
-        { "Slate", AppThemes.Slate },
-
-        // Reds
         { "Crimson", AppThemes.Crimson },
         { "Ember", AppThemes.Ember },
-        { "Blood Moon", AppThemes.BloodMoon },
-
-
-        // Purples
-        { "Nether", AppThemes.Nether },
-        { "Amethyst", AppThemes.Amethyst },
-        { "Void", AppThemes.Void },
-
-        // Blues & Teals
-        { "Cobalt", AppThemes.Cobalt },
-        { "Midnight", AppThemes.Midnight },
-        { "Nordic", AppThemes.Nordic },
-        { "Ocean", AppThemes.Ocean },
-        { "Abyssal", AppThemes.Abyssal },
-
-        // Greens
-        { "Matrix", AppThemes.Matrix },
-        { "Forest", AppThemes.Forest },
-        { "Mint Choco", AppThemes.MintChoco },
-        { "Toxic", AppThemes.Toxic },
-
-        // Oranges & Warm Tones
         { "Sunset", AppThemes.Sunset },
         { "Coffee", AppThemes.Coffee },
-        { "Honeycomb", AppThemes.Honeycomb },
         { "Dark Amber", AppThemes.DarkAmber },
-        { "Bunker", AppThemes.Bunker },
-
-        // Multi-colour neon
+        { "Honeycomb", AppThemes.Honeycomb },
+        { "Forest", AppThemes.Forest },
+        { "Abyssal", AppThemes.Abyssal },
+        { "Nordic", AppThemes.Nordic },
+        { "Slate", AppThemes.Slate },
+        { "Amethyst", AppThemes.Amethyst },
         { "Cyberpunk", AppThemes.Cyberpunk },
-
-        // Light themes
-        { "Sun", AppThemes.Sun },
-        { "Desert", AppThemes.Desert },
-        { "Sepia", AppThemes.Sepia },
-        { "Rose", AppThemes.Rose },
-        { "Plains", AppThemes.Plains },
+        { "Nether", AppThemes.Nether },
+        { "Focus", AppThemes.Focus },
+        { "Graphite", AppThemes.Graphite },
     };
 
-    public IEnumerable<string> AvailableThemes => ThemeMap.Keys;
+    public const string DefaultTheme = "Vaporwave";
+
+    public static IReadOnlyDictionary<string, ThemeVariant> Themes => ThemeMap;
 
     // --- Account ---
 
@@ -123,7 +92,6 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedThemeChanged(string value) => Save(data => ApplyTheme(data, value));
 
     partial void OnShowTimerChanged(bool value) => Save(data => data.ShowTimer = value);
     partial void OnShowProgressChanged(bool value) => Save(data => data.ShowProgress = value);
@@ -144,11 +112,16 @@ public partial class SettingsViewModel : ViewModelBase
 
     public static void ApplyTheme(AppMetaData settings, string themeName)
     {
+        var saved = ThemeMap.ContainsKey(themeName) ? null
+            : settings.SavedThemes.FirstOrDefault(theme => string.Equals(theme.Name, themeName, StringComparison.OrdinalIgnoreCase));
+        // A theme that's since been removed or deleted falls back to the default.
+        if (saved is not null) themeName = saved.Name;
+        else if (!ThemeMap.ContainsKey(themeName)) themeName = DefaultTheme;
         settings.Theme = themeName;
 
         if (Application.Current != null)
         {
-            var variant = ThemeMap.TryGetValue(themeName, out var mapped) ? mapped : ThemeVariant.Dark;
+            var variant = saved is not null ? CustomThemes.Install(saved) : ThemeMap[themeName];
             Application.Current.RequestedThemeVariant = variant;
 
             // Light palettes need the darker accent set, or reds and greens wash out.

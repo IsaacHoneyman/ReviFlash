@@ -36,11 +36,7 @@ public static class ImageInsertion
         root.AddHandler(TextBox.PastingFromClipboardEvent, (_, e) =>
         {
             if (e.Source is not TextBox box || !accepts(box)) return;
-            if (box == _plainPasteBox)
-            {
-                _plainPasteBox = null;
-                return;
-            }
+            if (ConsumePlainPaste(box)) return;
 
             e.Handled = true;
             _ = PasteAsync(box, showError);
@@ -109,8 +105,23 @@ public static class ImageInsertion
             Logger.LogError("Couldn't read an image from the clipboard.", ex);
         }
 
+        PasteAsPlainText(box, box.Paste);
+    }
+
+    /// <summary> True once if <paramref name="box"/> is mid-way through a paste handed back to it. </summary>
+    internal static bool ConsumePlainPaste(TextBox box)
+    {
+        if (box != _plainPasteBox) return false;
+        _plainPasteBox = null;
+        return true;
+    }
+
+    /// <summary> Runs <paramref name="paste"/> with <paramref name="box"/> marked so its paste event is let through; the mark never outlives the call. </summary>
+    internal static void PasteAsPlainText(TextBox box, Action paste)
+    {
         _plainPasteBox = box;
-        box.Paste();
+        try { paste(); }
+        finally { _plainPasteBox = null; }
     }
 
     private static Task InsertFilesAsync(TextBox box, IReadOnlyList<string> paths, Action<string> showError) =>

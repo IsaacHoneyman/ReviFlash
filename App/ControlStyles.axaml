@@ -87,6 +87,11 @@
         <Setter Property="Background" Value="{DynamicResource GradientStart}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
     </Style>
+    <!-- Fluent paints a checked toggle's inner presenter in its own accent blue; this keeps it in the theme's colour. -->
+    <Style Selector="ToggleButton.dashboardToggle:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.dashboardToggle:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.dashboardToggle:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource GradientStart}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+    </Style>
 
     <!-- Surfaces -->
 
@@ -132,10 +137,16 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
     </Style>
 
-    <!-- Text -->
+    <!-- Text: the app's type scale. Views use these classes rather than setting FontSize themselves. -->
 
-    <Style Selector="TextBlock.title">
+    <Style Selector="TextBlock.pageTitle">
         <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <!-- A window's or dialog's heading. -->
+    <Style Selector="TextBlock.title">
+        <Setter Property="FontSize" Value="24" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
     </Style>
@@ -143,6 +154,15 @@
     <Style Selector="TextBlock.sectionTitle">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="TextBlock.heading">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="TextBlock.body">
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
     </Style>
     <Style Selector="TextBlock.caption">
@@ -153,6 +173,72 @@
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
     </Style>
+    <Style Selector="TextBlock.error">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerForeground}" />
+    </Style>
+
+    <!-- Colour classes go after the type scale so they win over it; a colour set inline inside a template loses to any style. -->
+    <Style Selector="TextBlock.primary">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="TextBlock.secondary">
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    </Style>
+    <Style Selector="TextBlock.accent">
+        <Setter Property="Foreground" Value="{DynamicResource GradientStart}" />
+    </Style>
+    <Style Selector="TextBlock.success">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessForeground}" />
+    </Style>
+
+    <!-- Library card text: the count in its badge, then the hint lines under the name. -->
+    <Style Selector="TextBlock.badgeCount">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.folderBadge">
+        <Setter Property="Foreground" Value="{DynamicResource FolderBadgeForeground}" />
+    </Style>
+    <Style Selector="TextBlock.groupBadge">
+        <Setter Property="Foreground" Value="{DynamicResource GroupBadgeForeground}" />
+    </Style>
+    <Style Selector="TextBlock.noteBadge">
+        <Setter Property="Foreground" Value="{DynamicResource NoteBadgeForeground}" />
+    </Style>
+    <Style Selector="TextBlock.badgeLabel">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.cardHint">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Margin" Value="0,6,0,0" />
+    </Style>
+
+    <!-- Keyboard focus ring (Tab and arrow keys, never mouse clicks), which Fluent doesn't draw for these controls. -->
+    <Style Selector="Button, ToggleButton, ComboBox">
+        <Setter Property="FocusAdorner">
+            <FocusAdornerTemplate>
+                <Border BorderThickness="2" BorderBrush="{DynamicResource TextPrimary}"
+                    CornerRadius="{ReflectionBinding Path=(AdornerLayer.AdornedElement).CornerRadius, RelativeSource={RelativeSource Self}}" />
+            </FocusAdornerTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="CheckBox, RadioButton, ToggleSwitch, Slider, ListBoxItem, TabItem">
+        <Setter Property="FocusAdorner">
+            <FocusAdornerTemplate>
+                <Border CornerRadius="6" BorderThickness="2"
+                    BorderBrush="{DynamicResource TextPrimary}" />
+            </FocusAdornerTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="controls|SegmentedSwitch">
+        <Setter Property="FocusAdorner">
+            <FocusAdornerTemplate>
+                <Border CornerRadius="10" BorderThickness="2" BorderBrush="{DynamicResource TextPrimary}" />
+            </FocusAdornerTemplate>
+        </Setter>
+    </Style>
 
     <!-- Library cards: the keyboard highlight follows the card's rounded corners. -->
     <Style Selector="controls|LibraryCard">
@@ -162,6 +248,11 @@
                     BorderBrush="{DynamicResource TextPrimary}" />
             </FocusAdornerTemplate>
         </Setter>
+    </Style>
+
+    <!-- Progress bars fill in the theme's colour rather than Fluent's blue. -->
+    <Style Selector="ProgressBar">
+        <Setter Property="Foreground" Value="{DynamicResource GradientStart}" />
     </Style>
 
     <!-- Busy spinner (BusySpinner control), which turns itself on the render thread. -->

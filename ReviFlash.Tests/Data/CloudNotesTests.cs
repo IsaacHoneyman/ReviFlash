@@ -124,4 +124,29 @@ public class CloudNotesTests
         Assert.Equal(3, upload.Size);
         Assert.Contains("\"Content\": \"Three words here\"", upload.Json);
     }
+
+    [Fact]
+    public async Task Set_messages_call_it_a_set()
+    {
+        var (client, _) = Connect();
+
+        var (_, uploaded) = await client.UploadCloudDeckAsync("user-1", "Biology", "", 12, "{}", isPrivate: false);
+        var (_, deleted) = await client.DeleteCloudDeckAsync("user-1/abc.json");
+
+        Assert.Equal("Set uploaded successfully!", uploaded);
+        Assert.Equal("Set deleted successfully.", deleted);
+    }
+
+    [Theory]
+    [InlineData("""{"DeckName":"","Cards":[{"CardType":"FlipFlashCard","Front":"a","Back":"b"}]}""")]
+    [InlineData("""{"DeckName":5,"Cards":[{"CardType":"FlipFlashCard","Front":"a","Back":"b"}]}""")]
+    [InlineData("""{"DeckName":"   ","Cards":[{"CardType":"FlipFlashCard","Front":"a","Back":"b"}]}""")]
+    public void A_downloaded_set_without_a_usable_name_gets_a_default_one(string json)
+    {
+        using var database = new TestDatabase();
+
+        DeckTransferManager.TryImportCloudDeck(json);
+
+        Assert.Equal(["Imported Cloud Set"], Db.Query("SELECT Name FROM Decks;", r => r.GetString(0)));
+    }
 }

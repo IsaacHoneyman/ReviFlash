@@ -11,15 +11,6 @@
     Background="{DynamicResource AppBackground}">
 
     <Window.Styles>
-        <Style Selector="TextBlock.heading">
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-        </Style>
-        <Style Selector="TextBlock.note">
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-        </Style>
-
         <!-- A labelled setting: the header on the left, its control on the right. -->
         <Style Selector="HeaderedContentControl.settingRow">
             <Setter Property="Template">
@@ -47,8 +38,8 @@
                     <TextBlock Classes="heading" Text="Appearance" />
 
                     <HeaderedContentControl Classes="settingRow" Header="Application Theme">
-                        <ComboBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"
-                            Width="180" CornerRadius="5" />
+                        <Button Classes="secondary" Content="{Binding SelectedTheme}" Click="ChooseTheme_Click"
+                            MinWidth="140" ToolTip.Tip="Choose a theme or make your own" />
                     </HeaderedContentControl>
 
                     <HeaderedContentControl Classes="settingRow" Header="Background Swirl" Margin="0,6,0,0">
@@ -95,10 +86,10 @@
                 <StackPanel Spacing="10">
                     <TextBlock Classes="heading" Text="Backup and Import" />
 
-                    <TextBlock Classes="note"
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
                         Text="Create a backup zip or restore the app from an existing backup file." />
 
-                    <HeaderedContentControl Classes="settingRow" Header="Include flashcard stats in backup">
+                    <HeaderedContentControl Classes="settingRow" Header="Include Stats in Backup">
                         <CheckBox x:Name="IncludeStatsInBackupCheckBox" IsChecked="True" />
                     </HeaderedContentControl>
 
@@ -107,18 +98,18 @@
                         <Button Grid.Column="1" Classes="wide secondary" Content="Restore Backup" Click="RestoreBackup_Click" />
                     </Grid>
 
-                    <TextBlock x:Name="BackupStatusText" Classes="note" IsVisible="False" />
+                    <TextBlock x:Name="BackupStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
 
                     <Rectangle Height="1" Margin="0,6" Fill="{DynamicResource CardBorder}" />
 
-                    <TextBlock Classes="heading" Text="Import from Anki" FontSize="13" />
+                    <TextBlock Classes="heading" Text="Import from Anki" />
 
-                    <TextBlock Classes="note"
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
                         Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, images, cloze, type-in and reversed cards all come across, and sub-decks become folders. Sounds are left out." />
 
                     <Button x:Name="AnkiImportButton" Classes="wide secondary" Content="Import Anki Deck" Click="ImportAnki_Click" />
 
-                    <TextBlock x:Name="AnkiImportStatusText" Classes="note" IsVisible="False" />
+                    <TextBlock x:Name="AnkiImportStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
                 </StackPanel>
             </Border>
 
@@ -126,11 +117,11 @@
                 <StackPanel Spacing="10">
                     <TextBlock Classes="heading" Text="Updates" />
 
-                    <HeaderedContentControl Classes="settingRow" Header="Check for updates on startup">
+                    <HeaderedContentControl Classes="settingRow" Header="Check for Updates on Startup">
                         <CheckBox IsChecked="{Binding CheckForUpdatesOnStartup}" />
                     </HeaderedContentControl>
 
-                    <HeaderedContentControl Classes="settingRow" Header="Show the changelog after an update">
+                    <HeaderedContentControl Classes="settingRow" Header="Show Changelog After an Update">
                         <CheckBox IsChecked="{Binding ShowChangelogAfterUpdate}" />
                     </HeaderedContentControl>
 
@@ -138,7 +129,7 @@
 
                     <DockPanel>
                         <controls:BusySpinner x:Name="UpdateSpinner" DockPanel.Dock="Left" IsVisible="False" Margin="0,0,8,0" />
-                        <TextBlock x:Name="UpdateStatusText" Classes="note" IsVisible="False" />
+                        <TextBlock x:Name="UpdateStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
                     </DockPanel>
                 </StackPanel>
             </Border>
@@ -148,9 +139,8 @@
                     <TextBlock Classes="heading" Text="Account" />
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
-                        <TextBlock Grid.Column="0" Text="{Binding AccountText}"
-                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                            Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Grid.Column="0" Classes="body" Text="{Binding AccountText}"
+                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         <Button Grid.Column="1" Classes="secondary" Content="Sign Out" Click="SignOut_Click"
                             IsVisible="{Binding IsSignedIn}" Padding="12,6" />
                         <Button Grid.Column="1" Classes="secondary" Content="Sign In" Click="SignIn_Click"
@@ -160,12 +150,12 @@
                     <Button Classes="wide secondary" Content="Change Username" Click="ChangeUsername_Click"
                         IsVisible="{Binding IsSignedIn}" Padding="12,8" />
 
-                    <TextBlock Classes="caption" Text="Sign in to share decks, keep private copies, and download community decks."
+                    <TextBlock Classes="caption" Text="Sign in to share sets and notes, keep private copies, and download community sets and notes."
                         IsVisible="{Binding !IsSignedIn}" TextWrapping="Wrap" />
 
                     <DockPanel>
                         <controls:BusySpinner x:Name="AccountSpinner" DockPanel.Dock="Left" IsVisible="False" Margin="0,0,8,0" />
-                        <TextBlock x:Name="AccountStatusText" Classes="note" IsVisible="False" />
+                        <TextBlock x:Name="AccountStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
                     </DockPanel>
                 </StackPanel>
             </Border>
@@ -173,16 +163,16 @@
             <Border Classes="card compact" Background="{DynamicResource SurfaceOverlayBackground}"
                 BorderBrush="{DynamicResource DangerForeground}" BorderThickness="1.5">
                 <StackPanel Spacing="10">
-                    <TextBlock Classes="heading" Text="Danger Zone" FontSize="16"
+                    <TextBlock Classes="heading" Text="Danger Zone"
                         Foreground="{DynamicResource DangerForeground}" />
 
-                    <TextBlock Classes="note" Foreground="{DynamicResource TextPrimary}"
-                        Text="Delete flashcard stats, for every deck or just one. This cannot be undone." />
+                    <TextBlock Classes="body" TextWrapping="Wrap"
+                        Text="Delete your stats, for everything or for one set. Your sets and notes are not affected. This cannot be undone." />
 
-                    <Button Classes="wide danger" Content="Delete All Flashcard Stats" Click="DeleteAllStats_Click" />
-                    <Button Classes="wide danger" Content="Delete Flashcard Deck Stats" Click="OpenDeleteDeckStats_Click" />
+                    <Button Classes="wide danger" Content="Delete All Stats" Click="DeleteAllStats_Click" />
+                    <Button Classes="wide danger" Content="Delete a Set's Stats" Click="OpenDeleteDeckStats_Click" />
 
-                    <TextBlock x:Name="DeleteStatsStatusText" Classes="note" IsVisible="False" />
+                    <TextBlock x:Name="DeleteStatsStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
                 </StackPanel>
             </Border>
         </StackPanel>

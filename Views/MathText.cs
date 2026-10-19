@@ -166,29 +166,49 @@ public class MathText : Decorator
 
     // --- Text blocks with each formula placed inline ---
 
-    private StackPanel BuildView(IReadOnlyList<CardSegment> segments)
+    internal StackPanel BuildView(IReadOnlyList<CardSegment> segments)
     {
         var panel = new StackPanel();
         TextBlock? paragraph = null;
         var paragraphHeading = 0;
         var paragraphBullet = false;
+        var afterBlock = false;
 
         foreach (var segment in segments)
         {
+            // A block ends its line, so the line break right after it adds no blank line of its own.
+            if (afterBlock && segment is LineBreakSegment)
+            {
+                afterBlock = false;
+                continue;
+            }
+            afterBlock = false;
+
             // With a line limit only the first paragraph is shown, cut off within it.
             if (MaxLines > 0 && panel.Children.Count > 0 && paragraph is null) break;
 
             if (segment is ImageSegment image && MaxLines == 0)
             {
-                paragraph = null;
+                EndParagraphBeforeBlock(panel, ref paragraph);
+                paragraphHeading = 0;
+                paragraphBullet = false;
                 panel.Children.Add(CreateImage(image));
+                afterBlock = true;
                 continue;
             }
 
             if (segment is MathSegment { Display: true } display)
             {
-                paragraph = null;
-                panel.Children.Add(CreateMath(display, isInline: false) ?? (Control)CreateParagraph(FallbackWithNote(display), display.Heading));
+                EndParagraphBeforeBlock(panel, ref paragraph);
+                paragraphHeading = 0;
+                paragraphBullet = false;
+                if (CreateMath(display, isInline: false) is { } view) panel.Children.Add(view);
+                else
+                {
+                    var fallback = CreateParagraph(FallbackWithNote(display), display.Heading);
+                    panel.Children.Add(display.Bullet ? CreateBulletRow(fallback, display.Heading) : fallback);
+                }
+                afterBlock = true;
                 continue;
             }
 
@@ -238,6 +258,14 @@ public class MathText : Decorator
         }
 
         return panel;
+    }
+
+    /// <summary> Drops the line break that ends the text just before a block, and the paragraph itself if that leaves it empty. </summary>
+    private static void EndParagraphBeforeBlock(StackPanel panel, ref TextBlock? paragraph)
+    {
+        if (paragraph?.Inlines is { Count: > 0 } inlines && inlines[^1] is LineBreak) inlines.RemoveAt(inlines.Count - 1);
+        if (paragraph?.Inlines is { Count: 0 }) panel.Children.Remove(paragraph);
+        paragraph = null;
     }
 
     /// <summary> The image at its share of the width when sized, else its own size scaled down to fit; or a note that it's missing. </summary>

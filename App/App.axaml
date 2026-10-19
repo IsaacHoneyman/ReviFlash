@@ -10,6 +10,7 @@
   
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
         <StyleInclude Source="avares://ReviFlash/App/IconStyles.axaml" />
         <StyleInclude Source="avares://ReviFlash/App/ControlStyles.axaml" />
     </Application.Styles>

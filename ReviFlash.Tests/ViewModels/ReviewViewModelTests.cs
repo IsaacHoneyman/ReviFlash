@@ -154,4 +154,36 @@ public class ReviewViewModelTests
         review.MarkIncorrect();
         Assert.Equal(0, review.CurrentAnswerStreak);
     }
+
+    [Fact]
+    public void A_second_check_of_the_same_true_false_card_does_not_change_the_result()
+    {
+        using var database = new TestDatabase();
+        var deck = new FlashCardDeck("Deck");
+        FlashCardRepository.SaveNewDeck(deck);
+        foreach (var card in new[] { new TrueFalseFlashCard("Sky is blue", "", true), new TrueFalseFlashCard("Grass is red", "", false) })
+        {
+            FlashCardRepository.SaveNewCard(card, deck.ID);
+            deck.AddFlashCard(card);
+        }
+        var review = NewReview(deck);
+        var answerIsTrue = ((TrueFalseFlashCard)review.CurrentCard).CorrectAnswerIsTrue;
+
+        review.CheckTrueFalseAnswer(answerIsTrue);
+        review.CheckTrueFalseAnswer(!answerIsTrue);
+
+        Assert.True(review.IsAnswerCorrect);
+        Assert.Equal(1, review.CorrectCount);
+    }
+
+    [Theory]
+    [InlineData("new   york", "New York")]
+    [InlineData("  new york\t", "New York")]
+    public void Typed_answers_ignore_extra_spacing_and_case(string typed, string answer)
+    {
+        using var database = new TestDatabase();
+        var card = new TypeFlashCard("Biggest US city?", "", answer);
+        Assert.True(card.VerifyAnswer(typed));
+        Assert.False(card.VerifyAnswer("newyork"));
+    }
 }

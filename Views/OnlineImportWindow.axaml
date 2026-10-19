@@ -17,14 +17,13 @@
             <Grid ColumnDefinitions="*, Auto">
                 <StackPanel Grid.Column="0" Spacing="4">
                     <TextBlock Classes="title" Text="Community" />
-                    <TextBlock Text="Search and download public sets and notes shared by other users."
-                               Foreground="{DynamicResource TextSecondary}" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Classes="caption" Text="Search and download public sets and notes shared by other users."
+                               TextWrapping="Wrap"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="16,0,0,0">
-                    <ToggleButton Classes="dashboardToggle" Content="Sets" IsChecked="{Binding ShowSets, Mode=TwoWay}" />
-                    <ToggleButton Classes="dashboardToggle" Content="Notes" IsChecked="{Binding IsNotesSelected, Mode=TwoWay}" />
-                    <TextBlock Text="{Binding AccountText}" Margin="8,0,0,0" Foreground="{DynamicResource TextSecondary}" FontSize="13" VerticalAlignment="Center"
+                    <controls:SegmentedSwitch FirstLabel="Sets" SecondLabel="Notes" IsSecond="{Binding ShowNotes}" />
+                    <TextBlock Classes="caption" Text="{Binding AccountText}" Margin="8,0,0,0" VerticalAlignment="Center"
                                ToolTip.Tip="Sign out from Settings."/>
                 </StackPanel>
             </Grid>
@@ -50,7 +49,7 @@
                 <Button Grid.Column="2" Classes="primary"
                         Content="Search" 
                         Command="{Binding SearchCommand}"
-                        Padding="16,0" Height="40" FontSize="14" FontWeight="SemiBold"
+                        Padding="16,0" Height="40"
                         VerticalContentAlignment="Center" />
             </Grid>
         </StackPanel>
@@ -69,12 +68,12 @@
                                 <Grid ColumnDefinitions="*, Auto">
                                     <StackPanel Grid.Column="0" Spacing="4">
                                         <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
-                                        <TextBlock Text="{Binding UploaderName, StringFormat='by {0}'}" IsVisible="{Binding HasUploaderName}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding Description, StringFormat='in {0}'}" IsVisible="{Binding HasDescription}" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Classes="caption" Text="{Binding UploaderName, StringFormat='by {0}'}" IsVisible="{Binding HasUploaderName}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Classes="caption" Text="{Binding Description, StringFormat='in {0}'}" IsVisible="{Binding HasDescription}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
                                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
-                                            <TextBlock Text="{Binding SizeText}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding DownloadCountText}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold"/>
-                                            <TextBlock Classes="caption" Text="{Binding CreatedAt, StringFormat='{}{0:MMM dd, yyyy}'}" />
+                                            <TextBlock Classes="caption accent" Text="{Binding SizeText}" FontWeight="SemiBold"/>
+                                            <TextBlock Classes="caption accent" Text="{Binding DownloadCountText}" FontWeight="SemiBold"/>
+                                            <TextBlock Classes="caption" Text="{Binding CreatedAt, StringFormat='{}{0:d MMM yyyy}'}" />
                                         </StackPanel>
                                     </StackPanel>
                                     
@@ -97,9 +96,9 @@
 
         <Grid Grid.Row="2" ColumnDefinitions="Auto, *" Margin="0,16,0,0">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <TextBlock Text="{Binding TargetFolderText}" Foreground="{DynamicResource TextSecondary}" FontSize="13" VerticalAlignment="Center"/>
-                <CheckBox IsChecked="{Binding IncludeFolderInfo}" Content="Recreate uploader's folders"
-                          Foreground="{DynamicResource TextSecondary}" FontSize="13"
+                <TextBlock Classes="caption" Text="{Binding TargetFolderText}" VerticalAlignment="Center"/>
+                <CheckBox IsChecked="{Binding IncludeFolderInfo}" Content="Recreate Uploader's Folders"
+                          Foreground="{DynamicResource TextSecondary}" FontSize="12"
                           ToolTip.Tip="If the uploader included folder information, rebuild their folders inside the one you're saving to." />
             </StackPanel>
             <DockPanel Grid.Column="1" HorizontalAlignment="Right" Margin="16,0,0,0">
@@ -112,8 +111,8 @@
                         </MultiBinding>
                     </controls:BusySpinner.IsVisible>
                 </controls:BusySpinner>
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
-                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
             </DockPanel>
         </Grid>
     </Grid>

@@ -1,0 +1,211 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.ThemePickerWindow"
+    x:DataType="vm:ThemePickerViewModel"
+    Title="Themes"
+    Width="780" Height="720" MinWidth="640" MinHeight="480"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource AppBackground}">
+
+    <Window.Styles>
+        <Style Selector="Button.swatch">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="CornerRadius" Value="12" />
+        </Style>
+        <Style Selector="Border.swatchFrame">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Height" Value="64" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.swatchFrame.selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="Border.swatchFrame.newTheme">
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
+        </Style>
+        <Style Selector="Ellipse.dot">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Height" Value="10" />
+        </Style>
+
+        <!-- The live preview: one small card of each kind, in the theme being edited. -->
+        <Style Selector="Border.previewCard">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Width" Value="160" />
+        </Style>
+        <Style Selector="Border.previewBadge">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+    </Window.Styles>
+
+    <Window.Resources>
+        <DataTemplate x:Key="SwatchTile" x:DataType="vm:ThemeSwatch">
+            <Button Classes="swatch" Width="120" Margin="0,0,6,6"
+                Command="{Binding $parent[Window].((vm:ThemePickerViewModel)DataContext).SelectCommand}"
+                CommandParameter="{Binding}" ToolTip.Tip="{Binding Name}">
+                <StackPanel Spacing="6">
+                    <Border Classes="swatchFrame" Classes.selected="{Binding IsSelected}" Background="{Binding Background}">
+                        <Border Background="{Binding Card}" BorderBrush="{Binding Group}" BorderThickness="1.5" CornerRadius="6" Padding="6">
+                            <Grid RowDefinitions="*, Auto">
+                                <Border Grid.Row="0" Background="{Binding Text}" Height="4" Width="40" CornerRadius="2"
+                                    HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4">
+                                    <Ellipse Classes="dot" Fill="{Binding Group}" />
+                                    <Ellipse Classes="dot" Fill="{Binding Folder}" />
+                                    <Ellipse Classes="dot" Fill="{Binding Note}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Border>
+                    <TextBlock Classes="caption" Text="{Binding Name}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+    </Window.Resources>
+
+    <ScrollViewer Margin="24,24,8,24" Padding="0,0,16,0" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock Classes="title" Text="Themes" />
+                <TextBlock Classes="caption" TextWrapping="Wrap"
+                    Text="Pick a theme to use it straight away, or make your own below." />
+            </StackPanel>
+
+            <TextBlock Classes="sectionTitle" Text="Built-in Themes" />
+            <ItemsControl ItemsSource="{Binding BuiltInSwatches}" ItemTemplate="{StaticResource SwatchTile}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <StackPanel Spacing="4">
+                <TextBlock Classes="sectionTitle" Text="Your Themes" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding SavedThemesHint}" />
+            </StackPanel>
+            <WrapPanel>
+                <ItemsControl ItemsSource="{Binding SavedSwatches}" ItemTemplate="{StaticResource SwatchTile}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+                <Button Classes="swatch" Width="120" Margin="0,0,6,6" Command="{Binding NewThemeCommand}"
+                    ToolTip.Tip="Make a new theme of your own">
+                    <StackPanel Spacing="6">
+                        <Border Classes="swatchFrame newTheme">
+                            <TextBlock Text="+" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextSecondary}" />
+                        </Border>
+                        <TextBlock Classes="caption" Text="New Theme" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+
+            <Border Classes="card compact" IsVisible="{Binding ShowEditor}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                        <TextBox Grid.Column="0" Classes="input" Text="{Binding ThemeName}" MaxLength="30"
+                            FontSize="18" FontWeight="Bold" Watermark="Theme name" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Button Classes="iconButton" Command="{Binding DuplicateCommand}" ToolTip.Tip="Duplicate theme" VerticalAlignment="Center">
+                                <Path Classes="icon" Data="{StaticResource IconCopy}" />
+                            </Button>
+                            <Button Classes="iconButton" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete theme" VerticalAlignment="Center">
+                                <Path Classes="icon danger" Data="{StaticResource IconDelete}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Classes="error" Text="{Binding NameProblem}"
+                        IsVisible="{Binding NameProblem, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                        Text="Pick a background and two accents. ReviFlash works out the rest, keeping text and badges readable. Changes save as you go." />
+
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="8" ColumnSpacing="16">
+                        <TextBlock Grid.Row="0" Classes="body" Text="Background" VerticalAlignment="Center" />
+                        <ColorPicker Grid.Row="0" Grid.Column="1" Color="{Binding BackgroundColour}" IsAlphaEnabled="False" IsAlphaVisible="False" HorizontalAlignment="Left" />
+                        <TextBlock Grid.Row="1" Classes="body" Text="Accent" VerticalAlignment="Center" />
+                        <ColorPicker Grid.Row="1" Grid.Column="1" Color="{Binding AccentColour}" IsAlphaEnabled="False" IsAlphaVisible="False" HorizontalAlignment="Left" />
+                        <TextBlock Grid.Row="2" Classes="body" Text="Second Accent" VerticalAlignment="Center" />
+                        <ColorPicker Grid.Row="2" Grid.Column="1" Color="{Binding SecondAccentColour}" IsAlphaEnabled="False" IsAlphaVisible="False" HorizontalAlignment="Left" />
+                    </Grid>
+
+                    <TextBlock Classes="heading" Text="Preview" />
+                    <WrapPanel>
+                        <Border Classes="previewCard" BorderBrush="{DynamicResource FolderCardBorder}" Margin="0,0,8,8">
+                            <StackPanel Spacing="6">
+                                <Border Classes="previewBadge" Background="{DynamicResource FolderCardBorder}">
+                                    <TextBlock Classes="hint folderBadge badgeCount" Text="9 Items" />
+                                </Border>
+                                <TextBlock Classes="heading" Text="Year 2" />
+                                <TextBlock Classes="caption" Text="2 folders · 7 sets" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="previewCard" BorderBrush="{DynamicResource GroupCardBorder}" Margin="0,0,8,8">
+                            <StackPanel Spacing="6">
+                                <Border Classes="previewBadge" Background="{DynamicResource GroupCardBorder}">
+                                    <TextBlock Classes="hint groupBadge badgeCount" Text="3 Sets" />
+                                </Border>
+                                <TextBlock Classes="heading" Text="Revision" />
+                                <TextBlock Classes="caption" Text="72 cards · studied today" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="previewCard" BorderBrush="{DynamicResource CardBorder}" Margin="0,0,8,8">
+                            <StackPanel Spacing="6">
+                                <Border Classes="previewBadge" Background="{DynamicResource BadgeBackground}">
+                                    <TextBlock Classes="hint primary badgeCount" Text="24 Cards" />
+                                </Border>
+                                <TextBlock Classes="heading" Text="Linear Algebra" />
+                                <TextBlock Classes="caption" Text="Studied 3 days ago" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="previewCard" BorderBrush="{DynamicResource NoteCardBorder}" Margin="0,0,8,8">
+                            <StackPanel Spacing="6">
+                                <Border Classes="previewBadge" Background="{DynamicResource NoteCardBorder}">
+                                    <TextBlock Classes="hint noteBadge badgeCount" Text="1.2k Words" />
+                                </Border>
+                                <TextBlock Classes="heading" Text="Lecture 4" />
+                                <TextBlock Classes="caption" Text="Edited yesterday" />
+                            </StackPanel>
+                        </Border>
+                        <Button Classes="primary" Content="A Button" VerticalAlignment="Top" Margin="0,0,8,8" />
+                    </WrapPanel>
+
+                    <TextBlock Classes="error" Text="{Binding ReadabilityWarning}"
+                        IsVisible="{Binding ReadabilityWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <ToggleButton x:Name="AdvancedToggle" Classes="dashboardToggle" Content="Change Any Colour" HorizontalAlignment="Left" />
+                    <StackPanel Spacing="8" IsVisible="{Binding #AdvancedToggle.IsChecked}">
+                        <ItemsControl ItemsSource="{Binding ColourEntries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ThemeColourEntry">
+                                    <Grid ColumnDefinitions="*, Auto, 72" ColumnSpacing="12" Margin="0,0,0,6">
+                                        <TextBlock Grid.Column="0" Classes="body" Text="{Binding Label}" VerticalAlignment="Center" />
+                                        <ColorPicker Grid.Column="1" Color="{Binding Colour}" IsAlphaEnabled="False" IsAlphaVisible="False" />
+                                        <Button Grid.Column="2" Classes="secondary" Content="Reset" IsVisible="{Binding IsOverridden}"
+                                            Command="{Binding $parent[ItemsControl].((vm:ThemePickerViewModel)DataContext).ResetColourCommand}"
+                                            CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="secondary" Content="Reset All Colours" HorizontalAlignment="Left"
+                            Command="{Binding ResetAllColoursCommand}" IsVisible="{Binding HasOverrides}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

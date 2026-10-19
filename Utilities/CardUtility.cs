@@ -47,7 +47,7 @@ public static class CardUtility
     public static string CalculateGradeWithDefault(int correct, int total)
     {
         if (total == 0) return GRADE_UNGRADED;
-        return CalculateLetterGrade((correct * 100.0) / total);
+        return CalculateLetterGrade(AccuracyPercent(correct, total));
     }
 
     /// <summary> Percentage correct to one decimal place, 0 when nothing was answered. </summary>

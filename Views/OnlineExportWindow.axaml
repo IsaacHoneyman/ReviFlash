@@ -14,18 +14,17 @@
 
   <Grid Margin="32">
 
-    <Grid RowDefinitions="Auto, *, Auto">
+    <Grid RowDefinitions="Auto, *, Auto" IsEnabled="{Binding !IsSelectingUpdateDeck}">
 
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,24">
             <StackPanel Grid.Column="0" Spacing="4">
-                <TextBlock Text="Cloud Manager" Foreground="{DynamicResource TextPrimary}" FontSize="32" FontWeight="Bold"/>
-                <TextBlock Text="Upload your sets and notes, and manage the ones you've shared or kept private." Foreground="{DynamicResource TextSecondary}" FontSize="16"/>
+                <TextBlock Classes="title" Text="Cloud Manager" />
+                <TextBlock Classes="caption" Text="Upload your sets and notes, and manage the ones you've shared or kept private." />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <ToggleButton Classes="dashboardToggle" Content="Sets" IsChecked="{Binding ShowSets, Mode=TwoWay}" />
-                <ToggleButton Classes="dashboardToggle" Content="Notes" IsChecked="{Binding IsNotesSelected, Mode=TwoWay}" />
-                <TextBlock Text="{Binding AccountText}" Margin="8,0,0,0" Foreground="{DynamicResource TextSecondary}" FontSize="14" VerticalAlignment="Center"
+                <controls:SegmentedSwitch FirstLabel="Sets" SecondLabel="Notes" IsSecond="{Binding ShowNotes}" />
+                <TextBlock Classes="caption" Text="{Binding AccountText}" Margin="8,0,0,0" VerticalAlignment="Center"
                            ToolTip.Tip="Sign out from Settings."/>
             </StackPanel>
         </Grid>
@@ -35,14 +34,14 @@
 
             <Border Grid.Column="0" Classes="card">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <TextBlock Classes="sectionTitle" Text="On this device" />
+                    <TextBlock Classes="sectionTitle" Text="On This Device" />
                     <views:DeckFolderBrowserView Grid.Row="1" DataContext="{Binding LocalBrowser}" />
                 </Grid>
             </Border>
 
             <Border Grid.Column="1" Classes="card">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <TextBlock Classes="sectionTitle" Text="In the cloud" />
+                    <TextBlock Classes="sectionTitle" Text="In the Cloud" />
 
                     <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="10">
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
@@ -66,14 +65,14 @@
                                         <Border Classes="listRow">
                                             <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
                                                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                                    <TextBlock Classes="sectionTitle" Text="{Binding Title}" TextWrapping="Wrap" />
                                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                                         <Border IsVisible="{Binding IsPrivate}" Background="{DynamicResource StatTileBackground}" CornerRadius="6" Padding="6,1"
                                                                 ToolTip.Tip="Only you can see this. It isn't listed in community search.">
-                                                            <TextBlock Text="Private" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                                                            <TextBlock Classes="hint primary" Text="Private" FontWeight="SemiBold" />
                                                         </Border>
                                                         <TextBlock Classes="caption" Text="{Binding SizeText}" VerticalAlignment="Center" />
-                                                        <TextBlock Text="{Binding DownloadCountText}" IsVisible="{Binding !IsPrivate}" FontSize="12" Foreground="{DynamicResource GradientStart}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                        <TextBlock Classes="caption accent" Text="{Binding DownloadCountText}" IsVisible="{Binding !IsPrivate}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                                     </StackPanel>
                                                     <TextBlock Classes="hint" Text="{Binding Description, StringFormat='in {0}'}"
                                                                IsVisible="{Binding HasDescription}" TextTrimming="CharacterEllipsis" />
@@ -112,37 +111,34 @@
         </Grid>
 
         <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *" ColumnSpacing="20" Margin="0,16,0,0">
-            <CheckBox Grid.Column="0" IsChecked="{Binding IncludeFolderInfo}" Content="Include folder information"
-                      Foreground="{DynamicResource TextSecondary}" FontSize="13"
+            <CheckBox Grid.Column="0" IsChecked="{Binding IncludeFolderInfo}" Content="Include Folder Information"
+                      Foreground="{DynamicResource TextSecondary}" FontSize="12"
                       ToolTip.Tip="Uploads carry their folder path, and downloads rebuild it." />
-            <CheckBox Grid.Column="1" IsChecked="{Binding UploadAsPrivate}" Content="Upload as private"
-                      Foreground="{DynamicResource TextSecondary}" FontSize="13"
+            <CheckBox Grid.Column="1" IsChecked="{Binding UploadAsPrivate}" Content="Upload as Private"
+                      Foreground="{DynamicResource TextSecondary}" FontSize="12"
                       ToolTip.Tip="Private uploads don't appear in community search. Use them to move sets and notes between your own devices." />
             <DockPanel Grid.Column="2" HorizontalAlignment="Right" Margin="16,0,0,0">
                 <controls:BusySpinner DockPanel.Dock="Left" IsVisible="{Binding IsWorking}" Margin="0,0,8,0" />
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondary}"
-                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
             </DockPanel>
         </Grid>
     </Grid>
     <!-- Overlay: pick the local set or note that overwrites a cloud copy. -->
-    <Grid Background="#B3000000" IsVisible="{Binding IsSelectingUpdateDeck}">
+    <Grid Background="{DynamicResource ScrimBackground}" IsVisible="{Binding IsSelectingUpdateDeck}">
         <Border Classes="card" Padding="32"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 Width="600" Height="560">
             <Grid RowDefinitions="Auto, Auto, *, Auto, Auto" RowSpacing="12">
 
-                <TextBlock Grid.Row="0" Text="{Binding UpdateTitle}" FontSize="24" FontWeight="Bold"
-                           Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
+                <TextBlock Grid.Row="0" Classes="title" Text="{Binding UpdateTitle}" HorizontalAlignment="Center" />
 
-                <TextBlock Grid.Row="1" Text="{Binding UpdateHint}"
-                           Foreground="{DynamicResource TextSecondary}" FontSize="14"
+                <TextBlock Grid.Row="1" Classes="caption" Text="{Binding UpdateHint}"
                            TextWrapping="Wrap" TextAlignment="Center" />
 
                 <views:DeckFolderBrowserView Grid.Row="2" DataContext="{Binding UpdateBrowser}" />
 
-                <TextBlock Grid.Row="3" Text="{Binding SelectedLocalItemForUpdate.Name, StringFormat='Selected: {0}', FallbackValue='Nothing selected'}"
-                           Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold"
+                <TextBlock Grid.Row="3" Text="{Binding SelectedLocalItemForUpdate.Name, StringFormat='Selected: {0}', FallbackValue='Nothing selected'}" Classes="heading"
                            HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
                 <Grid Grid.Row="4" ColumnDefinitions="*, *" ColumnSpacing="16">

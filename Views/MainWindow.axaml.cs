@@ -121,9 +121,8 @@ public partial class MainWindow : Window
 
         if (check.Info is { } updateInfo)
         {
-            var confirmDialog = new ConfirmDialogWindow(
-                $"Version {updateInfo.TargetFullRelease.Version} is available. Download and restart now?"
-            );
+            var confirmDialog = new ConfirmDialogWindow("Update Available",
+                $"Version {updateInfo.TargetFullRelease.Version} is ready. Download it and restart now?");
 
             bool confirmed = await confirmDialog.ShowDialog<bool>(this);
 

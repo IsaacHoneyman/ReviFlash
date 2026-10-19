@@ -23,7 +23,7 @@
                     Padding="{TemplateBinding Padding}">
                     <Grid RowDefinitions="Auto, *">
 
-                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" VerticalAlignment="Top">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" ColumnSpacing="6" VerticalAlignment="Top">
                             <Border Grid.Column="0"
                                 HorizontalAlignment="Left" VerticalAlignment="Center"
                                 Background="{TemplateBinding BadgeBrush}"

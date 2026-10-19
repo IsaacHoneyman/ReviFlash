@@ -388,7 +388,7 @@ public sealed class SupabaseConnection : IDisposable
 /// <summary> Sets and notes each have their own table, file bucket and server functions. </summary>
 public sealed record CloudKind(string Table, string Bucket, string SearchFunction, string DownloadFunction, string DownloadParameter, string SizeColumn, string Noun)
 {
-    public static readonly CloudKind Sets = new("decks", "decks", "search_public_decks", "record_deck_download", "p_deck_id", "card_count", "Deck");
+    public static readonly CloudKind Sets = new("decks", "decks", "search_public_decks", "record_deck_download", "p_deck_id", "card_count", "Set");
     public static readonly CloudKind Notes = new("notes", "notes", "search_public_notes", "record_note_download", "p_note_id", "word_count", "Note");
 }
 

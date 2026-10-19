@@ -96,6 +96,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     {
         if (_suppressCardTypeDefaults) return;
 
+        ValidationMessage = "";
         if (oldValue == CARD_TYPE_MATCH) ClearMatchPlaceholder();
         ApplyCardTypeDefaults();
     }
@@ -111,6 +112,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     public string BackLabel => IsClozeCardType ? "Extra (optional, shown with the answer)" : "Back (Answer)";
 
     public bool ShowAdditionalFieldLatexPreviews => MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
+    public string EditorTitle => _editingCard is null ? "Add New Card" : "Edit Card";
     public string SaveButtonText => _editingCard is null ? "Save Card" : "Update Card";
 
     [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
@@ -422,6 +424,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     {
         ValidationMessage = "";
         OnPropertyChanged(nameof(SaveButtonText));
+        OnPropertyChanged(nameof(EditorTitle));
         _savedState = CaptureState();
     }
 

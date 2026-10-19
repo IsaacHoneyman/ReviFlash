@@ -11,13 +11,12 @@
 
     <Grid RowDefinitions="Auto, *, Auto" RowSpacing="12" Margin="24">
         <StackPanel Grid.Row="0" Spacing="10">
-            <TextBlock Text="Move or copy card" FontSize="24" FontWeight="Bold"
-                Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Classes="title" Text="Move or Copy Card" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <ToggleButton Classes="dashboardToggle" Content="Move" IsChecked="{Binding IsMove, Mode=TwoWay}" />
                 <ToggleButton Classes="dashboardToggle" Content="Copy" IsChecked="{Binding IsCopySelected, Mode=TwoWay}" />
             </StackPanel>
-            <TextBlock Text="{Binding Hint}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
+            <TextBlock Classes="caption" Text="{Binding Hint}" TextWrapping="Wrap" />
         </StackPanel>
 
         <Border Grid.Row="1" Classes="card compact" Padding="12">

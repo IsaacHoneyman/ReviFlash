@@ -365,7 +365,7 @@ public static class FlashCardRepository
     public static void DeleteAllStats()
     {
         Db.InTransaction((connection, transaction) =>
-            Db.Execute(connection, transaction, "DELETE FROM DeckStats; DELETE FROM DeckEditStats; DELETE FROM CardResults; DELETE FROM AnswerStreaks;"));
+            Db.Execute(connection, transaction, "DELETE FROM DeckStats; DELETE FROM DeckEditStats; DELETE FROM CardResults; DELETE FROM AnswerStreaks; DELETE FROM NoteStats;"));
     }
 
     public static void DeleteStatsForDeck(ulong deckID)

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReviFlash.Utilities;
 
@@ -8,6 +10,10 @@ namespace ReviFlash.Models;
 public partial class AppMetaData : ObservableObject
 {
     [ObservableProperty] private string _theme = "Vaporwave";
+    /// <summary> Themes the user made, at most <see cref="MaxSavedThemes"/>; saved here, so backups carry them too. </summary>
+    [ObservableProperty] private List<CustomTheme> _savedThemes = [];
+
+    public const int MaxSavedThemes = 12;
     [ObservableProperty] private DateOnly _firstLaunchDate = DateOnly.FromDateTime(DateTime.Now);
     [ObservableProperty] private DateOnly _lastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
     [ObservableProperty] private int _launchStreak = 1;
@@ -33,6 +39,7 @@ public partial class AppMetaData : ObservableObject
     public void ApplyFrom(AppMetaData other)
     {
         Theme = other.Theme;
+        SavedThemes = other.SavedThemes.Select(theme => theme.Copy()).ToList();
         FirstLaunchDate = other.FirstLaunchDate;
         LastLaunchDate = other.LastLaunchDate;
         LaunchStreak = other.LaunchStreak;

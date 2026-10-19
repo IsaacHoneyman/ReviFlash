@@ -12,7 +12,7 @@ using ReviFlash.Utilities;
 
 namespace ReviFlash.Data.Local;
 
-/// <summary> Import counts: images come across, except ones missing or unreadable, which stay as "[image]"; Skipped notes are image occlusion or have nothing to ask. </summary>
+/// <summary> Import counts: images come across, except ones missing or unreadable, which stay as "[image]"; Skipped notes are image occlusion, have an unknown note type or have nothing to ask. </summary>
 public sealed record AnkiImportResult(int Decks, int Cards, int Images, int CardsWithMissingImages, int Skipped, IReadOnlyList<string> DecksWithMissingImages);
 
 /// <summary> Imports an Anki .apkg/.colpkg as decks (parent decks become folders) of Flip, Type and Cloze cards, without scheduling. </summary>
@@ -162,7 +162,12 @@ public static partial class AnkiImporter
 
         foreach (var note in notes)
         {
-            if (!noteTypes.TryGetValue(note.NoteTypeID, out var type) || !noteDecks.TryGetValue(note.ID, out var deckId)) continue;
+            if (!noteTypes.TryGetValue(note.NoteTypeID, out var type))
+            {
+                skipped++;
+                continue;
+            }
+            if (!noteDecks.TryGetValue(note.ID, out var deckId)) continue;
 
             var card = ConvertNote(note, type, notesWithReverse.Contains(note.ID), media, out var missedImage);
             if (card is null)

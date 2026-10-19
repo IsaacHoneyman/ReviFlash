@@ -11,26 +11,24 @@ public partial class Folder(string name) : LibraryItem(name)
     [ObservableProperty] private ulong? _parentFolderID;
 
     /// <summary> Direct child counts, shown on the folder card. </summary>
-    [NotifyPropertyChangedFor(nameof(ItemCount))]
-    [NotifyPropertyChangedFor(nameof(ContentsSummary))]
+    [NotifyPropertyChangedFor(nameof(ItemCount), nameof(ItemCountLabel))]
+    [NotifyPropertyChangedFor(nameof(ContentsSummary), nameof(CardSubtitle))]
     [ObservableProperty] private int _subFolderCount;
-    [NotifyPropertyChangedFor(nameof(ItemCount))]
-    [NotifyPropertyChangedFor(nameof(ContentsSummary))]
+    [NotifyPropertyChangedFor(nameof(ItemCount), nameof(ItemCountLabel))]
+    [NotifyPropertyChangedFor(nameof(ContentsSummary), nameof(CardSubtitle))]
     [ObservableProperty] private int _setCount;
-    [NotifyPropertyChangedFor(nameof(ItemCount))]
-    [NotifyPropertyChangedFor(nameof(ContentsSummary))]
+    [NotifyPropertyChangedFor(nameof(ItemCount), nameof(ItemCountLabel))]
+    [NotifyPropertyChangedFor(nameof(ContentsSummary), nameof(CardSubtitle))]
     [ObservableProperty] private int _groupCount;
-    [NotifyPropertyChangedFor(nameof(ItemCount))]
-    [NotifyPropertyChangedFor(nameof(ContentsSummary))]
+    [NotifyPropertyChangedFor(nameof(ItemCount), nameof(ItemCountLabel))]
+    [NotifyPropertyChangedFor(nameof(ContentsSummary), nameof(CardSubtitle))]
     [ObservableProperty] private int _noteCount;
 
     /// <summary> Cards across the whole subtree, so a folder of folders still reads usefully. </summary>
     [ObservableProperty] private int _cardCount;
 
-    /// <summary> Trails the contents summary on the card, so the location never needs a line of its own. </summary>
-    public string LocationSuffix => HasFolderPath ? $" · in {FolderPath}" : "";
-
     public int ItemCount => SubFolderCount + SetCount + GroupCount + NoteCount;
+    public string ItemCountLabel => ItemCount == 1 ? "Item" : "Items";
 
     public string ContentsSummary
     {
@@ -55,7 +53,7 @@ public partial class Folder(string name) : LibraryItem(name)
         ParentFolderID = parentFolderID;
     }
 
-    protected override void OnFolderPathUpdated() => OnPropertyChanged(nameof(LocationSuffix));
+    protected override string CardSummary => ContentsSummary;
 
     // --- Search ---
 

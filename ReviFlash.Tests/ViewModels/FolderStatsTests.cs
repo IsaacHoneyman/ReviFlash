@@ -103,4 +103,18 @@ public class FolderStatsTests
         Assert.False(vm.IsViewingStats);
         Assert.Equal(900, vm.TotalTimeSeconds);
     }
+
+    [Fact]
+    public void Deleting_the_folder_being_viewed_but_keeping_its_contents_goes_back_to_overall_stats()
+    {
+        using var database = new TestDatabase();
+        var (outer, _) = NewLibrary();
+        var vm = new DashboardViewModel();
+        vm.ShowFolderStats(outer.ID);
+
+        vm.DeleteFolder(vm.FolderTree.AllFolders.Single(f => f.ID == outer.ID));
+
+        Assert.False(vm.IsViewingStats);
+        Assert.Equal("Overall", vm.CurrentStatsTitle);
+    }
 }

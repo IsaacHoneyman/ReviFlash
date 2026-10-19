@@ -181,6 +181,12 @@ public partial class NoteView : UserControl
             return;
         }
 
+        if (e.Key == Key.Tab && e.KeyModifiers == KeyModifiers.Shift)
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Shortcuts.IsCommand(e, Key.Enter, _topLevel?.PlatformSettings?.HotkeyConfiguration))
         {
             MakeCard_Click(this, new RoutedEventArgs());

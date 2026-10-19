@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -24,22 +25,12 @@ public partial class OnlineImportViewModel : OnlineViewModelBase
     public ObservableCollection<FlashCardDeckMetadata> SearchResults { get; } = [];
 
     /// <summary> Searches public notes rather than sets. </summary>
-    [NotifyPropertyChangedFor(nameof(ShowSets), nameof(IsNotesSelected), nameof(SearchWatermark))]
+    [NotifyPropertyChangedFor(nameof(SearchWatermark))]
     [ObservableProperty] private bool _showNotes;
     partial void OnShowNotesChanged(bool value) => _ = SearchAsync();
 
     // Bound to toggle buttons, so clicking the selected one keeps it selected.
-    public bool ShowSets
-    {
-        get => !ShowNotes;
-        set { if (value) ShowNotes = false; else OnPropertyChanged(); }
-    }
 
-    public bool IsNotesSelected
-    {
-        get => ShowNotes;
-        set { if (value) ShowNotes = true; else OnPropertyChanged(); }
-    }
 
     public string SearchWatermark => ShowNotes ? "Search notes by title or uploader..." : "Search sets by title or uploader...";
 
@@ -68,41 +59,57 @@ public partial class OnlineImportViewModel : OnlineViewModelBase
         _ = SearchAsync();
     }
 
+    private int _searchGeneration;
+
     [RelayCommand]
     private async Task SearchAsync()
     {
+        var generation = ++_searchGeneration;
         IsSearching = true;
         SearchResults.Clear();
+        _rawResults.Clear();
         var kind = Kind;
+        var query = SearchText;
         var noun = ShowNotes ? "note" : "set";
 
-        await RunWithStatusAsync(ShowNotes ? "Searching public notes" : "Searching public sets", async () =>
-        {
-            using var client = await SupabaseConnection.CreateAsync();
-            var results = await client.GetPublicDecksAsync(SearchText, limit: 25, kind);
+        await RunWithStatusAsync(ShowNotes ? "Searching public notes" : "Searching public sets", () =>
+            ApplySearchAsync(generation, query, noun, async () =>
+            {
+                using var client = await SupabaseConnection.CreateAsync();
+                return await client.GetPublicDecksAsync(query, limit: 25, kind);
+            }), "Search failed", fadeOnSuccess: false);
 
-            // Switched between sets and notes while searching: that search has replaced this one.
-            if (kind != Kind) return StatusMessage;
-
-            _rawResults.Clear();
-            _rawResults.AddRange(results);
-            _rawResultsQuery = SearchText;
-            ApplyOrdering();
-
-            return SearchResults.Count == 0
-                ? $"No {noun}s found matching your search."
-                : $"Found {TextUtility.Plural(SearchResults.Count, noun)}.";
-        }, "Search failed");
-
-        if (kind == Kind) IsSearching = false;
+        if (generation == _searchGeneration) IsSearching = false;
     }
+
+    /// <summary> Shows what <paramref name="fetch"/> returns only if no newer search has started; an older search's results and failures are dropped. </summary>
+    internal async Task<string> ApplySearchAsync(int generation, string query, string noun, Func<Task<List<FlashCardDeckMetadata>>> fetch)
+    {
+        List<FlashCardDeckMetadata> results;
+        try { results = await fetch(); }
+        catch when (generation != _searchGeneration) { return StatusMessage; }
+
+        if (generation != _searchGeneration) return StatusMessage;
+
+        _rawResults.Clear();
+        _rawResults.AddRange(results);
+        _rawResultsQuery = query;
+        ApplyOrdering();
+
+        return SearchResults.Count == 0
+            ? $"No {noun}s found matching your search."
+            : $"Found {TextUtility.Plural(SearchResults.Count, noun)}.";
+    }
+
+    /// <summary> Starts a new search generation, making every earlier one stale. </summary>
+    internal int BeginSearch() => ++_searchGeneration;
 
     [RelayCommand]
     private async Task DownloadAsync(FlashCardDeckMetadata? deck)
     {
         if (deck == null || string.IsNullOrWhiteSpace(deck.StoragePath))
         {
-            StatusMessage = "Cannot download: Invalid deck or missing storage path.";
+            ReportFailure("Cannot download: this item is missing its file.");
             return;
         }
 

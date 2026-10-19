@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform;
 using ReviFlash.Data.Local;
 using ReviFlash.Utilities;
 
@@ -158,23 +156,9 @@ public partial class SyntaxGuideWindow : Window
         ]),
     ];
 
-    /// <summary> Examples using the ReviFlash logo, stored like any added image; none if it can't be stored. </summary>
-    private static List<GuideRow> ImageExamples()
-    {
-        try
-        {
-            using var logo = AssetLoader.Open(new Uri("avares://ReviFlash/Assets/ReviFlashLogo.ico"));
-            using var bytes = new MemoryStream();
-            logo.CopyTo(bytes);
-            var name = ImageStore.Add(bytes.ToArray());
-            return [new("An image", ImageToken.Format(name)), new("A quarter of the width", ImageToken.Format(name, 25))];
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Couldn't store the example image for the formatting guide.", ex);
-            return [];
-        }
-    }
+    /// <summary> Examples using the ReviFlash logo; none if it can't be stored. </summary>
+    private static List<GuideRow> ImageExamples() =>
+        LogoImage.Store() is { } name ? [new("An image", ImageToken.Format(name)), new("A quarter of the width", ImageToken.Format(name, 25))] : [];
 
     public SyntaxGuideWindow()
     {

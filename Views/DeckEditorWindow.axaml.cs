@@ -80,7 +80,7 @@ public partial class DeckEditorWindow : Window
         _closePromptOpen = true;
         try
         {
-            if (!await ConfirmDiscardEditorAsync("Discard this card?")) return;
+            if (!await ConfirmDiscardEditorAsync("Discard Card?")) return;
         }
         finally
         {
@@ -118,10 +118,10 @@ public partial class DeckEditorWindow : Window
     private static FlashCard? CardOf(object? sender) => (sender as Button)?.DataContext as FlashCard;
 
     /// <summary> True if the editor has nothing unsaved, or the user agrees to lose it. </summary>
-    private async Task<bool> ConfirmDiscardEditorAsync(string message)
+    private async Task<bool> ConfirmDiscardEditorAsync(string title, string? message = null)
     {
         if (ViewModel is not { } vm || !vm.HasUnsavedWork()) return true;
-        return await new ConfirmDialogWindow(message).ShowDialog<bool>(this);
+        return await new ConfirmDialogWindow(title, message).ShowDialog<bool>(this);
     }
 
     // --- Formatting toolbar and shortcuts ---
@@ -167,7 +167,7 @@ public partial class DeckEditorWindow : Window
     {
         if (CardOf(sender) is not { } card) return;
 
-        bool confirmed = await new ConfirmDialogWindow("Are you sure you want to delete this flashcard?").ShowDialog<bool>(this);
+        bool confirmed = await new ConfirmDialogWindow("Delete Card?", "This can't be undone.").ShowDialog<bool>(this);
         if (confirmed) ViewModel?.DeleteCard(card);
     }
 
@@ -175,14 +175,14 @@ public partial class DeckEditorWindow : Window
     {
         if (CardOf(sender) is not { } card) return;
 
-        if (await ConfirmDiscardEditorAsync("Current editor contains unsaved content. Overwrite and edit this card?"))
+        if (await ConfirmDiscardEditorAsync("Edit Another Card?", "The card you're working on hasn't been saved. Discard it and edit this one?"))
             ViewModel?.BeginEditCard(card);
     }
 
     private async void NewCardFromThis_Click(object sender, RoutedEventArgs e)
     {
         if (CardOf(sender) is not { } card) return;
-        if (!await ConfirmDiscardEditorAsync("Replace the card you're working on with a new card based on this one?")) return;
+        if (!await ConfirmDiscardEditorAsync("Start From This Card?", "Replace the card you're working on with a new card based on this one?")) return;
 
         ViewModel?.CopyCardToEditor(card);
         FrontBox.Focus();
@@ -201,7 +201,7 @@ public partial class DeckEditorWindow : Window
             return;
         }
 
-        if (vm.IsEditing(card) && !await ConfirmDiscardEditorAsync("Discard your changes to this card and move it?")) return;
+        if (vm.IsEditing(card) && !await ConfirmDiscardEditorAsync("Discard Changes?", "Discard your changes to this card and move it?")) return;
 
         vm.MoveCard(card, choice.Deck);
     }

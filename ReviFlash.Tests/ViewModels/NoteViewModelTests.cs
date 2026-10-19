@@ -97,4 +97,20 @@ public class NoteViewModelTests
         Assert.Equal("", vm.Blocks[0].Text);
         Assert.Equal("two", NoteRepository.GetContent(id));
     }
+
+    [Fact]
+    public void Deleting_the_only_paragraph_being_edited_stops_editing_it()
+    {
+        using var database = new TestDatabase();
+        var id = NewNote();
+        var vm = Open(id, "hello");
+        var block = vm.Blocks[0];
+
+        vm.BeginEdit(block);
+        vm.DeleteBlock(block);
+
+        Assert.False(block.IsEditing);
+        Assert.False(vm.IsEditingBlock);
+        Assert.Equal("", block.Text);
+    }
 }

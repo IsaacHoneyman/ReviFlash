@@ -14,16 +14,20 @@ public partial class Note : LibraryItem
     /// <summary> Folder this note lives in, or null when it sits at the main menu. </summary>
     [ObservableProperty] private ulong? _folderID;
 
-    [NotifyPropertyChangedFor(nameof(Summary))]
+    [NotifyPropertyChangedFor(nameof(WordCountText), nameof(WordCountLabel), nameof(Summary))]
     [ObservableProperty] private int _wordCount;
 
-    [NotifyPropertyChangedFor(nameof(Summary))]
+    [NotifyPropertyChangedFor(nameof(CardSubtitle), nameof(Summary))]
     [ObservableProperty] private DateTime _updatedAt;
 
     public DateTime CreatedAt { get; }
 
-    /// <summary> What the note card says under the name, e.g. "1,204 words · edited 3 Oct". </summary>
+    /// <summary> Words and last edit in one line, for lists with no badge, e.g. "1,204 words · edited 3 Oct". </summary>
     public string Summary => $"{(WordCount == 1 ? "1 word" : $"{WordCount:N0} words")} · edited {TextUtility.FormatWhen(UpdatedAt)}";
+    public string WordCountText => TextUtility.Compact(WordCount);
+    public string WordCountLabel => WordCount == 1 ? "Word" : "Words";
+
+    protected override string CardSummary => $"Edited {TextUtility.FormatWhen(UpdatedAt)}";
 
     public override string Kind => "note";
     public override ulong? ContainerFolderID => FolderID;

@@ -12,7 +12,10 @@ public partial class OnlineImportWindow : Window
     {
         InitializeComponent();
         Shortcuts.CloseOnEscape(this);
-        var vm = new OnlineImportViewModel(targetFolderID);
+        var vm = new OnlineImportViewModel(targetFolderID)
+        {
+            ShowErrorAsync = message => ConfirmDialogWindow.ShowNoticeAsync(this, "Something Went Wrong", message),
+        };
         DataContext = vm;
     }
 }

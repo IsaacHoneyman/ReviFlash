@@ -15,7 +15,8 @@
         <TextBox Grid.Row="0"
             Text="{Binding GroupName, Mode=TwoWay}"
             Watermark="Group name"
-            FontSize="32" FontWeight="Bold"
+            MaxLength="100"
+            FontSize="24" FontWeight="Bold"
             Background="Transparent"
             BorderThickness="0,0,0,2"
             Foreground="{DynamicResource TextPrimary}"
@@ -24,7 +25,7 @@
         <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
             <Border Classes="card">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <TextBlock Classes="sectionTitle" Text="Available Decks" />
+                    <TextBlock Classes="sectionTitle" Text="Available Sets" />
 
                     <views:DeckFolderBrowserView Grid.Row="1" DataContext="{Binding AvailableBrowser}" />
                 </Grid>
@@ -44,11 +45,8 @@
                                     <Border Classes="listRow">
                                         <Grid ColumnDefinitions="*, Auto">
                                             <StackPanel Grid.Column="0" Spacing="4">
-                                                <TextBlock Text="{Binding Name}" FontSize="18"
-                                                    FontWeight="SemiBold"
-                                                    Foreground="{DynamicResource TextPrimary}"
-                                                    TextWrapping="Wrap" />
-                                                <TextBlock Classes="caption" Text="{Binding CardCount, StringFormat='{}{0} cards'}" />
+                                                <TextBlock Classes="sectionTitle" Text="{Binding Name}" TextWrapping="Wrap" />
+                                                <TextBlock Classes="caption" Text="{Binding CardCountText}" />
                                             </StackPanel>
 
                                             <Button Grid.Column="1" Classes="danger"

@@ -22,9 +22,9 @@
                 </Rectangle.RenderTransform>
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Offset="0.0" Color="{DynamicResource GradientStart}" />
-                        <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource GradientEnd}" />
+                        <GradientStop Offset="0.0" Color="{DynamicResource SwirlStart}" />
+                        <GradientStop Offset="0.5" Color="{DynamicResource SwirlMiddle}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource SwirlEnd}" />
                     </LinearGradientBrush>
                 </Rectangle.Fill>
             </Rectangle>
@@ -36,9 +36,9 @@
                 </Rectangle.RenderTransform>
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,100%">
-                        <GradientStop Offset="0.0" Color="{DynamicResource GradientEnd}" />
-                        <GradientStop Offset="0.5" Color="{DynamicResource GradientMiddle}" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource GradientStart}" />
+                        <GradientStop Offset="0.0" Color="{DynamicResource SwirlEnd}" />
+                        <GradientStop Offset="0.5" Color="{DynamicResource SwirlMiddle}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource SwirlStart}" />
                     </LinearGradientBrush>
                 </Rectangle.Fill>
             </Rectangle>

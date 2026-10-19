@@ -259,7 +259,11 @@ public partial class NoteViewModel : ViewModelBase
 
     public void DeleteBlock(NoteBlock block)
     {
-        if (EditingBlock == block) EditingBlock = null;
+        if (EditingBlock == block)
+        {
+            EditingBlock = null;
+            block.IsEditing = false;
+        }
 
         if (Blocks.Count > 1) RemoveBlock(block);
         else block.Text = block.RenderedText = "";

@@ -28,7 +28,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     [ObservableProperty] private LibraryItem? _selectedLocalItemForUpdate;
 
     /// <summary> Both panes show notes rather than sets. </summary>
-    [NotifyPropertyChangedFor(nameof(ShowSets), nameof(IsNotesSelected), nameof(ItemNoun), nameof(ItemsNoun), nameof(CloudSearchWatermark),
+    [NotifyPropertyChangedFor(nameof(ItemNoun), nameof(ItemsNoun), nameof(CloudSearchWatermark),
         nameof(LoadingText), nameof(UpdateTitle), nameof(UpdateHint))]
     [ObservableProperty] private bool _showNotes;
     partial void OnShowNotesChanged(bool value)
@@ -42,17 +42,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     }
 
     // Bound to toggle buttons, so clicking the selected one keeps it selected.
-    public bool ShowSets
-    {
-        get => !ShowNotes;
-        set { if (value) ShowNotes = false; else OnPropertyChanged(); }
-    }
 
-    public bool IsNotesSelected
-    {
-        get => ShowNotes;
-        set { if (value) ShowNotes = true; else OnPropertyChanged(); }
-    }
 
     private CloudKind Kind => ShowNotes ? CloudKind.Notes : CloudKind.Sets;
 
@@ -100,7 +90,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
     }
 
     /// <summary> Asks the user to confirm a destructive action; supplied by the window. </summary>
-    public Func<string, Task<bool>>? ConfirmAsync { get; set; }
+    public Func<string, string, Task<bool>>? ConfirmAsync { get; set; }
 
     public OnlineExportViewModel(ulong? targetFolderID = null)
     {
@@ -153,8 +143,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.UploadCloudDeckAsync(userId, item.Name, upload.Description, upload.Size, upload.Json, UploadAsPrivate, kind);
 
-            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
-            return message;
+            return await AfterCloudChangeAsync(success, message);
         }, "Upload failed");
     }
 
@@ -165,7 +154,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
         if (SelectedLocalItemForUpdate is not { } local)
         {
-            StatusMessage = $"Please select a {ItemNoun} on this device to upload.";
+            ReportFailure($"Please select a {ItemNoun} on this device to upload.");
             return;
         }
 
@@ -179,8 +168,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.UpdateCloudDeckAsync(storagePath, local.Name, upload.Description, upload.Size, upload.Json, kind);
 
-            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
-            return message;
+            return await AfterCloudChangeAsync(success, message);
         }, "Update failed");
     }
 
@@ -191,7 +179,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
         bool makePrivate = !deck.IsPrivate;
         if (makePrivate && ConfirmAsync is not null &&
-            !await ConfirmAsync($"Make \"{deck.Title}\" private? It will disappear from community search. People who already downloaded it keep their copies."))
+            !await ConfirmAsync("Make Private?", $"\"{deck.Title}\" will disappear from community search. People who already downloaded it keep their copies."))
         {
             return;
         }
@@ -202,8 +190,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.SetCloudDeckVisibilityAsync(userId, deck.StoragePath, makePrivate, kind);
 
-            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
-            return message;
+            return await AfterCloudChangeAsync(success, message);
         }, "Change failed");
     }
 
@@ -235,7 +222,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
         string downloads = deck.DownloadCount > 0 ? $" Its {deck.DownloadCountText} will be lost too." : "";
         if (ConfirmAsync is not null &&
-            !await ConfirmAsync($"Delete \"{deck.Title}\" from the cloud? Anyone searching for it will no longer find it.{downloads} Your local copy is not affected."))
+            !await ConfirmAsync("Delete from the Cloud?", $"Anyone searching for \"{deck.Title}\" will no longer find it.{downloads} Your local copy is not affected."))
         {
             return;
         }
@@ -246,12 +233,11 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             using var client = await SupabaseConnection.CreateAsync();
             var (success, message) = await client.DeleteCloudDeckAsync(deck.StoragePath, kind);
 
-            if (success && !await LoadCloudDecksAsync()) message += " " + ListRefreshFailedText;
-            return message;
+            return await AfterCloudChangeAsync(success, message);
         }, "Delete failed");
     }
 
-    /// <summary> What an upload sends for a set or note, or null with <see cref="OnlineViewModelBase.StatusMessage"/> saying why it can't go. </summary>
+    /// <summary> What an upload sends for a set or note, or null after reporting why it can't go. </summary>
     internal CloudUpload? PrepareUpload(LibraryItem item)
     {
         List<string> folderPath = IncludeFolderInfo ? DeckTransferManager.GetFolderPathNames(item.ContainerFolderID) : [];
@@ -262,12 +248,12 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
             var content = NoteRepository.GetContent(note.ID);
             if (string.IsNullOrWhiteSpace(content))
             {
-                StatusMessage = "Cannot upload an empty note.";
+                ReportFailure("Cannot upload an empty note.");
                 return null;
             }
             if (ImageToken.Shows(content))
             {
-                StatusMessage = ImagesCantUploadText(note.Name, "notes");
+                ReportFailure(ImagesCantUploadText(note.Name, "notes"));
                 return null;
             }
             return new CloudUpload(DeckTransferManager.GenerateCloudNoteJson(note.Name, content, folderPath), description, NoteText.WordCount(content));
@@ -276,12 +262,12 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         var cards = FlashCardRepository.GetCardsForDeck(item.ID);
         if (cards.Count == 0)
         {
-            StatusMessage = "Cannot upload an empty set.";
+            ReportFailure("Cannot upload an empty set.");
             return null;
         }
         if (DeckTransferManager.HasImages(cards))
         {
-            StatusMessage = ImagesCantUploadText(item.Name, "sets");
+            ReportFailure(ImagesCantUploadText(item.Name, "sets"));
             return null;
         }
         return new CloudUpload(DeckTransferManager.GenerateCloudExportJson(item.ID, folderPath), description, cards.Count);
@@ -293,6 +279,14 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
 
         var fDecks = CloudDecks.SearchAndSort(CloudSearchText, SelectedCloudSortOption?.Mode ?? SortMode.Relevance);
         foreach (var d in fDecks) FilteredCloudDecks.Add(d);
+    }
+
+    /// <summary> Throws a server's refusal so it shows as a failure; a list that won't refresh afterwards is reported separately. </summary>
+    private async Task<string> AfterCloudChangeAsync(bool success, string message)
+    {
+        if (!success) throw new CloudActionException(message);
+        if (!await LoadCloudDecksAsync()) ReportFailure(ListRefreshFailedText);
+        return message;
     }
 
     private string ListRefreshFailedText => $"Couldn't refresh your cloud {ItemsNoun}. Check your connection.";
@@ -315,7 +309,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         bool loaded = await LoadCloudDecksAsync();
         IsLoadingCloudDecks = false;
 
-        if (!loaded) StatusMessage = $"Couldn't load your cloud {ItemsNoun}. Check your connection.";
+        if (!loaded) await ReportFailureAsync($"Couldn't load your cloud {ItemsNoun}. Check your connection.");
     }
 
     /// <summary> False when the list couldn't be loaded; the list on screen is then left as it was. </summary>

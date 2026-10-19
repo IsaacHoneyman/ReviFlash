@@ -1,20 +1,23 @@
 using System;
 using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Models;
 
 public partial class StudyGroup(string name) : LibraryItem(name)
 {
+    [NotifyPropertyChangedFor(nameof(CardSubtitle))]
     [ObservableProperty] private int _cardCount;
+    [NotifyPropertyChangedFor(nameof(DeckCountLabel))]
     [ObservableProperty] private int _deckCount;
+
+    public string DeckCountLabel => DeckCount == 1 ? "Set" : "Sets";
 
     /// <summary> Folder this group lives in, or null when it sits at the main menu. </summary>
     [ObservableProperty] private ulong? _folderID;
 
-    /// <summary> A search result found in another folder says where it lives instead. </summary>
-    public bool ShowLocationHint => HasFolderPath;
-    public bool ShowReviewHint => !HasFolderPath;
+    protected override string CardSummary => $"{TextUtility.Plural(CardCount, "card")} · {StudiedText(LastStudied)}";
 
     public override string Kind => "group";
     public override ulong? ContainerFolderID => FolderID;
@@ -34,14 +37,8 @@ public partial class StudyGroup(string name) : LibraryItem(name)
         LastStudied = lastStudied;
     }
 
-    protected override void OnFolderPathUpdated()
-    {
-        OnPropertyChanged(nameof(ShowLocationHint));
-        OnPropertyChanged(nameof(ShowReviewHint));
-    }
-
     // --- Search ---
 
-    public override IEnumerable<string?> SearchKeywords => [CardCount.ToString(), $"{DeckCount} decks", FolderPath];
+    public override IEnumerable<string?> SearchKeywords => [CardCount.ToString(), $"{DeckCount} sets", FolderPath];
     public override int SortCardCount => CardCount;
 }

@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -28,7 +29,20 @@ public partial class TextPromptWindow : DialogWindow
         };
     }
 
-    private void Input_TextChanged(object? sender, TextChangedEventArgs e) => UpdateConfirmEnabled();
+    /// <summary> Returns what's wrong with the text, shown under the box while the prompt stays open, or null to accept it. </summary>
+    public Func<string, string?>? Validate { get; init; }
+
+    private void Input_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        UpdateConfirmEnabled();
+        ShowHintStyle(false);
+    }
+
+    private void ShowHintStyle(bool isError)
+    {
+        HintText.Classes.Set("error", isError);
+        HintText.Classes.Set("caption", !isError);
+    }
 
     private void UpdateConfirmEnabled() => ConfirmButton.IsEnabled = !string.IsNullOrWhiteSpace(InputBox.Text);
 
@@ -50,6 +64,13 @@ public partial class TextPromptWindow : DialogWindow
 
         // An empty name would leave an unidentifiable card on the dashboard.
         if (string.IsNullOrWhiteSpace(text)) return;
+
+        if (Validate?.Invoke(text) is string problem)
+        {
+            HintText.Text = problem;
+            ShowHintStyle(true);
+            return;
+        }
 
         Close(text);
     }

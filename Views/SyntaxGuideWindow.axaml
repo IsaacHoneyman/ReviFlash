@@ -27,8 +27,9 @@
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
         <Style Selector="SelectableTextBlock.source">
+            <Setter Property="IsTabStop" Value="False" />
             <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
@@ -53,8 +54,8 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock Grid.Column="1" Text="{Binding Action}" TextWrapping="Wrap"
-                        VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Grid.Column="1" Classes="body" Text="{Binding Action}" TextWrapping="Wrap"
+                        VerticalAlignment="Center" />
                 </Grid>
             </Border>
         </DataTemplate>
@@ -66,7 +67,7 @@
         <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
                 <TextBlock Classes="title" Text="Formatting Guide" />
-                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                <TextBlock Classes="caption" TextWrapping="Wrap"
                     Text="The toolbar above the card fields does the common ones for you: select some text and press a button (or its shortcut). Everything here can also be typed. Each example shows what you type and how it looks; use the copy button to paste one into a card." />
             </StackPanel>
 
@@ -75,8 +76,7 @@
                     <DataTemplate x:DataType="views:GuideSection">
                         <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
                             <StackPanel Spacing="10">
-                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
                                 <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                     TextWrapping="Wrap" />
 
@@ -91,8 +91,8 @@
                                         <DataTemplate x:DataType="views:GuideRow">
                                             <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="0,10">
                                                 <Grid ColumnDefinitions="170, *, *, Auto" ColumnSpacing="16">
-                                                    <TextBlock Grid.Column="0" Text="{Binding Description}" TextWrapping="Wrap"
-                                                        VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
+                                                    <TextBlock Grid.Column="0" Classes="caption" Text="{Binding Description}" TextWrapping="Wrap"
+                                                        VerticalAlignment="Center" />
                                                     <SelectableTextBlock Grid.Column="1" Classes="source" Text="{Binding Source}" />
                                                     <views:MathText Grid.Column="2" Text="{Binding Source}" FontSize="15"
                                                         VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
@@ -120,7 +120,7 @@
         <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
                 <TextBlock Classes="title" Text="Keyboard Shortcuts" />
-                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                <TextBlock Classes="caption" TextWrapping="Wrap"
                     Text="Where a row shows more than one key, either works. On macOS, use Cmd wherever Ctrl is shown." />
             </StackPanel>
 
@@ -129,8 +129,7 @@
                     <DataTemplate x:DataType="views:ShortcutSection">
                         <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
                             <StackPanel Spacing="10">
-                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
                                 <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                     TextWrapping="Wrap" />
 
@@ -140,8 +139,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="views:ShortcutSection">
                                             <StackPanel Spacing="10" Margin="0,12,0,0">
-                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"
-                                                    Foreground="{DynamicResource TextPrimary}" />
+                                                <TextBlock Classes="heading" Text="{Binding Title}" />
                                                 <ItemsControl ItemsSource="{Binding Rows}" />
                                             </StackPanel>
                                         </DataTemplate>
@@ -161,7 +159,7 @@
         <StackPanel Margin="16,16,16,32" Spacing="20">
             <StackPanel Spacing="6">
                 <TextBlock Classes="title" Text="Changelog" />
-                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                <TextBlock Classes="caption" TextWrapping="Wrap"
                     Text="The changes in each version of ReviFlash, newest first." />
             </StackPanel>
 
@@ -170,8 +168,7 @@
                     <DataTemplate x:DataType="utilities:ReleaseNotes">
                         <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
                             <StackPanel Spacing="10">
-                                <TextBlock Text="{Binding Version, StringFormat='Version {0}'}" FontSize="18" FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Classes="sectionTitle" Text="{Binding Version, StringFormat='Version {0}'}" />
                                 <views:MathText Text="{Binding Body}" Foreground="{DynamicResource TextPrimary}" />
                             </StackPanel>
                         </Border>

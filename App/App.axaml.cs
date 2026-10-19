@@ -1,3 +1,4 @@
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -22,7 +23,9 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         MetaDataManager.InitMetaData(); // Applies the saved theme, and with it the accent palette.
+        bool freshInstall = !File.Exists(MetaDataManager.Data.DatabasePath);
         DatabaseManager.InitDatabase();
+        if (freshInstall) WelcomeLibrary.Create(LogoImage.Store());
         ApplyAccessibilityPalette(IsLightTheme());
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -70,12 +73,20 @@ public partial class App : Application
 
         Current.Resources["SuccessForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#1D6A42") : Color.Parse("#44CC88"));
         Current.Resources["WarningForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#8A5A00") : Color.Parse("#FFCC66"));
-        // #7F1726 is the lightest red that keeps 4.5:1 on every light theme's background (Sepia is the tightest).
+        // #7F1726 is the lightest red that keeps 4.5:1 on a light background.
         Current.Resources["DangerForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#7F1726") : Color.Parse("#FF8888"));
         Current.Resources["SuccessBackground"] = new SolidColorBrush(Color.Parse("#2E9E44"));
         Current.Resources["DangerBackground"] = new SolidColorBrush(Color.Parse("#CC3D3D"));
         // Text on DangerBackground. Theme accents (IconForeground) can be nearly invisible on red.
         Current.Resources["DangerBackgroundForeground"] = new SolidColorBrush(Colors.White);
         Current.Resources["SurfaceOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#12000000") : Color.Parse("#18000000"));
+        Current.Resources["HoverOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#10000000") : Color.Parse("#10FFFFFF"));
+        Current.Resources["ScrimBackground"] = new SolidColorBrush(Color.Parse("#B3000000"));
+        Current.Resources["AccentSoftBackground"] = new SolidColorBrush(Color.Parse("#7044AAFF"));
+        Current.Resources["DangerSoftBackground"] = new SolidColorBrush(Color.Parse("#60FF4444"));
+        Current.Resources["ChartAttemptsBrush"] = new SolidColorBrush(Color.Parse("#EEEF6B5B"));
+        Current.Resources["ChartReviewBrush"] = new SolidColorBrush(Color.Parse("#FF4AA3FF"));
+        Current.Resources["ChartEditingBrush"] = new SolidColorBrush(Color.Parse("#FFFFB547"));
+        Current.Resources["ChartNotesBrush"] = new SolidColorBrush(Color.Parse("#FFB57BFF"));
     }
 }

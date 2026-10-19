@@ -29,11 +29,13 @@ public class TypeFlashCard(string front, string back, string? answer) : FlashCar
     {
         if (answer is not string strAnswer) return false;
         if (BlankAnswers is { Count: > 1 }) return SameWords(strAnswer, string.Join(' ', BlankAnswers));
-        return strAnswer.Trim().Equals(Answer, StringComparison.OrdinalIgnoreCase);
+        return CollapseSpaces(strAnswer).Equals(CollapseSpaces(Answer), StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool SameWords(string typed, string expected) =>
         Words(typed).SequenceEqual(Words(expected), StringComparer.OrdinalIgnoreCase);
+
+    private static string CollapseSpaces(string text) => string.Join(' ', text.Normalize().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
     private static string[] Words(string text) => text.Split([',', ' ', '\t', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 

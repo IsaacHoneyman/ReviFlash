@@ -18,7 +18,7 @@
             <Setter Property="Cursor" Value="Ibeam" />
         </Style>
         <Style Selector="Border.rendered:pointerover">
-            <Setter Property="Background" Value="#10FFFFFF" />
+            <Setter Property="Background" Value="{DynamicResource HoverOverlayBackground}" />
         </Style>
         <Style Selector="TextBox.blockEditor">
             <Setter Property="AcceptsReturn" Value="True" />
@@ -59,9 +59,8 @@
                 LostFocus="NameBox_LostFocus"
                 KeyDown="NameBox_KeyDown" />
 
-            <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="13"
-                VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis"
-                Foreground="{DynamicResource TextSecondary}" />
+            <TextBlock Grid.Column="2" Classes="caption" Text="{Binding StatusText}"
+                VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis" />
 
             <Button Grid.Column="3" Classes="secondary" Click="ToggleContents_Click" Focusable="False"
                 Padding="14,0" Height="36" FontSize="14" VerticalContentAlignment="Center"
@@ -86,8 +85,7 @@
             <Border Grid.Column="0" Classes="card" Width="240" Margin="0,0,16,24" Padding="12,16"
                 IsVisible="{Binding ShowContents}">
                 <Grid RowDefinitions="Auto, *">
-                    <TextBlock Grid.Row="0" Text="Contents" FontSize="16" FontWeight="Bold" Margin="8,0,0,8"
-                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Grid.Row="0" Classes="sectionTitle" Text="Contents" Margin="8,0,0,8" />
                     <TextBlock Grid.Row="1" Classes="caption" IsVisible="{Binding !HasContents}" TextWrapping="Wrap" Margin="8,0"
                         Text="Headings you add with \H1{...}, \H2{...} or \H3{...} (or the H1–H3 buttons) appear here." />
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -118,8 +116,8 @@
                                             PointerPressed="Block_PointerPressed">
                                             <Border.ContextMenu>
                                                 <ContextMenu>
-                                                    <MenuItem Header="Make card from this paragraph" Click="MakeCardFromBlock_Click" />
-                                                    <MenuItem Header="Delete paragraph" Click="DeleteBlock_Click" />
+                                                    <MenuItem Header="Make Card from This Paragraph" Click="MakeCardFromBlock_Click" />
+                                                    <MenuItem Header="Delete Paragraph" Click="DeleteBlock_Click" />
                                                 </ContextMenu>
                                             </Border.ContextMenu>
                                             <Panel>
@@ -127,8 +125,7 @@
                                                     Foreground="{DynamicResource TextPrimary}"
                                                     MaxImageHeight="Infinity"
                                                     IsVisible="{Binding !IsEmpty}" />
-                                                <TextBlock Text="Empty paragraph: click to write" FontSize="15" FontStyle="Italic"
-                                                    Foreground="{DynamicResource TextSecondary}"
+                                                <TextBlock Classes="body secondary" Text="Empty paragraph: click to write" FontStyle="Italic"
                                                     IsVisible="{Binding IsEmpty}" />
                                             </Panel>
                                         </Border>
@@ -147,8 +144,7 @@
                         <Border Background="Transparent" MinHeight="160" Cursor="Ibeam"
                             PointerPressed="PageEnd_PointerPressed">
                             <TextBlock Text="Click here to keep writing. Leave a blank line to start a new paragraph."
-                                Margin="10,8" FontSize="13" VerticalAlignment="Top"
-                                Foreground="{DynamicResource TextSecondary}" />
+                                Classes="caption" Margin="10,8" VerticalAlignment="Top" />
                         </Border>
                     </StackPanel>
                 </ScrollViewer>

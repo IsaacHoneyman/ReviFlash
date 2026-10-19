@@ -7,11 +7,8 @@
 
     <Border Classes="dialogShell">
         <Grid RowDefinitions="*, Auto, Auto">
-            <TextBlock x:Name="MessageText"
+            <TextBlock x:Name="MessageText" Classes="heading"
                        Text="Downloading update... 0%"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimary}"
                        TextWrapping="Wrap"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"

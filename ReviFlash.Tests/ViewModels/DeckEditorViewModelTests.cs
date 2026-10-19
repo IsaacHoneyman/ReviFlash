@@ -305,4 +305,34 @@ public class DeckEditorViewModelTests
         Assert.Equal(("Q", "A", true), (copy.Front, copy.Back, copy.IsReversible));
         Assert.Equal(2, FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID).Count);
     }
+
+    [Fact]
+    public void Changing_the_card_type_clears_an_old_validation_message()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+
+        editor.AddNewCard();
+        Assert.True(editor.HasValidationMessage);
+
+        editor.SelectedCardType = CARD_TYPE_CLOZE;
+
+        Assert.False(editor.HasValidationMessage);
+    }
+
+    [Fact]
+    public void The_editor_heading_says_edit_while_a_saved_card_is_open()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        Assert.Equal("Add New Card", editor.EditorTitle);
+
+        editor.BeginEditCard(card);
+        Assert.Equal("Edit Card", editor.EditorTitle);
+
+        editor.AddNewCard();
+        Assert.Equal("Add New Card", editor.EditorTitle);
+    }
 }

@@ -40,8 +40,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:Folder">
                             <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="/" FontSize="13" VerticalAlignment="Center"
-                                    Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Classes="body secondary" Text="/" VerticalAlignment="Center" />
                                 <Button Classes="crumb" Click="Crumb_Click" Content="{Binding Name}" />
                             </StackPanel>
                         </DataTemplate>

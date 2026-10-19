@@ -294,7 +294,7 @@ public partial class DashboardView : UserControl
         var note = ItemOf<Note>(sender);
         if (DataContext is not DashboardViewModel vm) return;
 
-        var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete the note '{note.Name}'?");
+        var dialog = new ConfirmDialogWindow("Delete Note?", $"'{note.Name}' will be deleted permanently.");
         if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteNote(note);
     }
 
@@ -357,12 +357,12 @@ public partial class DashboardView : UserControl
         // Deleting a folder never deletes what is inside it, so say so plainly.
         string destination = vm.FolderTree.Get(folder.ParentFolderID)?.Name ?? "the main menu";
         string message = folder.ItemCount == 0
-            ? $"Delete the empty folder '{folder.Name}'?"
-            : $"Delete the folder '{folder.Name}'? Its {folder.ContentsSummary.ToLowerInvariant()} will be moved to {destination}. No flashcards are deleted.";
+            ? $"The empty folder '{folder.Name}' will be deleted."
+            : $"Its {folder.ContentsSummary.ToLowerInvariant()} will be moved to {destination}. No flashcards are deleted.";
 
         if (folder.ItemCount == 0)
         {
-            if (await new ConfirmDialogWindow(message).ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder);
+            if (await new ConfirmDialogWindow("Delete Folder?", message).ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder);
             return;
         }
 
@@ -370,9 +370,9 @@ public partial class DashboardView : UserControl
         var everything = string.Join(", ", new[] { (folders, "folder"), (sets, "set"), (notes, "note"), (groups, "group") }
             .Where(part => part.Item1 > 0)
             .Select(part => TextUtility.Plural(part.Item1, part.Item2)));
-        var deleteMessage = $"Delete the folder '{folder.Name}' and everything in it ({everything}, {TextUtility.Plural(cards, "card")})? This can't be undone.";
+        var deleteMessage = $"'{folder.Name}' and everything in it ({everything}, {TextUtility.Plural(cards, "card")}) will be deleted. This can't be undone.";
 
-        var dialog = new ConfirmDialogWindow(message, "Also delete everything inside", deleteMessage);
+        var dialog = new ConfirmDialogWindow("Delete Folder?", message, "Also delete everything inside", deleteMessage);
         if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder, withContents: dialog.IsOptionChecked);
     }
 
@@ -393,7 +393,7 @@ public partial class DashboardView : UserControl
 
         if (!vm.MoveItem(item, choice.FolderID))
         {
-            var failed = new ConfirmDialogWindow("That move is not possible: a folder cannot be placed inside itself.");
+            var failed = ConfirmDialogWindow.Notice("Can't Move That", "A folder can't go inside itself.");
             await failed.ShowDialog<bool>(OwnerWindow);
         }
     }
@@ -420,7 +420,7 @@ public partial class DashboardView : UserControl
     public async void DeleteDeck_Click(object sender, RoutedEventArgs e)
     {
         var selectedDeck = ItemOf<FlashCardDeck>(sender);
-        var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete '{selectedDeck.Name}' and all of its cards?");
+        var dialog = new ConfirmDialogWindow("Delete Set?", $"'{selectedDeck.Name}' and all of its cards will be deleted permanently.");
 
         bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
 
@@ -475,7 +475,7 @@ public partial class DashboardView : UserControl
     public async void DeleteGroup_Click(object sender, RoutedEventArgs e)
     {
         var selectedGroup = ItemOf<StudyGroup>(sender);
-        var dialog = new ConfirmDialogWindow($"Are you sure you want to permanently delete group '{selectedGroup.Name}'?");
+        var dialog = new ConfirmDialogWindow("Delete Group?", $"'{selectedGroup.Name}' will be deleted. The sets in it are not affected.");
 
         bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
 
@@ -606,7 +606,7 @@ public partial class DashboardView : UserControl
             case SessionState.Active:
                 return true;
             case SessionState.Offline:
-                await ConfirmDialogWindow.Notice("Couldn't reach ReviFlash Online. Check your connection and try again.").ShowDialog<bool>(owner);
+                await ConfirmDialogWindow.Notice("Can't Connect", "Couldn't reach ReviFlash Online. Check your connection and try again.").ShowDialog<bool>(owner);
                 return false;
             default:
                 return await new LoginWindow().ShowDialog<bool>(owner);

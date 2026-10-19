@@ -5,7 +5,7 @@
 
     <UserControl.Styles>
         <Style Selector="Border.toolbar">
-            <Setter Property="Background" Value="#15000000" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
@@ -23,7 +23,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.format TextBlock">
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>

@@ -4,36 +4,34 @@
     xmlns:views="using:ReviFlash.Views"
     x:Class="ReviFlash.Views.DeleteDeckStatsWindow"
     x:DataType="vm:DeleteDeckStatsViewModel"
-    Title="Delete Deck Stats"
+    Title="Delete Set Stats"
     Width="520" Height="620" MinWidth="420" MinHeight="460"
     WindowStartupLocation="CenterOwner"
     Background="{DynamicResource AppBackground}">
 
     <Grid RowDefinitions="Auto, *, Auto, Auto, Auto" RowSpacing="12" Margin="24">
         <StackPanel Grid.Row="0" Spacing="4">
-            <TextBlock Text="Delete Deck Stats" FontSize="24" FontWeight="Bold"
-                Foreground="{DynamicResource TextPrimary}" />
-            <TextBlock Text="Choose a set to clear its stats. Its cards are not affected. This cannot be undone."
-                TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
+            <TextBlock Classes="title" Text="Delete Set Stats" />
+            <TextBlock Classes="caption" Text="Choose a set to clear its stats. Its cards are not affected. This cannot be undone."
+                TextWrapping="Wrap" />
         </StackPanel>
 
         <Border Grid.Row="1" Classes="card compact" Padding="12">
             <views:DeckFolderBrowserView DataContext="{Binding DeckBrowser}" />
         </Border>
 
-        <TextBlock Grid.Row="2"
-            Text="{Binding SelectedDeck.Name, StringFormat='Selected: {0}', FallbackValue='No deck selected'}"
-            FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-            Foreground="{DynamicResource TextPrimary}" />
+        <TextBlock Grid.Row="2" Classes="heading"
+            Text="{Binding SelectedDeck.Name, StringFormat='Selected: {0}', FallbackValue='No set selected'}"
+            TextTrimming="CharacterEllipsis" />
 
         <Grid Grid.Row="3" ColumnDefinitions="*, *" ColumnSpacing="10">
             <Button Grid.Column="0" Classes="wide secondary" Content="Close" Click="Close_Click" IsCancel="True" />
-            <Button Grid.Column="1" Classes="wide danger" Content="Delete This Deck's Stats" Click="DeleteDeckStats_Click"
+            <Button Grid.Column="1" Classes="wide danger" Content="Delete This Set's Stats" Click="DeleteDeckStats_Click"
                 IsEnabled="{Binding SelectedDeck, Converter={x:Static ObjectConverters.IsNotNull}}" />
         </Grid>
 
-        <TextBlock Grid.Row="4" Text="{Binding StatusMessage}"
+        <TextBlock Grid.Row="4" Classes="caption" Text="{Binding StatusMessage}"
             IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
+            TextWrapping="Wrap" />
     </Grid>
 </Window>

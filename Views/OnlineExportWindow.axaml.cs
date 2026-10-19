@@ -14,7 +14,8 @@ public partial class OnlineExportWindow : Window
 
         var vm = new OnlineExportViewModel(targetFolderID)
         {
-            ConfirmAsync = message => new ConfirmDialogWindow(message).ShowDialog<bool>(this),
+            ConfirmAsync = (title, message) => new ConfirmDialogWindow(title, message).ShowDialog<bool>(this),
+            ShowErrorAsync = message => ConfirmDialogWindow.ShowNoticeAsync(this, "Something Went Wrong", message),
         };
         DataContext = vm;
 

@@ -13,7 +13,7 @@ public abstract partial class LibraryItem : ObservableObject, ISearchable
     [ObservableProperty] private string _name;
 
     /// <summary> Breadcrumb text shown when a search surfaces this item from inside a folder. </summary>
-    [NotifyPropertyChangedFor(nameof(HasFolderPath))]
+    [NotifyPropertyChangedFor(nameof(HasFolderPath), nameof(CardSubtitle))]
     [ObservableProperty] private string? _folderPath;
 
     public bool HasFolderPath => !string.IsNullOrEmpty(FolderPath);
@@ -22,7 +22,23 @@ public abstract partial class LibraryItem : ObservableObject, ISearchable
     public int StudySeconds { get; set; }
 
     /// <summary> Most recent day this was studied, or null if it never has been. </summary>
-    public DateTime? LastStudied { get; set; }
+    public DateTime? LastStudied
+    {
+        get => _lastStudied;
+        set
+        {
+            _lastStudied = value;
+            OnPropertyChanged(nameof(CardSubtitle));
+        }
+    }
+    private DateTime? _lastStudied;
+
+    /// <summary> The line under the name on the item's card; a search result from another folder adds where it lives. </summary>
+    public string CardSubtitle => HasFolderPath ? $"{CardSummary} · in {FolderPath}" : CardSummary;
+
+    protected abstract string CardSummary { get; }
+
+    protected static string StudiedText(DateTime? day) => day is { } studied ? $"studied {TextUtility.FormatDay(studied)}" : "not studied yet";
 
     /// <summary> Lower-case noun for messages, e.g. "set" or "folder". </summary>
     public abstract string Kind { get; }

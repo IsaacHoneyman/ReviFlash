@@ -60,14 +60,14 @@ public static class DeckTransferManager
         using var document = JsonDocument.Parse(jsonPayload);
         var root = document.RootElement;
 
-        string deckName = root.TryGetProperty("DeckName", out var nameProp)
-            ? nameProp.GetString() ?? "Imported Cloud Deck" : "Imported Cloud Deck";
+        string deckName = root.TryGetProperty("DeckName", out var nameProp) && nameProp.ValueKind == JsonValueKind.String && nameProp.GetString() is { } given && given.Trim().Length > 0
+            ? given.Trim() : "Imported Cloud Set";
 
         var cards = root.TryGetProperty("Cards", out var cardsProp)
             ? JsonSerializer.Deserialize<List<CardExportEntry>>(cardsProp.GetRawText(), TextUtility.Indented) ?? [] : [];
 
         if (cards.Count == 0)
-            throw new InvalidDataException("The downloaded deck does not contain any readable cards.");
+            throw new InvalidDataException("The downloaded set does not contain any readable cards.");
 
         var flashCards = cards.Select(FlashCardFactory.FromExportEntry).ToList();
 

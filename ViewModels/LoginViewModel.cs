@@ -42,7 +42,7 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = string.Empty;
     [ObservableProperty] private bool _isStatusError;
 
-    [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SubmitCommand), nameof(ResendCodeCommand))]
     [ObservableProperty] private bool _isBusy;
 
     partial void OnEmailChanged(string value) => _recoverySession = null;
@@ -62,22 +62,22 @@ public partial class LoginViewModel : ViewModelBase
     public bool ShowPassword => Mode != LoginMode.ForgotPassword;
     public bool ShowConfirmPassword => Mode is LoginMode.SignUp or LoginMode.ResetPassword;
 
-    public string PasswordLabel => IsResetting ? "New password" : "Password";
+    public string PasswordLabel => IsResetting ? "New Password" : "Password";
 
     public string Title => Mode switch
     {
-        LoginMode.SignUp => "Create your account",
-        LoginMode.ForgotPassword => "Forgot your password?",
-        LoginMode.ResetPassword => "Choose a new password",
-        _ => "Welcome back",
+        LoginMode.SignUp => "Create Your Account",
+        LoginMode.ForgotPassword => "Forgot Your Password?",
+        LoginMode.ResetPassword => "Choose a New Password",
+        _ => "Welcome Back",
     };
 
     public string Subtitle => Mode switch
     {
-        LoginMode.SignUp => "Share your sets and download ones made by others.",
+        LoginMode.SignUp => "Share your sets and notes, and download ones made by others.",
         LoginMode.ForgotPassword => "Enter your account's email and we'll send you a reset code.",
         LoginMode.ResetPassword => $"Enter the code we sent to {Email.Trim()}.",
-        _ => "Sign in to ReviFlash Online to share and download sets.",
+        _ => "Sign in to ReviFlash Online to share and download sets and notes.",
     };
 
     public string PrimaryActionText => Mode switch
@@ -142,10 +142,11 @@ public partial class LoginViewModel : ViewModelBase
         finally { IsBusy = false; }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSubmit))]
     private async Task ResendCodeAsync()
     {
         IsBusy = true;
+        SetStatus("Sending reset code...");
         try { await SendResetCodeAsync(); }
         finally { IsBusy = false; }
     }
@@ -230,17 +231,20 @@ public partial class LoginViewModel : ViewModelBase
 
     // --- Validation ---
 
+    public static string? UsernameProblem(string username)
+    {
+        int length = username.Trim().Length;
+        return length < MinUsernameLength || length > MaxUsernameLength
+            ? $"Usernames must be {MinUsernameLength}-{MaxUsernameLength} characters."
+            : null;
+    }
+
     /// <summary> The first thing wrong with the form, or null when it can be sent. </summary>
     private string? Validate()
     {
         if (ShowEmail && !LooksLikeEmail(Email)) return "Enter a valid email address.";
 
-        if (IsSignUp)
-        {
-            int length = Username.Trim().Length;
-            if (length < MinUsernameLength || length > MaxUsernameLength)
-                return $"Usernames must be {MinUsernameLength}-{MaxUsernameLength} characters.";
-        }
+        if (IsSignUp && UsernameProblem(Username) is string problem) return problem;
 
         if (IsResetting && string.IsNullOrWhiteSpace(ResetCode)) return "Enter the code from the email.";
 

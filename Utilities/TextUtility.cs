@@ -87,6 +87,26 @@ public static partial class TextUtility
     private static string WithEllipsis(string text, int length) => text[..length].TrimEnd() + Ellipsis;
 
     /// <summary> A local time as "just now", "5 min ago", "today at 14:05", "yesterday", "3 Oct" or "3 Oct 2025". </summary>
+    /// <summary> A count short enough for a badge: 950, 1.2k, 12k. </summary>
+    public static string Compact(int count) => count switch
+    {
+        < 1000 => count.ToString(),
+        < 10_000 => (Math.Floor(count / 100.0) / 10).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "k",
+        _ => (count / 1000) + "k",
+    };
+
+    public static string Capitalise(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+
+    /// <summary> A study day relative to today: "today", "yesterday", "3 days ago", then "d MMM". </summary>
+    public static string FormatDay(DateTime day)
+    {
+        var days = (DateTime.Today - day.Date).Days;
+        if (days <= 0) return "today";
+        if (days == 1) return "yesterday";
+        if (days < 7) return $"{days} days ago";
+        return day.Year == DateTime.Today.Year ? day.ToString("d MMM") : day.ToString("d MMM yyyy");
+    }
+
     public static string FormatWhen(DateTime local)
     {
         var now = DateTime.Now;

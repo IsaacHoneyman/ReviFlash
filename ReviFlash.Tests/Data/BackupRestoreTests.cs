@@ -117,4 +117,22 @@ public class BackupRestoreTests
         var rows = Db.Query("SELECT n.SyncID, s.Seconds FROM NoteStats s JOIN Notes n ON n.ID = s.NoteID;", r => (r.GetString(0), r.GetInt32(1)));
         Assert.Equal([(sharedSyncId, 10)], rows);
     }
+
+    [Fact]
+    public void Saved_themes_are_kept_in_a_backup()
+    {
+        using var database = new TestDatabase();
+        MetaDataManager.Data.SavedThemes = [new ReviFlash.Models.CustomTheme { Name = "Exam Night", Accent = "#123456" }];
+        MetaDataManager.SaveMetaData();
+        var folder = NewBackupFolder();
+        BackupManager.TryCreateBackup(folder);
+        MetaDataManager.Data.SavedThemes = [];
+
+        Restore(Directory.GetFiles(folder, "*.zip").Single(), database);
+
+        var theme = Assert.Single(MetaDataManager.Data.SavedThemes);
+        Assert.Equal(("Exam Night", "#123456"), (theme.Name, theme.Accent));
+        MetaDataManager.Data.SavedThemes = [];
+        MetaDataManager.SaveMetaData();
+    }
 }

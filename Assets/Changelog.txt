@@ -1,3 +1,27 @@
+=== 1.4.1
+\H2{Themes}
+- A new \B{Themes} window, opened from Settings, shows every theme as a tile in its own colours.
+- Make your own: pick a background and two accents, and ReviFlash works out the rest so text stays readable. Change any single colour if you like, name it, and keep up to 12. They're saved in your backups.
+- Seventeen themes were retired, including the light themes. If you were using one, you're now on Vaporwave.
+
+\H2{A cleaner main menu}
+- Every card has the same kind of line under its name: when a set was last studied, a group's cards, a folder's contents or a note's last edit.
+- Notes have their own colour, and their badge shows the word count.
+- Badges are readable on every theme.
+
+\H2{Clearer messages}
+- When something goes wrong, a message pops up with the whole explanation instead of a cut-off line in the corner.
+- Confirmations and errors have a short title, like "Delete Set?", with the details underneath.
+- Success messages show briefly, then fade.
+
+\H2{Everywhere else}
+- Everything you can reach with Tab or the arrow keys now shows a clear highlight.
+- Text sizes, colours and capitalisation are the same in every window, and the app says "set" everywhere.
+- Community and the Cloud Manager switch between sets and notes with a sliding switch.
+- \B{Delete All Stats} now clears notes time and your launch streak too.
+- Typed answers ignore extra spaces, and grades always match the percentage shown.
+- Over 20 more fixes.
+
 === 1.4.0
 \H2{Images}
 - Add images to cards and notes: paste one with Ctrl+V, drag an image file in, or use the new \B{Image} button.

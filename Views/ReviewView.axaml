@@ -32,7 +32,7 @@
             <Setter Property="Padding" Value="14,12" />
         </Style>
         <Style Selector="TextBlock.paneTitle">
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -144,8 +144,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                     <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
                         IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
-                    <TextBlock Text="{Binding CardLabel}" FontSize="14"
-                        Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Classes="prompt" Text="{Binding CardLabel}" />
                 </StackPanel>
 
                 <!-- Centred while they fit on one line; anything longer reads better left-aligned -->
@@ -160,10 +159,10 @@
                 <StackPanel Spacing="12" Margin="0,8,0,0">
                     <!-- Result, for every card type that's checked rather than self-marked -->
                     <Panel IsVisible="{Binding IsAnswerChecked}">
-                        <TextBlock Text="✓ Correct!" FontSize="24" FontWeight="Bold"
+                        <TextBlock Classes="title" Text="✓ Correct!"
                             Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
                             IsVisible="{Binding IsAnswerCorrect}" />
-                        <TextBlock Text="✕ Incorrect" FontSize="24" FontWeight="Bold"
+                        <TextBlock Classes="title" Text="✕ Incorrect"
                             Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
                             IsVisible="{Binding !IsAnswerCorrect}" />
                     </Panel>
@@ -253,7 +252,7 @@
                             </StackPanel>
 
                             <StackPanel IsVisible="{Binding HasSelectedWrongOptions}">
-                                <TextBlock Text="You selected these incorrectly:" FontSize="14"
+                                <TextBlock Classes="body" Text="You selected these incorrectly:"
                                     Foreground="{DynamicResource DangerForeground}" />
                                 <ItemsControl ItemsSource="{Binding SelectedWrongOptions}">
                                     <ItemsControl.ItemTemplate>
@@ -268,7 +267,7 @@
                             </StackPanel>
 
                             <StackPanel IsVisible="{Binding HasMissedCorrectOptions}">
-                                <TextBlock Text="You missed these correct options:" FontSize="14"
+                                <TextBlock Classes="body" Text="You missed these correct options:"
                                     Foreground="{DynamicResource WarningForeground}" />
                                 <ItemsControl ItemsSource="{Binding MissedCorrectOptions}">
                                     <ItemsControl.ItemTemplate>

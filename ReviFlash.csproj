@@ -7,7 +7,7 @@
     <ApplicationIcon>Assets\ReviFlashLogo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <EnableDefaultAvaloniaXamlItems>false</EnableDefaultAvaloniaXamlItems>
-    <Version>1.4.0</Version>
+    <Version>1.4.1</Version>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
@@ -15,11 +15,11 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaXaml Remove="**/*.axaml" />
-    <AvaloniaXaml Include="**/*.axaml" Exclude="**/bin/**;**/obj/**" />
+    <AvaloniaXaml Include="**/*.axaml" Exclude="**/bin/**;**/obj/**;.claude/**" />
     <AvaloniaResource Include="Assets\**" Exclude="Assets\Changelog.txt;Assets\ReviFlashLogo.png;Assets\ReviFlashLogo.svg" />
     <EmbeddedResource Include="Assets\Changelog.txt" LogicalName="ReviFlash.Changelog.txt" />
-    <Compile Remove="ReviFlash.Tests/**" />
-    <None Remove="ReviFlash.Tests/**" />
+    <Compile Remove="ReviFlash.Tests/**;.claude/**" />
+    <None Remove="ReviFlash.Tests/**;.claude/**" />
     <InternalsVisibleTo Include="ReviFlash.Tests" />
   </ItemGroup>
 
@@ -27,6 +27,7 @@
     <PackageReference Include="Avalonia" Version="11.3.12" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.12" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.12">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>

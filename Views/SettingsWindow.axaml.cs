@@ -23,17 +23,32 @@ public partial class SettingsWindow : Window
 
     private DashboardViewModel? Dashboard => Owner?.DataContext as DashboardViewModel;
 
-    private static void ShowStatus(TextBlock statusText, string? message)
+    private static readonly TimeSpan SuccessFadeDelay = TimeSpan.FromSeconds(5);
+
+    private static void ShowStatus(TextBlock statusText, string? message, bool fade = false)
     {
         statusText.Text = message;
         statusText.IsVisible = message is not null;
+        if (fade && message is not null) _ = FadeStatusAsync(statusText, message);
+    }
+
+    private static async Task FadeStatusAsync(TextBlock statusText, string message)
+    {
+        await Task.Delay(SuccessFadeDelay);
+        if (statusText.Text == message) ShowStatus(statusText, null);
+    }
+
+    private Task ShowErrorAsync(TextBlock statusText, string message)
+    {
+        ShowStatus(statusText, null);
+        return ConfirmDialogWindow.Notice("Something Went Wrong", message).ShowDialog(this);
     }
 
     private async void CreateBackup_Click(object? sender, RoutedEventArgs e)
     {
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Choose a folder for the backup",
+            Title = "Choose a Folder for the Backup",
             AllowMultiple = false,
         });
 
@@ -47,11 +62,11 @@ public partial class SettingsWindow : Window
         try
         {
             BackupManager.TryCreateBackup(folders[0].Path.LocalPath, includeStats);
-            ShowStatus(BackupStatusText, "Backup created successfully.");
+            ShowStatus(BackupStatusText, "Backup created successfully.", fade: true);
         }
         catch (Exception ex)
         {
-            ShowStatus(BackupStatusText, $"Backup failed: {ex.Message}");
+            await ShowErrorAsync(BackupStatusText, $"Backup failed: {ex.Message}");
         }
     }
 
@@ -59,7 +74,7 @@ public partial class SettingsWindow : Window
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Choose an Anki deck",
+            Title = "Choose an Anki Deck",
             AllowMultiple = false,
             FileTypeFilter =
             [
@@ -86,7 +101,7 @@ public partial class SettingsWindow : Window
         catch (Exception ex)
         {
             Logger.LogError("Anki import failed", ex);
-            ShowStatus(AnkiImportStatusText, $"Import failed: {ex.Message}");
+            await ShowErrorAsync(AnkiImportStatusText, $"Import failed: {ex.Message}");
         }
         finally
         {
@@ -96,7 +111,7 @@ public partial class SettingsWindow : Window
 
     private static string DescribeAnkiImport(AnkiImportResult result)
     {
-        var message = $"Imported {Plural(result.Cards, "card")} into {Plural(result.Decks, "deck")}";
+        var message = $"Imported {Plural(result.Cards, "card")} into {Plural(result.Decks, "set")}";
         message += result.Images > 0 ? $", with {Plural(result.Images, "image")}." : ".";
         if (result.CardsWithMissingImages > 0)
             message += $" {Plural(result.CardsWithMissingImages, "card")} had images missing from the file or in a format ReviFlash can't read; they're marked [image] in {string.Join(", ", result.DecksWithMissingImages)}.";
@@ -109,7 +124,7 @@ public partial class SettingsWindow : Window
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Choose a backup file",
+            Title = "Choose a Backup File",
             AllowMultiple = false,
             FileTypeFilter =
             [
@@ -122,9 +137,8 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        var confirmDialog = new ConfirmDialogWindow(
-            "Restoring replaces all of your current decks, groups, folders and settings with the ones in the backup. Continue?"
-        );
+        var confirmDialog = new ConfirmDialogWindow("Restore Backup?",
+            "Restoring replaces all of your current sets, notes, groups, folders and settings with the ones in the backup.");
         if (!await confirmDialog.ShowDialog<bool>(this))
         {
             return;
@@ -140,19 +154,18 @@ public partial class SettingsWindow : Window
             }
 
             Dashboard?.RefreshAfterBackupRestore();
-            ShowStatus(BackupStatusText, "Backup restored successfully.");
+            ShowStatus(BackupStatusText, "Backup restored successfully.", fade: true);
         }
         catch (Exception ex)
         {
-            ShowStatus(BackupStatusText, $"Restore failed: {ex.Message}");
+            await ShowErrorAsync(BackupStatusText, $"Restore failed: {ex.Message}");
         }
     }
 
     private async void DeleteAllStats_Click(object? sender, RoutedEventArgs e)
     {
-        var confirmDialog = new ConfirmDialogWindow(
-            "Are you sure you want to delete all flashcard stats across all decks?"
-        );
+        var confirmDialog = new ConfirmDialogWindow("Delete All Stats?",
+            "This clears every set's results, study and editing time, notes time and streaks. Your sets and notes are not affected.");
 
         bool confirmed = await confirmDialog.ShowDialog<bool>(this);
         if (!confirmed)
@@ -161,8 +174,17 @@ public partial class SettingsWindow : Window
         }
 
         FlashCardRepository.DeleteAllStats();
+        MetaDataManager.Data.LaunchStreak = 0;
+        MetaDataManager.Data.BestLaunchStreak = 0;
+        MetaDataManager.SaveMetaData();
         Dashboard?.ReloadAfterEdit();
-        ShowStatus(DeleteStatsStatusText, "All flashcard stats were deleted.");
+        ShowStatus(DeleteStatsStatusText, "All stats were deleted.", fade: true);
+    }
+
+    private async void ChooseTheme_Click(object? sender, RoutedEventArgs e)
+    {
+        await new ThemePickerWindow().ShowDialog(this);
+        (DataContext as SettingsViewModel)?.RefreshFromMetadata();
     }
 
     private async void OpenDeleteDeckStats_Click(object? sender, RoutedEventArgs e)
@@ -208,20 +230,18 @@ public partial class SettingsWindow : Window
     {
         const int min = LoginViewModel.MinUsernameLength, max = LoginViewModel.MaxUsernameLength;
 
-        var prompt = new TextPromptWindow("Change username", "Save", AuthSession.Username,
-            $"{min}-{max} characters. Shown on the decks you share.");
+        var prompt = new TextPromptWindow("Change Username", "Save", AuthSession.Username,
+            $"{min}-{max} characters. Shown on the sets and notes you share.")
+        {
+            Validate = LoginViewModel.UsernameProblem,
+        };
         var username = await prompt.ShowDialog<string?>(this);
         if (username is null || username == AuthSession.Username) return;
 
-        if (username.Length < min || username.Length > max)
-        {
-            ShowStatus(AccountStatusText, $"Usernames must be {min}-{max} characters.");
-            return;
-        }
-
         ShowStatus(AccountStatusText, "Saving username...");
         var result = await RunBusyAsync(sender, AccountSpinner, () => AuthSession.ChangeUsernameAsync(username));
-        ShowStatus(AccountStatusText, result.Success ? $"Username changed to {username}." : $"Couldn't change username: {result.Message}");
+        if (result.Success) ShowStatus(AccountStatusText, $"Username changed to {username}.", fade: true);
+        else await ShowErrorAsync(AccountStatusText, $"Couldn't change username: {result.Message}");
     }
 
     private async void CheckForUpdates_Click(object? sender, RoutedEventArgs e)
@@ -233,28 +253,28 @@ public partial class SettingsWindow : Window
 
         if (check.Status == UpdateCheckStatus.Failed)
         {
-            ShowStatus(UpdateStatusText, "Couldn't check for updates. Check your connection.");
+            await ShowErrorAsync(UpdateStatusText, "Couldn't check for updates. Check your connection.");
             return;
         }
 
         if (check.Info is not { } updateInfo)
         {
-            ShowStatus(UpdateStatusText, "You are already on the latest version.");
+            ShowStatus(UpdateStatusText, "You are already on the latest version.", fade: true);
             return;
         }
 
         var version = updateInfo.TargetFullRelease.Version;
         ShowStatus(UpdateStatusText, $"Version {version} available!");
-        var confirmDialog = new ConfirmDialogWindow($"Version {version} is available. Download and restart now?");
+        var confirmDialog = new ConfirmDialogWindow("Update Available", $"Version {version} is ready. Download it and restart now?");
 
         if (!await confirmDialog.ShowDialog<bool>(this))
         {
-            ShowStatus(UpdateStatusText, "Update cancelled.");
+            ShowStatus(UpdateStatusText, "Update cancelled.", fade: true);
             return;
         }
 
         // A successful update restarts the app, so the window only closes on a failure.
         await new UpdateProgressWindow(updateClient, updateInfo).ShowDialog(this);
-        ShowStatus(UpdateStatusText, "The update couldn't be installed. Please try again later.");
+        await ShowErrorAsync(UpdateStatusText, "The update couldn't be installed. Please try again later.");
     }
 }

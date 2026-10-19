@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main", "release-*" ]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # TZ (set by the tests) doesn't change .NET's local zone on Windows, so set the machine's zone the same way.
+      - name: Use a zone far from UTC (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $zone = if ((Get-Date).ToUniversalTime().Hour -ge 12) { "Line Islands Standard Time" } else { "Dateline Standard Time" }
+          tzutil /s $zone
+
+      - name: Test
+        run: dotnet test ReviFlash.Tests --logger "console;verbosity=normal"

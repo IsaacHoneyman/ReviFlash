@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
+using ReviFlash.Utilities;
 
 namespace ReviFlash.Models;
 
 public partial class FlashCardDeck(string name) : LibraryItem(name)
 {
+    [NotifyPropertyChangedFor(nameof(CardCountText), nameof(CardCountLabel))]
     [ObservableProperty] private int _cardCount;
 
-    [NotifyPropertyChangedFor(nameof(ShowLocationHint))]
-    [NotifyPropertyChangedFor(nameof(ShowReviewHint))]
+    public string CardCountText => TextUtility.Plural(CardCount, "card");
+    public string CardCountLabel => CardCount == 1 ? "Card" : "Cards";
+
     [ObservableProperty] private bool _isSelectedForMultiReview;
 
     /// <summary> Folder this set lives in, or null when it sits at the main menu. </summary>
     [ObservableProperty] private ulong? _folderID;
 
-    /// <summary> A search result found in another folder says where it lives instead. </summary>
-    public bool ShowLocationHint => HasFolderPath && !IsSelectedForMultiReview;
-    public bool ShowReviewHint => !HasFolderPath && !IsSelectedForMultiReview;
 
     public override string Kind => "set";
     public override ulong? ContainerFolderID => FolderID;
@@ -49,11 +49,7 @@ public partial class FlashCardDeck(string name) : LibraryItem(name)
         flashCards.Remove(card);
     }
 
-    protected override void OnFolderPathUpdated()
-    {
-        OnPropertyChanged(nameof(ShowLocationHint));
-        OnPropertyChanged(nameof(ShowReviewHint));
-    }
+    protected override string CardSummary => TextUtility.Capitalise(StudiedText(LastStudied));
 
     // --- Search ---
 

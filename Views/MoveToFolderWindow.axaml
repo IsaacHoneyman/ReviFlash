@@ -10,10 +10,8 @@
 
     <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="24">
 
-        <TextBlock Grid.Row="0"
+        <TextBlock Grid.Row="0" Classes="title"
             Text="{Binding Header}"
-            FontSize="22" FontWeight="Bold"
-            Foreground="{DynamicResource TextPrimary}"
             TextWrapping="Wrap"
             TextTrimming="CharacterEllipsis"
             MaxLines="2" />
@@ -36,8 +34,7 @@
                                 Margin="0,0,10,0" />
 
                             <StackPanel Grid.Column="1" Spacing="2">
-                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}"
+                                <TextBlock Classes="heading" Text="{Binding Name}"
                                     TextTrimming="CharacterEllipsis" />
                                 <TextBlock Classes="hint" Text="{Binding Subtitle}"
                                     IsVisible="{Binding HasSubtitle}"

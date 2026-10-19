@@ -9,20 +9,19 @@
             Padding="32">
             <StackPanel Spacing="20" HorizontalAlignment="Center">
                 <StackPanel HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="Session Complete!" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
-                    <TextBlock Text="{Binding SessionMarker}" FontSize="14"
+                    <TextBlock Classes="title" Text="Session Complete!" HorizontalAlignment="Center" />
+                    <TextBlock Classes="body" Text="{Binding SessionMarker}"
                         Foreground="{DynamicResource WarningForeground}" FontStyle="Italic" HorizontalAlignment="Center"
                         IsVisible="{Binding IsPartialSession}" />
                 </StackPanel>
                 <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="64"
                     FontWeight="Black" Foreground="{DynamicResource GradientStart}" HorizontalAlignment="Center" />
-                <TextBlock Text="{Binding Grade, StringFormat='Grade: {0}'}" FontSize="20" HorizontalAlignment="Center"
+                <TextBlock Classes="heading" Text="{Binding Grade, StringFormat='Grade: {0}'}" HorizontalAlignment="Center"
                     Foreground="{DynamicResource TextSecondary}" />
-                <TextBlock Text="{Binding TimeFormatted, StringFormat='Time: {0}'}" HorizontalAlignment="Center"
-                    FontSize="18" FontWeight="SemiBold"
+                <TextBlock Classes="heading" Text="{Binding TimeFormatted, StringFormat='Time: {0}'}" HorizontalAlignment="Center"
                     Foreground="{DynamicResource TextSecondary}" />
                 <Button Classes="action primary" Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True" IsCancel="True"
-                    Margin="0,20,0,0" ToolTip.Tip="Back to your decks (Enter)" />
+                    Margin="0,20,0,0" ToolTip.Tip="Back to your sets (Enter)" />
             </StackPanel>
         </Border>
     </Grid>

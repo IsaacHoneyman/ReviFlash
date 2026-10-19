@@ -19,9 +19,8 @@ public partial class DeleteDeckStatsWindow : Window
     {
         if (DataContext is not DeleteDeckStatsViewModel { SelectedDeck: not null } vm) return;
 
-        var confirmDialog = new ConfirmDialogWindow(
-            $"Are you sure you want to delete all stats for \"{vm.SelectedDeck.Name}\"? This cannot be undone."
-        );
+        var confirmDialog = new ConfirmDialogWindow("Delete Set Stats?",
+            $"All stats for \"{vm.SelectedDeck.Name}\" will be deleted. Its cards are not affected. This can't be undone.");
         if (!await confirmDialog.ShowDialog<bool>(this)) return;
 
         vm.DeleteStatsForSelectedDeck();

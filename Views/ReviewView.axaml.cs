@@ -224,7 +224,7 @@ public partial class ReviewView : UserControl
         _confirmingQuit = true;
         try
         {
-            var dialog = new ConfirmDialogWindow("Quit this session and save your progress so far?");
+            var dialog = new ConfirmDialogWindow("Quit Session?", "Your progress so far will be saved.");
             if (await dialog.ShowDialog<bool>(window)) GetReviewVM()?.QuitSession();
         }
         finally

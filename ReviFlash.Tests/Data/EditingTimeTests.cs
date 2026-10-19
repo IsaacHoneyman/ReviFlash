@@ -72,6 +72,17 @@ public class EditingTimeTests
     }
 
     [Fact]
+    public void Deleting_all_stats_removes_notes_time()
+    {
+        using var database = new TestDatabase();
+        NoteRepository.AddStudyTime(NoteRepository.CreateNote("Note", null).ID, 30);
+
+        FlashCardRepository.DeleteAllStats();
+
+        Assert.Equal(0, NoteRepository.GetStudySeconds(null, null));
+    }
+
+    [Fact]
     public void Deleting_a_folder_with_its_contents_removes_its_sets_editing_time()
     {
         using var database = new TestDatabase();

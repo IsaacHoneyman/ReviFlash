@@ -277,12 +277,13 @@ public partial class ReviewViewModel : ViewModelBase
 
     public void CheckTypedAnswer()
     {
+        if (IsAnswerChecked) return;
         FinishCheck(CurrentCard.VerifyAnswer(UserTypedAnswer));
     }
 
     public void CheckMultiChoiceAnswer()
     {
-        if (CurrentCard is not MultiFlashCard)
+        if (CurrentCard is not MultiFlashCard || IsAnswerChecked)
         {
             return;
         }
@@ -315,7 +316,7 @@ public partial class ReviewViewModel : ViewModelBase
 
     public void CheckMatchAnswer()
     {
-        if (CurrentCard is not MatchFlashCard)
+        if (CurrentCard is not MatchFlashCard || IsAnswerChecked)
         {
             return;
         }
@@ -336,7 +337,7 @@ public partial class ReviewViewModel : ViewModelBase
 
     public void CheckTrueFalseAnswer(bool selectedAnswerIsTrue)
     {
-        if (CurrentCard is not TrueFalseFlashCard trueFalseCard)
+        if (CurrentCard is not TrueFalseFlashCard trueFalseCard || IsAnswerChecked)
         {
             return;
         }

@@ -25,8 +25,8 @@
     <Grid RowDefinitions="Auto, *, Auto" Margin="24">
         <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
             <TextBlock Classes="title" Text="Make Card" />
-            <TextBlock Text="From your note. Edit anything before adding it: the previews show how the card will look."
-                TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" />
+            <TextBlock Classes="caption" Text="From your note. Edit anything before adding it: the previews show how the card will look."
+                TextWrapping="Wrap" />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="3*, 2*" ColumnSpacing="20">
@@ -38,11 +38,11 @@
                             HorizontalAlignment="Stretch" CornerRadius="8" />
 
                         <StackPanel Spacing="8" IsVisible="{Binding IsFlip}">
-                            <TextBlock Classes="fieldLabel" Text="Front (the question)" />
+                            <TextBlock Classes="fieldLabel" Text="Front (Question)" />
                             <TextBox Classes="field" Text="{Binding Front, Mode=TwoWay}" />
                             <Border Classes="preview"><views:MathText Text="{Binding Front}" ShowErrors="True" /></Border>
 
-                            <TextBlock Classes="fieldLabel" Text="Back (the answer)" />
+                            <TextBlock Classes="fieldLabel" Text="Back (Answer)" />
                             <TextBox Classes="field" Text="{Binding Back, Mode=TwoWay}" />
                             <Border Classes="preview"><views:MathText Text="{Binding Back}" ShowErrors="True" /></Border>
                         </StackPanel>
@@ -50,9 +50,9 @@
                         <StackPanel Spacing="8" IsVisible="{Binding IsCloze}">
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBlock Grid.Column="0" Classes="fieldLabel" VerticalAlignment="Center"
-                                    Text="Text: select what to hide and press Blank (Ctrl+Shift+C)" />
+                                    Text="Text (select what to hide, then press Blank or Ctrl+Shift+C)" />
                                 <Button Grid.Column="1" Click="Blank_Click" Focusable="False"
-                                    CornerRadius="6" Padding="10,4" FontSize="13"
+                                    CornerRadius="6" Padding="10,4" FontSize="14"
                                     Background="{DynamicResource StatTileBackground}" Foreground="{DynamicResource TextPrimary}"
                                     ToolTip.Tip="Cloze blank: \C{...}  (Ctrl+Shift+C)">
                                     <TextBlock Text="Blank" />
@@ -70,10 +70,9 @@
 
             <Border Grid.Column="1" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
                 <Grid RowDefinitions="Auto, Auto, *" RowSpacing="8">
-                    <TextBlock Grid.Row="0" Text="Add to set" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Grid.Row="0" Classes="sectionTitle" Text="Add to Set" />
                     <Border Grid.Row="1" Background="{DynamicResource BadgeBackground}" CornerRadius="8" Padding="12,8">
-                        <TextBlock Text="{Binding SelectedDeckText}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                            Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Classes="heading" Text="{Binding SelectedDeckText}" TextTrimming="CharacterEllipsis" />
                     </Border>
                     <views:DeckFolderBrowserView Grid.Row="2" DataContext="{Binding DeckBrowser}" />
                 </Grid>
@@ -81,8 +80,8 @@
         </Grid>
 
         <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" ColumnSpacing="10" Margin="0,16,0,0">
-            <TextBlock Grid.Column="0" Text="{Binding ErrorText}" IsVisible="{Binding HasError}"
-                TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource DangerForeground}" />
+            <TextBlock Grid.Column="0" Classes="error" Text="{Binding ErrorText}" IsVisible="{Binding HasError}"
+                VerticalAlignment="Center" />
             <Button Grid.Column="1" Classes="secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" Padding="16,10" />
             <Button Grid.Column="2" Classes="primary" Content="Add Card" Click="Add_Click" Padding="16,10" />
         </Grid>

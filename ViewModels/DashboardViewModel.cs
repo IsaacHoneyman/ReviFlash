@@ -740,7 +740,7 @@ public partial class DashboardViewModel : FolderBrowserBase
             CurrentFolderID = folder.ParentFolderID;
 
         ReloadLibrary();
-        if (withContents) RefreshStatsAfterDelete();
+        if (withContents || SelectedFolderForStats == folder.ID) RefreshStatsAfterDelete();
     }
 
     /// <summary> Refiles a set, note, group or folder. Returns false when the move is not allowed. </summary>
