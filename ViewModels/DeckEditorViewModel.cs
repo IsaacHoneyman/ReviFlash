@@ -43,6 +43,9 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     private EditorState _savedState;
 
     public FlashCardDeck CurrentDeck { get; }
+
+    /// <summary> Raised with the saved card after a card being edited is updated. </summary>
+    public event Action<FlashCard>? CardUpdated;
     [ObservableProperty] private ObservableCollection<FlashCard> _cards = new();
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
     public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();
@@ -275,6 +278,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
             var index = Cards.IndexOf(editingCard);
             if (index >= 0) Cards[index] = updatedCard;
+            CardUpdated?.Invoke(updatedCard);
         }
         else
         {

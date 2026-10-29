@@ -123,7 +123,7 @@
                 <TextBlock Classes="prompt" Text="Progress" HorizontalAlignment="Center" />
                 <TextBlock Text="{Binding ProgressCardCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
                 <TextBlock Classes="prompt" Text="{Binding ProgressPercentage, StringFormat='{}{0}%'}" HorizontalAlignment="Center" Margin="0,2,0,0" />
-                <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="4" CornerRadius="2" Margin="0,4,0,0" Width="100" />
+                <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="6" CornerRadius="3" Margin="0,6,0,0" Width="140" />
             </StackPanel>
 
             <Button Grid.Column="2" Classes="action secondary small" Content="Quit" Click="QuitSession_Click"
@@ -141,11 +141,17 @@
                 Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="20">
                 <!-- Card type, plus the deck in a study group -->
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                    <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
-                        IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
-                    <TextBlock Classes="prompt" Text="{Binding CardLabel}" />
-                </StackPanel>
+                <Grid ColumnDefinitions="*, Auto, *">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
+                            IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
+                        <TextBlock Classes="prompt" Text="{Binding CardLabel}" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Classes="iconButton" HorizontalAlignment="Right" Margin="0,-12,-20,-12"
+                        IsVisible="{Binding CanEditCard}" Click="EditCard_Click" ToolTip.Tip="Edit this card (E)">
+                        <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                    </Button>
+                </Grid>
 
                 <!-- Centred while they fit on one line; anything longer reads better left-aligned -->
                 <views:MathText Text="{Binding CurrentCard.Front}" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource TextPrimary}" IsCentered="True" />
@@ -297,13 +303,13 @@
                                                 <DataTemplate x:DataType="vm:ReviewMatchRow">
                                                     <Button Classes="matchRow" Classes.current="{Binding IsCurrent}" Margin="0,4" Click="MatchRow_Click">
                                                         <Grid ColumnDefinitions="*, Auto, *">
-                                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                                 FontSize="16" Foreground="{DynamicResource TextPrimary}" />
                                                             <TextBlock Grid.Column="1" Text="→" Margin="10,0"
                                                                 VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
                                                             <Border Grid.Column="2" Classes="slot filled" IsVisible="{Binding HasSelection}">
                                                                 <!-- Shown in full in the Answers pane, so kept short here -->
-                                                                <views:MathText Text="{Binding SelectedRightText}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                                <views:MathText Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                                     MaxLines="2" FontSize="15" Foreground="{DynamicResource TextPrimary}" />
                                                             </Border>
                                                             <Border Grid.Column="2" Classes="slot" IsVisible="{Binding !HasSelection}">
@@ -327,7 +333,7 @@
                                                     <Button Classes="chip" IsEnabled="{Binding !IsUsed}" Click="MatchChip_Click">
                                                         <Grid ColumnDefinitions="22, *, 22">
                                                             <TextBlock Classes="key" Text="{Binding NumberText}" />
-                                                            <views:MathText Grid.Column="1" Text="{Binding Text}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                                            <views:MathText Grid.Column="1" Text="{Binding Text}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                                 FontSize="15" Foreground="{DynamicResource TextPrimary}" />
                                                         </Grid>
                                                     </Button>
@@ -347,26 +353,26 @@
                                 <DataTemplate x:DataType="vm:ReviewMatchRow">
                                     <Border Classes="matchResult" Classes.wrong="{Binding !IsCorrect}">
                                         <Grid ColumnDefinitions="*, Auto, *">
-                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Center" VerticalAlignment="Center" IsCentered="True"
+                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                 FontSize="16" Foreground="{DynamicResource TextPrimary}" />
                                             <TextBlock Grid.Column="1" Text="→" Margin="16,0"
                                                 VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                            <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <Grid ColumnDefinitions="Auto, *" HorizontalAlignment="Center" IsVisible="{Binding IsCorrect}">
+                                            <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
+                                                <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding IsCorrect}">
                                                     <TextBlock Text="✓" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SuccessForeground}" />
-                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" VerticalAlignment="Center" IsCentered="True"
+                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                         FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
                                                 </Grid>
-                                                <Grid ColumnDefinitions="Auto, *" HorizontalAlignment="Center" IsVisible="{Binding !IsCorrect}">
+                                                <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding !IsCorrect}">
                                                     <TextBlock Text="✕" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource DangerForeground}" />
-                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" VerticalAlignment="Center" IsCentered="True"
+                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                         FontSize="15" Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding HasSelection}" />
                                                     <TextBlock Grid.Column="1" Text="Nothing chosen" FontSize="15" VerticalAlignment="Center"
                                                         Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding !HasSelection}" />
                                                 </Grid>
-                                                <Grid ColumnDefinitions="Auto, *" HorizontalAlignment="Center" IsVisible="{Binding !IsCorrect}">
+                                                <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding !IsCorrect}">
                                                     <TextBlock Text="✓" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SuccessForeground}" />
-                                                    <views:MathText Grid.Column="1" Text="{Binding CorrectRightText}" VerticalAlignment="Center" IsCentered="True"
+                                                    <views:MathText Grid.Column="1" Text="{Binding CorrectRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                                         FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
                                                 </Grid>
                                             </StackPanel>

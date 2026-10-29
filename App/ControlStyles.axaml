@@ -253,6 +253,7 @@
     <!-- Progress bars fill in the theme's colour rather than Fluent's blue. -->
     <Style Selector="ProgressBar">
         <Setter Property="Foreground" Value="{DynamicResource GradientStart}" />
+        <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
     </Style>
 
     <!-- Busy spinner (BusySpinner control), which turns itself on the render thread. -->

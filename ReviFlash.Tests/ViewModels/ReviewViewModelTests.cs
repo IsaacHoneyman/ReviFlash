@@ -222,4 +222,93 @@ public class ReviewViewModelTests
 
         Assert.Equal(shown, review.ShowBackSection);
     }
+
+    private static (FlashCardDeck deck, FlashCard card) DeckWith(FlashCard card)
+    {
+        var deck = new FlashCardDeck("Set");
+        FlashCardRepository.SaveNewDeck(deck);
+        FlashCardRepository.SaveNewCard(card, deck.ID);
+        deck.AddFlashCard(card);
+        return (deck, card);
+    }
+
+    private static FlashCard Edited(FlashCard card)
+    {
+        FlashCardRepository.UpdateCard(card);
+        return FlashCardRepository.GetCardsForDeck(FlashCardRepository.GetAllDecks().Single().ID).Single(c => c.ID == card.ID);
+    }
+
+    [Fact]
+    public void A_card_can_only_be_edited_once_its_answer_shows()
+    {
+        using var database = new TestDatabase();
+        var review = NewReview(DeckWith(new FlipFlashCard("Q", "A")).deck);
+
+        Assert.False(review.CanEditCard);
+        review.Reveal();
+        Assert.True(review.CanEditCard);
+    }
+
+    [Fact]
+    public void Editing_the_shown_card_redraws_it_and_keeps_its_answer_showing()
+    {
+        using var database = new TestDatabase();
+        var (deck, card) = DeckWith(new FlipFlashCard("Q", "Wrong"));
+        var review = NewReview(deck);
+        review.Reveal();
+
+        review.ApplyEditedCard(Edited(new FlipFlashCard("Q", "Right", card.ID)));
+
+        Assert.Equal("Right", review.CurrentCard.Back);
+        Assert.True(review.IsAnswerRevealed);
+        Assert.Equal(1, review.TotalCards);
+    }
+
+    [Fact]
+    public void Making_a_card_reversible_mid_review_adds_its_reversed_question_to_the_end()
+    {
+        using var database = new TestDatabase();
+        var (deck, card) = DeckWith(new FlipFlashCard("Q", "A"));
+        var review = NewReview(deck);
+        review.Reveal();
+
+        review.ApplyEditedCard(Edited(new FlipFlashCard("Q", "A", card.ID, isReversible: true)));
+        review.MarkCorrect();
+
+        Assert.Equal(2, review.TotalCards);
+        Assert.True(review.IsReversedCard);
+        Assert.Equal("A", review.CurrentCard.Front);
+    }
+
+    [Fact]
+    public void A_cloze_blank_added_mid_review_is_asked_and_a_removed_one_still_to_come_is_dropped()
+    {
+        using var database = new TestDatabase();
+        var (deck, card) = DeckWith(new ClozeFlashCard(@"\C1{a} \C2{b}", "", typeAnswer: false));
+        var review = NewReview(deck);
+        review.Reveal();
+        var shown = review.CurrentCard.ReviewPart;
+
+        var kept = shown == "c1" ? @"\C1{a} b \C3{c}" : @"a \C2{b} \C3{c}";
+        review.ApplyEditedCard(Edited(new ClozeFlashCard(kept, "", false, card.ID)));
+
+        Assert.Equal(2, review.TotalCards);
+        Assert.Equal(shown, review.CurrentCard.ReviewPart);
+        review.MarkCorrect();
+        Assert.Equal("c3", review.CurrentCard.ReviewPart);
+    }
+
+    [Fact]
+    public void Switching_a_shown_cloze_to_typed_answers_leaves_the_shown_question_as_it_was()
+    {
+        using var database = new TestDatabase();
+        var (deck, card) = DeckWith(new ClozeFlashCard(@"\C1{a}", "", typeAnswer: false));
+        var review = NewReview(deck);
+        review.Reveal();
+
+        review.ApplyEditedCard(Edited(new ClozeFlashCard(@"\C1{a}", "", true, card.ID)));
+
+        Assert.True(review.IsFlipCard);
+        Assert.True(review.IsAnswerRevealed);
+    }
 }

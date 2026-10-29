@@ -1,10 +1,13 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using ReviFlash.Data.Local;
+using ReviFlash.Models;
 using ReviFlash.ViewModels;
 
 namespace ReviFlash.Views;
@@ -57,7 +60,7 @@ public partial class ReviewView : UserControl
             Dispatcher.UIThread.Post(() => TypedAnswerBox.Focus(), DispatcherPriority.Background);
     }
 
-    /// <summary> Space reveals, Left/Right or 1/2 mark or pick True/False, 1-9 pick options, Enter submits, S skips, R retries later, Esc quits; typing allows only Enter and Esc. </summary>
+    /// <summary> Space reveals, Left/Right or 1/2 mark or pick True/False, 1-9 pick options, Enter submits, S skips, R retries later, E edits the card, Esc quits; typing allows only Enter and Esc. </summary>
     private void Review_KeyDown(object? sender, KeyEventArgs e)
     {
         if (!IsEffectivelyVisible || GetReviewVM() is not { } vm) return;
@@ -72,6 +75,13 @@ public partial class ReviewView : UserControl
 
         var typing = _topLevel?.FocusManager?.GetFocusedElement() is TextBox;
         if (typing && e.Key != Key.Enter) return;
+
+        if (e.Key == Key.E && vm.CanEditCard)
+        {
+            e.Handled = true;
+            EditCard();
+            return;
+        }
 
         e.Handled = HandleKey(vm, e.Key);
     }
@@ -214,6 +224,30 @@ public partial class ReviewView : UserControl
     }
 
     private void QuitSession_Click(object sender, RoutedEventArgs e) => ConfirmQuit();
+
+    private void EditCard_Click(object sender, RoutedEventArgs e) => EditCard();
+
+    private bool _editingCard;
+
+    private async void EditCard()
+    {
+        if (_editingCard || GetReviewVM() is not { CanEditCard: true } vm || TopLevel.GetTopLevel(this) is not Window window) return;
+        if (FlashCardRepository.GetAllDecks().FirstOrDefault(deck => deck.ID == vm.CurrentDeckId) is not { } deck) return;
+
+        _editingCard = true;
+        try
+        {
+            FlashCard? saved = null;
+            var editor = new DeckEditorViewModel(deck);
+            editor.CardUpdated += card => saved = card;
+            await DeckEditorWindow.ForSingleCard(editor, vm.CurrentSourceCard).ShowDialog(window);
+            if (saved is not null) vm.ApplyEditedCard(saved);
+        }
+        finally
+        {
+            _editingCard = false;
+        }
+    }
 
     private bool _confirmingQuit;
 

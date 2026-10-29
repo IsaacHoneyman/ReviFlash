@@ -359,4 +359,26 @@ public class DeckEditorViewModelTests
         editor.NewMatchKeepLeftOrder = false;
         Assert.True(editor.HasUnsavedWork());
     }
+
+    [Fact]
+    public void Updating_a_card_being_edited_reports_the_saved_card_but_saving_a_new_one_does_not()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        var updated = new List<FlashCard>();
+        editor.CardUpdated += updated.Add;
+
+        editor.NewFront = "Q";
+        editor.NewBack = "A";
+        editor.AddNewCard();
+        Assert.Empty(updated);
+
+        var card = FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID).Single();
+        editor.BeginEditCard(card);
+        editor.NewBack = "B";
+        editor.AddNewCard();
+
+        var saved = Assert.Single(updated);
+        Assert.Equal((card.ID, "B"), (saved.ID, saved.Back));
+    }
 }

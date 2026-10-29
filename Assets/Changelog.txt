@@ -1,3 +1,8 @@
+=== 1.4.3
+- Spotted a mistake mid-review? Once the answer shows, press \B{E} or the pencil button to fix the card. The rest of the session uses the fixed version.
+- The review progress bar is easier to see.
+- Text on match cards lines up on the left, so a column of answers reads like a list whether or not each answer wraps.
+
 === 1.4.2
 - Match cards have a new option, \B{Keep the left side in this order}. Tick it and reviews show the left side the way you wrote it. The right side is still shuffled.
 - A bullet point's dot now lines up with its text when the line has tall maths in it, like a formula split over two lines.

@@ -1,0 +1,3 @@
+Fixed match card answers lining up differently depending on whether their text wraps; all match text is now left-aligned.
+Fixed the review progress bar being hard to see; it is thicker and sits on a solid track.
+Cards can be edited during a review once the answer shows, with the pencil button or E; the rest of the session uses the fixed card.

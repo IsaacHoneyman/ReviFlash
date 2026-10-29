@@ -52,6 +52,8 @@ public partial class ReviewViewModel : ViewModelBase
     , IDisposable
 {
     private readonly List<FlashCard> _sessionCards;
+    /// <summary> The saved cards the session's questions were made from, by card ID. </summary>
+    private readonly Dictionary<ulong, FlashCard> _sourceCards = [];
     private readonly Dictionary<ulong, ulong>? _cardDeckMap;
     private readonly ulong? _reviewGroupId;
     /// <summary> Deck names by ID, for labelling questions in a study group review. </summary>
@@ -89,6 +91,7 @@ public partial class ReviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanSkip))]
     [NotifyPropertyChangedFor(nameof(ShowFlipRetryLater))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
+    [NotifyPropertyChangedFor(nameof(CanEditCard))]
     [ObservableProperty] private bool _isAnswerRevealed = false;
     [ObservableProperty] private string _userTypedAnswer = "";
     public Action<int, int, TimeSpan, bool> OnSessionComplete = delegate { };
@@ -161,12 +164,12 @@ public partial class ReviewViewModel : ViewModelBase
         get
         {
             const string gap = "      ";
-            if (IsAnswerChecked) return CanRetryLater ? $"Enter: next card{gap}R: retry later" : "Enter: next card";
+            if (IsAnswerChecked) return (CanRetryLater ? $"Enter: next card{gap}R: retry later" : "Enter: next card") + $"{gap}E: edit card";
 
             var hint = this switch
             {
                 { IsFlipCard: true, IsAnswerRevealed: false } => "Space: show answer",
-                { IsFlipCard: true } => $"←  Incorrect{gap}→  Correct" + (CanRetryLater ? $"{gap}R: retry later" : ""),
+                { IsFlipCard: true } => $"←  Incorrect{gap}→  Correct" + (CanRetryLater ? $"{gap}R: retry later" : "") + $"{gap}E: edit card",
                 { IsTrueFalseCard: true } => $"←  {CurrentTrueFalseTrueOptionText}{gap}→  {CurrentTrueFalseFalseOptionText}",
                 { IsMultiChoiceCard: true } => $"1–{Math.Min(MultiChoiceAnswerOptions.Count, 9)}: tick an option{gap}Enter: submit",
                 { IsMatchCard: true } => $"1–{Math.Min(MatchChips.Count, 9)}: place an answer{gap}Arrows: move{gap}Backspace: undo{gap}Enter: submit",
@@ -188,15 +191,9 @@ public partial class ReviewViewModel : ViewModelBase
     {
         ArgumentNullException.ThrowIfNull(cards);
 
-        // Reversible flip cards are also asked back to front, and cloze cards once per blank group, each as its own question.
-        _sessionCards = [.. cards
-            .SelectMany(card => card switch
-            {
-                FlipFlashCard { IsReversible: true } flip => [card, flip.CreateReversedCopy()],
-                ClozeFlashCard cloze => cloze.CreateQuestions(),
-                _ => [card],
-            })
-            .OrderBy(_ => Guid.NewGuid())];
+        var sourceCards = cards.ToList();
+        foreach (var card in sourceCards) _sourceCards.TryAdd(card.ID, card);
+        _sessionCards = [.. sourceCards.SelectMany(QuestionsFrom).OrderBy(_ => Guid.NewGuid())];
         if (_sessionCards.Count == 0)
         {
             throw new ArgumentException("Cannot start a review session with no cards.", nameof(cards));
@@ -227,6 +224,57 @@ public partial class ReviewViewModel : ViewModelBase
         _displayTimer.Start();
 
         UpdateTimerText();
+    }
+
+    /// <summary> Reversible flip cards are also asked back to front, and cloze cards once per blank group, each as its own question. </summary>
+    private static IEnumerable<FlashCard> QuestionsFrom(FlashCard card) => card switch
+    {
+        FlipFlashCard { IsReversible: true } flip => [card, flip.CreateReversedCopy()],
+        ClozeFlashCard cloze => cloze.CreateQuestions(),
+        _ => [card],
+    };
+
+    // --- Editing a card mid-review ---
+
+    public bool CanEditCard => IsAnswerRevealed;
+
+    /// <summary> The saved card the current question was made from. </summary>
+    public FlashCard CurrentSourceCard => _sourceCards.GetValueOrDefault(CurrentCard.ID, CurrentCard);
+
+    public ulong CurrentDeckId => GetDeckId(CurrentCard);
+
+    /// <summary> Remakes the edited card's questions still to come, adds any it gained to the end, and redraws the current one without changing its mark. </summary>
+    public void ApplyEditedCard(FlashCard edited)
+    {
+        if (!_sourceCards.TryGetValue(edited.ID, out var old)) return;
+        _sourceCards[edited.ID] = edited;
+
+        var oldParts = QuestionsFrom(old).Select(q => q.ReviewPart).ToHashSet();
+        var fresh = QuestionsFrom(edited).ToDictionary(q => q.ReviewPart);
+
+        for (var i = _sessionCards.Count - 1; i >= _currentIndex; i--)
+        {
+            var question = _sessionCards[i];
+            if (question.ID != edited.ID) continue;
+
+            if (fresh.TryGetValue(question.ReviewPart, out var remade) && (i > _currentIndex || remade.GetType() == question.GetType()))
+                _sessionCards[i] = remade;
+            else if (i > _currentIndex)
+                _sessionCards.RemoveAt(i);
+        }
+        _sessionCards.AddRange(fresh.Values.Where(q => !oldParts.Contains(q.ReviewPart)));
+
+        OnPropertyChanged(nameof(CurrentCard));
+        OnPropertyChanged(nameof(CardLabel));
+        OnPropertyChanged(nameof(ShowBackSection));
+        OnPropertyChanged(nameof(CurrentTypeCardAnswer));
+        OnPropertyChanged(nameof(CurrentTrueFalseCorrectOptionText));
+        OnPropertyChanged(nameof(TotalCards));
+        OnPropertyChanged(nameof(ProgressCardCount));
+        OnPropertyChanged(nameof(ProgressPercentage));
+        OnPropertyChanged(nameof(CanRetryLater));
+        OnPropertyChanged(nameof(CanSkip));
+        OnPropertyChanged(nameof(KeyboardHint));
     }
 
     private void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)

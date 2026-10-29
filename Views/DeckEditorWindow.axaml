@@ -81,7 +81,7 @@
                         <StackPanel Spacing="12" x:Name="EditorPanel">
                         <TextBlock Classes="sectionTitle" Text="{Binding EditorTitle}" />
 
-                        <ComboBox ItemsSource="{Binding AvailableCardTypes}"
+                        <ComboBox x:Name="CardTypeBox" ItemsSource="{Binding AvailableCardTypes}"
                             SelectedItem="{Binding SelectedCardType}"
                             HorizontalAlignment="Stretch"
                             CornerRadius="8" />
@@ -244,7 +244,7 @@
                 </Grid>
             </ScrollViewer>
 
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto"
+            <ScrollViewer Grid.Column="1" x:Name="CardListScroll" VerticalScrollBarVisibility="Auto"
                 HorizontalScrollBarVisibility="Disabled"
                 Margin="0,0,-24,0"
                 Padding="0,0,24,0">

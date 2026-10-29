@@ -24,7 +24,37 @@ public partial class DeckEditorWindow : Window
     /// <summary> The card field the formatting toolbar and shortcuts act on: the one last clicked into. </summary>
     private TextBox? _activeField;
 
+    private bool _singleCard;
+
     private DeckEditorViewModel? ViewModel => DataContext as DeckEditorViewModel;
+
+    /// <summary> Just the editor, open on one saved card of a fixed type; closes once the card is updated. </summary>
+    public static DeckEditorWindow ForSingleCard(DeckEditorViewModel editor, FlashCard card)
+    {
+        editor.BeginEditCard(card);
+        var window = new DeckEditorWindow
+        {
+            DataContext = editor,
+            Title = "Edit Card",
+            WindowState = WindowState.Normal,
+            Width = 640,
+            MinWidth = 480,
+            Height = 760,
+            _singleCard = true,
+        };
+        window.NameBox.IsVisible = false;
+        window.CardListScroll.IsVisible = false;
+        window.CardTypeBox.IsEnabled = false;
+        Grid.SetColumnSpan(window.EditorScroll, 2);
+        window.EditorScroll.Margin = default;
+
+        editor.CardUpdated += _ =>
+        {
+            window._closeConfirmed = true;
+            window.Close();
+        };
+        return window;
+    }
 
     public DeckEditorWindow()
     {
@@ -54,6 +84,12 @@ public partial class DeckEditorWindow : Window
         {
             editing.EditingTime.Start();
             _editingTracking = ActiveTimeTracking.Attach(this, editing.EditingTime);
+        }
+
+        if (_singleCard)
+        {
+            FrontBox.Focus();
+            return;
         }
 
         if (ViewModel is not { } vm || _cardLoadScheduled) return;
