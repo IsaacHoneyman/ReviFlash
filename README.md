@@ -37,9 +37,11 @@ Get the latest release for your platform from the [GitHub Releases Page](https:/
 ## Updates
 Updates are handled automatically within ReviFlash! On startup the app checks whether a new version has been released and offers to update, showing the download progress before restarting into the new version. You can also check at any time from **Settings → Updates**, or turn the startup check off there.
 
-## New in 1.4.1
+## New in 1.4
 
-A clean-up release: everything looks and works the same way in every window, and themes are now yours to make.
+**1.4.2**: match cards have a new **Keep the left side in this order** option, so reviews show the left side the way you wrote it while the right side is still shuffled. Match cards show their back again once you've checked your answer, if you've written one. A bullet point's dot lines up with its text when the line has tall maths in it, like a formula split over two lines.
+
+**1.4.1**: a clean-up release. Everything looks and works the same way in every window, and themes are now yours to make.
 
 **Themes**
 - A new **Themes** window, opened from Settings, shows every theme as a tile drawn in its own colours, listed round the colour wheel.
@@ -80,7 +82,7 @@ Write LaTeX between `$...$` in a line of text, or `$$...$$` on its own line: fra
 - **Cloze**: hide parts of a sentence or formula. Each blank becomes its own question, blanks with the same number are hidden together, and you can choose to type the answer.
 - **Type to Answer**: type the answer and ReviFlash checks it, ignoring case and extra spaces.
 - **Multiple Choice**: one or more correct options.
-- **Match**: pair up items from two columns.
+- **Match**: pair up items from two columns, with the left side shuffled or kept in your order.
 - **True/False**: with your own labels if you like, such as "Closed" and "Not closed".
 
 The set editor has a formatting toolbar (bold, italic, underline, code, headings, bullet points, maths and images) and a live preview under every field. Move or copy cards between sets, or start a new card from an existing one.
