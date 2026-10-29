@@ -69,6 +69,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string _newTypeAnswer = "";
     [ObservableProperty] private bool _newIsReversible;
     [ObservableProperty] private bool _newClozeTypeAnswer;
+    [ObservableProperty] private bool _newMatchKeepLeftOrder;
     [ObservableProperty] private bool _newTrueFalseAnswerIsTrue = true;
     [ObservableProperty] private string _newTrueOptionText = TRUE_LABEL;
     [ObservableProperty] private string _newFalseOptionText = FALSE_LABEL;
@@ -341,7 +342,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
             CARD_TYPE_CLOZE => new ClozeFlashCard(front, back, NewClozeTypeAnswer, cardId),
             CARD_TYPE_TYPE => new TypeFlashCard(front, back, NewTypeAnswer.Trim(), cardId),
             CARD_TYPE_MULTI_CHOICE => new MultiFlashCard(front, back, FilledOptions(), cardId),
-            CARD_TYPE_MATCH => new MatchFlashCard(front, back, CompletePairs(), cardId),
+            CARD_TYPE_MATCH => new MatchFlashCard(front, back, CompletePairs(), cardId, NewMatchKeepLeftOrder),
             CARD_TYPE_TRUE_FALSE => new TrueFalseFlashCard(front, back, NewTrueFalseAnswerIsTrue, NewTrueOptionText, NewFalseOptionText, cardId),
             _ => new FlipFlashCard(front, back, cardId, NewIsReversible),
         };
@@ -382,6 +383,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         NewTypeAnswer = (card as TypeFlashCard)?.Answer ?? "";
         NewIsReversible = card is FlipFlashCard { IsReversible: true };
         NewClozeTypeAnswer = card is ClozeFlashCard { TypeAnswer: true };
+        NewMatchKeepLeftOrder = card is MatchFlashCard { KeepLeftOrder: true };
 
         var trueFalse = card as TrueFalseFlashCard;
         NewTrueFalseAnswerIsTrue = trueFalse?.CorrectAnswerIsTrue ?? true;
@@ -410,6 +412,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         NewTypeAnswer = "";
         NewIsReversible = false;
         NewClozeTypeAnswer = false;
+        NewMatchKeepLeftOrder = false;
         NewTrueFalseAnswerIsTrue = true;
         NewTrueOptionText = TRUE_LABEL;
         NewFalseOptionText = FALSE_LABEL;
@@ -508,7 +511,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
     /// <summary> The editor's contents in a form records can compare (blank option and pair rows ignored). </summary>
     private sealed record EditorState(
-        string CardType, string Front, string Back, string TypeAnswer, bool IsReversible, bool ClozeTypeAnswer,
+        string CardType, string Front, string Back, string TypeAnswer, bool IsReversible, bool ClozeTypeAnswer, bool MatchKeepLeftOrder,
         bool TrueFalseAnswerIsTrue, string TrueOptionText, string FalseOptionText,
         string Options, string Pairs);
 
@@ -526,7 +529,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         var back = IsMatchCardType && NewBack == CARD_TYPE_MATCH_PLACEHOLDER ? "" : NewBack;
 
         return new EditorState(
-            SelectedCardType, front, back, NewTypeAnswer, NewIsReversible, NewClozeTypeAnswer,
+            SelectedCardType, front, back, NewTypeAnswer, NewIsReversible, NewClozeTypeAnswer, NewMatchKeepLeftOrder,
             NewTrueFalseAnswerIsTrue, NewTrueOptionText, NewFalseOptionText,
             string.Join('\u001E', options), string.Join('\u001E', pairs));
     }

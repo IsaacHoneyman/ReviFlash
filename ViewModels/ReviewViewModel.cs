@@ -111,7 +111,8 @@ public partial class ReviewViewModel : ViewModelBase
         : "";
     public bool ShowBackAnswer => IsAnswerRevealed;
     /// <summary> The back once answered, unless there's nothing to show (blank, or a match card's placeholder). </summary>
-    public bool ShowBackSection => IsAnswerRevealed && !IsMatchCard && !string.IsNullOrWhiteSpace(CurrentCard.Back);
+    public bool ShowBackSection => IsAnswerRevealed && !string.IsNullOrWhiteSpace(CurrentCard.Back)
+        && !(IsMatchCard && CurrentCard.Back == CardUtility.CARD_TYPE_MATCH_PLACEHOLDER);
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
     [NotifyPropertyChangedFor(nameof(CanSkip))]
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
@@ -553,7 +554,7 @@ public partial class ReviewViewModel : ViewModelBase
             return;
         }
 
-        var randomizedPairs = matchCard.Options.OrderBy(_ => Guid.NewGuid()).ToList();
+        var randomizedPairs = matchCard.KeepLeftOrder ? matchCard.Options.ToList() : matchCard.Options.OrderBy(_ => Guid.NewGuid()).ToList();
         var randomizedRightChoices = randomizedPairs
             .Select(p => p.rightText)
             .OrderBy(_ => Guid.NewGuid())

@@ -335,4 +335,28 @@ public class DeckEditorViewModelTests
         editor.AddNewCard();
         Assert.Equal("Add New Card", editor.EditorTitle);
     }
+
+    [Fact]
+    public void A_match_card_saves_and_reloads_keeping_its_left_order()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        editor.SelectedCardType = CARD_TYPE_MATCH;
+        editor.MatchPairs.Clear();
+        editor.MatchPairs.Add(new MatchPairEditor { LeftText = "a", RightText = "1" });
+        editor.MatchPairs.Add(new MatchPairEditor { LeftText = "b", RightText = "2" });
+        editor.NewMatchKeepLeftOrder = true;
+
+        editor.AddNewCard();
+
+        var saved = Assert.IsType<MatchFlashCard>(Assert.Single(FlashCardRepository.GetCardsForDeck(editor.CurrentDeck.ID)));
+        Assert.True(saved.KeepLeftOrder);
+        Assert.False(editor.NewMatchKeepLeftOrder);
+
+        editor.BeginEditCard(saved);
+        Assert.True(editor.NewMatchKeepLeftOrder);
+
+        editor.NewMatchKeepLeftOrder = false;
+        Assert.True(editor.HasUnsavedWork());
+    }
 }

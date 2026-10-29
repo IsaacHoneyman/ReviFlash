@@ -11,6 +11,9 @@ public static class FlashCardFactory
     /// <summary> Stored in a cloze card's Answer column when its blanks are typed rather than revealed. </summary>
     public const string ClozeTypeAnswerPayload = "type";
 
+    /// <summary> Stored in a match card's Answer column when its left side keeps its written order. </summary>
+    public const string MatchKeepLeftOrderPayload = "ordered";
+
     public static FlashCard CreateCard(string cardType, string front, string back, string? answer, ulong id,
     List<(string optionText, bool isCorrect)> options, List<(string leftText, string rightText)> pairs, bool isReversible = false)
     {
@@ -20,7 +23,7 @@ public static class FlashCardFactory
             nameof(FlipFlashCard) => new FlipFlashCard(front, back, id, isReversible),
             nameof(ClozeFlashCard) => new ClozeFlashCard(front, back, answer == ClozeTypeAnswerPayload, id),
             nameof(MultiFlashCard) => new MultiFlashCard(front, back, options, id),
-            nameof(MatchFlashCard) => new MatchFlashCard(front, back, pairs, id),
+            nameof(MatchFlashCard) => new MatchFlashCard(front, back, pairs, id, answer == MatchKeepLeftOrderPayload),
             nameof(TrueFalseFlashCard) => BuildTrueFalseCard(front, back, answer, id),
             _ => throw new InvalidOperationException($"Unknown card type: {cardType}")
         };
@@ -33,6 +36,7 @@ public static class FlashCardFactory
         {
             TypeFlashCard typeCard => typeCard.Answer,
             ClozeFlashCard { TypeAnswer: true } => ClozeTypeAnswerPayload,
+            MatchFlashCard { KeepLeftOrder: true } => MatchKeepLeftOrderPayload,
             TrueFalseFlashCard trueFalseCard => JsonSerializer.Serialize(
                 new TrueFalseAnswerPayload(trueFalseCard.CorrectAnswerIsTrue, trueFalseCard.TrueLabel, trueFalseCard.FalseLabel)),
             _ => null,
@@ -52,7 +56,7 @@ public static class FlashCardFactory
             nameof(MultiFlashCard) => new MultiFlashCard(entry.Front, entry.Back,
                 [.. (entry.Options ?? []).Select(option => (option.OptionText, option.IsCorrect))]),
             nameof(MatchFlashCard) => new MatchFlashCard(entry.Front, entry.Back,
-                [.. (entry.Pairs ?? []).Select(pair => (pair.LeftText, pair.RightText))]),
+                [.. (entry.Pairs ?? []).Select(pair => (pair.LeftText, pair.RightText))], entry.Answer == MatchKeepLeftOrderPayload),
             nameof(TrueFalseFlashCard) => BuildTrueFalseCard(entry.Front, entry.Back,
                 NormaliseTrueFalse(entry.CorrectAnswerIsTrue ?? true, entry.TrueLabel, entry.FalseLabel), ulong.MaxValue),
             _ => throw new InvalidOperationException($"Unknown card type: {entry.CardType}")
@@ -69,7 +73,7 @@ public static class FlashCardFactory
             ClozeFlashCard => new CardExportEntry(cardType, card.Front, card.Back, BuildAnswerPayload(card), null, null, null, null, null),
             MultiFlashCard multiCard => new CardExportEntry(cardType, card.Front, card.Back, null, null, null, null,
                 [.. multiCard.Options.Select(option => new MultiChoiceOptionEntry(option.optionText, option.isCorrect))], null),
-            MatchFlashCard matchCard => new CardExportEntry(cardType, card.Front, card.Back, null, null, null, null, null,
+            MatchFlashCard matchCard => new CardExportEntry(cardType, card.Front, card.Back, BuildAnswerPayload(card), null, null, null, null,
                 [.. matchCard.Options.Select(pair => new MatchPairEntry(pair.leftText, pair.rightText))]),
             TrueFalseFlashCard trueFalseCard => new CardExportEntry(cardType, card.Front, card.Back, null,
                 trueFalseCard.CorrectAnswerIsTrue, trueFalseCard.TrueLabel, trueFalseCard.FalseLabel, null, null),

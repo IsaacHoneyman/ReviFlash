@@ -1,6 +1,7 @@
 using ReviFlash.Data.Local;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
+using static ReviFlash.Utilities.CardUtility;
 
 namespace ReviFlash.Tests.ViewModels;
 
@@ -185,5 +186,40 @@ public class ReviewViewModelTests
         var card = new TypeFlashCard("Biggest US city?", "", answer);
         Assert.True(card.VerifyAnswer(typed));
         Assert.False(card.VerifyAnswer("newyork"));
+    }
+
+    [Fact]
+    public void A_match_card_that_keeps_its_left_order_shows_the_left_side_as_written()
+    {
+        using var database = new TestDatabase();
+        var deck = new FlashCardDeck("Set");
+        FlashCardRepository.SaveNewDeck(deck);
+        List<(string leftText, string rightText)> pairs = [.. Enumerable.Range(1, 8).Select(i => ($"left {i}", $"right {i}"))];
+        var card = new MatchFlashCard("Q", "Q", pairs, keepLeftOrder: true);
+        FlashCardRepository.SaveNewCard(card, deck.ID);
+        deck.AddFlashCard(card);
+
+        var review = NewReview(deck);
+
+        Assert.Equal(pairs.Select(p => p.leftText), review.MatchRows.Select(row => row.LeftText));
+    }
+
+    [Theory]
+    [InlineData("Each constant goes with its first few digits.", true)]
+    [InlineData(CARD_TYPE_MATCH_PLACEHOLDER, false)]
+    [InlineData("", false)]
+    public void A_checked_match_card_shows_its_back_unless_it_is_the_placeholder(string back, bool shown)
+    {
+        using var database = new TestDatabase();
+        var deck = new FlashCardDeck("Set");
+        FlashCardRepository.SaveNewDeck(deck);
+        var card = new MatchFlashCard(CARD_TYPE_MATCH_PLACEHOLDER, back, [("a", "1"), ("b", "2")]);
+        FlashCardRepository.SaveNewCard(card, deck.ID);
+        deck.AddFlashCard(card);
+        var review = NewReview(deck);
+
+        review.CheckMatchAnswer();
+
+        Assert.Equal(shown, review.ShowBackSection);
     }
 }

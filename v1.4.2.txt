@@ -1,0 +1,3 @@
+Match cards have a new "Keep the left side in this order" option, off by default, so reviews show the left side as written while the right side is still shuffled.
+Fixed a bullet point's dot sitting too high when its line starts with tall inline maths, such as a formula with a line break.
+Fixed match cards never showing their back after being checked.

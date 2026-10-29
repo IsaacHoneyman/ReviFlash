@@ -319,7 +319,7 @@ public class MathText : Decorator
     /// <summary> A bullet point: the bullet, then the point's text, wrapping under itself rather than under the bullet. </summary>
     private Grid CreateBulletRow(TextBlock paragraph, int heading)
     {
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto, *"), Tag = BulletRowTag, Margin = paragraph.Margin };
+        var row = new BulletRow { ColumnDefinitions = new ColumnDefinitions("Auto, *"), Tag = BulletRowTag, Margin = paragraph.Margin };
         paragraph.Margin = default;
         paragraph.TextAlignment = TextAlignment.Left;
 
@@ -444,6 +444,22 @@ public class MathText : Decorator
             view.Margin = new Thickness(0, size / 2);
         }
         return view;
+    }
+}
+
+/// <summary> A bullet point's row; the bullet sits on its text's first baseline, which a tall formula on that line pushes down. </summary>
+internal class BulletRow : Grid
+{
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        var size = base.ArrangeOverride(finalSize);
+        if (Children is [TextBlock dot, TextBlock text]
+            && dot.TextLayout.TextLines is [var dotLine, ..] && text.TextLayout.TextLines is [var textLine, ..])
+        {
+            var drop = textLine.Baseline - dotLine.Baseline;
+            if (drop > 0) dot.Arrange(new Rect(0, drop, dot.DesiredSize.Width, dot.DesiredSize.Height));
+        }
+        return size;
     }
 }
 

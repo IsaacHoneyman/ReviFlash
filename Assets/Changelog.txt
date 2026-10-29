@@ -1,3 +1,8 @@
+=== 1.4.2
+- Match cards have a new option, \B{Keep the left side in this order}. Tick it and reviews show the left side the way you wrote it. The right side is still shuffled.
+- A bullet point's dot now lines up with its text when the line has tall maths in it, like a formula split over two lines.
+- Match cards show their back again once you've checked your answer, if you've written one.
+
 === 1.4.1
 \H2{Themes}
 - A new \B{Themes} window, opened from Settings, shows every theme as a tile in its own colours.

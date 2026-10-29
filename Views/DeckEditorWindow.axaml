@@ -227,6 +227,10 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
+                            <CheckBox IsChecked="{Binding NewMatchKeepLeftOrder, Mode=TwoWay}"
+                                Content="Keep the left side in this order"
+                                ToolTip.Tip="Reviews show the left side as written. The right side is still shuffled." />
+
                             <TextBlock Classes="hint" TextWrapping="Wrap" Text="In review, left and right sides are shuffled and the user matches them." />
                         </StackPanel>
 
