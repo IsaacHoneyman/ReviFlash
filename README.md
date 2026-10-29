@@ -39,6 +39,8 @@ Updates are handled automatically within ReviFlash! On startup the app checks wh
 
 ## New in 1.4
 
+**1.4.3**: spotted a mistake mid-review? Once the answer shows, press **E** or the pencil button to fix the card, and the rest of the session uses the fixed version. Text on match cards lines up on the left, and the review progress bar is easier to see.
+
 **1.4.2**: match cards have a new **Keep the left side in this order** option, so reviews show the left side the way you wrote it while the right side is still shuffled. Match cards show their back again once you've checked your answer, if you've written one. A bullet point's dot lines up with its text when the line has tall maths in it, like a formula split over two lines.
 
 **1.4.1**: a clean-up release. Everything looks and works the same way in every window, and themes are now yours to make.
@@ -103,6 +105,7 @@ Write notes with headings, maths and images. A contents panel lets you jump arou
 - There are no due cards and no backlog: study any set, folder or study group whenever you like.
 - Put sets from different topics into a **study group**, or pick several with **Select Multiple**, to review them together.
 - Use **Retry Later** to bring back the cards you got wrong, and finish with a grade for the session.
+- Spot a mistake mid-review? Fix the card there and then, and the rest of the session uses the fixed version.
 - Organise everything into folders, and search your whole library from the main menu.
 - New installs start with a **Welcome!** folder: a tour of every card type and a Read Me on how to use the app.
 
