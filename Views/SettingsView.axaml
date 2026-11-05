@@ -1,0 +1,180 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ReviFlash.Views.Controls"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.SettingsView"
+    x:DataType="vm:SettingsViewModel"
+    Background="{DynamicResource AppBackground}">
+
+    <UserControl.Styles>
+        <!-- A labelled setting: the header on the left, its control on the right. -->
+        <Style Selector="HeaderedContentControl.settingRow">
+            <Setter Property="Template">
+                <ControlTemplate TargetType="HeaderedContentControl">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <ContentPresenter Name="PART_HeaderPresenter" Content="{TemplateBinding Header}"
+                            VerticalAlignment="Center" Foreground="{DynamicResource TextPrimary}" />
+                        <ContentPresenter Name="PART_ContentPresenter" Grid.Column="1" Content="{TemplateBinding Content}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer Margin="24,24,8,24" HorizontalContentAlignment="Center"
+        Padding="0,0,16,0"
+        VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16" Width="420">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <Button Classes="action secondary small" Content="Back" Click="Back_Click"
+                    VerticalAlignment="Center" ToolTip.Tip="Back (Esc)" />
+                <TextBlock Classes="title" Text="Settings" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <Border Classes="card compact">
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="heading" Text="Appearance" />
+
+                    <HeaderedContentControl Classes="settingRow" Header="Application Theme">
+                        <Button Classes="secondary" Content="{Binding SelectedTheme}" Click="ChooseTheme_Click"
+                            MinWidth="140" ToolTip.Tip="Choose a theme or make your own" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Background Swirl" Margin="0,6,0,0">
+                        <CheckBox IsChecked="{Binding ShowBackgroundSwirl}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="LaTeX Font for Card Text">
+                        <CheckBox IsChecked="{Binding UseLatexFontForCards}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show LaTeX Previews for Additional Fields">
+                        <CheckBox IsChecked="{Binding ShowAdditionalFieldLatexPreviews}" />
+                    </HeaderedContentControl>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card compact">
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="heading" Text="Review" />
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show Timer">
+                        <CheckBox IsChecked="{Binding ShowTimer}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show Progress Meter">
+                        <CheckBox IsChecked="{Binding ShowProgress}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show Skip Button">
+                        <CheckBox IsChecked="{Binding ShowSkipButton}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show Retry Later Button">
+                        <CheckBox IsChecked="{Binding ShowRetryLaterButton}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show Answer Streak">
+                        <CheckBox IsChecked="{Binding ShowAnswerStreakInReview}" />
+                    </HeaderedContentControl>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card compact">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="heading" Text="Backup and Import" />
+
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                        Text="Create a backup zip or restore the app from an existing backup file." />
+
+                    <HeaderedContentControl Classes="settingRow" Header="Include Stats in Backup">
+                        <CheckBox x:Name="IncludeStatsInBackupCheckBox" IsChecked="True" />
+                    </HeaderedContentControl>
+
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                        <Button Grid.Column="0" Classes="wide secondary" Content="Create Backup" Click="CreateBackup_Click" />
+                        <Button Grid.Column="1" Classes="wide secondary" Content="Restore Backup" Click="RestoreBackup_Click" />
+                    </Grid>
+
+                    <TextBlock x:Name="BackupStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
+
+                    <Rectangle Height="1" Margin="0,6" Fill="{DynamicResource CardBorder}" />
+
+                    <TextBlock Classes="heading" Text="Import from Anki" />
+
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                        Text="Add the decks from an Anki .apkg file. Text, formatting, LaTeX, images, cloze, type-in and reversed cards all come across, and sub-decks become folders. Sounds are left out." />
+
+                    <Button x:Name="AnkiImportButton" Classes="wide secondary" Content="Import Anki Deck" Click="ImportAnki_Click" />
+
+                    <TextBlock x:Name="AnkiImportStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card compact">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="heading" Text="Updates" />
+
+                    <HeaderedContentControl Classes="settingRow" Header="Check for Updates on Startup">
+                        <CheckBox IsChecked="{Binding CheckForUpdatesOnStartup}" />
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="settingRow" Header="Show Changelog After an Update">
+                        <CheckBox IsChecked="{Binding ShowChangelogAfterUpdate}" />
+                    </HeaderedContentControl>
+
+                    <Button Classes="wide secondary" Content="Check for Updates Now" Click="CheckForUpdates_Click" />
+
+                    <DockPanel>
+                        <controls:BusySpinner x:Name="UpdateSpinner" DockPanel.Dock="Left" IsVisible="False" Margin="0,0,8,0" />
+                        <TextBlock x:Name="UpdateStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card compact">
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="heading" Text="Account" />
+
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                        <TextBlock Grid.Column="0" Classes="body" Text="{Binding AccountText}"
+                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <Button Grid.Column="1" Classes="secondary" Content="Sign Out" Click="SignOut_Click"
+                            IsVisible="{Binding IsSignedIn}" Padding="12,6" />
+                        <Button Grid.Column="1" Classes="secondary" Content="Sign In" Click="SignIn_Click"
+                            IsVisible="{Binding !IsSignedIn}" Padding="12,6" />
+                    </Grid>
+
+                    <Button Classes="wide secondary" Content="Change Username" Click="ChangeUsername_Click"
+                        IsVisible="{Binding IsSignedIn}" Padding="12,8" />
+
+                    <TextBlock Classes="caption" Text="Sign in to share sets and notes, keep private copies, and download community sets and notes."
+                        IsVisible="{Binding !IsSignedIn}" TextWrapping="Wrap" />
+
+                    <DockPanel>
+                        <controls:BusySpinner x:Name="AccountSpinner" DockPanel.Dock="Left" IsVisible="False" Margin="0,0,8,0" />
+                        <TextBlock x:Name="AccountStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card compact" Background="{DynamicResource SurfaceOverlayBackground}"
+                BorderBrush="{DynamicResource DangerForeground}" BorderThickness="1.5">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="heading" Text="Danger Zone"
+                        Foreground="{DynamicResource DangerForeground}" />
+
+                    <TextBlock Classes="body" TextWrapping="Wrap"
+                        Text="Delete your stats, for everything or for one set. Your sets and notes are not affected. This cannot be undone." />
+
+                    <Button Classes="wide danger" Content="Delete All Stats" Click="DeleteAllStats_Click" />
+                    <Button Classes="wide danger" Content="Delete a Set's Stats" Click="OpenDeleteDeckStats_Click" />
+
+                    <TextBlock x:Name="DeleteStatsStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -49,11 +49,39 @@ public partial class MainWindow : Window
         if (change.Property == IsActiveProperty || change.Property == WindowStateProperty) UpdateSwirl();
     }
 
+    private bool _quitConfirmed;
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
+        var page = (DataContext as DashboardViewModel)?.CurrentPage;
+
         // A note saves a moment after typing stops; closing the app in that moment shouldn't lose the last words.
-        if ((DataContext as DashboardViewModel)?.CurrentPage is NoteViewModel note) note.SaveBeforeExit();
+        if (page is NoteViewModel note) note.SaveBeforeExit();
+
+        // Colour edits are saved on leaving the themes page, which quitting skips.
+        if (page is ThemePickerViewModel) MetaDataManager.SaveMetaData();
+
+        if (page is DeckEditorViewModel editor)
+        {
+            editor.CommitDeckName();
+            if (!_quitConfirmed && editor.HasUnsavedWork())
+            {
+                e.Cancel = true;
+                ConfirmQuitDiscardingCard();
+                return;
+            }
+            editor.Dispose();
+        }
+    }
+
+    private async void ConfirmQuitDiscardingCard()
+    {
+        if (Main.DialogLayer.IsOpen) return;
+        if (!await new ConfirmDialog("Discard Card?", "The card you're working on hasn't been saved.").ShowDialog<bool>(this)) return;
+
+        _quitConfirmed = true;
+        Close();
     }
 
     protected override void OnClosed(EventArgs e)
@@ -113,7 +141,7 @@ public partial class MainWindow : Window
 
         if (ChangelogUtility.ShouldShowAfterUpdate(MetaDataManager.VersionBeforeLaunch, TextUtility.VersionText,
                 MetaDataManager.Data.ShowChangelogAfterUpdate, ChangelogUtility.HasNotesFor(TextUtility.VersionNumber)))
-            SyntaxGuideWindow.ShowFor(this, HelpTab.Changelog);
+            SyntaxGuideView.ShowFor(this, HelpTab.Changelog);
 
         if (!MetaDataManager.Data.CheckForUpdatesOnStartup) return;
         var updateClient = new UpdateClient();
@@ -121,30 +149,36 @@ public partial class MainWindow : Window
 
         if (check.Info is { } updateInfo)
         {
-            var confirmDialog = new ConfirmDialogWindow("Update Available",
+            var confirmDialog = new ConfirmDialog("Update Available",
                 $"Version {updateInfo.TargetFullRelease.Version} is ready. Download it and restart now?");
 
             bool confirmed = await confirmDialog.ShowDialog<bool>(this);
 
             if (confirmed)
             {
-                await new UpdateProgressWindow(updateClient, updateInfo).ShowDialog(this);
+                await new UpdateProgressDialog(updateClient, updateInfo).ShowDialog(this);
             }
         }
     }
 
-    /// <summary> Keys never reach the page behind an open dialog, and Tab doesn't move around the main window (a note uses it for its contents). </summary>
+    /// <summary> Keys never reach the page behind an open dialog, and Tab doesn't move around the main menu, a review or its summary (the forms and notes use it). </summary>
     private void Blocking_KeyDown(object? sender, KeyEventArgs e)
     {
-        bool tabMovesFocus = e.Key == Key.Tab && (DataContext as DashboardViewModel)?.CurrentPage is not NoteViewModel;
-        if (tabMovesFocus || OwnedWindows.Any(window => window is not SyntaxGuideWindow)) e.Handled = true;
+        if (Main.DialogLayer.IsOpen)
+        {
+            if (!Main.DialogLayer.IsInTopDialog(e.Source) && !Main.IsInHelp(e.Source)) e.Handled = true;
+            return;
+        }
+
+        bool tabMovesFocus = e.Key == Key.Tab && (DataContext as DashboardViewModel)?.CurrentPage is DashboardViewModel or ReviewViewModel or SummaryViewModel;
+        if (tabMovesFocus) e.Handled = true;
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.F1)
         {
-            SyntaxGuideWindow.ShowFor(this, HelpTab.KeyboardShortcuts);
+            SyntaxGuideView.ShowFor(this, HelpTab.KeyboardShortcuts);
             e.Handled = true;
         }
         else if (e.Key == Key.F11)

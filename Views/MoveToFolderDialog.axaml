@@ -1,0 +1,57 @@
+<controls:DialogView xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ReviFlash.Views.Controls"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    x:Class="ReviFlash.Views.MoveToFolderDialog"
+    x:DataType="vm:MoveToFolderViewModel"
+    Width="520" Height="620">
+
+    <Border Classes="dialogShell">
+        <Grid RowDefinitions="Auto, Auto, *, Auto">
+
+            <TextBlock Grid.Row="0" Classes="title"
+                Text="{Binding Header}"
+                TextWrapping="Wrap"
+                TextTrimming="CharacterEllipsis"
+                MaxLines="2" />
+
+            <TextBox Grid.Row="1" Classes="input"
+                Text="{Binding SearchText, Mode=TwoWay, Delay=120}"
+                Watermark="Search folders..."
+                Margin="0,16,0,12"
+                Padding="10,7" />
+
+            <Border Grid.Row="2" Classes="card" CornerRadius="16" Padding="8">
+                <ListBox ItemsSource="{Binding Choices}"
+                    SelectedItem="{Binding SelectedChoice, Mode=TwoWay}"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FolderChoice">
+                            <Grid Margin="{Binding Indent}" ColumnDefinitions="Auto, *">
+                                <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconFolder}"
+                                    Margin="0,0,10,0" />
+
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Classes="heading" Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Classes="hint" Text="{Binding Subtitle}"
+                                        IsVisible="{Binding HasSubtitle}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                Margin="0,20,0,0" Spacing="12">
+                <Button Classes="dialog secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" />
+
+                <Button Classes="dialog primary" Content="Move Here" Click="Move_Click" IsDefault="True"
+                    IsEnabled="{Binding CanMove}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</controls:DialogView>

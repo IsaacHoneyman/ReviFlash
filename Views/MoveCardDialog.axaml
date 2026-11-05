@@ -1,0 +1,28 @@
+<controls:DialogView xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ReviFlash.Views.Controls"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:views="using:ReviFlash.Views"
+    x:Class="ReviFlash.Views.MoveCardDialog"
+    x:DataType="vm:MoveCardViewModel"
+    Width="520" Height="620">
+
+    <Border Classes="dialogShell">
+        <Grid RowDefinitions="Auto, *, Auto" RowSpacing="12">
+            <StackPanel Grid.Row="0" Spacing="10">
+                <TextBlock Classes="title" Text="Move or Copy Card" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ToggleButton Classes="dashboardToggle" Content="Move" IsChecked="{Binding IsMove, Mode=TwoWay}" />
+                    <ToggleButton Classes="dashboardToggle" Content="Copy" IsChecked="{Binding IsCopySelected, Mode=TwoWay}" />
+                </StackPanel>
+                <TextBlock Classes="caption" Text="{Binding Hint}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Grid.Row="1" Classes="card compact" Padding="12">
+                <views:DeckFolderBrowserView DataContext="{Binding Browser}" />
+            </Border>
+
+            <Button Grid.Row="2" Classes="wide secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" />
+        </Grid>
+    </Border>
+</controls:DialogView>

@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:models="using:ReviFlash.Models"
+    xmlns:views="using:ReviFlash.Views"
+    x:Class="ReviFlash.Views.StudyGroupEditorView"
+    x:DataType="vm:StudyGroupEditorViewModel"
+    Background="{DynamicResource AppBackground}">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="32">
+
+        <TextBox Grid.Row="0"
+            Text="{Binding GroupName, Mode=TwoWay}"
+            Watermark="Group name"
+            MaxLength="100"
+            FontSize="24" FontWeight="Bold"
+            Background="Transparent"
+            BorderThickness="0,0,0,2"
+            Foreground="{DynamicResource TextPrimary}"
+            Margin="0,0,0,24" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="24">
+            <Border Classes="card">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <TextBlock Classes="sectionTitle" Text="Available Sets" />
+
+                    <views:DeckFolderBrowserView Grid.Row="1" DataContext="{Binding AvailableBrowser}" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Classes="card">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <TextBlock Classes="sectionTitle" Text="Group Membership" />
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled"
+                        Margin="0,0,-16,0"
+                        Padding="0,0,16,0">
+                        <ItemsControl ItemsSource="{Binding SelectedDecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:FlashCardDeck">
+                                    <Border Classes="listRow">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Classes="sectionTitle" Text="{Binding Name}" TextWrapping="Wrap" />
+                                                <TextBlock Classes="caption" Text="{Binding CardCountText}" />
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1" Classes="danger"
+                                                Content="Remove"
+                                                Click="RemoveDeck_Click"
+                                                Padding="14,8"
+                                                FontWeight="SemiBold" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+            Margin="0,24,0,0" Spacing="12">
+            <Button Classes="dialog secondary" Content="Cancel" Click="Cancel_Click" IsCancel="True" />
+
+            <Button Classes="dialog primary" Content="Save Group" Click="Save_Click" IsDefault="True"
+                IsEnabled="{Binding CanSave}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

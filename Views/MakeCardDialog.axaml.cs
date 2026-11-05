@@ -1,0 +1,63 @@
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using ReviFlash.ViewModels;
+
+using ReviFlash.Views.Controls;
+
+namespace ReviFlash.Views;
+
+/// <summary> Makes a card from note text. Closes with the set's name once the card is added, or null. </summary>
+public partial class MakeCardDialog : DialogView
+{
+    private MakeCardViewModel? ViewModel => DataContext as MakeCardViewModel;
+
+    public MakeCardDialog()
+    {
+        InitializeComponent();
+        AddHandler(KeyDownEvent, Shortcut_KeyDown, RoutingStrategies.Tunnel);
+        ImageInsertion.Attach(FieldsPanel, box => box.Classes.Contains("field"), message =>
+        {
+            if (ViewModel is { } vm) vm.ErrorText = message;
+        });
+
+        Opened += (_, _) =>
+        {
+            if (ViewModel is not { } vm) return;
+            vm.EditingTime.Start();
+            _editingTracking = ActiveTimeTracking.Attach(this, vm.EditingTime);
+        };
+        Closed += (_, _) =>
+        {
+            _editingTracking?.Dispose();
+            ViewModel?.EditingTime.Stop();
+        };
+    }
+
+    private ActiveTimeTracking? _editingTracking;
+
+    /// <summary> The formatting shortcuts in the card's fields, plus Ctrl+Enter to add the card. </summary>
+    private void Shortcut_KeyDown(object? sender, KeyEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        var command = topLevel?.PlatformSettings?.HotkeyConfiguration.CommandModifiers ?? KeyModifiers.Control;
+        if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(command))
+        {
+            Add_Click(this, e);
+            e.Handled = true;
+            return;
+        }
+
+        if (topLevel?.FocusManager?.GetFocusedElement() is TextBox box && box.Classes.Contains("field"))
+            TextFormatting.TryHandleShortcut(box, e, topLevel.PlatformSettings?.HotkeyConfiguration, ViewModel?.IsCloze == true);
+    }
+
+    private void Blank_Click(object? sender, RoutedEventArgs e) => TextFormatting.Wrap(ClozeBox, @"\C{", "}");
+
+    private void Add_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel?.TrySave() is { } deckName) Close(deckName);
+    }
+
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(null);
+}

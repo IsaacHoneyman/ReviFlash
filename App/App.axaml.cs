@@ -31,7 +31,6 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             DisableAvaloniaDataAnnotationValidation();
-            Shortcuts.FocusWindowsOnActivate();
             desktop.MainWindow = new MainWindow { DataContext = new DashboardViewModel() };
         }
 
@@ -82,6 +81,7 @@ public partial class App : Application
         Current.Resources["SurfaceOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#12000000") : Color.Parse("#18000000"));
         Current.Resources["HoverOverlayBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#10000000") : Color.Parse("#10FFFFFF"));
         Current.Resources["ScrimBackground"] = new SolidColorBrush(Color.Parse("#B3000000"));
+        Current.Resources["DialogScrimBackground"] = new SolidColorBrush(Color.Parse("#66000000"));
         Current.Resources["AccentSoftBackground"] = new SolidColorBrush(Color.Parse("#7044AAFF"));
         Current.Resources["DangerSoftBackground"] = new SolidColorBrush(Color.Parse("#60FF4444"));
         Current.Resources["ChartAttemptsBrush"] = new SolidColorBrush(Color.Parse("#EEEF6B5B"));

@@ -10,6 +10,8 @@ using ReviFlash.Data.Local;
 using ReviFlash.Models;
 using ReviFlash.ViewModels;
 
+using ReviFlash.Views.Controls;
+
 namespace ReviFlash.Views;
 
 public partial class ReviewView : UserControl
@@ -63,7 +65,7 @@ public partial class ReviewView : UserControl
     /// <summary> Space reveals, Left/Right or 1/2 mark or pick True/False, 1-9 pick options, Enter submits, S skips, R retries later, E edits the card, Esc quits; typing allows only Enter and Esc. </summary>
     private void Review_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (!IsEffectivelyVisible || GetReviewVM() is not { } vm) return;
+        if (!IsEffectivelyVisible || GetReviewVM() is not { } vm || !Shortcuts.IsForPage(this, e)) return;
         if (e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift)) return;
 
         if (e.Key == Key.Escape)
@@ -227,39 +229,35 @@ public partial class ReviewView : UserControl
 
     private void EditCard_Click(object sender, RoutedEventArgs e) => EditCard();
 
-    private bool _editingCard;
-
-    private async void EditCard()
+    /// <summary> Opens the current card in the editor as a page; leaving it comes back to this card, updated if it was saved. </summary>
+    private void EditCard()
     {
-        if (_editingCard || GetReviewVM() is not { CanEditCard: true } vm || TopLevel.GetTopLevel(this) is not Window window) return;
+        if (GetReviewVM() is not { CanEditCard: true } vm || TopLevel.GetTopLevel(this)?.DataContext is not DashboardViewModel dashboard) return;
         if (FlashCardRepository.GetAllDecks().FirstOrDefault(deck => deck.ID == vm.CurrentDeckId) is not { } deck) return;
 
-        _editingCard = true;
-        try
+        FlashCard? saved = null;
+        var editor = new DeckEditorViewModel(deck);
+        editor.CardUpdated += card => saved = card;
+        editor.OnLeave = () =>
         {
-            FlashCard? saved = null;
-            var editor = new DeckEditorViewModel(deck);
-            editor.CardUpdated += card => saved = card;
-            await DeckEditorWindow.ForSingleCard(editor, vm.CurrentSourceCard).ShowDialog(window);
             if (saved is not null) vm.ApplyEditedCard(saved);
-        }
-        finally
-        {
-            _editingCard = false;
-        }
+            dashboard.GoBack();
+        };
+        editor.BeginSingleCard(vm.CurrentSourceCard);
+        dashboard.OpenPage(editor);
     }
 
     private bool _confirmingQuit;
 
     private async void ConfirmQuit()
     {
-        if (_confirmingQuit || TopLevel.GetTopLevel(this) is not Window window) return;
+        if (_confirmingQuit) return;
 
         _confirmingQuit = true;
         try
         {
-            var dialog = new ConfirmDialogWindow("Quit Session?", "Your progress so far will be saved.");
-            if (await dialog.ShowDialog<bool>(window)) GetReviewVM()?.QuitSession();
+            var dialog = new ConfirmDialog("Quit Session?", "Your progress so far will be saved.");
+            if (await dialog.ShowDialog<bool>(this)) GetReviewVM()?.QuitSession();
         }
         finally
         {

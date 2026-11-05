@@ -1,0 +1,4 @@
+Everything now opens inside the one ReviFlash window: dialogs appear over the page, and the set editor, settings, themes, study groups and ReviFlash Online open as pages with a Back button.
+Help opens as a panel beside the page and stays usable while you edit.
+Esc goes back a step on every page, and back from a page returns to wherever you came from, including the same card mid-review.
+Quitting with an unsaved card in the set editor asks before discarding it.

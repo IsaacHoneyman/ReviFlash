@@ -40,7 +40,7 @@ public partial class NoteView : UserControl
         _topLevel?.AddHandler(KeyDownEvent, Note_KeyDown, RoutingStrategies.Tunnel);
 
         // Typing, clicking and scrolling anywhere in the window keep the note's study time counting.
-        if (ViewModel is { } vm) _studyTracking = ActiveTimeTracking.Attach(_topLevel, vm.StudyTime);
+        if (ViewModel is { } vm) _studyTracking = ActiveTimeTracking.Attach(this, vm.StudyTime);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -51,8 +51,6 @@ public partial class NoteView : UserControl
         _studyTracking = null;
         _topLevel = null;
     }
-
-    private Window? OwnerWindow => TopLevel.GetTopLevel(this) as Window;
 
     // --- Header ---
 
@@ -164,7 +162,7 @@ public partial class NoteView : UserControl
     /// <summary> Tab shows or hides the contents, Ctrl+Enter makes a card, and Esc leaves the note when nothing is being typed. While editing: Esc finishes, Up/Down on the first/last line move between paragraphs, Backspace at the start joins, shortcuts format. </summary>
     private void Note_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (ViewModel is not { } vm || !IsEffectivelyVisible) return;
+        if (ViewModel is not { } vm || !IsEffectivelyVisible || !Shortcuts.IsForPage(this, e)) return;
 
         var focused = _topLevel?.FocusManager?.GetFocusedElement();
         if (focused is not TextBox && Shortcuts.IsPlain(e, Key.Escape))
@@ -302,10 +300,10 @@ public partial class NoteView : UserControl
 
     private async void OpenMakeCard(string selection, string? heading)
     {
-        if (OwnerWindow is not { } owner || ViewModel is not { } vm) return;
+        if (ViewModel is not { } vm) return;
 
-        var dialog = new MakeCardWindow { DataContext = new MakeCardViewModel(selection.Trim(), heading) };
-        var deckName = await dialog.ShowDialog<string?>(owner);
+        var dialog = new MakeCardDialog { DataContext = new MakeCardViewModel(selection.Trim(), heading) };
+        var deckName = await dialog.ShowDialog<string?>(this);
         if (deckName is not null) vm.StatusText = $"Card added to {deckName}";
     }
 }

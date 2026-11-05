@@ -1,0 +1,24 @@
+<controls:DialogView xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
+        x:Class="ReviFlash.Views.UpdateProgressDialog"
+        Width="450" Height="200">
+
+    <Border Classes="dialogShell">
+        <Grid RowDefinitions="*, Auto, Auto">
+            <TextBlock x:Name="MessageText" Classes="heading"
+                       Text="Downloading update... 0%"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"/>
+
+            <ProgressBar x:Name="DownloadProgress" Grid.Row="1"
+                         Minimum="0" Maximum="100" Value="0" Height="8" CornerRadius="4"
+                         Foreground="{DynamicResource GradientStart}" Margin="0,16,0,0"/>
+
+            <Button x:Name="CloseButton" Grid.Row="2" Classes="dialog secondary" Click="Close_Click" Content="Close" IsVisible="False"
+                    HorizontalAlignment="Center" Margin="0,16,0,0" />
+        </Grid>
+    </Border>
+</controls:DialogView>

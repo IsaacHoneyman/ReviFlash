@@ -364,10 +364,9 @@ public static class BackupManager
     {
         if (Avalonia.Application.Current?.ApplicationLifetime is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop) return;
 
-        if (desktop.MainWindow?.DataContext is DashboardViewModel dashboardViewModel)
-            dashboardViewModel.RefreshAfterBackupRestore();
+        if (desktop.MainWindow?.DataContext is not DashboardViewModel dashboardViewModel) return;
 
-        foreach (var window in desktop.Windows)
-            if (window.DataContext is SettingsViewModel settingsViewModel) settingsViewModel.RefreshFromMetadata();
+        dashboardViewModel.RefreshAfterBackupRestore();
+        if (dashboardViewModel.CurrentPage is SettingsViewModel settingsViewModel) settingsViewModel.RefreshFromMetadata();
     }
 }

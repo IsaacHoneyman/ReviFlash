@@ -88,7 +88,7 @@ public partial class LoginViewModel : ViewModelBase
         _ => "Sign In",
     };
 
-    /// <summary> Raised once a session has been stored, so the window can close. </summary>
+    /// <summary> Raised once a session has been stored, so the dialog can close. </summary>
     public event Action? SignedIn;
 
     // --- Mode switching ---

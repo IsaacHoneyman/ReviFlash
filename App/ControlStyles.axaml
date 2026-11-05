@@ -118,7 +118,7 @@
         <Setter Property="Margin" Value="0,0,0,10" />
     </Style>
 
-    <!-- The whole visible body of a chromeless dialog (see DialogWindow). -->
+    <!-- The whole visible body of a dialog (see DialogView). -->
     <Style Selector="Border.dialogShell">
         <Setter Property="Background" Value="{DynamicResource AppBackground}" />
         <Setter Property="Opacity" Value="0.96" />

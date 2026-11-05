@@ -89,7 +89,7 @@ public partial class OnlineExportViewModel : OnlineViewModelBase
         UpdateBrowser.IsActionEnabled = !value;
     }
 
-    /// <summary> Asks the user to confirm a destructive action; supplied by the window. </summary>
+    /// <summary> Asks the user to confirm a destructive action; supplied by the page. </summary>
     public Func<string, string, Task<bool>>? ConfirmAsync { get; set; }
 
     public OnlineExportViewModel(ulong? targetFolderID = null)

@@ -11,6 +11,9 @@ namespace ReviFlash.ViewModels;
 
 public partial class StudyGroupEditorViewModel : ViewModelBase
 {
+    /// <summary> Run when the page is left, by whoever opened it. </summary>
+    public Action? OnLeave { get; set; }
+
     private readonly StudyGroup? _editingGroup;
     private readonly ulong? _targetFolderID;
     [ObservableProperty]

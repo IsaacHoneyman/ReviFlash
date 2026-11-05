@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:views="using:ReviFlash.Views"
+    xmlns:controls="using:ReviFlash.Views.Controls"
+    x:Class="ReviFlash.Views.MainView"
+    x:DataType="vm:DashboardViewModel">
+
+    <!-- Help docks on the right and stays usable beside the page, even while a dialog is open over it. -->
+    <Grid ColumnDefinitions="*, Auto">
+        <ContentControl Content="{Binding CurrentPage}" />
+        <controls:DialogLayer x:Name="Dialogs" />
+        <views:SyntaxGuideView Grid.Column="1" x:Name="Help" Width="620" IsVisible="False" />
+    </Grid>
+
+</UserControl>

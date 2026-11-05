@@ -13,6 +13,9 @@ namespace ReviFlash.ViewModels;
 
 public partial class SettingsViewModel : ViewModelBase
 {
+    /// <summary> Run when the page is left, by whoever opened it. </summary>
+    public Action? OnLeave { get; set; }
+
     // Round the colour wheel from the pinks (Vaporwave, the default, first) through reds, oranges, greens and blues to purples, then the greys.
     private static readonly Dictionary<string, ThemeVariant> ThemeMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -59,7 +62,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     public SettingsViewModel()
     {
-        // Sign-ins and sign-outs from anywhere (including this window) show up live.
+        // Sign-ins and sign-outs from anywhere (including this page) show up live.
         MetaDataManager.Data.PropertyChanged += Metadata_PropertyChanged;
 
         _selectedTheme = MetaDataManager.Data.Theme;
@@ -75,7 +78,7 @@ public partial class SettingsViewModel : ViewModelBase
         _showChangelogAfterUpdate = MetaDataManager.Data.ShowChangelogAfterUpdate;
     }
 
-    /// <summary> Stops listening to the app-wide metadata; call when the window closes. </summary>
+    /// <summary> Stops listening to the app-wide metadata; call when the page is left. </summary>
     public void Detach() => MetaDataManager.Data.PropertyChanged -= Metadata_PropertyChanged;
 
     private void Metadata_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

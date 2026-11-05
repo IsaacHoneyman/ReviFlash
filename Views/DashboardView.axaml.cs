@@ -28,8 +28,6 @@ public partial class DashboardView : UserControl
         LibraryColumn.SizeChanged += (_, e) => LibraryColumn.Classes.Set("compact", e.NewSize.Width < CompactLibraryWidth);
     }
 
-    private Window OwnerWindow => (Window)TopLevel.GetTopLevel(this)!;
-
     private TopLevel? _topLevel;
     private bool _confirmingQuit;
 
@@ -55,7 +53,7 @@ public partial class DashboardView : UserControl
     /// <summary> Arrows from no focus or a card move between cards, ahead of Avalonia's own arrow navigation to the nearest button. </summary>
     private void Arrow_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.KeyModifiers != KeyModifiers.None || MoveFor(e.Key) is not { } move) return;
+        if (e.KeyModifiers != KeyModifiers.None || MoveFor(e.Key) is not { } move || !Shortcuts.IsForPage(this, e)) return;
         if (DataContext is not DashboardViewModel { IsGraphView: false } || !IsEffectivelyVisible) return;
 
         var focused = _topLevel?.FocusManager?.GetFocusedElement();
@@ -68,7 +66,7 @@ public partial class DashboardView : UserControl
     /// <summary> F2 settings, F3 opens the graph view, F or Ctrl+F search, Ctrl+N new, E/Delete/M/S act on the focused card, Esc backs out a step. </summary>
     private void Library_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Handled || DataContext is not DashboardViewModel vm || !IsEffectivelyVisible) return;
+        if (e.Handled || DataContext is not DashboardViewModel vm || !IsEffectivelyVisible || !Shortcuts.IsForPage(this, e)) return;
 
         var hotkeys = _topLevel?.PlatformSettings?.HotkeyConfiguration;
         var focused = _topLevel?.FocusManager?.GetFocusedElement();
@@ -211,8 +209,7 @@ public partial class DashboardView : UserControl
         _confirmingQuit = true;
         try
         {
-            var owner = OwnerWindow;
-            if (await new ConfirmDialogWindow("Quit ReviFlash?").ShowDialog<bool>(owner)) owner.Close();
+            if (await new ConfirmDialog("Quit ReviFlash?").ShowDialog<bool>(this)) (TopLevel.GetTopLevel(this) as Window)?.Close();
         }
         finally { _confirmingQuit = false; }
     }
@@ -225,31 +222,37 @@ public partial class DashboardView : UserControl
         ? $"It will be created inside {vm.FolderTree.DisplayPath(vm.CurrentFolderID)}."
         : "It will be created on the main menu.";
 
-    private void HelpButton_Click(object sender, RoutedEventArgs e) => SyntaxGuideWindow.ShowFor(OwnerWindow);
+    private void HelpButton_Click(object sender, RoutedEventArgs e) => SyntaxGuideView.ShowFor(this);
 
-    private async void SettingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        var settingsWindow = new SettingsWindow
-        {
-            DataContext = new SettingsViewModel()
-        };
-
-        await settingsWindow.ShowDialog(OwnerWindow);
-    }
-
-    public async void CreateDeck_Click(object sender, RoutedEventArgs e)
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
 
-        var newDeck = vm.CreateNewDeck();
-
-        var editor = new DeckEditorWindow
+        var settings = new SettingsViewModel();
+        settings.OnLeave = () =>
         {
-            DataContext = new DeckEditorViewModel(newDeck)
+            settings.Detach();
+            vm.GoBack();
         };
-        await editor.ShowDialog(OwnerWindow);
+        vm.OpenPage(settings);
+    }
 
-        vm.ReloadAfterEdit();
+    public void CreateDeck_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DashboardViewModel vm) return;
+
+        OpenEditor(vm, new DeckEditorViewModel(vm.CreateNewDeck()));
+    }
+
+    /// <summary> Opens the set editor as a page; leaving it comes back here with the library refreshed. </summary>
+    private static void OpenEditor(DashboardViewModel vm, DeckEditorViewModel editor)
+    {
+        editor.OnLeave = () =>
+        {
+            vm.GoBack();
+            vm.ReloadAfterEdit();
+        };
+        vm.OpenPage(editor);
     }
 
     // --- Notes ---
@@ -258,13 +261,13 @@ public partial class DashboardView : UserControl
     {
         if (DataContext is not DashboardViewModel vm) return;
 
-        var prompt = new TextPromptWindow(
+        var prompt = new TextPromptDialog(
             "Name your new note",
             "Create",
             "New Note",
             CreationHint(vm));
 
-        var name = await prompt.ShowDialog<string?>(OwnerWindow);
+        var name = await prompt.ShowDialog<string?>(this);
         if (string.IsNullOrWhiteSpace(name)) return;
 
         vm.OpenNote(vm.CreateNote(name));
@@ -276,7 +279,7 @@ public partial class DashboardView : UserControl
         var note = ItemOf<Note>(sender);
         if (DataContext is not DashboardViewModel vm) return;
 
-        var name = await new TextPromptWindow("Rename note", "Rename", note.Name).ShowDialog<string?>(OwnerWindow);
+        var name = await new TextPromptDialog("Rename note", "Rename", note.Name).ShowDialog<string?>(this);
         if (string.IsNullOrWhiteSpace(name) || name == note.Name) return;
 
         vm.RenameNote(note, name);
@@ -294,22 +297,25 @@ public partial class DashboardView : UserControl
         var note = ItemOf<Note>(sender);
         if (DataContext is not DashboardViewModel vm) return;
 
-        var dialog = new ConfirmDialogWindow("Delete Note?", $"'{note.Name}' will be deleted permanently.");
-        if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteNote(note);
+        var dialog = new ConfirmDialog("Delete Note?", $"'{note.Name}' will be deleted permanently.");
+        if (await dialog.ShowDialog<bool>(this)) vm.DeleteNote(note);
     }
 
-    public async void CreateGroup_Click(object sender, RoutedEventArgs e)
+    public void CreateGroup_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
 
-        var editor = new StudyGroupEditorWindow
+        OpenGroupEditor(vm, new StudyGroupEditorViewModel(targetFolderID: vm.CurrentFolderID));
+    }
+
+    private static void OpenGroupEditor(DashboardViewModel vm, StudyGroupEditorViewModel editor)
+    {
+        editor.OnLeave = () =>
         {
-            DataContext = new StudyGroupEditorViewModel(targetFolderID: vm.CurrentFolderID)
+            vm.GoBack();
+            vm.ReloadAfterEdit();
         };
-
-        await editor.ShowDialog(OwnerWindow);
-
-        vm.ReloadAfterEdit();
+        vm.OpenPage(editor);
     }
 
     // --- Folders ---
@@ -318,13 +324,13 @@ public partial class DashboardView : UserControl
     {
         if (DataContext is not DashboardViewModel vm) return;
 
-        var prompt = new TextPromptWindow(
+        var prompt = new TextPromptDialog(
             "Name your new folder",
             "Create",
             "New Folder",
             CreationHint(vm));
 
-        var name = await prompt.ShowDialog<string?>(OwnerWindow);
+        var name = await prompt.ShowDialog<string?>(this);
         if (string.IsNullOrWhiteSpace(name)) return;
 
         vm.CreateFolder(name);
@@ -338,8 +344,8 @@ public partial class DashboardView : UserControl
 
         if (DataContext is not DashboardViewModel vm) return;
 
-        var prompt = new TextPromptWindow("Rename folder", "Rename", folder.Name);
-        var name = await prompt.ShowDialog<string?>(OwnerWindow);
+        var prompt = new TextPromptDialog("Rename folder", "Rename", folder.Name);
+        var name = await prompt.ShowDialog<string?>(this);
 
         if (string.IsNullOrWhiteSpace(name) || name == folder.Name) return;
 
@@ -362,7 +368,7 @@ public partial class DashboardView : UserControl
 
         if (folder.ItemCount == 0)
         {
-            if (await new ConfirmDialogWindow("Delete Folder?", message).ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder);
+            if (await new ConfirmDialog("Delete Folder?", message).ShowDialog<bool>(this)) vm.DeleteFolder(folder);
             return;
         }
 
@@ -372,8 +378,8 @@ public partial class DashboardView : UserControl
             .Select(part => TextUtility.Plural(part.Item1, part.Item2)));
         var deleteMessage = $"'{folder.Name}' and everything in it ({everything}, {TextUtility.Plural(cards, "card")}) will be deleted. This can't be undone.";
 
-        var dialog = new ConfirmDialogWindow("Delete Folder?", message, "Also delete everything inside", deleteMessage);
-        if (await dialog.ShowDialog<bool>(OwnerWindow)) vm.DeleteFolder(folder, withContents: dialog.IsOptionChecked);
+        var dialog = new ConfirmDialog("Delete Folder?", message, "Also delete everything inside", deleteMessage);
+        if (await dialog.ShowDialog<bool>(this)) vm.DeleteFolder(folder, withContents: dialog.IsOptionChecked);
     }
 
     public async void MoveItem_Click(object sender, RoutedEventArgs e)
@@ -383,18 +389,18 @@ public partial class DashboardView : UserControl
         var item = ItemOf<LibraryItem>(sender);
         if (DataContext is not DashboardViewModel vm) return;
 
-        var picker = new MoveToFolderWindow
+        var picker = new MoveToFolderDialog
         {
             DataContext = new MoveToFolderViewModel(vm.FolderTree, item, item.ContainerFolderID)
         };
 
-        var choice = await picker.ShowDialog<FolderChoice?>(OwnerWindow);
+        var choice = await picker.ShowDialog<FolderChoice?>(this);
         if (choice is null) return;
 
         if (!vm.MoveItem(item, choice.FolderID))
         {
-            var failed = ConfirmDialogWindow.Notice("Can't Move That", "A folder can't go inside itself.");
-            await failed.ShowDialog<bool>(OwnerWindow);
+            var failed = ConfirmDialog.Notice("Can't Move That", "A folder can't go inside itself.");
+            await failed.ShowDialog<bool>(this);
         }
     }
 
@@ -404,25 +410,19 @@ public partial class DashboardView : UserControl
     private void Breadcrumbs_UpRequested(object? sender, RoutedEventArgs e) =>
         (DataContext as DashboardViewModel)?.NavigateUp();
 
-    public async void EditDeck_Click(object sender, RoutedEventArgs e)
+    public void EditDeck_Click(object sender, RoutedEventArgs e)
     {
-        var selectedDeck = ItemOf<FlashCardDeck>(sender);
+        if (DataContext is not DashboardViewModel vm) return;
 
-        var editor = new DeckEditorWindow
-        {
-            DataContext = new DeckEditorViewModel(selectedDeck)
-        };
-        await editor.ShowDialog(OwnerWindow);
-
-        (DataContext as DashboardViewModel)?.ReloadAfterEdit();
+        OpenEditor(vm, new DeckEditorViewModel(ItemOf<FlashCardDeck>(sender)));
     }
 
     public async void DeleteDeck_Click(object sender, RoutedEventArgs e)
     {
         var selectedDeck = ItemOf<FlashCardDeck>(sender);
-        var dialog = new ConfirmDialogWindow("Delete Set?", $"'{selectedDeck.Name}' and all of its cards will be deleted permanently.");
+        var dialog = new ConfirmDialog("Delete Set?", $"'{selectedDeck.Name}' and all of its cards will be deleted permanently.");
 
-        bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
+        bool confirmed = await dialog.ShowDialog<bool>(this);
 
         if (confirmed && DataContext is DashboardViewModel vm)
         {
@@ -458,26 +458,19 @@ public partial class DashboardView : UserControl
         }
     }
 
-    public async void EditGroup_Click(object sender, RoutedEventArgs e)
+    public void EditGroup_Click(object sender, RoutedEventArgs e)
     {
-        var selectedGroup = ItemOf<StudyGroup>(sender);
+        if (DataContext is not DashboardViewModel vm) return;
 
-        var editor = new StudyGroupEditorWindow
-        {
-            DataContext = new StudyGroupEditorViewModel(selectedGroup)
-        };
-
-        await editor.ShowDialog(OwnerWindow);
-
-        (DataContext as DashboardViewModel)?.ReloadAfterEdit();
+        OpenGroupEditor(vm, new StudyGroupEditorViewModel(ItemOf<StudyGroup>(sender)));
     }
 
     public async void DeleteGroup_Click(object sender, RoutedEventArgs e)
     {
         var selectedGroup = ItemOf<StudyGroup>(sender);
-        var dialog = new ConfirmDialogWindow("Delete Group?", $"'{selectedGroup.Name}' will be deleted. The sets in it are not affected.");
+        var dialog = new ConfirmDialog("Delete Group?", $"'{selectedGroup.Name}' will be deleted. The sets in it are not affected.");
 
-        bool confirmed = await dialog.ShowDialog<bool>(OwnerWindow);
+        bool confirmed = await dialog.ShowDialog<bool>(this);
 
         if (confirmed && DataContext is DashboardViewModel vm)
         {
@@ -596,7 +589,7 @@ public partial class DashboardView : UserControl
     }
 
     /// <summary> True once there is a ReviFlash Online session, asking the user to sign in if needed; false if a check was already running or the dashboard was left while checking. </summary>
-    private async Task<bool> EnsureSignedInAsync(Window owner, DashboardViewModel vm, DashboardViewModel.OnlineEntry entry)
+    private async Task<bool> EnsureSignedInAsync(Visual owner, DashboardViewModel vm, DashboardViewModel.OnlineEntry entry)
     {
         if (await vm.CheckSignInAsync(entry) is not { } state) return false;
         if (!this.IsAttachedToVisualTree()) return false;
@@ -606,44 +599,46 @@ public partial class DashboardView : UserControl
             case SessionState.Active:
                 return true;
             case SessionState.Offline:
-                await ConfirmDialogWindow.Notice("Can't Connect", "Couldn't reach ReviFlash Online. Check your connection and try again.").ShowDialog<bool>(owner);
+                await ConfirmDialog.Notice("Can't Connect", "Couldn't reach ReviFlash Online. Check your connection and try again.").ShowDialog<bool>(owner);
                 return false;
             default:
-                return await new LoginWindow().ShowDialog<bool>(owner);
+                return await new LoginDialog().ShowDialog<bool>(owner);
         }
     }
 
     private async void SignIn_Click(object sender, RoutedEventArgs e)
     {
         // The account text updates itself from the stored session; nothing else to do.
-        if (DataContext is DashboardViewModel vm) await EnsureSignedInAsync(OwnerWindow, vm, DashboardViewModel.OnlineEntry.SignIn);
+        if (DataContext is DashboardViewModel vm) await EnsureSignedInAsync(this, vm, DashboardViewModel.OnlineEntry.SignIn);
     }
 
     private async void OpenOnlineImport_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
-        var owner = OwnerWindow;
-        if (!await EnsureSignedInAsync(owner, vm, DashboardViewModel.OnlineEntry.Import)) return;
+        if (!await EnsureSignedInAsync(this, vm, DashboardViewModel.OnlineEntry.Import)) return;
 
-        var window = new OnlineImportWindow(vm.CurrentFolderID);
-        await window.ShowDialog(owner);
-
-        vm.ReloadLibrary();
-        vm.RefreshStats();
+        OpenOnlinePage(vm, new OnlineImportViewModel(vm.CurrentFolderID));
     }
 
     private async void OpenOnlineExport_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not DashboardViewModel vm) return;
-        var owner = OwnerWindow;
-        if (!await EnsureSignedInAsync(owner, vm, DashboardViewModel.OnlineEntry.Export)) return;
+        if (!await EnsureSignedInAsync(this, vm, DashboardViewModel.OnlineEntry.Export)) return;
 
         // Your own decks can be downloaded from here, into the folder you're in.
-        var window = new OnlineExportWindow(vm.CurrentFolderID);
-        await window.ShowDialog(owner);
+        OpenOnlinePage(vm, new OnlineExportViewModel(vm.CurrentFolderID));
+    }
 
-        vm.ReloadLibrary();
-        vm.RefreshStats();
+    /// <summary> Opens an online page; coming back shows anything it downloaded. </summary>
+    private static void OpenOnlinePage(DashboardViewModel vm, OnlineViewModelBase page)
+    {
+        page.OnLeave = () =>
+        {
+            vm.GoBack();
+            vm.ReloadLibrary();
+            vm.RefreshStats();
+        };
+        vm.OpenPage(page);
     }
 
     private void StartReviewSession(FlashCardDeck deck)

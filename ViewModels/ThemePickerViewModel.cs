@@ -56,6 +56,9 @@ public partial class ThemeColourEntry(string key, string label) : ObservableObje
 
 public partial class ThemePickerViewModel : ViewModelBase
 {
+    /// <summary> Run when the page is left, by whoever opened it. </summary>
+    public Action? OnLeave { get; set; }
+
     private readonly AppMetaData _data;
     private readonly Action _save;
     private bool _refreshing;
@@ -75,7 +78,7 @@ public partial class ThemePickerViewModel : ViewModelBase
     [ObservableProperty] private Color _secondAccentColour;
     [ObservableProperty] private string _readabilityWarning = "";
 
-    /// <summary> Raised after any change to the theme in use, so the window can redraw the app in it. </summary>
+    /// <summary> Raised after any change to the theme in use, so the page can redraw the app in it. </summary>
     public event Action? ThemeEdited;
 
     /// <summary> Asks before deleting a theme; supplied by the window. </summary>

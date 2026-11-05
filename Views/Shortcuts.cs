@@ -4,7 +4,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
 
@@ -17,39 +19,42 @@ internal static class Shortcuts
 
     public static bool IsPlain(KeyEventArgs e, Key key) => e.Key == key && e.KeyModifiers == KeyModifiers.None;
 
-    /// <summary> A window takes the keyboard when it becomes active, so Enter and Esc reach a dialog without a click first. </summary>
-    public static void FocusWindowsOnActivate()
+    /// <summary> Focuses the default button in <paramref name="root"/>, or else its first control. </summary>
+    public static void FocusFirstIn(Visual root)
     {
-        // Owner isn't set yet when a dialog opens, so every window subscribes.
-        Window.WindowOpenedEvent.AddClassHandler<Window>((window, _) => window.Activated += (_, _) => TakeFocus(window));
-    }
-
-    /// <summary> Moves focus left in another window into this one: a dialog's default button or first control; the main window just clears it. </summary>
-    private static void TakeFocus(Window window)
-    {
-        if (window.FocusManager is not { } focus || (focus.GetFocusedElement() as Visual)?.GetVisualRoot() == window) return;
-
-        if (window is MainWindow)
-        {
-            focus.ClearFocus();
-            return;
-        }
-
-        var controls = window.GetVisualDescendants().OfType<InputElement>()
+        var controls = root.GetVisualDescendants().OfType<InputElement>()
             .Where(c => c.Focusable && c.IsEffectivelyVisible && c.IsEffectivelyEnabled)
             .ToList();
         (controls.OfType<Button>().FirstOrDefault(b => b.IsDefault) ?? controls.FirstOrDefault())?.Focus();
     }
 
-    /// <summary> Esc closes <paramref name="window"/> unless something in it handled the key, or <paramref name="backOut"/> backed out of a step first. </summary>
-    public static void CloseOnEscape(Window window, Func<bool>? backOut = null)
+    /// <summary> Whether a key belongs to <paramref name="page"/>: pressed inside it, or with nothing focused, and not while a dialog covers it. </summary>
+    public static bool IsForPage(Visual page, KeyEventArgs e) =>
+        !DialogLayer.IsOpenOver(page) && (e.Source is TopLevel || (e.Source is Visual source && (source == page || page.IsVisualAncestorOf(source))));
+
+    /// <summary> Esc runs <paramref name="leave"/> while <paramref name="page"/> is showing, unless something on it used the key first or a dialog is open. </summary>
+    public static void LeaveOnEscape(Control page, Action leave)
     {
-        window.KeyDown += (_, e) =>
+        TopLevel? topLevel = null;
+
+        void Escape_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.Handled || !IsPlain(e, Key.Escape)) return;
+            if (e.Handled || !IsPlain(e, Key.Escape) || !IsForPage(page, e) || !page.IsEffectivelyVisible) return;
 
             e.Handled = true;
-            if (backOut?.Invoke() != true) window.Close();
+            leave();
+        }
+
+        // On the window, so Esc works wherever the focus is.
+        page.AttachedToVisualTree += (_, _) =>
+        {
+            topLevel = TopLevel.GetTopLevel(page);
+            topLevel?.AddHandler(InputElement.KeyDownEvent, Escape_KeyDown, RoutingStrategies.Bubble);
+        };
+        page.DetachedFromVisualTree += (_, _) =>
+        {
+            topLevel?.RemoveHandler(InputElement.KeyDownEvent, Escape_KeyDown);
+            topLevel = null;
         };
     }
 }

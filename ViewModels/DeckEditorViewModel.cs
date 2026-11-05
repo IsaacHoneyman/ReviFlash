@@ -46,6 +46,18 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
     /// <summary> Raised with the saved card after a card being edited is updated. </summary>
     public event Action<FlashCard>? CardUpdated;
+
+    /// <summary> Just one saved card of a fixed type, edited mid-review; the editor is left once it's updated. </summary>
+    public bool IsSingleCard { get; private set; }
+
+    /// <summary> Run when the editor is left, by whoever opened it. </summary>
+    public Action? OnLeave { get; set; }
+
+    public void BeginSingleCard(FlashCard card)
+    {
+        IsSingleCard = true;
+        BeginEditCard(card);
+    }
     [ObservableProperty] private ObservableCollection<FlashCard> _cards = new();
     public ObservableCollection<MultiChoiceOptionEditor> MultiChoiceOptions { get; } = new();
     public ObservableCollection<MatchPairEditor> MatchPairs { get; } = new();

@@ -45,6 +45,6 @@ public partial class FormattingToolbar : UserControl
 
     private void Help_Click(object? sender, RoutedEventArgs e)
     {
-        if (TopLevel.GetTopLevel(this) is Window owner) SyntaxGuideWindow.ShowFor(owner);
+        SyntaxGuideView.ShowFor(this);
     }
 }

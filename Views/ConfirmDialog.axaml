@@ -1,0 +1,27 @@
+<controls:DialogView xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ReviFlash.Views.Controls"
+        x:Class="ReviFlash.Views.ConfirmDialog"
+        Width="450" MinHeight="200">
+
+    <Border Classes="dialogShell">
+        <Grid RowDefinitions="*, Auto, Auto">
+            <StackPanel Spacing="8" VerticalAlignment="Center">
+                <TextBlock x:Name="TitleText" Classes="sectionTitle"
+                           TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+                <TextBlock x:Name="MessageText" Classes="body"
+                           TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+            </StackPanel>
+            
+            <!-- An optional extra choice, e.g. also deleting a folder's contents -->
+            <CheckBox Grid.Row="1" x:Name="OptionCheckBox" IsVisible="False" HorizontalAlignment="Center" Margin="0,16,0,0"
+                IsCheckedChanged="Option_Changed" />
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
+                <Button x:Name="CancelButton" Classes="dialog secondary" Click="Cancel_Click" Content="Cancel" IsCancel="True" />
+                <Button x:Name="ConfirmButton" Classes="dialog secondary" Click="Confirm_Click" Content="Proceed" IsDefault="True"
+                    Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" FontWeight="Bold" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</controls:DialogView>

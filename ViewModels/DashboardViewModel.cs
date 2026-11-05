@@ -31,6 +31,31 @@ public partial class DashboardViewModel : FolderBrowserBase
     }
 
     [ObservableProperty] private object _currentPage = new();
+
+    /// <summary> Pages opened over others, so going back returns to each one as it was left. </summary>
+    private readonly Stack<object> _pagesBelow = new();
+
+    /// <summary> Back at the main menu, nothing is underneath any more. </summary>
+    partial void OnCurrentPageChanged(object value)
+    {
+        if (value == this) _pagesBelow.Clear();
+    }
+
+    /// <summary> Opens <paramref name="page"/> over the current page, which <see cref="GoBack"/> returns to. </summary>
+    public void OpenPage(object page)
+    {
+        _pagesBelow.Push(CurrentPage);
+        CurrentPage = page;
+    }
+
+    /// <returns> False if there was no page underneath to go back to. </returns>
+    public bool GoBack()
+    {
+        if (!_pagesBelow.TryPop(out var below)) return false;
+
+        CurrentPage = below;
+        return true;
+    }
     [ObservableProperty] private string _bestAnswerStreakText = "0";
     [ObservableProperty] private bool _isGraphView;
     [ObservableProperty] private string _streakText = "0 Day Streak";

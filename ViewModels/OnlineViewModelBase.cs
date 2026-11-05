@@ -8,11 +8,14 @@ namespace ReviFlash.ViewModels;
 /// <summary> Shared by the signed-in cloud windows: the account line and a status with a spinner for server calls. </summary>
 public abstract partial class OnlineViewModelBase : ViewModelBase
 {
+    /// <summary> Run when the page is left, by whoever opened it. </summary>
+    public Action? OnLeave { get; set; }
+
     public string AccountText => $"Signed in as {AuthSession.Username}";
 
     [ObservableProperty] private string _statusMessage = string.Empty;
 
-    /// <summary> Shows a failure in a popup; supplied by the window. Without one, failures show in the status line. </summary>
+    /// <summary> Shows a failure in a popup; supplied by the page. Without one, failures show in the status line. </summary>
     public Func<string, Task>? ShowErrorAsync { get; set; }
 
     /// <summary> How long a success message stays before it fades. </summary>
