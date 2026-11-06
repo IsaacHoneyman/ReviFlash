@@ -656,7 +656,7 @@ public partial class DashboardView : UserControl
         var cards = FlashCardRepository.GetCardsForDeck(deck.ID);
         if (cards.Count == 0) return;
 
-        ShowReview(vm, new ReviewViewModel(cards, deck.ID));
+        ShowReview(vm, new ReviewViewModel(cards, deck.ID) { SessionTitle = deck.Name });
     }
 
     private void StartReviewSession(IReadOnlyList<FlashCardDeck> decks, ulong? groupId = null)
@@ -677,7 +677,9 @@ public partial class DashboardView : UserControl
 
         if (allCards.Count == 0) return;
 
-        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap, groupId);
+        var title = vm.StudyGroups.FirstOrDefault(group => group.ID == groupId)?.Name
+            ?? (decks.Count == 1 ? decks[0].Name : $"{decks.Count} sets");
+        var reviewVM = new ReviewViewModel(allCards, ulong.MaxValue, cardDeckMap, groupId) { SessionTitle = title };
         vm.CancelSelectionMode();
         ShowReview(vm, reviewVM);
     }

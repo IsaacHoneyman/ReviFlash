@@ -85,6 +85,7 @@ public partial class ReviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(BestAnswerStreakText))]
     [ObservableProperty] private int _bestAnswerStreak = 0;
     [NotifyPropertyChangedFor(nameof(ShowAnswerButtonVisible))]
+    [NotifyPropertyChangedFor(nameof(ShowMarkButtons))]
     [NotifyPropertyChangedFor(nameof(ShowBackAnswer))]
     [NotifyPropertyChangedFor(nameof(ShowBackSection))]
     [NotifyPropertyChangedFor(nameof(CanRetryLater))]
@@ -121,6 +122,12 @@ public partial class ReviewViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(KeyboardHint))]
     [ObservableProperty] private bool _isAnswerChecked = false;
     public bool ShowAnswerButtonVisible => IsFlipCard && !IsAnswerRevealed;
+
+    /// <summary> Correct and Incorrect, for marking yourself once a flip card's answer shows. </summary>
+    public bool ShowMarkButtons => IsFlipCard && IsAnswerRevealed;
+
+    /// <summary> What's being studied, shown at the top: the set, the group, or how many sets. </summary>
+    public string SessionTitle { get; init; } = "";
     public ObservableCollection<ReviewOptionItem> MultiChoiceAnswerOptions { get; } = new();
     public ObservableCollection<ReviewMatchRow> MatchRows { get; } = new();
     public ObservableCollection<ReviewMatchChip> MatchChips { get; } = new();
@@ -143,7 +150,7 @@ public partial class ReviewViewModel : ViewModelBase
     public bool CanRetryLater => MetaDataManager.Data.ShowRetryLaterButton && TotalCards > 1 && (IsAnswerChecked || (IsFlipCard && IsAnswerRevealed));
     public bool ShowFlipRetryLater => IsFlipCard && CanRetryLater;
     /// <summary> Match cards get a wider card, so the items and answers can sit side by side. </summary>
-    public double CardMaxWidth => IsMatchCard ? 1040 : 720;
+    public double CardMaxWidth => IsMatchCard ? 1100 : 860;
     public bool ShouldShowAnswerStreak => MetaDataManager.Data.ShowAnswerStreakInReview;
     public string CurrentAnswerStreakText => $"{CurrentAnswerStreak} in a row";
     public string BestAnswerStreakText => $"Best: {BestAnswerStreak}";

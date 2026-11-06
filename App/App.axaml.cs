@@ -70,10 +70,12 @@ public partial class App : Application
     {
         if (Current is null) return;
 
-        Current.Resources["SuccessForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#1D6A42") : Color.Parse("#44CC88"));
+        Current.Resources["SuccessForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#1D6A42") : Color.Parse("#8FCB9B"));
         Current.Resources["WarningForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#8A5A00") : Color.Parse("#FFCC66"));
         // #7F1726 is the lightest red that keeps 4.5:1 on a light background.
-        Current.Resources["DangerForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#7F1726") : Color.Parse("#FF8888"));
+        Current.Resources["DangerForeground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#7F1726") : Color.Parse("#E8907C"));
+        // A wash behind a wrong answer, faint enough to read the text on.
+        Current.Resources["DangerTintBackground"] = new SolidColorBrush(isLightTheme ? Color.Parse("#147F1726") : Color.Parse("#1AE8907C"));
         Current.Resources["SuccessBackground"] = new SolidColorBrush(Color.Parse("#2E9E44"));
         Current.Resources["DangerBackground"] = new SolidColorBrush(Color.Parse("#CC3D3D"));
         // Text on DangerBackground. Theme accents (IconForeground) can be nearly invisible on red.

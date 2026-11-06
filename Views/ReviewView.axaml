@@ -92,110 +92,119 @@
         <Style Selector="Button.chip:disabled">
             <Setter Property="Opacity" Value="0.3" />
         </Style>
+        <!-- A checked match pair: a line under each, and a soft red wash on the ones you got wrong. -->
         <Style Selector="Border.matchResult">
-            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SuccessForeground}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="16,12" />
-            <Setter Property="Margin" Value="0,4" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="12,11" />
         </Style>
         <Style Selector="Border.matchResult.wrong">
-            <Setter Property="BorderBrush" Value="{DynamicResource DangerForeground}" />
+            <Setter Property="Background" Value="{DynamicResource DangerTintBackground}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+
+        <!-- The bottom bar's buttons: their own width, side by side. -->
+        <Style Selector="Button.bar">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="MinWidth" Value="140" />
+            <Setter Property="Padding" Value="22,0" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <!-- The answer you're most likely to give, in the text colour rather than the accent. -->
+        <Style Selector="Button.bar.strong">
+            <Setter Property="Background" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppBackground}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.bar.strong:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.bar.strong:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppBackground}" />
+        </Style>
+        <Style Selector="Button.bar.strong:pointerover">
+            <Setter Property="Opacity" Value="0.88" />
+        </Style>
+        <Style Selector="Button.bar.plain">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+
+        <!-- What you study is set in the serif. -->
+        <Style Selector="views|MathText.question">
+            <Setter Property="TextElement.FontFamily" Value="{DynamicResource SerifFont}" />
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="views|MathText.answer">
+            <Setter Property="TextElement.FontFamily" Value="{DynamicResource SerifFont}" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="Opacity" Value="0.92" />
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto, *">
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto, *" Margin="24, 16, 24, 16" VerticalAlignment="Center">
-            <StackPanel Grid.Column="0" Spacing="8">
-                <StackPanel IsVisible="{Binding ShouldShowTimer}">
-                    <TextBlock Classes="prompt" Text="Time" />
-                    <TextBlock Text="{Binding TimerText}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                </StackPanel>
-                <StackPanel IsVisible="{Binding ShouldShowAnswerStreak}">
-                    <TextBlock Classes="prompt" Text="Streak" />
-                    <TextBlock Text="{Binding CurrentAnswerStreakText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                    <TextBlock Classes="caption" Text="{Binding BestAnswerStreakText}" />
+    <!-- A thin progress line, a header, the card (scrolling when it's long) and a bar of actions pinned at the bottom. -->
+    <Grid RowDefinitions="Auto, Auto, *, Auto">
+        <ProgressBar Grid.Row="0" Value="{Binding ProgressPercentage}" Maximum="100"
+            Height="3" MinHeight="3" CornerRadius="0" IsVisible="{Binding ShouldShowProgress}" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="16" Margin="16,12,24,0">
+            <Button Classes="iconButton" Background="Transparent" Click="QuitSession_Click" ToolTip.Tip="Quit and save progress (Esc)">
+                <Path Classes="icon" Data="{StaticResource IconClose}" />
+            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SessionTitle}" FontFamily="{DynamicResource SerifFont}" FontSize="18" FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" MaxWidth="420" TextTrimming="CharacterEllipsis" />
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
+                        IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
+                    <TextBlock Classes="prompt" Text="{Binding CardLabel}" VerticalAlignment="Center" />
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Grid.Column="1" HorizontalAlignment="Center" IsVisible="{Binding ShouldShowProgress}">
-                <TextBlock Classes="prompt" Text="Progress" HorizontalAlignment="Center" />
-                <TextBlock Text="{Binding ProgressCardCount}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" />
-                <TextBlock Classes="prompt" Text="{Binding ProgressPercentage, StringFormat='{}{0}%'}" HorizontalAlignment="Center" Margin="0,2,0,0" />
-                <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="6" CornerRadius="3" Margin="0,6,0,0" Width="140" />
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="22" VerticalAlignment="Center">
+                <TextBlock Classes="prompt" VerticalAlignment="Center" IsVisible="{Binding ShouldShowProgress}">
+                    <Run Text="{Binding CurrentNumber}" FontFamily="{DynamicResource MonoFont}" Foreground="{DynamicResource TextPrimary}" />
+                    <Run Text="{Binding TotalCards, StringFormat='of {0}'}" />
+                </TextBlock>
+                <TextBlock Classes="prompt" VerticalAlignment="Center" IsVisible="{Binding ShouldShowAnswerStreak}"
+                    ToolTip.Tip="{Binding BestAnswerStreakText}" Text="{Binding CurrentAnswerStreakText}" />
+                <TextBlock Classes="prompt" VerticalAlignment="Center" FontFamily="{DynamicResource MonoFont}"
+                    Text="{Binding TimerText}" IsVisible="{Binding ShouldShowTimer}" />
+                <Button Classes="iconButton" Background="Transparent" IsVisible="{Binding CanEditCard}"
+                    Click="EditCard_Click" ToolTip.Tip="Edit this card (E)">
+                    <Path Classes="icon" Data="{StaticResource IconEdit}" />
+                </Button>
             </StackPanel>
-
-            <Button Grid.Column="2" Classes="action secondary small" Content="Quit" Click="QuitSession_Click"
-                VerticalAlignment="Top" ToolTip.Tip="Quit and save progress (Esc)" />
         </Grid>
 
-        <Grid Grid.Row="1" Margin="0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                HorizontalScrollBarVisibility="Disabled"
-                VerticalAlignment="Center"
-                Margin="0,0,-16,0"
-                Padding="0,0,16,0">
-            <!-- Grows with the window up to a comfortable reading width, keeping a margin either side -->
-            <Border MaxWidth="{Binding CardMaxWidth}" Margin="48,0" Background="{DynamicResource CardBackground}" CornerRadius="26"
-                Padding="40,32" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                <StackPanel Spacing="20">
-                <!-- Card type, plus the deck in a study group -->
-                <Grid ColumnDefinitions="*, Auto, *">
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Path Classes="icon" Data="{StaticResource IconLeftRight}" Stroke="{DynamicResource TextSecondary}"
-                            IsVisible="{Binding IsReversedCard}" ToolTip.Tip="Asked back to front" />
-                        <TextBlock Classes="prompt" Text="{Binding CardLabel}" />
-                    </StackPanel>
-                    <Button Grid.Column="2" Classes="iconButton" HorizontalAlignment="Right" Margin="0,-12,-20,-12"
-                        IsVisible="{Binding CanEditCard}" Click="EditCard_Click" ToolTip.Tip="Edit this card (E)">
-                        <Path Classes="icon" Data="{StaticResource IconEdit}" />
-                    </Button>
-                </Grid>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <!-- A comfortable reading column, centred, with the text left-aligned in it. -->
+            <StackPanel MaxWidth="{Binding CardMaxWidth}" Margin="48,40,48,48" Spacing="22" VerticalAlignment="Center">
+                <views:MathText Classes="question" Text="{Binding CurrentCard.Front}" HorizontalAlignment="Stretch" />
 
-                <!-- Centred while they fit on one line; anything longer reads better left-aligned -->
-                <views:MathText Text="{Binding CurrentCard.Front}" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource TextPrimary}" IsCentered="True" />
-
-                <!-- Only once there's an answer to show, so unanswered cards have no empty band -->
-                <Separator Background="{DynamicResource CardBorder}" Opacity="0.3"
+                <Border Width="64" Height="1.5" HorizontalAlignment="Left" Background="{DynamicResource GroupCardBorder}"
                     IsVisible="{Binding ShowBackSection}" />
 
-                <views:MathText Text="{Binding CurrentCard.Back}" IsVisible="{Binding ShowBackSection}" HorizontalAlignment="Center" FontSize="18" Foreground="{DynamicResource TextSecondary}" IsCentered="True" />
+                <views:MathText Classes="answer" Text="{Binding CurrentCard.Back}" HorizontalAlignment="Stretch"
+                    IsVisible="{Binding ShowBackSection}" />
 
-                <StackPanel Spacing="12" Margin="0,8,0,0">
+                <StackPanel Spacing="14">
                     <!-- Result, for every card type that's checked rather than self-marked -->
                     <Panel IsVisible="{Binding IsAnswerChecked}">
-                        <TextBlock Classes="title" Text="✓ Correct!"
-                            Foreground="{DynamicResource SuccessForeground}" HorizontalAlignment="Center"
+                        <TextBlock Classes="sectionTitle" Text="✓ Correct" Foreground="{DynamicResource SuccessForeground}"
                             IsVisible="{Binding IsAnswerCorrect}" />
-                        <TextBlock Classes="title" Text="✕ Incorrect"
-                            Foreground="{DynamicResource DangerForeground}" HorizontalAlignment="Center"
+                        <TextBlock Classes="sectionTitle" Text="✕ Incorrect" Foreground="{DynamicResource DangerForeground}"
                             IsVisible="{Binding !IsAnswerCorrect}" />
                     </Panel>
-
-                    <StackPanel Spacing="12" IsVisible="{Binding IsFlipCard}">
-                        <Button Classes="action primary" Content="Show Answer" Click="ShowAnswer_Click"
-                            IsVisible="{Binding ShowAnswerButtonVisible}" />
-
-                        <UniformGrid Rows="1" ColumnSpacing="12" IsVisible="{Binding IsAnswerRevealed}">
-                            <Button Classes="action danger" Click="Incorrect_Click">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}" />
-                                    <TextBlock Text="Incorrect" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <Button Classes="action success" Click="Correct_Click">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Path Classes="icon" Data="{StaticResource IconCheck}" Stroke="{Binding $parent[Button].Foreground}" />
-                                    <TextBlock Text="Correct" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </UniformGrid>
-
-                        <!-- Puts the card back in the queue unmarked -->
-                        <Button Classes="action secondary" Content="Retry Later" Click="RetryLater_Click"
-                            IsVisible="{Binding ShowFlipRetryLater}" />
-                    </StackPanel>
 
                     <StackPanel Spacing="12" IsVisible="{Binding IsTypeCard}">
                         <StackPanel Spacing="12" IsVisible="{Binding !IsAnswerChecked}">
@@ -206,7 +215,6 @@
                                 Foreground="{DynamicResource TextPrimary}"
                                 BorderBrush="{DynamicResource CardBorder}"
                                 BorderThickness="1.5" />
-                            <Button Classes="action primary" Content="Submit Answer" Click="SubmitAnswer_Click" />
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding IsAnswerChecked}">
@@ -238,8 +246,6 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-
-                            <Button Classes="action primary" Content="Submit Answer" Click="SubmitAnswer_Click" />
                         </StackPanel>
 
                         <StackPanel Spacing="12" IsVisible="{Binding IsAnswerChecked}">
@@ -343,8 +349,6 @@
                                     </StackPanel>
                                 </Border>
                             </Grid>
-
-                            <Button Classes="action primary" Content="Submit Answer" Click="SubmitAnswer_Click" />
                         </StackPanel>
 
                         <!-- Each pair as answered, with the right answer under any that were wrong -->
@@ -352,29 +356,23 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:ReviewMatchRow">
                                     <Border Classes="matchResult" Classes.wrong="{Binding !IsCorrect}">
-                                        <Grid ColumnDefinitions="*, Auto, *">
-                                            <views:MathText Text="{Binding LeftText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                                FontSize="16" Foreground="{DynamicResource TextPrimary}" />
-                                            <TextBlock Grid.Column="1" Text="→" Margin="16,0"
-                                                VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" />
-                                            <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
-                                                <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding IsCorrect}">
-                                                    <TextBlock Text="✓" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SuccessForeground}" />
-                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                                        FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
-                                                </Grid>
-                                                <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding !IsCorrect}">
-                                                    <TextBlock Text="✕" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource DangerForeground}" />
-                                                    <views:MathText Grid.Column="1" Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                                        FontSize="15" Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding HasSelection}" />
-                                                    <TextBlock Grid.Column="1" Text="Nothing chosen" FontSize="15" VerticalAlignment="Center"
-                                                        Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding !HasSelection}" />
-                                                </Grid>
-                                                <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding !IsCorrect}">
-                                                    <TextBlock Text="✓" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SuccessForeground}" />
-                                                    <views:MathText Grid.Column="1" Text="{Binding CorrectRightText}" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                                                        FontSize="15" Foreground="{DynamicResource SuccessForeground}" />
-                                                </Grid>
+                                        <Grid ColumnDefinitions="28, 220, *" ColumnSpacing="12">
+                                            <TextBlock Text="✓" FontSize="15" VerticalAlignment="Top" Foreground="{DynamicResource SuccessForeground}" IsVisible="{Binding IsCorrect}" />
+                                            <TextBlock Text="✕" FontSize="15" VerticalAlignment="Top" Foreground="{DynamicResource DangerForeground}" IsVisible="{Binding !IsCorrect}" />
+                                            <views:MathText Grid.Column="1" Text="{Binding LeftText}" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                                                FontSize="15" TextElement.FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                                            <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Top">
+                                                <views:MathText Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" FontSize="16"
+                                                    TextElement.FontFamily="{DynamicResource SerifFont}" Foreground="{DynamicResource TextPrimary}"
+                                                    IsVisible="{Binding IsCorrect}" />
+                                                <views:MathText Text="{Binding SelectedRightText}" HorizontalAlignment="Stretch" FontSize="16"
+                                                    TextElement.FontFamily="{DynamicResource SerifFont}" Foreground="{DynamicResource TextSecondary}" Opacity="0.8"
+                                                    IsVisible="{Binding !IsCorrect}" />
+                                                <TextBlock Text="Nothing chosen" FontSize="15" Foreground="{DynamicResource TextSecondary}"
+                                                    IsVisible="{Binding !HasSelection}" />
+                                                <views:MathText Text="{Binding CorrectRightText}" HorizontalAlignment="Stretch" FontSize="16"
+                                                    TextElement.FontFamily="{DynamicResource SerifFont}" Foreground="{DynamicResource TextPrimary}"
+                                                    IsVisible="{Binding !IsCorrect}" />
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -402,23 +400,60 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- After any checked answer: Retry Later beside Next (Next alone if retrying is off) -->
-                    <UniformGrid Rows="1" ColumnSpacing="12" Margin="0,4,0,0" IsVisible="{Binding IsAnswerChecked}">
-                        <Button Classes="action secondary" Content="Retry Later" Click="RetryLater_Click"
-                            IsVisible="{Binding CanRetryLater}" />
-                        <Button Classes="action primary" Content="Next" Click="NextCard_Click" />
-                    </UniformGrid>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="3" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="24,14,24,18">
+            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="16">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Classes="bar strong" Content="Show Answer" Click="ShowAnswer_Click"
+                        IsVisible="{Binding ShowAnswerButtonVisible}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding ShowMarkButtons}">
+                        <Button Classes="bar secondary" Click="Incorrect_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}" />
+                                <TextBlock Text="Incorrect" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="bar strong" Click="Correct_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Classes="icon" Data="{StaticResource IconCheck}" Stroke="{Binding $parent[Button].Foreground}" />
+                                <TextBlock Text="Correct" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <Button Classes="bar strong" Content="Check Answer" Click="SubmitAnswer_Click">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!IsAnswerChecked" />
+                                <Binding Path="!IsFlipCard" />
+                                <Binding Path="!IsTrueFalseCard" />
+                            </MultiBinding>
+                        </Button.IsVisible>
+                    </Button>
+
+                    <Button Classes="bar strong" Content="Next Card" Click="NextCard_Click" IsVisible="{Binding IsAnswerChecked}" />
+
+                    <!-- Puts the card back in the queue unmarked -->
+                    <Button Classes="bar plain" Content="Retry Later" Click="RetryLater_Click" IsVisible="{Binding ShowFlipRetryLater}" />
+                    <Button Classes="bar plain" Content="Retry Later" Click="RetryLater_Click">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="IsAnswerChecked" />
+                                <Binding Path="CanRetryLater" />
+                            </MultiBinding>
+                        </Button.IsVisible>
+                    </Button>
+                    <Button Classes="bar plain" Content="Skip" Click="SkipCard_Click"
+                        IsVisible="{Binding CanSkip}" ToolTip.Tip="Skip this card (S)" />
                 </StackPanel>
 
-                <TextBlock Classes="caption" Text="{Binding KeyboardHint}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
-                    Opacity="0.75" />
-                </StackPanel>
-            </Border>
-            </ScrollViewer>
-
-            <Button Classes="action secondary small" Content="Skip" Click="SkipCard_Click"
-                VerticalAlignment="Bottom" Margin="0,0,24,16"
-                IsVisible="{Binding CanSkip}" ToolTip.Tip="Skip this card (S)" />
-        </Grid>
+                <TextBlock Grid.Column="2" Classes="caption" Text="{Binding KeyboardHint}" VerticalAlignment="Center"
+                    TextAlignment="Right" TextWrapping="Wrap" MaxWidth="560" />
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

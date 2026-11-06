@@ -223,6 +223,30 @@ public class ReviewViewModelTests
         Assert.Equal(shown, review.ShowBackSection);
     }
 
+    [Fact]
+    public void Correct_and_incorrect_show_once_a_flip_card_is_turned_over()
+    {
+        using var database = new TestDatabase();
+        var review = NewReview(DeckWith(new FlipFlashCard("Q", "A")).deck);
+        Assert.False(review.ShowMarkButtons);
+
+        review.Reveal();
+        Assert.True(review.ShowMarkButtons);
+    }
+
+    [Fact]
+    public void A_checked_typed_answer_never_shows_the_flip_cards_marking_buttons()
+    {
+        using var database = new TestDatabase();
+        var review = NewReview(DeckWith(new TypeFlashCard("Biggest US city?", "", "New York")).deck);
+
+        review.UserTypedAnswer = "New York";
+        review.CheckTypedAnswer();
+
+        Assert.True(review.IsAnswerChecked);
+        Assert.False(review.ShowMarkButtons);
+    }
+
     private static (FlashCardDeck deck, FlashCard card) DeckWith(FlashCard card)
     {
         var deck = new FlashCardDeck("Set");
