@@ -23,10 +23,9 @@
                 </ControlTemplate>
             </Setter>
         </Style>
+        <!-- A section's rows fill a column up to a comfortable width, from the left. -->
         <Style Selector="StackPanel.section">
-            <Setter Property="MaxWidth" Value="760" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="Margin" Value="48,4,24,32" />
+            <Setter Property="Margin" Value="48,4,0,32" />
         </Style>
         <Style Selector="StackPanel.section > TextBlock.title">
             <Setter Property="Margin" Value="0,0,0,6" />
@@ -80,6 +79,11 @@
         <TabControl Grid.Row="1" x:Name="Sections" Classes="sections" TabStripPlacement="Left">
             <TabItem Header="Appearance">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="808" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel Classes="section">
                         <TextBlock Classes="title" Text="Appearance" />
 
@@ -108,11 +112,17 @@
                             <CheckBox IsChecked="{Binding ShowAdditionalFieldLatexPreviews}" />
                         </HeaderedContentControl>
                     </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Review">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="808" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel Classes="section">
                         <TextBlock Classes="title" Text="Review" />
                         <TextBlock Classes="caption" Text="What shows around the card while you study." Margin="0,0,0,8" />
@@ -133,11 +143,17 @@
                             <CheckBox IsChecked="{Binding ShowAnswerStreakInReview}" />
                         </HeaderedContentControl>
                     </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Backup and import">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="808" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel Classes="section">
                         <TextBlock Classes="title" Text="Backup and import" />
                         <TextBlock Classes="caption" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -167,11 +183,17 @@
                         </HeaderedContentControl>
                         <TextBlock x:Name="AnkiImportStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="0,10,0,0" />
                     </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Updates">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="808" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel Classes="section">
                         <TextBlock Classes="title" Text="Updates" />
 
@@ -190,11 +212,17 @@
                             <TextBlock x:Name="UpdateStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
                         </DockPanel>
                     </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Account">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="808" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel Classes="section">
                         <TextBlock Classes="title" Text="Account" />
                         <TextBlock Classes="caption" TextWrapping="Wrap" Margin="0,0,0,8" IsVisible="{Binding !IsSignedIn}"
@@ -215,11 +243,17 @@
                             <TextBlock x:Name="AccountStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
                         </DockPanel>
                     </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Danger zone">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="808" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel Classes="section">
                         <TextBlock Classes="title" Text="Danger zone" Foreground="{DynamicResource DangerForeground}" />
                         <TextBlock Classes="caption" TextWrapping="Wrap" Margin="0,0,0,8"
@@ -234,6 +268,7 @@
 
                         <TextBlock x:Name="DeleteStatsStatusText" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="0,10,0,0" />
                     </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
         </TabControl>

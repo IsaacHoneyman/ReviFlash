@@ -494,8 +494,8 @@
 
             <Border Grid.Column="1" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1,0,0,0"
                 Padding="24,4,0,0" Margin="0,0,0,24">
-                <!-- Scrolls when the window is too short for every tile, such as after F11. -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <!-- Scrolls when the window is too short for every row, such as after F11; the padding keeps the scrollbar off the numbers. -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,16,0">
                 <StackPanel Spacing="12">
                     <Panel>
                         <TextBlock Classes="sideTitle" Text="Overall Stats" IsVisible="{Binding !IsViewingStats}" />
@@ -550,7 +550,7 @@
                 <Button Grid.Column="2" Classes="exit" Content="← Back" Click="ExitGraphView_Click" ToolTip.Tip="Back (Esc)" />
             </Grid>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,16,0">
                 <StackPanel Spacing="18">
                     <!-- One row of tiles; hidden ones (card stats for a note, the time split outside overall) take no space. -->
                     <UniformGrid Rows="1" Margin="-7,0">
