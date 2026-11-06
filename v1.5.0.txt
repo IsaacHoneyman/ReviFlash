@@ -4,3 +4,5 @@ Esc goes back a step on every page, and back from a page returns to wherever you
 Quitting with an unsaved card in the set editor asks before discarding it.
 A new default theme, Ink: warm charcoal with off-white text and one amber accent, set in Geist with Source Serif titles. Updating switches you to it once; your old theme is still in Themes.
 The moving background swirl is gone.
+The main menu shows folders as a row of their own above your sets, groups and notes, which now look like index cards.
+The main menu's stats keep to questions, accuracy and time; a set's, group's or note's own stats and the graph view still show the full breakdown.

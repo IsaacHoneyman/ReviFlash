@@ -16,20 +16,45 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <!-- Sidebar stat tile: Header is the label, Content the value. -->
+        <!-- Small caps over each part of the library. -->
+        <Style Selector="TextBlock.sectionLabel">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="LetterSpacing" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+
+        <!-- Card action buttons: small and quiet, so the hint beside them keeps room. -->
+        <Style Selector="controls|LibraryCard Button.iconButton">
+            <Setter Property="Padding" Value="7,6" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="controls|LibraryCard Button.iconButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+        </Style>
+
+        <!-- Sidebar stat row: Header is the label, Content the value. -->
         <Style Selector="HeaderedContentControl.statTile">
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Border Background="{DynamicResource StatTileBackground}" CornerRadius="10" Padding="16">
-                        <StackPanel>
-                            <ContentPresenter Content="{TemplateBinding Header}"
-                                FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                            <ContentPresenter Content="{TemplateBinding Content}"
-                                FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                        </StackPanel>
+                    <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="0,11">
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                            <ContentPresenter Content="{TemplateBinding Header}" VerticalAlignment="Center"
+                                FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                            <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalAlignment="Center"
+                                FontFamily="{DynamicResource MonoFont}" FontSize="16" FontWeight="Medium"
+                                Foreground="{DynamicResource TextPrimary}" />
+                        </Grid>
                     </Border>
                 </ControlTemplate>
             </Setter>
+        </Style>
+        <Style Selector="TextBlock.sideTitle">
+            <Setter Property="FontFamily" Value="{DynamicResource SerifFont}" />
+            <Setter Property="FontSize" Value="21" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
 
         <!-- Graph view tile, spaced by margin (the uniform grid it sits in has no spacing of its own); long values shrink to fit. -->
@@ -119,13 +144,12 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type models:Folder}">
-            <controls:LibraryCard Title="{Binding Name}" Icon="{StaticResource IconFolder}"
-                BorderBrush="{DynamicResource FolderCardBorder}" BadgeBrush="{DynamicResource FolderCardBorder}"
+            <controls:LibraryCard Classes="folder" Title="{Binding Name}" Icon="{StaticResource IconFolder}"
                 PointerPressed="Card_Click" KeyDown="Card_KeyDown">
                 <controls:LibraryCard.Badge>
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Classes="body badgeCount folderBadge" Text="{Binding ItemCount}" />
-                        <TextBlock Classes="hint badgeLabel folderBadge" Text="{Binding ItemCountLabel}" />
+                        <TextBlock Classes="caption badgeCount primary" Text="{Binding ItemCount}" />
+                        <TextBlock Classes="caption badgeLabel" Text="{Binding ItemCountLabel}" />
                     </StackPanel>
                 </controls:LibraryCard.Badge>
                 <controls:LibraryCard.Actions>
@@ -151,12 +175,11 @@
 
         <DataTemplate DataType="{x:Type models:StudyGroup}">
             <controls:LibraryCard Title="{Binding Name}"
-                BorderBrush="{DynamicResource GroupCardBorder}" BadgeBrush="{DynamicResource GroupCardBorder}"
                 PointerPressed="Card_Click" KeyDown="Card_KeyDown">
                 <controls:LibraryCard.Badge>
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Classes="body badgeCount groupBadge" Text="{Binding DeckCount}" />
-                        <TextBlock Classes="hint badgeLabel groupBadge" Text="{Binding DeckCountLabel}" />
+                        <TextBlock Classes="caption badgeCount primary" Text="{Binding DeckCount}" />
+                        <TextBlock Classes="caption badgeLabel" Text="{Binding DeckCountLabel}" />
                     </StackPanel>
                 </controls:LibraryCard.Badge>
                 <controls:LibraryCard.Actions>
@@ -185,8 +208,8 @@
                 PointerPressed="Card_Click" KeyDown="Card_KeyDown">
                 <controls:LibraryCard.Badge>
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Classes="body badgeCount" Text="{Binding CardCount}" />
-                        <TextBlock Classes="hint badgeLabel" Text="{Binding CardCountLabel}" />
+                        <TextBlock Classes="caption badgeCount primary" Text="{Binding CardCount}" />
+                        <TextBlock Classes="caption badgeLabel" Text="{Binding CardCountLabel}" />
                     </StackPanel>
                 </controls:LibraryCard.Badge>
                 <controls:LibraryCard.Actions>
@@ -216,12 +239,11 @@
 
         <DataTemplate DataType="{x:Type models:Note}">
             <controls:LibraryCard Title="{Binding Name}"
-                BorderBrush="{DynamicResource NoteCardBorder}" BadgeBrush="{DynamicResource NoteCardBorder}"
                 PointerPressed="Card_Click" KeyDown="Card_KeyDown">
                 <controls:LibraryCard.Badge>
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Classes="body badgeCount noteBadge" Text="{Binding WordCountText}" />
-                        <TextBlock Classes="hint badgeLabel noteBadge" Text="{Binding WordCountLabel}" />
+                        <TextBlock Classes="caption badgeCount primary" Text="{Binding WordCountText}" />
+                        <TextBlock Classes="caption badgeLabel" Text="{Binding WordCountLabel}" />
                     </StackPanel>
                 </controls:LibraryCard.Badge>
                 <controls:LibraryCard.Actions>
@@ -253,10 +275,9 @@
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="24, 16, 24, 0">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12"
                 VerticalAlignment="Center">
-                <TextBlock Text="ReviFlash" FontSize="30" FontWeight="Bold"
+                <TextBlock Text="ReviFlash" FontFamily="{DynamicResource SerifFont}" FontSize="30" FontWeight="SemiBold"
                     Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                <Border Background="{DynamicResource BadgeBackground}" CornerRadius="13"
-                    Padding="12,6" VerticalAlignment="Center">
+                <Border Padding="4,6,0,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <TextBlock Classes="body" Text="{Binding StreakText}"
                             VerticalAlignment="Center" />
@@ -339,8 +360,8 @@
                         CornerRadius="8" Margin="0,0,12,0"
                         Background="{DynamicResource CardBackground}" />
 
-                    <Button Grid.Column="2" x:Name="NewButton" Classes="secondary"
-                        Padding="14, 0" FontSize="14" FontWeight="Bold"
+                    <Button Grid.Column="2" x:Name="NewButton" Classes="primary"
+                        Padding="16, 0" FontSize="14"
                         ToolTip.Tip="Create a set, note, folder or group here (Ctrl+N)">
                         <TextBlock Text="+ New" VerticalAlignment="Center" />
                         <Button.Flyout>
@@ -364,13 +385,25 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                         Margin="0,0,-16,0"
                         Padding="0,0,16,0">
-                        <ItemsControl x:Name="LibraryItems" ItemsSource="{Binding DashboardItems}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel HorizontalAlignment="Left" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+                        <StackPanel>
+                            <TextBlock Classes="sectionLabel" Text="FOLDERS" IsVisible="{Binding HasFolderItems}" />
+                            <ItemsControl x:Name="FolderList" ItemsSource="{Binding FolderItems}" Margin="0,0,0,12">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel HorizontalAlignment="Left" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <TextBlock Classes="sectionLabel" Text="SETS, GROUPS AND NOTES" IsVisible="{Binding HasOtherItems}" />
+                            <ItemsControl x:Name="LibraryItems" ItemsSource="{Binding OtherItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel HorizontalAlignment="Left" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </StackPanel>
                     </ScrollViewer>
 
                     <TextBlock Text="{Binding EmptyStateText}"
@@ -388,8 +421,8 @@
                         Background="{DynamicResource CardBackground}"
                         BorderBrush="{DynamicResource CardBorder}"
                         BorderThickness="1"
-                        CornerRadius="14"
-                        Padding="10"
+                        CornerRadius="8"
+                        Padding="8"
                         Margin="0,0,0,24">
                         <StackPanel Orientation="Horizontal"
                             Spacing="12"
@@ -459,16 +492,17 @@
 
             </Grid>
 
-            <Border Grid.Column="1" Classes="card" Margin="0,0,0,24">
+            <Border Grid.Column="1" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1,0,0,0"
+                Padding="24,4,0,0" Margin="0,0,0,24">
                 <!-- Scrolls when the window is too short for every tile, such as after F11. -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12">
                     <Panel>
-                        <TextBlock Classes="sectionTitle" Text="Overall Stats" IsVisible="{Binding !IsViewingStats}" />
-                        <TextBlock Classes="sectionTitle" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingDeckStats}" />
-                        <TextBlock Classes="sectionTitle" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingGroupStats}" />
-                        <TextBlock Classes="sectionTitle" Text="{Binding SelectedNoteForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingNoteStats}" />
-                        <TextBlock Classes="sectionTitle" Text="{Binding CurrentStatsTitle, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingFolderStats}" />
+                        <TextBlock Classes="sideTitle" Text="Overall Stats" IsVisible="{Binding !IsViewingStats}" />
+                        <TextBlock Classes="sideTitle" Text="{Binding SelectedDeckForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingDeckStats}" />
+                        <TextBlock Classes="sideTitle" Text="{Binding SelectedGroupForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingGroupStats}" />
+                        <TextBlock Classes="sideTitle" Text="{Binding SelectedNoteForStats.Name, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingNoteStats}" />
+                        <TextBlock Classes="sideTitle" Text="{Binding CurrentStatsTitle, StringFormat='{}{0} Stats'}" IsVisible="{Binding IsViewingFolderStats}" />
                     </Panel>
 
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
@@ -479,14 +513,49 @@
                     </Grid>
 
                     <HeaderedContentControl Classes="statTile" Header="Total Questions" Content="{Binding TotalQuestions}" IsVisible="{Binding ShowCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Total Correct" Content="{Binding TotalCorrect}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Total Correct" Content="{Binding TotalCorrect}">
+                        <HeaderedContentControl.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ShowCardStats" />
+                                <Binding Path="IsViewingStats" />
+                            </MultiBinding>
+                        </HeaderedContentControl.IsVisible>
+                    </HeaderedContentControl>
                     <HeaderedContentControl Classes="statTile" Header="Accuracy Rate" Content="{Binding PercentageText}" IsVisible="{Binding ShowCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Grade" Content="{Binding Grade}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Grade" Content="{Binding Grade}">
+                        <HeaderedContentControl.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ShowCardStats" />
+                                <Binding Path="IsViewingStats" />
+                            </MultiBinding>
+                        </HeaderedContentControl.IsVisible>
+                    </HeaderedContentControl>
                     <HeaderedContentControl Classes="statTile" Header="Total Time" Content="{Binding TotalTimeFormatted}" />
-                    <!-- The total split up: reviewing and editing for everything but a note, and notes overall or for a folder. -->
-                    <HeaderedContentControl Classes="statTile" Header="Review Time" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Editing Time" Content="{Binding EditingTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Notes Time" Content="{Binding NoteTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
+                    <!-- The breakdown shows for one item's stats; overall, the main menu keeps to the totals and the graph view has the rest. -->
+                    <HeaderedContentControl Classes="statTile" Header="Review Time" Content="{Binding FlashcardTimeFormatted}">
+                        <HeaderedContentControl.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ShowCardStats" />
+                                <Binding Path="IsViewingStats" />
+                            </MultiBinding>
+                        </HeaderedContentControl.IsVisible>
+                    </HeaderedContentControl>
+                    <HeaderedContentControl Classes="statTile" Header="Editing Time" Content="{Binding EditingTimeFormatted}">
+                        <HeaderedContentControl.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ShowCardStats" />
+                                <Binding Path="IsViewingStats" />
+                            </MultiBinding>
+                        </HeaderedContentControl.IsVisible>
+                    </HeaderedContentControl>
+                    <HeaderedContentControl Classes="statTile" Header="Notes Time" Content="{Binding NoteTimeFormatted}">
+                        <HeaderedContentControl.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ShowTimeSplit" />
+                                <Binding Path="IsViewingStats" />
+                            </MultiBinding>
+                        </HeaderedContentControl.IsVisible>
+                    </HeaderedContentControl>
                     <HeaderedContentControl Classes="statTile" Header="Last Studied" Content="{Binding NoteLastStudiedText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Words" Content="{Binding NoteWordsText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Headings" Content="{Binding NoteHeadingsText}" IsVisible="{Binding IsViewingNoteStats}" />

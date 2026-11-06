@@ -2,62 +2,86 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:ReviFlash.Views.Controls">
 
+    <!-- An index card: the name over a coloured rule (BorderBrush), faint ruled lines below, hints bottom-left and actions bottom-right. -->
     <ControlTheme x:Key="{x:Type controls:LibraryCard}" TargetType="controls:LibraryCard">
-        <Setter Property="Width" Value="286" />
-        <Setter Property="Height" Value="145" />
+        <Setter Property="Width" Value="300" />
+        <Setter Property="Height" Value="150" />
         <Setter Property="Margin" Value="0,0,16,16" />
-        <Setter Property="Padding" Value="16" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
-        <Setter Property="BorderThickness" Value="1.5" />
-        <Setter Property="CornerRadius" Value="20" />
-        <Setter Property="BadgeBrush" Value="{DynamicResource BadgeBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GroupCardBorder}" />
+        <Setter Property="CornerRadius" Value="4" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Focusable" Value="True" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
                     CornerRadius="{TemplateBinding CornerRadius}"
-                    Padding="{TemplateBinding Padding}">
+                    BoxShadow="0 10 24 -14 #B0000000"
+                    ClipToBounds="True">
                     <Grid RowDefinitions="Auto, *">
 
-                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" ColumnSpacing="6" VerticalAlignment="Top">
-                            <Border Grid.Column="0"
-                                HorizontalAlignment="Left" VerticalAlignment="Center"
-                                Background="{TemplateBinding BadgeBrush}"
-                                CornerRadius="8" Padding="9,5"
-                                Height="28" MinHeight="28">
-                                <ContentPresenter Name="PART_BadgePresenter" Content="{TemplateBinding Badge}" />
-                            </Border>
-
-                            <ContentPresenter Grid.Column="1" Name="PART_ActionsPresenter"
-                                Content="{TemplateBinding Actions}"
-                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="16,14,16,10">
+                            <Path Grid.Column="0" Classes="icon" Margin="0,3,8,0" VerticalAlignment="Top"
+                                Data="{TemplateBinding Icon}"
+                                IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            <TextBlock Grid.Column="1" Text="{TemplateBinding Title}"
+                                FontFamily="{DynamicResource SerifFont}" FontSize="20" FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextTrimming="CharacterEllipsis" ToolTip.Tip="{TemplateBinding Title}" />
+                            <ContentPresenter Grid.Column="2" Name="PART_BadgePresenter" Content="{TemplateBinding Badge}"
+                                VerticalAlignment="Top" Margin="10,4,0,0"
+                                TextElement.Foreground="{DynamicResource TextSecondary}" />
                         </Grid>
+                        <Border Grid.Row="0" Height="1.5" VerticalAlignment="Bottom" Background="{TemplateBinding BorderBrush}" />
 
-                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                            <Border Height="64" VerticalAlignment="Center" Padding="0,4,0,0">
-                                <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
-                                    <Path Grid.Column="0" Classes="icon medium" Margin="0,0,10,0"
-                                        Data="{TemplateBinding Icon}"
-                                        IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                                    <controls:ClampedTextBlock Grid.Column="1" Text="{TemplateBinding Title}"
-                                        FontSize="22" FontWeight="SemiBold"
-                                        Foreground="{DynamicResource TextPrimary}"
-                                        TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2"
-                                        VerticalAlignment="Center" />
-                                </Grid>
-                            </Border>
-
-                            <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" />
-                        </StackPanel>
+                        <Border Grid.Row="1" Name="PART_Lines" Padding="16,6,10,10">
+                            <Border.Background>
+                                <VisualBrush TileMode="Tile" Stretch="None" AlignmentY="Top"
+                                    SourceRect="0,0,8,26" DestinationRect="0,0,8,26">
+                                    <VisualBrush.Visual>
+                                        <Canvas Width="8" Height="26">
+                                            <Rectangle Canvas.Top="25" Width="8" Height="1"
+                                                Fill="{DynamicResource TextPrimary}" Opacity="0.09" />
+                                        </Canvas>
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Border.Background>
+                            <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Bottom">
+                                <ContentPresenter Grid.Column="0" Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                    VerticalAlignment="Bottom" Margin="0,0,8,6" />
+                                <ContentPresenter Grid.Column="1" Name="PART_ActionsPresenter" Content="{TemplateBinding Actions}"
+                                    VerticalAlignment="Bottom" />
+                            </Grid>
+                        </Border>
 
                     </Grid>
                 </Border>
             </ControlTemplate>
         </Setter>
+
+        <!-- A folder holds things rather than being studied: a slim flat row with its icon, name, count and actions. -->
+        <Style Selector="^.folder">
+            <Setter Property="Width" Value="360" />
+            <Setter Property="Height" Value="52" />
+            <Setter Property="Background" Value="{DynamicResource StatTileBackground}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="14,0,8,0">
+                        <Grid ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                            <Path Grid.Column="0" Classes="icon" Data="{TemplateBinding Icon}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{TemplateBinding Title}" VerticalAlignment="Center"
+                                FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
+                                TextTrimming="CharacterEllipsis" ToolTip.Tip="{TemplateBinding Title}" />
+                            <ContentPresenter Grid.Column="2" Name="PART_BadgePresenter" Content="{TemplateBinding Badge}"
+                                VerticalAlignment="Center" TextElement.Foreground="{DynamicResource TextSecondary}" />
+                            <ContentPresenter Grid.Column="3" Name="PART_ActionsPresenter" Content="{TemplateBinding Actions}"
+                                VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
     </ControlTheme>
 
 </ResourceDictionary>

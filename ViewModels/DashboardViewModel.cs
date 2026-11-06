@@ -262,6 +262,12 @@ public partial class DashboardViewModel : FolderBrowserBase
     public ObservableCollection<StudyGroup> StudyGroups { get; } = [];
     public ObservableCollection<Note> Notes { get; } = [];
     public ObservableCollection<object> DashboardItems { get; } = [];
+
+    /// <summary> The visible items split for display: folders in their own section above everything else. </summary>
+    public ObservableCollection<object> FolderItems { get; } = [];
+    public ObservableCollection<object> OtherItems { get; } = [];
+    public bool HasFolderItems => FolderItems.Count > 0;
+    public bool HasOtherItems => OtherItems.Count > 0;
     public bool HasAttemptsData => AttemptsGraphPoints.Count > 0;
     public bool HasTimeData => TimeGraphPoints.Count > 0;
     public bool HasGraphData => HasAttemptsData || HasTimeData;
@@ -712,6 +718,10 @@ public partial class DashboardViewModel : FolderBrowserBase
         }
 
         DashboardItems.SyncTo<object>(ordered);
+        FolderItems.SyncTo<object>(ordered.OfType<Folder>().ToList<object>());
+        OtherItems.SyncTo<object>(ordered.Where(item => item is not Folder).ToList<object>());
+        OnPropertyChanged(nameof(HasFolderItems));
+        OnPropertyChanged(nameof(HasOtherItems));
     }
 
     protected override int TypePriority(ISearchable item) => item switch

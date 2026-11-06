@@ -78,22 +78,18 @@
     </Style>
 
     <Style Selector="ToggleButton.dashboardToggle">
-        <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Padding" Value="14,8" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
-    <Style Selector="ToggleButton.dashboardToggle:checked">
-        <Setter Property="Background" Value="{DynamicResource GradientStart}" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
-    </Style>
-    <!-- Fluent paints a checked toggle's inner presenter in its own accent blue; this keeps it in the theme's colour. -->
+    <!-- Fluent paints a checked toggle in its own accent blue; a switched-on toggle here is a quiet raised pill instead. -->
     <Style Selector="ToggleButton.dashboardToggle:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.dashboardToggle:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.dashboardToggle:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource GradientStart}" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
     </Style>
 
     <!-- Surfaces -->
@@ -246,7 +242,7 @@
     <Style Selector="controls|LibraryCard">
         <Setter Property="FocusAdorner">
             <FocusAdornerTemplate>
-                <Border CornerRadius="20" BorderThickness="2"
+                <Border CornerRadius="4" BorderThickness="2"
                     BorderBrush="{DynamicResource TextPrimary}" />
             </FocusAdornerTemplate>
         </Setter>

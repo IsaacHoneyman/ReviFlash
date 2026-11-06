@@ -4,7 +4,7 @@ using Avalonia.Media;
 
 namespace ReviFlash.Views.Controls;
 
-/// <summary> A dashboard library tile: count badge and action buttons on top, the item's name, then hint lines (Content). </summary>
+/// <summary> A main menu library card: the item's name and count, then hint lines (Content) beside its action buttons. </summary>
 public class LibraryCard : ContentControl
 {
     public static readonly StyledProperty<string?> TitleProperty =
@@ -16,13 +16,10 @@ public class LibraryCard : ContentControl
     public static readonly StyledProperty<object?> BadgeProperty =
         AvaloniaProperty.Register<LibraryCard, object?>(nameof(Badge));
 
-    public static readonly StyledProperty<IBrush?> BadgeBrushProperty =
-        AvaloniaProperty.Register<LibraryCard, IBrush?>(nameof(BadgeBrush));
-
     public static readonly StyledProperty<object?> ActionsProperty =
         AvaloniaProperty.Register<LibraryCard, object?>(nameof(Actions));
 
-    /// <summary> The item's name, shown large in the middle of the card. </summary>
+    /// <summary> The item's name, shown large at the top of the card. </summary>
     public string? Title
     {
         get => GetValue(TitleProperty);
@@ -36,20 +33,14 @@ public class LibraryCard : ContentControl
         set => SetValue(IconProperty, value);
     }
 
-    /// <summary> Top-left badge content, e.g. a count and its noun. </summary>
+    /// <summary> Shown beside the name, e.g. a count and its noun. </summary>
     public object? Badge
     {
         get => GetValue(BadgeProperty);
         set => SetValue(BadgeProperty, value);
     }
 
-    public IBrush? BadgeBrush
-    {
-        get => GetValue(BadgeBrushProperty);
-        set => SetValue(BadgeBrushProperty, value);
-    }
-
-    /// <summary> Top-right content, usually a row of icon buttons. </summary>
+    /// <summary> Bottom-right content, usually a row of icon buttons. </summary>
     public object? Actions
     {
         get => GetValue(ActionsProperty);

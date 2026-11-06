@@ -9,16 +9,16 @@
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Ink}">
             <SolidColorBrush x:Key="AppBackground" Color="#18181A" />
 
-            <SolidColorBrush x:Key="CardBackground" Color="#232326" />
-            <SolidColorBrush x:Key="CardBorder" Color="#2E2E33" />
+            <SolidColorBrush x:Key="CardBackground" Color="#29292D" />
+            <SolidColorBrush x:Key="CardBorder" Color="#38383E" />
             <SolidColorBrush x:Key="GroupCardBorder" Color="#C98A6B" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#A39F95" />
+            <SolidColorBrush x:Key="FolderCardBorder" Color="#E8B48A" />
             <SolidColorBrush x:Key="GroupBadgeForeground" Color="#18181A" />
             <SolidColorBrush x:Key="FolderBadgeForeground" Color="#18181A" />
             <SolidColorBrush x:Key="NoteCardBorder" Color="#8FA9C8" />
             <SolidColorBrush x:Key="NoteBadgeForeground" Color="#18181A" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#2C2C31" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#26262A" />
+            <SolidColorBrush x:Key="BadgeBackground" Color="#34343A" />
+            <SolidColorBrush x:Key="StatTileBackground" Color="#1F1F22" />
 
             <SolidColorBrush x:Key="TextPrimary" Color="#ECE8DF" />
             <SolidColorBrush x:Key="TextSecondary" Color="#A39F95" />

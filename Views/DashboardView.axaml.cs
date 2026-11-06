@@ -57,7 +57,7 @@ public partial class DashboardView : UserControl
         if (DataContext is not DashboardViewModel { IsGraphView: false } || !IsEffectivelyVisible) return;
 
         var focused = _topLevel?.FocusManager?.GetFocusedElement();
-        if (focused is not null && FocusedCardIndex(focused) < 0) return;
+        if (focused is not null && FocusedCard(focused).Section < 0) return;
 
         MoveCardFocus(move);
         e.Handled = true;
@@ -90,18 +90,18 @@ public partial class DashboardView : UserControl
         else if (Shortcuts.IsPlain(e, Key.Escape))
         {
             if (focused == SearchBox && vm.IsSearching) vm.SearchText = "";
-            else if (focused == SearchBox) FocusCard(0);
+            else if (focused == SearchBox) MoveCardFocus(GridMove.First);
             else if (!vm.BackOut()) ConfirmQuit();
         }
         else if (focused == SearchBox && Shortcuts.IsPlain(e, Key.Down))
         {
-            FocusCard(0);
+            MoveCardFocus(GridMove.First);
         }
         else if (focused is TextBox || vm.IsGraphView || e.KeyModifiers != KeyModifiers.None)
         {
             return;
         }
-        else if (FocusedCardIndex(focused) is var index and >= 0 && LibraryItems.ContainerFromIndex(index) is { } container)
+        else if (FocusedCard(focused) is var (section, index) && section >= 0 && Sections[section].ContainerFromIndex(index) is { } container)
         {
             if (!RunCardShortcut(CardIn(container), e.Key)) return;
         }
@@ -130,17 +130,22 @@ public partial class DashboardView : UserControl
         SearchBox.SelectAll();
     }
 
+    /// <summary> The library's sections top to bottom: folders, then everything else. </summary>
+    private ItemsControl[] Sections => [FolderList, LibraryItems];
+
     private void MoveCardFocus(GridMove move)
     {
-        int target = GridNavigation.Move(FocusedCardIndex(_topLevel?.FocusManager?.GetFocusedElement()), LibraryItems.ItemCount, CardColumns(), move);
+        var (section, index) = FocusedCard(_topLevel?.FocusManager?.GetFocusedElement());
+        var sizes = Sections.Select(list => (list.ItemCount, CardColumns(list))).ToArray();
+        var (targetSection, target) = GridNavigation.MoveAcross(sizes, section, index, move);
 
-        if (target < 0) FocusSearch();
-        else FocusCard(target);
+        if (targetSection < 0) FocusSearch();
+        else FocusCard(targetSection, target);
     }
 
-    private void FocusCard(int index)
+    private void FocusCard(int section, int index)
     {
-        if (LibraryItems.ContainerFromIndex(index) is not { } container || CardIn(container) is not { } card) return;
+        if (Sections[section].ContainerFromIndex(index) is not { } container || CardIn(container) is not { } card) return;
 
         card.Focus(NavigationMethod.Directional);
         card.BringIntoView();
@@ -149,24 +154,27 @@ public partial class DashboardView : UserControl
     private static LibraryCard? CardIn(Control container) =>
         container as LibraryCard ?? container.GetVisualDescendants().OfType<LibraryCard>().FirstOrDefault();
 
-    /// <summary> The library position of the card holding <paramref name="focused"/>, or -1. </summary>
-    private int FocusedCardIndex(IInputElement? focused)
+    /// <summary> The section and position of the card holding <paramref name="focused"/>, or (-1, -1). </summary>
+    private (int Section, int Index) FocusedCard(IInputElement? focused)
     {
+        var sections = Sections;
         for (var control = focused as Visual; control is not null; control = control.GetVisualParent())
         {
-            if (control is Control c && LibraryItems.IndexFromContainer(c) is var index and >= 0) return index;
+            if (control is not Control c) continue;
+            for (int section = 0; section < sections.Length; section++)
+                if (sections[section].IndexFromContainer(c) is var index and >= 0) return (section, index);
         }
 
-        return -1;
+        return (-1, -1);
     }
 
-    /// <summary> Cards on the first row: every row holds the same number. </summary>
-    private int CardColumns()
+    /// <summary> Items on a section's first row: every row holds the same number. </summary>
+    private static int CardColumns(ItemsControl list)
     {
-        if (LibraryItems.ContainerFromIndex(0) is not { } first) return 1;
+        if (list.ContainerFromIndex(0) is not { } first) return 1;
 
         int columns = 1;
-        while (LibraryItems.ContainerFromIndex(columns) is { } next && Math.Abs(next.Bounds.Top - first.Bounds.Top) < 1) columns++;
+        while (list.ContainerFromIndex(columns) is { } next && Math.Abs(next.Bounds.Top - first.Bounds.Top) < 1) columns++;
         return columns;
     }
 
