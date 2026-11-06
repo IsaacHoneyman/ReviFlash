@@ -19,6 +19,31 @@ public class DeckEditorViewModelTests
         FlashCardRepository.GetAllDecks().Single(d => d.ID == editor.CurrentDeck.ID).Name;
 
     [Fact]
+    public void The_card_being_edited_is_known_until_it_is_saved()
+    {
+        using var database = new TestDatabase();
+        var editor = NewEditor();
+        var card = new FlipFlashCard("Q", "A");
+        FlashCardRepository.SaveNewCard(card, editor.CurrentDeck.ID);
+        editor.Cards.Add(card);
+
+        editor.BeginEditCard(card);
+        Assert.Same(card, editor.EditingCard);
+
+        editor.AddNewCard();
+        Assert.Null(editor.EditingCard);
+    }
+
+    [Fact]
+    public void A_card_in_the_list_is_highlighted_only_while_it_is_in_the_editor()
+    {
+        var same = ReviFlash.Converters.AllEqualConverter.Instance;
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        Assert.Equal(true, same.Convert(new List<object?> { 5UL, 5UL }, typeof(bool), null, culture));
+        Assert.Equal(false, same.Convert(new List<object?> { 5UL, null }, typeof(bool), null, culture));
+    }
+
+    [Fact]
     public void A_blank_set_name_is_never_saved()
     {
         using var database = new TestDatabase();

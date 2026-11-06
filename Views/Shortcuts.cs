@@ -28,9 +28,20 @@ internal static class Shortcuts
         (controls.OfType<Button>().FirstOrDefault(b => b.IsDefault) ?? controls.FirstOrDefault())?.Focus();
     }
 
-    /// <summary> Whether a key belongs to <paramref name="page"/>: pressed inside it, or with nothing focused, and not while a dialog covers it. </summary>
+    /// <summary> Whether a key belongs to <paramref name="page"/>: pressed inside it, or with nothing (or something no longer shown) focused, and not while a dialog covers it. </summary>
     public static bool IsForPage(Visual page, KeyEventArgs e) =>
-        !DialogLayer.IsOpenOver(page) && (e.Source is TopLevel || (e.Source is Visual source && (source == page || page.IsVisualAncestorOf(source))));
+        !DialogLayer.IsOpenOver(page)
+        && (e.Source is TopLevel || (e.Source is Visual source && (source == page || page.IsVisualAncestorOf(source) || source.GetVisualRoot() is null)));
+
+    /// <summary> Items on the first row of a wrapping list: every row holds the same number. </summary>
+    public static int ColumnsIn(ItemsControl list)
+    {
+        if (list.ContainerFromIndex(0) is not { } first) return 1;
+
+        int columns = 1;
+        while (list.ContainerFromIndex(columns) is { } next && Math.Abs(next.Bounds.Top - first.Bounds.Top) < 1) columns++;
+        return columns;
+    }
 
     /// <summary> Esc runs <paramref name="leave"/> while <paramref name="page"/> is showing, unless something on it used the key first or a dialog is open. </summary>
     public static void LeaveOnEscape(Control page, Action leave)

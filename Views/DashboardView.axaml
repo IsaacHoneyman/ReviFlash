@@ -62,13 +62,15 @@
             <Setter Property="Margin" Value="7,0" />
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Border Background="{DynamicResource StatTileBackground}" CornerRadius="16" Padding="18">
-                        <StackPanel>
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                        CornerRadius="8" Padding="18,16">
+                        <StackPanel Spacing="4">
                             <ContentPresenter Content="{TemplateBinding Header}"
                                 FontSize="12" Foreground="{DynamicResource TextSecondary}" />
                             <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
                                 <ContentPresenter Content="{TemplateBinding Content}"
-                                    FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    FontFamily="{DynamicResource MonoFont}" FontSize="26" FontWeight="Medium"
+                                    Foreground="{DynamicResource TextPrimary}" />
                             </Viewbox>
                         </StackPanel>
                     </Border>
@@ -87,19 +89,17 @@
 
         <!-- Leaves the stats or graph view. -->
         <Style Selector="Button.exit">
-            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="16,10" />
-            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Height" Value="38" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Opacity" Value="0.85" />
         </Style>
         <Style Selector="Button.exit /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
@@ -508,54 +508,19 @@
                     <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
                         <ComboBox Grid.Column="0" Classes="timePeriod"
                             ItemsSource="{Binding TimePeriods}" SelectedItem="{Binding SelectedTimePeriod}" />
-                        <Button Grid.Column="1" Classes="exit" Content="Exit" Click="CloseDecKStats_Click"
+                        <Button Grid.Column="1" Classes="exit" Content="Close" Click="CloseDecKStats_Click"
                             IsVisible="{Binding IsViewingStats}" />
                     </Grid>
 
                     <HeaderedContentControl Classes="statTile" Header="Total Questions" Content="{Binding TotalQuestions}" IsVisible="{Binding ShowCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Total Correct" Content="{Binding TotalCorrect}">
-                        <HeaderedContentControl.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ShowCardStats" />
-                                <Binding Path="IsViewingStats" />
-                            </MultiBinding>
-                        </HeaderedContentControl.IsVisible>
-                    </HeaderedContentControl>
+                    <HeaderedContentControl Classes="statTile" Header="Total Correct" Content="{Binding TotalCorrect}" IsVisible="{Binding ShowCardStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Accuracy Rate" Content="{Binding PercentageText}" IsVisible="{Binding ShowCardStats}" />
-                    <HeaderedContentControl Classes="statTile" Header="Grade" Content="{Binding Grade}">
-                        <HeaderedContentControl.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ShowCardStats" />
-                                <Binding Path="IsViewingStats" />
-                            </MultiBinding>
-                        </HeaderedContentControl.IsVisible>
-                    </HeaderedContentControl>
+                    <HeaderedContentControl Classes="statTile" Header="Grade" Content="{Binding Grade}" IsVisible="{Binding ShowCardStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Total Time" Content="{Binding TotalTimeFormatted}" />
-                    <!-- The breakdown shows for one item's stats; overall, the main menu keeps to the totals and the graph view has the rest. -->
-                    <HeaderedContentControl Classes="statTile" Header="Review Time" Content="{Binding FlashcardTimeFormatted}">
-                        <HeaderedContentControl.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ShowCardStats" />
-                                <Binding Path="IsViewingStats" />
-                            </MultiBinding>
-                        </HeaderedContentControl.IsVisible>
-                    </HeaderedContentControl>
-                    <HeaderedContentControl Classes="statTile" Header="Editing Time" Content="{Binding EditingTimeFormatted}">
-                        <HeaderedContentControl.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ShowCardStats" />
-                                <Binding Path="IsViewingStats" />
-                            </MultiBinding>
-                        </HeaderedContentControl.IsVisible>
-                    </HeaderedContentControl>
-                    <HeaderedContentControl Classes="statTile" Header="Notes Time" Content="{Binding NoteTimeFormatted}">
-                        <HeaderedContentControl.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ShowTimeSplit" />
-                                <Binding Path="IsViewingStats" />
-                            </MultiBinding>
-                        </HeaderedContentControl.IsVisible>
-                    </HeaderedContentControl>
+                    <!-- The total split up: reviewing and editing for everything but a note, and notes overall or for a folder. -->
+                    <HeaderedContentControl Classes="statTile" Header="Review Time" Content="{Binding FlashcardTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Editing Time" Content="{Binding EditingTimeFormatted}" IsVisible="{Binding ShowCardStats}" />
+                    <HeaderedContentControl Classes="statTile" Header="Notes Time" Content="{Binding NoteTimeFormatted}" IsVisible="{Binding ShowTimeSplit}" />
                     <HeaderedContentControl Classes="statTile" Header="Last Studied" Content="{Binding NoteLastStudiedText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Words" Content="{Binding NoteWordsText}" IsVisible="{Binding IsViewingNoteStats}" />
                     <HeaderedContentControl Classes="statTile" Header="Headings" Content="{Binding NoteHeadingsText}" IsVisible="{Binding IsViewingNoteStats}" />
@@ -563,7 +528,7 @@
 
                     <Button Classes="secondary" Click="GraphStats_Click"
                         Content="Graph View"
-                        CornerRadius="10" Padding="14, 10" FontSize="14" />
+                        Padding="14, 10" FontSize="14" />
                 </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -582,7 +547,7 @@
                 <ComboBox Grid.Column="1" Classes="timePeriod" Width="240" VerticalAlignment="Center"
                     ItemsSource="{Binding TimePeriods}" SelectedItem="{Binding SelectedTimePeriod}" />
 
-                <Button Grid.Column="2" Classes="exit" Content="Exit" Click="ExitGraphView_Click" />
+                <Button Grid.Column="2" Classes="exit" Content="← Back" Click="ExitGraphView_Click" ToolTip.Tip="Back (Esc)" />
             </Grid>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -650,7 +615,7 @@
 
                                                 <Border Height="160" VerticalAlignment="Bottom" HorizontalAlignment="Center">
                                                     <Border Width="28" Height="{Binding AttemptsBarHeight}"
-                                                        CornerRadius="6" ClipToBounds="True" Background="{DynamicResource ChartAttemptsBrush}"
+                                                        CornerRadius="3" ClipToBounds="True" Background="{DynamicResource ChartAttemptsBrush}"
                                                         VerticalAlignment="Bottom"
                                                         IsVisible="{Binding HasAttempts}"
                                                         ToolTip.Tip="{Binding AttemptsTooltip}">
@@ -676,7 +641,7 @@
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Spacing="4">
                                     <TextBlock Classes="sectionTitle" Text="Study Time Chart" />
-                                    <TextBlock Classes="caption" Text="The bar height shows total time spent: blue is reviewing, amber is editing sets, purple is notes." />
+                                    <TextBlock Classes="caption" Text="The bar height shows total time spent: blue is reviewing, amber is editing sets, violet is notes." />
                                 </StackPanel>
 
                                 <ComboBox Grid.Column="1" VerticalAlignment="Top"
@@ -713,7 +678,7 @@
                                                 <!-- Reviewing time, with editing and then note time stacked at the bottom. -->
                                                 <Border Height="160" VerticalAlignment="Bottom" HorizontalAlignment="Center">
                                                     <Border Width="28" Height="{Binding TimeBarHeight}"
-                                                        CornerRadius="6" ClipToBounds="True" Background="{DynamicResource ChartReviewBrush}"
+                                                        CornerRadius="3" ClipToBounds="True" Background="{DynamicResource ChartReviewBrush}"
                                                         VerticalAlignment="Bottom"
                                                         IsVisible="{Binding HasTime}"
                                                         ToolTip.Tip="{Binding TimeTooltip}">
@@ -756,7 +721,7 @@
                                                 Padding="7,2" VerticalAlignment="Center">
                                                 <TextBlock Classes="hint" Text="{Binding Kind}" />
                                             </Border>
-                                            <Border Grid.Column="2" Height="14" CornerRadius="5" HorizontalAlignment="Left"
+                                            <Border Grid.Column="2" Height="14" CornerRadius="3" HorizontalAlignment="Left"
                                                 Width="{Binding BarWidth}" Background="{DynamicResource GradientStart}"
                                                 VerticalAlignment="Center" />
                                             <TextBlock Classes="body" Grid.Column="3" Text="{Binding TimeText}"

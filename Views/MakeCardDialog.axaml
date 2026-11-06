@@ -30,7 +30,7 @@
 
             <Grid Grid.Row="1" ColumnDefinitions="3*, 2*" ColumnSpacing="20">
 
-                <Border Grid.Column="0" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
+                <Border Grid.Column="0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="8" Padding="20">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel Spacing="10" x:Name="FieldsPanel">
                             <ComboBox ItemsSource="{Binding CardTypes}" SelectedItem="{Binding SelectedCardType}"
@@ -67,10 +67,10 @@
                     </ScrollViewer>
                 </Border>
 
-                <Border Grid.Column="1" Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20">
+                <Border Grid.Column="1" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="8" Padding="20">
                     <Grid RowDefinitions="Auto, Auto, *" RowSpacing="8">
-                        <TextBlock Grid.Row="0" Classes="sectionTitle" Text="Add to Set" />
-                        <Border Grid.Row="1" Background="{DynamicResource BadgeBackground}" CornerRadius="8" Padding="12,8">
+                        <TextBlock Grid.Row="0" Classes="label" Text="ADD TO SET" />
+                        <Border Grid.Row="1" Background="{DynamicResource BadgeBackground}" CornerRadius="6" Padding="12,8">
                             <TextBlock Classes="heading" Text="{Binding SelectedDeckText}" TextTrimming="CharacterEllipsis" />
                         </Border>
                         <views:DeckFolderBrowserView Grid.Row="2" DataContext="{Binding DeckBrowser}" />

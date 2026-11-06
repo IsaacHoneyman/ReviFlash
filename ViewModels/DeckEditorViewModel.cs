@@ -254,6 +254,9 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
 
     public bool IsEditing(FlashCard card) => _editingCard?.ID == card.ID;
 
+    /// <summary> The saved card in the editor, or null while writing a new one. </summary>
+    public FlashCard? EditingCard => _editingCard;
+
     public void MoveCard(FlashCard card, FlashCardDeck target)
     {
         if (target.ID == CurrentDeck.ID) return;
@@ -444,6 +447,7 @@ public partial class DeckEditorViewModel : ViewModelBase, IDisposable
         ValidationMessage = "";
         OnPropertyChanged(nameof(SaveButtonText));
         OnPropertyChanged(nameof(EditorTitle));
+        OnPropertyChanged(nameof(EditingCard));
         _savedState = CaptureState();
     }
 

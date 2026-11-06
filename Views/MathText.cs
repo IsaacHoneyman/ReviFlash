@@ -361,7 +361,7 @@ public class MathText : Decorator
         return paragraph;
     }
 
-    private static readonly FontFamily CodeFont = new("Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace");
+    private static readonly FontFamily CodeFont = new("fonts:Geist#Geist Mono");
 
     private Run CreateRun(TextSegment text)
     {

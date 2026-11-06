@@ -1,24 +1,84 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
-using ReviFlash.Views.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using ReviFlash.Data.Backup.Local;
 using ReviFlash.Data.Local;
 using ReviFlash.Data.Online;
+using ReviFlash.Utilities;
 using ReviFlash.ViewModels;
+using ReviFlash.Views.Controls;
 using static ReviFlash.Utilities.TextUtility;
 
 namespace ReviFlash.Views;
 
 public partial class SettingsView : UserControl
 {
+    private TopLevel? _topLevel;
+
     public SettingsView()
     {
         InitializeComponent();
         Shortcuts.LeaveOnEscape(this, Leave);
     }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        // On the window, so the arrows work wherever the focus is.
+        _topLevel = TopLevel.GetTopLevel(this);
+        _topLevel?.AddHandler(KeyDownEvent, Sections_KeyDown, RoutingStrategies.Tunnel);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        _topLevel?.RemoveHandler(KeyDownEvent, Sections_KeyDown);
+        _topLevel = null;
+    }
+
+    /// <summary> Two panes: Up and Down change section in the list or move between settings in a section, Right steps into the section and Left back to the list. </summary>
+    private void Sections_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyModifiers != KeyModifiers.None || !Shortcuts.IsForPage(this, e)) return;
+        if (e.Key is not (Key.Up or Key.Down or Key.Left or Key.Right)) return;
+
+        var focused = _topLevel?.FocusManager?.GetFocusedElement();
+        if (focused is TextBox or ComboBox) return;
+
+        var settings = SectionControls();
+        int inSection = focused is Control control ? settings.IndexOf(control) : -1;
+        e.Handled = true;
+
+        if (e.Key == Key.Left) FocusSectionList();
+        else if (e.Key == Key.Right) settings.FirstOrDefault()?.Focus(NavigationMethod.Directional);
+        else if (inSection >= 0)
+        {
+            int target = GridNavigation.Move(inSection, settings.Count, 1, e.Key == Key.Up ? GridMove.Up : GridMove.Down);
+            if (target >= 0) settings[target].Focus(NavigationMethod.Directional);
+        }
+        else
+        {
+            int target = GridNavigation.Move(Sections.SelectedIndex, Sections.ItemCount, 1, e.Key == Key.Up ? GridMove.Up : GridMove.Down);
+            if (target >= 0) Sections.SelectedIndex = target;
+            FocusSectionList();
+        }
+    }
+
+    private void FocusSectionList() => (Sections.ContainerFromIndex(Sections.SelectedIndex) as TabItem)?.Focus(NavigationMethod.Directional);
+
+    /// <summary> The settings in the open section that take the keyboard, top to bottom. </summary>
+    private List<Control> SectionControls() =>
+        Sections.GetVisualDescendants().OfType<StackPanel>().FirstOrDefault(panel => panel.Classes.Contains("section") && panel.IsEffectivelyVisible)
+            ?.GetVisualDescendants().OfType<Control>()
+            .Where(c => c is CheckBox or Button && c.Focusable && c.IsEffectivelyVisible && c.IsEffectivelyEnabled)
+            .ToList() ?? [];
 
     private DashboardViewModel? Dashboard => TopLevel.GetTopLevel(this)?.DataContext as DashboardViewModel;
 

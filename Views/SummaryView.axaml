@@ -4,25 +4,24 @@
     x:Class="ReviFlash.Views.SummaryView"
     x:DataType="vm:SummaryViewModel">
 
-    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Border Width="420" Background="{DynamicResource CardBackground}" CornerRadius="26"
-            Padding="32">
-            <StackPanel Spacing="20" HorizontalAlignment="Center">
-                <StackPanel HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Classes="title" Text="Session Complete!" HorizontalAlignment="Center" />
-                    <TextBlock Classes="body" Text="{Binding SessionMarker}"
-                        Foreground="{DynamicResource WarningForeground}" FontStyle="Italic" HorizontalAlignment="Center"
-                        IsVisible="{Binding IsPartialSession}" />
-                </StackPanel>
-                <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontSize="64"
-                    FontWeight="Black" Foreground="{DynamicResource GradientStart}" HorizontalAlignment="Center" />
-                <TextBlock Classes="heading" Text="{Binding Grade, StringFormat='Grade: {0}'}" HorizontalAlignment="Center"
-                    Foreground="{DynamicResource TextSecondary}" />
-                <TextBlock Classes="heading" Text="{Binding TimeFormatted, StringFormat='Time: {0}'}" HorizontalAlignment="Center"
-                    Foreground="{DynamicResource TextSecondary}" />
-                <Button Classes="action primary" Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True" IsCancel="True"
-                    Margin="0,20,0,0" ToolTip.Tip="Back to your sets (Enter)" />
-            </StackPanel>
-        </Border>
-    </Grid>
+    <!-- The result set on the page like a card's answer: the score large, grade and time under it. -->
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Width="420">
+        <TextBlock Classes="title" Text="Session complete" HorizontalAlignment="Center" />
+        <TextBlock Classes="body" Text="{Binding SessionMarker}"
+            Foreground="{DynamicResource WarningForeground}" FontStyle="Italic" HorizontalAlignment="Center"
+            IsVisible="{Binding IsPartialSession}" />
+
+        <TextBlock Text="{Binding Percentage, StringFormat='{}{0}%'}" FontFamily="{DynamicResource SerifFont}" FontSize="96"
+            FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" Margin="0,12,0,0" />
+        <Border Width="64" Height="1.5" Background="{DynamicResource GroupCardBorder}" HorizontalAlignment="Center" />
+
+        <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center" Margin="0,8,0,0">
+            <TextBlock Classes="heading secondary" Text="{Binding Grade, StringFormat='Grade {0}'}" />
+            <TextBlock Classes="heading secondary" Text="{Binding TimeFormatted}" FontFamily="{DynamicResource MonoFont}" />
+        </StackPanel>
+
+        <Button Classes="primary" Content="Finish" Click="ReturnToDashboard_Click" IsDefault="True" IsCancel="True"
+            Height="46" Width="200" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+            Focusable="False" Margin="0,28,0,0" ToolTip.Tip="Back to your sets (Enter)" />
+    </StackPanel>
 </UserControl>

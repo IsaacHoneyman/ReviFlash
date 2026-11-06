@@ -1,6 +1,9 @@
+using System;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
+using ReviFlash.ViewModels;
 using ReviFlash.Views.Controls;
 
 namespace ReviFlash.Views;
@@ -11,6 +14,18 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (DataContext is DashboardViewModel vm) vm.PropertyChanged += Dashboard_PropertyChanged;
+    }
+
+    /// <summary> A new page starts with nothing focused, so its keys work straight away rather than going to a control on the page just left. </summary>
+    private void Dashboard_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DashboardViewModel.CurrentPage)) TopLevel.GetTopLevel(this)?.FocusManager?.ClearFocus();
     }
 
     public DialogLayer DialogLayer => Dialogs;

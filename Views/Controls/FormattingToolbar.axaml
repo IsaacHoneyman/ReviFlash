@@ -8,7 +8,7 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="4" />
         </Style>
         <!-- Not focusable, so clicking keeps the cursor and selection in the text being formatted -->
@@ -41,14 +41,13 @@
                 <TextBlock Text="B" FontWeight="Bold" />
             </Button>
             <Button Classes="format" Tag="Italic" Click="Format_Click" ToolTip.Tip="Italic: \I{...}  (Ctrl+I)">
-                <!-- An icon, as the app's Inter has no italic face: a slanted plain "I" reads as "/" -->
-                <Path Classes="icon" Data="{StaticResource IconItalic}" Width="9" StrokeThickness="1.7" />
+                <TextBlock Text="I" FontStyle="Italic" FontFamily="{DynamicResource SerifFont}" FontSize="16" />
             </Button>
             <Button Classes="format" Tag="Underline" Click="Format_Click" ToolTip.Tip="Underline: \U{...}  (Ctrl+U)">
                 <TextBlock Text="U" TextDecorations="Underline" />
             </Button>
             <Button Classes="format" Tag="Code" Click="Format_Click" ToolTip.Tip="Code: \T{...}  (Ctrl+T)">
-                <TextBlock Text="T" FontFamily="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+                <TextBlock Text="T" FontFamily="{DynamicResource MonoFont}" />
             </Button>
             <Rectangle Classes="separator" />
             <Button Classes="format" Tag="Heading1" Click="Format_Click" ToolTip.Tip="Heading: \H1{...}  (Ctrl+1)">

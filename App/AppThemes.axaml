@@ -29,6 +29,30 @@
             <Color x:Key="GradientStart">#E9B261</Color>
         </ResourceDictionary>
 
+        <ResourceDictionary x:Key="{x:Static local:AppThemes.Crimson}">
+            <SolidColorBrush x:Key="AppBackground" Color="#150C0D" />
+
+            <SolidColorBrush x:Key="CardBackground" Color="#24171A" />
+            <SolidColorBrush x:Key="CardBorder" Color="#3A2629" />
+            <SolidColorBrush x:Key="GroupCardBorder" Color="#E0705F" />
+            <SolidColorBrush x:Key="FolderCardBorder" Color="#C9A9A5" />
+            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#150C0D" />
+            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#150C0D" />
+            <SolidColorBrush x:Key="NoteCardBorder" Color="#D99A8F" />
+            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#150C0D" />
+            <SolidColorBrush x:Key="BadgeBackground" Color="#3A2629" />
+            <SolidColorBrush x:Key="StatTileBackground" Color="#1C1113" />
+
+            <SolidColorBrush x:Key="TextPrimary" Color="#F6ECEA" />
+            <SolidColorBrush x:Key="TextSecondary" Color="#C7A6A1" />
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#150C0D" />
+            <SolidColorBrush x:Key="SurfaceActionForeground" Color="#150C0D" />
+            <SolidColorBrush x:Key="IconForeground" Color="#E3CFCB" />
+
+            <Color x:Key="GradientStart">#E06A5A</Color>
+        </ResourceDictionary>
+
+
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Forest}">
             <SolidColorBrush x:Key="AppBackground" Color="#0D1A14" />
 
@@ -68,80 +92,11 @@
 
             <SolidColorBrush x:Key="TextPrimary" Color="#E8F0F3" />
             <SolidColorBrush x:Key="TextSecondary" Color="#9FBEC7" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#E8F0F3" />
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0B0E12" />
             <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
             <SolidColorBrush x:Key="IconForeground" Color="#9FBEC7" />
 
-            <Color x:Key="GradientStart">#10323A</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Ember}">
-            <SolidColorBrush x:Key="AppBackground" Color="#0A0A0A" />
-
-            <SolidColorBrush x:Key="CardBackground" Color="#121212" />
-            <SolidColorBrush x:Key="CardBorder" Color="#3A2B2A" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FF6A3D" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#58E4E1" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#A864D8" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#3A1812" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#2A1A18" />
-
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFF6F3" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#E3B8A1" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF6F3" />
-            <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FFD1B2" />
-
-            <Color x:Key="GradientStart">#3E1F1B</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Crimson}">
-            <SolidColorBrush x:Key="AppBackground" Color="#070607" />
-
-            <SolidColorBrush x:Key="CardBackground" Color="#0F0B0B" />
-            <SolidColorBrush x:Key="CardBorder" Color="#3A1F22" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FF6A6F" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#7FEACC" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#070607" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#070607" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#A688E1" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#070607" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#3A0F12" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#2A1112" />
-
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFF6F7" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#E6B3B6" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF6F7" />
-            <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FFD1D4" />
-
-            <Color x:Key="GradientStart">#3B0D12</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Focus}">
-            <SolidColorBrush x:Key="AppBackground" Color="#101214" />
-
-            <SolidColorBrush x:Key="CardBackground" Color="#1A1D21" />
-            <SolidColorBrush x:Key="CardBorder" Color="#3B424B" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#7A8B9E" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#B47A64" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#101214" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#101214" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#74A96F" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#101214" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#2D333B" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#252B33" />
-
-            <SolidColorBrush x:Key="TextPrimary" Color="#F5F7FA" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#B5BCC6" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#F5F7FA" />
-            <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
-            <SolidColorBrush x:Key="IconForeground" Color="#F5F7FA" />
-
-            <Color x:Key="GradientStart">#5B6675</Color>
+            <Color x:Key="GradientStart">#3FB7C1</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Amethyst}">
@@ -165,25 +120,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#F7F3FF" />
 
             <Color x:Key="GradientStart">#5A3E9B</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Synthwave}">
-            <SolidColorBrush x:Key="AppBackground" Color="#120B24" />
-            <SolidColorBrush x:Key="CardBackground" Color="#1E1338" />
-            <SolidColorBrush x:Key="CardBorder" Color="#4A2E80" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FF2A85" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#48E179" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#120B24" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#120B24" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#555FD4" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#2A1B4E" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#251842" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFEFFF" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#C19FE3" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFEFFF" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FF2A85" />
-            <Color x:Key="GradientStart">#7A00FF</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Coffee}">
@@ -224,63 +160,6 @@
             <Color x:Key="GradientStart">#1A5276</Color>
         </ResourceDictionary>
 
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Sunset}">
-            <SolidColorBrush x:Key="AppBackground" Color="#1E1018" />
-            <SolidColorBrush x:Key="CardBackground" Color="#2C1825" />
-            <SolidColorBrush x:Key="CardBorder" Color="#6E3250" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FF7F50" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#68E4E7" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#1E1018" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#1E1018" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#B973DC" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#1E1018" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#3D2134" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#351D2D" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFF0F5" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#FFB6C1" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF0F5" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FF7F50" />
-            <Color x:Key="GradientStart">#8B008B</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Vaporwave}">
-            <SolidColorBrush x:Key="AppBackground" Color="#1A1528" />
-            <SolidColorBrush x:Key="CardBackground" Color="#251F38" />
-            <SolidColorBrush x:Key="CardBorder" Color="#564278" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FF71CE" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#85EB8F" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#1A1528" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#1A1528" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#8DA3E3" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#1A1528" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#342B4E" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#2E2644" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFF8FA" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#B990FF" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF8FA" />
-            <SolidColorBrush x:Key="IconForeground" Color="#01CDFE" />
-            <Color x:Key="GradientStart">#B967FF</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Honeycomb}">
-            <SolidColorBrush x:Key="AppBackground" Color="#1C1811" />
-            <SolidColorBrush x:Key="CardBackground" Color="#2C251A" />
-            <SolidColorBrush x:Key="CardBorder" Color="#665233" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FFB703" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#2687DC" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#1C1811" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#1C1811" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#CD35C0" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#3B3224" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#332B1E" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFFDF5" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#E2C799" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#1C1811" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FFB703" />
-            <Color x:Key="GradientStart">#B37400</Color>
-        </ResourceDictionary>
-
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Sakura}">
             <SolidColorBrush x:Key="AppBackground" Color="#1E1418" />
             <SolidColorBrush x:Key="CardBackground" Color="#2C1D24" />
@@ -295,70 +174,13 @@
             <SolidColorBrush x:Key="StatTileBackground" Color="#35222B" />
             <SolidColorBrush x:Key="TextPrimary" Color="#FFF0F3" />
             <SolidColorBrush x:Key="TextSecondary" Color="#F4A2B2" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#1E1418" />
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF0F3" />
             <SolidColorBrush x:Key="IconForeground" Color="#FFB7C5" />
             <Color x:Key="GradientStart">#8C3F5D</Color>
         </ResourceDictionary>
 
         <!--  Test Themes -->
         
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Cyberpunk}">
-            <SolidColorBrush x:Key="AppBackground" Color="#0E1013" />
-            <SolidColorBrush x:Key="CardBackground" Color="#161A1F" />
-            <SolidColorBrush x:Key="CardBorder" Color="#2F3640" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FFEE00" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#8324DB" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#0E1013" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#33CCA6" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#0E1013" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#222831" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#1C2128" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#00FFFF" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0E1013" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FFEE00" />
-            <Color x:Key="GradientStart">#FF007F</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Abyssal}">
-            <SolidColorBrush x:Key="AppBackground" Color="#03080E" />
-            <SolidColorBrush x:Key="CardBackground" Color="#08131F" />
-            <SolidColorBrush x:Key="CardBorder" Color="#15324E" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#00F5D4" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#D32266" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#03080E" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#EDF6F9" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#9FC431" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#03080E" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#0D2136" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#0A1B2C" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#EDF6F9" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#83C5BE" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#03080E" />
-            <SolidColorBrush x:Key="IconForeground" Color="#00F5D4" />
-            <Color x:Key="GradientStart">#005F73</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.DarkAmber}">
-            <SolidColorBrush x:Key="AppBackground" Color="#140D08" />
-            <SolidColorBrush x:Key="CardBackground" Color="#21150E" />
-            <SolidColorBrush x:Key="CardBorder" Color="#4A3121" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#FFA500" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#2492DB" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#140D08" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#140D08" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#CC33CC" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#140D08" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#332116" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#2A1B12" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FFF8F0" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#E5B28C" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#140D08" />
-            <SolidColorBrush x:Key="IconForeground" Color="#FFA500" />
-            <Color x:Key="GradientStart">#7A3E04</Color>
-        </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Graphite}">
             <SolidColorBrush x:Key="AppBackground" Color="#0F1012" />
@@ -376,26 +198,7 @@
             <SolidColorBrush x:Key="TextSecondary" Color="#94A3B8" />
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0F1012" />
             <SolidColorBrush x:Key="IconForeground" Color="#CBD5E1" />
-            <Color x:Key="GradientStart">#334155</Color>
-        </ResourceDictionary>
-
-        <ResourceDictionary x:Key="{x:Static local:AppThemes.Nether}">
-            <SolidColorBrush x:Key="AppBackground" Color="#120A12" />
-            <SolidColorBrush x:Key="CardBackground" Color="#1E101E" />
-            <SolidColorBrush x:Key="CardBorder" Color="#422242" />
-            <SolidColorBrush x:Key="GroupCardBorder" Color="#D946EF" />
-            <SolidColorBrush x:Key="FolderCardBorder" Color="#89E352" />
-            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#120A12" />
-            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#120A12" />
-            <SolidColorBrush x:Key="NoteCardBorder" Color="#5EB9D7" />
-            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#120A12" />
-            <SolidColorBrush x:Key="BadgeBackground" Color="#2E182E" />
-            <SolidColorBrush x:Key="StatTileBackground" Color="#261426" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#FDF4FD" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#F0ABFC" />
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#120A12" />
-            <SolidColorBrush x:Key="IconForeground" Color="#D946EF" />
-            <Color x:Key="GradientStart">#701A75</Color>
+            <Color x:Key="GradientStart">#CBD5E1</Color>
         </ResourceDictionary>
 
     </ResourceDictionary.ThemeDictionaries>

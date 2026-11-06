@@ -21,7 +21,7 @@
                 Margin="0,16,0,12"
                 Padding="10,7" />
 
-            <Border Grid.Row="2" Classes="card" CornerRadius="16" Padding="8">
+            <Border Grid.Row="2" Classes="card" Padding="8">
                 <ListBox ItemsSource="{Binding Choices}"
                     SelectedItem="{Binding SelectedChoice, Mode=TwoWay}"
                     Background="Transparent"

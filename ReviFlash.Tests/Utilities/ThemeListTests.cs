@@ -44,4 +44,25 @@ public class ThemeListTests
 
         Assert.Equal(SettingsViewModel.DefaultTheme, settings.Theme);
     }
+
+    private static Dictionary<string, Dictionary<string, Avalonia.Media.Color>> PaletteColours() =>
+        Regex.Matches(ThemesFile(), @"<ResourceDictionary x:Key=""\{x:Static local:AppThemes\.(\w+)\}"">(.*?)</ResourceDictionary>", RegexOptions.Singleline)
+            .ToDictionary(m => m.Groups[1].Value, m => Regex.Matches(m.Groups[2].Value, @"x:Key=""(\w+)""(?: Color="")?>?(#[0-9A-Fa-f]+)")
+                .ToDictionary(k => k.Groups[1].Value, k => Avalonia.Media.Color.Parse(k.Groups[2].Value)));
+
+    [Theory]
+    [InlineData("TextPrimary", "CardBackground", 4.5)]
+    [InlineData("TextSecondary", "CardBackground", 4.5)]
+    [InlineData("TextSecondary", "AppBackground", 4.5)]
+    [InlineData("PrimaryButtonForeground", "GradientStart", 4.5)]
+    [InlineData("GroupCardBorder", "CardBackground", 2)]
+    [InlineData("GradientStart", "AppBackground", 1.8)]
+    public void Every_built_in_theme_is_readable(string foreground, string background, double least)
+    {
+        foreach (var (name, colours) in PaletteColours())
+        {
+            double contrast = ReviFlash.Utilities.ThemePalette.Contrast(colours[foreground], colours[background]);
+            Assert.True(contrast >= least, $"{name}: {foreground} on {background} is {contrast:0.00}, needs {least}");
+        }
+    }
 }

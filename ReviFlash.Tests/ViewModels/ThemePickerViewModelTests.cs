@@ -10,7 +10,7 @@ public class ThemePickerViewModelTests
 {
     private static (ThemePickerViewModel Picker, AppMetaData Data, List<int> Saves) NewPicker(AppMetaData? data = null)
     {
-        data ??= new AppMetaData { Theme = "Vaporwave" };
+        data ??= new AppMetaData { Theme = "Slate" };
         var saves = new List<int>();
         return (new ThemePickerViewModel(data, () => saves.Add(1)), data, saves);
     }
@@ -25,20 +25,20 @@ public class ThemePickerViewModelTests
     [Fact]
     public void Built_in_themes_and_saved_themes_get_their_own_tiles()
     {
-        var data = new AppMetaData { Theme = "Vaporwave", SavedThemes = [new CustomTheme { Name = "Exam Night" }] };
+        var data = new AppMetaData { Theme = "Slate", SavedThemes = [new CustomTheme { Name = "Exam Night" }] };
         var (picker, _, _) = NewPicker(data);
 
         Assert.Equal(SettingsViewModel.Themes.Keys, picker.BuiltInSwatches.Select(s => s.Name));
         Assert.Equal(["Exam Night"], picker.SavedSwatches.Select(s => s.Name));
-        Assert.Equal("Vaporwave", picker.BuiltInSwatches.Single(s => s.IsSelected).Name);
+        Assert.Equal("Slate", picker.BuiltInSwatches.Single(s => s.IsSelected).Name);
         Assert.False(picker.ShowEditor);
     }
 
     [Fact]
     public void Ink_comes_first_and_the_dropped_themes_are_gone()
     {
-        Assert.Equal("Ink", SettingsViewModel.Themes.Keys.First());
-        Assert.DoesNotContain("Midnight", SettingsViewModel.Themes.Keys);
+        Assert.Equal(["Ink", "Crimson", "Coffee", "Forest", "Slate", "Nordic", "Amethyst", "Sakura", "Graphite"], SettingsViewModel.Themes.Keys);
+        Assert.DoesNotContain("Vaporwave", SettingsViewModel.Themes.Keys);
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public class ThemePickerViewModelTests
     [Theory]
     [InlineData("", "Give your theme a name.")]
     [InlineData("   ", "Give your theme a name.")]
-    [InlineData("vaporwave", "There's already a theme called vaporwave.")]
+    [InlineData("slate", "There's already a theme called slate.")]
     [InlineData("This name is far too long to fit on a tile", "Theme names can be up to 30 characters.")]
     public void Bad_theme_names_are_explained(string name, string problem)
     {

@@ -20,23 +20,13 @@ public partial class SettingsViewModel : ViewModelBase
     private static readonly Dictionary<string, ThemeVariant> ThemeMap = new(StringComparer.OrdinalIgnoreCase)
     {
         { "Ink", AppThemes.Ink },
-        { "Vaporwave", AppThemes.Vaporwave },
-        { "Synthwave", AppThemes.Synthwave },
-        { "Sakura", AppThemes.Sakura },
         { "Crimson", AppThemes.Crimson },
-        { "Ember", AppThemes.Ember },
-        { "Sunset", AppThemes.Sunset },
         { "Coffee", AppThemes.Coffee },
-        { "Dark Amber", AppThemes.DarkAmber },
-        { "Honeycomb", AppThemes.Honeycomb },
         { "Forest", AppThemes.Forest },
-        { "Abyssal", AppThemes.Abyssal },
-        { "Nordic", AppThemes.Nordic },
         { "Slate", AppThemes.Slate },
+        { "Nordic", AppThemes.Nordic },
         { "Amethyst", AppThemes.Amethyst },
-        { "Cyberpunk", AppThemes.Cyberpunk },
-        { "Nether", AppThemes.Nether },
-        { "Focus", AppThemes.Focus },
+        { "Sakura", AppThemes.Sakura },
         { "Graphite", AppThemes.Graphite },
     };
 
@@ -127,6 +117,7 @@ public partial class SettingsViewModel : ViewModelBase
 
             // Light palettes need the darker accent set, or reds and greens wash out.
             App.ApplyAccessibilityPalette(App.IsLightTheme(variant));
+            App.ApplyAccentColour(variant);
         }
     }
 

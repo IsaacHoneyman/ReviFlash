@@ -24,9 +24,12 @@
     <Style Selector="Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="BorderBrush" Value="{DynamicResource TextSecondary}" />
     </Style>
+    <!-- Destructive actions are outlined in red rather than filled, so they don't shout from the page. -->
     <Style Selector="Button.danger">
-        <Setter Property="Background" Value="{DynamicResource DangerBackground}" />
-        <Setter Property="Foreground" Value="{DynamicResource DangerBackgroundForeground}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerForeground}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerForeground}" />
     </Style>
     <Style Selector="Button.success">
         <Setter Property="Background" Value="{DynamicResource SuccessBackground}" />
@@ -34,11 +37,16 @@
     </Style>
 
     <!-- Keep each button's own colours on hover and press (Fluent would turn them all grey) and just lighten a little. -->
-    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.secondary:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.success:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.success:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.secondary:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.success:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.success:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{Binding $parent[Button].Background}" />
         <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
     </Style>
-    <Style Selector="Button.primary:pointerover, Button.secondary:pointerover, Button.danger:pointerover, Button.success:pointerover">
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource DangerTintBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerForeground}" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerForeground}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover, Button.secondary:pointerover, Button.success:pointerover">
         <Setter Property="Opacity" Value="0.88" />
     </Style>
 
@@ -162,6 +170,13 @@
     <Style Selector="TextBlock.body">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <!-- Small capitals over a section, e.g. FOLDERS. -->
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LetterSpacing" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
     </Style>
     <Style Selector="TextBlock.caption">
         <Setter Property="FontSize" Value="12" />

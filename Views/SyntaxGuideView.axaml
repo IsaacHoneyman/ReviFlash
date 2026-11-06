@@ -19,17 +19,21 @@
             <Setter Property="Padding" Value="8,3" />
         </Style>
         <Style Selector="Border.key TextBlock">
-            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
         <Style Selector="SelectableTextBlock.source">
             <Setter Property="IsTabStop" Value="False" />
-            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <!-- Examples render as they would on a card, in the serif. -->
+        <Style Selector="views|MathText">
+            <Setter Property="TextElement.FontFamily" Value="{DynamicResource SerifFont}" />
         </Style>
     </UserControl.Styles>
 
@@ -80,7 +84,7 @@
             <ItemsControl ItemsSource="{Binding Sections}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="views:GuideSection">
-                        <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border Classes="card" Margin="0,0,0,16">
                             <StackPanel Spacing="10">
                                 <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
                                 <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
@@ -133,7 +137,7 @@
             <ItemsControl ItemsSource="{Binding ShortcutSections}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="views:ShortcutSection">
-                        <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border Classes="card" Margin="0,0,0,16">
                             <StackPanel Spacing="10">
                                 <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
                                 <TextBlock Classes="caption" Text="{Binding Note}" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
@@ -172,7 +176,7 @@
             <ItemsControl ItemsSource="{Binding ReleaseNotes}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="utilities:ReleaseNotes">
-                        <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border Classes="card" Margin="0,0,0,16">
                             <StackPanel Spacing="10">
                                 <TextBlock Classes="sectionTitle" Text="{Binding Version, StringFormat='Version {0}'}" />
                                 <views:MathText Text="{Binding Body}" Foreground="{DynamicResource TextPrimary}" />

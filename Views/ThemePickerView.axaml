@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:ReviFlash.ViewModels"
+    xmlns:controls="using:ReviFlash.Views.Controls"
     xmlns:views="using:ReviFlash.Views"
     x:Class="ReviFlash.Views.ThemePickerView"
     x:DataType="vm:ThemePickerViewModel"
@@ -31,22 +32,13 @@
             <Setter Property="Height" Value="10" />
         </Style>
 
-        <!-- The live preview: one small card of each kind, in the theme being edited. -->
-        <Style Selector="Border.previewCard">
-            <Setter Property="Background" Value="{DynamicResource CardBackground}" />
-            <Setter Property="BorderThickness" Value="1.5" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="Width" Value="160" />
-        </Style>
-        <Style Selector="Border.previewBadge">
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="7,3" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-        </Style>
     </UserControl.Styles>
 
     <UserControl.Resources>
+        <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceInclude Source="avares://ReviFlash/Views/Controls/LibraryCard.axaml" />
+        </ResourceDictionary.MergedDictionaries>
         <DataTemplate x:Key="SwatchTile" x:DataType="vm:ThemeSwatch">
             <Button Classes="swatch" Width="120" Margin="0,0,6,6"
                 Command="{Binding $parent[views:ThemePickerView].((vm:ThemePickerViewModel)DataContext).SelectCommand}"
@@ -69,14 +61,17 @@
                 </StackPanel>
             </Button>
         </DataTemplate>
+        </ResourceDictionary>
     </UserControl.Resources>
 
-    <ScrollViewer Margin="24,24,8,24" Padding="0,0,16,0" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center">
-        <StackPanel Spacing="16" Width="740">
+    <!-- The themes and the editor on the left; a preview of the app in the chosen theme on the right. -->
+    <Grid ColumnDefinitions="*, 440">
+    <ScrollViewer Margin="32,24,8,24" Padding="0,0,24,0" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16" MaxWidth="1100" HorizontalAlignment="Left">
             <StackPanel Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                    <Button Classes="action secondary small" Content="Back" Click="Back_Click"
-                    VerticalAlignment="Center" ToolTip.Tip="Back (Esc)" />
+                    <Button Classes="secondary" Content="← Back" Click="Back_Click" Height="38" Padding="12,0"
+                        VerticalAlignment="Center" VerticalContentAlignment="Center" ToolTip.Tip="Back (Esc)" />
                     <TextBlock Classes="title" Text="Themes" VerticalAlignment="Center" />
                 </StackPanel>
                 <TextBlock Classes="caption" TextWrapping="Wrap"
@@ -84,7 +79,7 @@
             </StackPanel>
 
             <TextBlock Classes="sectionTitle" Text="Built-in Themes" />
-            <ItemsControl ItemsSource="{Binding BuiltInSwatches}" ItemTemplate="{StaticResource SwatchTile}">
+            <ItemsControl x:Name="BuiltInList" ItemsSource="{Binding BuiltInSwatches}" ItemTemplate="{StaticResource SwatchTile}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel />
@@ -97,7 +92,7 @@
                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding SavedThemesHint}" />
             </StackPanel>
             <WrapPanel>
-                <ItemsControl ItemsSource="{Binding SavedSwatches}" ItemTemplate="{StaticResource SwatchTile}">
+                <ItemsControl x:Name="SavedList" ItemsSource="{Binding SavedSwatches}" ItemTemplate="{StaticResource SwatchTile}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel />
@@ -144,46 +139,6 @@
                         <ColorPicker Grid.Row="2" Grid.Column="1" Color="{Binding SecondAccentColour}" IsAlphaEnabled="False" IsAlphaVisible="False" HorizontalAlignment="Left" />
                     </Grid>
 
-                    <TextBlock Classes="heading" Text="Preview" />
-                    <WrapPanel>
-                        <Border Classes="previewCard" BorderBrush="{DynamicResource FolderCardBorder}" Margin="0,0,8,8">
-                            <StackPanel Spacing="6">
-                                <Border Classes="previewBadge" Background="{DynamicResource FolderCardBorder}">
-                                    <TextBlock Classes="hint folderBadge badgeCount" Text="9 Items" />
-                                </Border>
-                                <TextBlock Classes="heading" Text="Year 2" />
-                                <TextBlock Classes="caption" Text="2 folders · 7 sets" />
-                            </StackPanel>
-                        </Border>
-                        <Border Classes="previewCard" BorderBrush="{DynamicResource GroupCardBorder}" Margin="0,0,8,8">
-                            <StackPanel Spacing="6">
-                                <Border Classes="previewBadge" Background="{DynamicResource GroupCardBorder}">
-                                    <TextBlock Classes="hint groupBadge badgeCount" Text="3 Sets" />
-                                </Border>
-                                <TextBlock Classes="heading" Text="Revision" />
-                                <TextBlock Classes="caption" Text="72 cards · studied today" />
-                            </StackPanel>
-                        </Border>
-                        <Border Classes="previewCard" BorderBrush="{DynamicResource CardBorder}" Margin="0,0,8,8">
-                            <StackPanel Spacing="6">
-                                <Border Classes="previewBadge" Background="{DynamicResource BadgeBackground}">
-                                    <TextBlock Classes="hint primary badgeCount" Text="24 Cards" />
-                                </Border>
-                                <TextBlock Classes="heading" Text="Linear Algebra" />
-                                <TextBlock Classes="caption" Text="Studied 3 days ago" />
-                            </StackPanel>
-                        </Border>
-                        <Border Classes="previewCard" BorderBrush="{DynamicResource NoteCardBorder}" Margin="0,0,8,8">
-                            <StackPanel Spacing="6">
-                                <Border Classes="previewBadge" Background="{DynamicResource NoteCardBorder}">
-                                    <TextBlock Classes="hint noteBadge badgeCount" Text="1.2k Words" />
-                                </Border>
-                                <TextBlock Classes="heading" Text="Lecture 4" />
-                                <TextBlock Classes="caption" Text="Edited yesterday" />
-                            </StackPanel>
-                        </Border>
-                        <Button Classes="primary" Content="A Button" VerticalAlignment="Top" Margin="0,0,8,8" />
-                    </WrapPanel>
 
                     <TextBlock Classes="error" Text="{Binding ReadabilityWarning}"
                         IsVisible="{Binding ReadabilityWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
@@ -210,4 +165,75 @@
             </Border>
         </StackPanel>
     </ScrollViewer>
+
+    <Border Grid.Column="1" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1,0,0,0" Padding="28,24,28,24">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <!-- Real pieces of the app, drawn in the theme in use; not clickable. -->
+            <StackPanel Spacing="18" IsHitTestVisible="False">
+                <TextBlock Classes="label" Text="PREVIEW" />
+
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock Text="ReviFlash" FontFamily="{DynamicResource SerifFont}" FontSize="24" FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
+                    <Button Classes="primary" Content="+ New" Height="34" Padding="14,0" VerticalContentAlignment="Center" />
+                </StackPanel>
+
+                <controls:LibraryCard Classes="folder" Title="Year 2" Icon="{StaticResource IconFolder}" Focusable="False" Width="380" Margin="0">
+                    <controls:LibraryCard.Badge>
+                        <TextBlock Classes="caption" Text="9 items" />
+                    </controls:LibraryCard.Badge>
+                </controls:LibraryCard>
+                <controls:LibraryCard Title="Linear Algebra" Focusable="False" Width="380" Margin="0">
+                    <controls:LibraryCard.Badge>
+                        <TextBlock Classes="caption" Text="24 cards" />
+                    </controls:LibraryCard.Badge>
+                    <TextBlock Classes="caption cardHint" Text="Studied 3 days ago" />
+                </controls:LibraryCard>
+
+                <!-- A card as it reads in a review -->
+                <Border Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                    CornerRadius="8" Padding="20,18">
+                    <StackPanel Spacing="12">
+                        <Border Height="3" CornerRadius="2" Background="{DynamicResource StatTileBackground}">
+                            <Border Width="140" HorizontalAlignment="Left" CornerRadius="2" Background="{DynamicResource GradientStart}" />
+                        </Border>
+                        <TextBlock Text="What is the determinant of a 2 × 2 matrix?" FontFamily="{DynamicResource SerifFont}" FontSize="19"
+                            TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}" />
+                        <Border Width="48" Height="1.5" HorizontalAlignment="Left" Background="{DynamicResource GroupCardBorder}" />
+                        <TextBlock Text="ad − bc. If it's zero, the matrix has no inverse." FontFamily="{DynamicResource SerifFont}" FontSize="16"
+                            TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}" Opacity="0.92" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                            <Button Classes="secondary" Content="Incorrect" Height="36" Padding="16,0" VerticalContentAlignment="Center" />
+                            <Button Content="Correct" Height="36" Padding="16,0" VerticalContentAlignment="Center"
+                                Background="{DynamicResource TextPrimary}" Foreground="{DynamicResource AppBackground}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <TextBlock Classes="caption" Text="✓ Correct" Foreground="{DynamicResource SuccessForeground}" />
+                            <TextBlock Classes="caption" Text="✕ Incorrect" Foreground="{DynamicResource DangerForeground}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Spacing="10">
+                    <TextBox Classes="input" Text="Search sets, notes, groups…" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <CheckBox IsChecked="True" Content="A setting" />
+                        <CheckBox IsChecked="False" Content="Another" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Classes="secondary" Content="Secondary" Height="34" Padding="14,0" VerticalContentAlignment="Center" />
+                        <Button Classes="danger" Content="Delete" Height="34" Padding="14,0" VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="0,8">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Classes="body secondary" Text="Accuracy Rate" />
+                        <TextBlock Grid.Column="1" Classes="body" Text="94.2%" FontFamily="{DynamicResource MonoFont}" />
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+    </Grid>
 </UserControl>

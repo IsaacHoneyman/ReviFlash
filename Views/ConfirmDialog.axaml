@@ -7,7 +7,7 @@
     <Border Classes="dialogShell">
         <Grid RowDefinitions="*, Auto, Auto">
             <StackPanel Spacing="8" VerticalAlignment="Center">
-                <TextBlock x:Name="TitleText" Classes="sectionTitle"
+                <TextBlock x:Name="TitleText" Classes="title" FontSize="22"
                            TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
                 <TextBlock x:Name="MessageText" Classes="body"
                            TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
@@ -19,8 +19,7 @@
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
                 <Button x:Name="CancelButton" Classes="dialog secondary" Click="Cancel_Click" Content="Cancel" IsCancel="True" />
-                <Button x:Name="ConfirmButton" Classes="dialog secondary" Click="Confirm_Click" Content="Proceed" IsDefault="True"
-                    Background="{DynamicResource CardBorder}" Foreground="{DynamicResource IconForeground}" FontWeight="Bold" />
+                <Button x:Name="ConfirmButton" Classes="dialog primary" Click="Confirm_Click" Content="Proceed" IsDefault="True" />
             </StackPanel>
         </Grid>
     </Border>

@@ -37,33 +37,78 @@
             <Setter Property="MinHeight" Value="32" />
         </Style>
         <Style Selector="Button.addRow">
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="Background" Value="{DynamicResource AccentSoftBackground}" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         </Style>
         <Style Selector="Button.removeRow">
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="8,6" />
             <Setter Property="Margin" Value="8,0,0,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Background" Value="{DynamicResource DangerSoftBackground}" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <!-- A card's actions in the list: quiet until pointed at. -->
+        <Style Selector="Button.cardAction">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8,7" />
+        </Style>
+        <Style Selector="Button.cardAction:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+        </Style>
+        <Style Selector="Border.editingRing">
+            <Setter Property="BorderBrush" Value="{DynamicResource GroupCardBorder}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <!-- The card type as segments: a quiet track with the chosen one raised. -->
+        <Style Selector="ListBox.segments">
+            <Setter Property="Background" Value="{DynamicResource SurfaceOverlayBackground}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="3" />
+        </Style>
+        <Style Selector="ListBox.segments ListBoxItem">
+            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ListBox.segments ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.segments ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BadgeBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style Selector="ListBox.segments ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource HoverOverlayBackground}" />
+        </Style>
+
+        <Style Selector="Border.listCard views|MathText.front">
+            <Setter Property="TextElement.FontFamily" Value="{DynamicResource SerifFont}" />
+            <Setter Property="FontSize" Value="16" />
         </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto, *" Margin="32">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" ColumnSpacing="16" Margin="0,0,0,24">
-            <Button Classes="action secondary small" Content="Back" Click="Back_Click"
-                VerticalAlignment="Center" ToolTip.Tip="Back (Esc)" />
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="16" Margin="0,0,0,24">
+            <Button Classes="secondary" Content="← Back" Click="Back_Click" Height="38" Padding="12,0"
+                VerticalAlignment="Center" VerticalContentAlignment="Center" ToolTip.Tip="Back (Esc)" />
 
             <TextBox Grid.Column="1" x:Name="NameBox"
                 Text="{Binding DeckName, Mode=TwoWay}"
                 MaxLength="100"
                 LostFocus="NameBox_LostFocus"
-                FontSize="24" FontWeight="Bold"
-                Background="Transparent" BorderThickness="0,0,0,2"
+                FontFamily="{DynamicResource SerifFont}" FontSize="26" FontWeight="SemiBold"
+                Background="Transparent" BorderThickness="0,0,0,1"
                 Foreground="{DynamicResource TextPrimary}" />
+
+            <TextBlock Grid.Column="2" Classes="caption" VerticalAlignment="Center" x:Name="CardCountText"
+                Text="{Binding Cards.Count, StringFormat='{}{0} cards'}" FontSize="13" />
         </Grid>
 
         <Grid Grid.Row="1" ColumnDefinitions="1*, 1*">
@@ -73,17 +118,23 @@
                 x:Name="EditorScroll"
                 Margin="0,0,8,0"
                 Padding="0,0,16,0">
-                <Grid Width="{Binding #EditorScroll.Bounds.Width}">
-                    <Border Background="{DynamicResource CardBackground}" CornerRadius="15" Padding="20"
+                <Grid>
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                        CornerRadius="8" Padding="22"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top">
                         <StackPanel Spacing="12" x:Name="EditorPanel">
                         <TextBlock Classes="sectionTitle" Text="{Binding EditorTitle}" />
 
-                        <ComboBox x:Name="CardTypeBox" ItemsSource="{Binding AvailableCardTypes}"
-                            SelectedItem="{Binding SelectedCardType}"
-                            HorizontalAlignment="Stretch"
-                            CornerRadius="8" />
+                        <!-- The card type as a row of segments -->
+                        <ListBox x:Name="CardTypeBox" Classes="segments" ItemsSource="{Binding AvailableCardTypes}"
+                            SelectedItem="{Binding SelectedCardType}" HorizontalAlignment="Left">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                        </ListBox>
 
                         <!-- Formatting toolbar: acts on the card field last clicked into -->
                         <controls:FormattingToolbar ShowBlank="{Binding IsClozeCardType}" FormatRequested="Toolbar_FormatRequested" />
@@ -256,96 +307,99 @@
                     <ItemsControl ItemsSource="{Binding Cards}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:FlashCard">
-                            <Border Classes="card compact" Margin="0,0,0,16">
-                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="*, Auto">
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Classes="hint" Text="{Binding CardType}"
-                                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,8" />
+                            <Panel Margin="0,0,0,12">
+                                <Border Classes="card compact listCard">
+                                    <Grid ColumnDefinitions="*, Auto" RowDefinitions="*, Auto">
+                                        <TextBlock Grid.Column="1" Grid.Row="0" Classes="hint" Text="{Binding CardType}"
+                                            VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,8" />
 
-                                    <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12" IsVisible="{Binding !IsMatchCard}">
-                                        <views:MathText Text="{Binding Front}" />
+                                        <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="12" IsVisible="{Binding !IsMatchCard}">
+                                            <views:MathText Classes="front" Text="{Binding Front}" />
 
-                                        <Rectangle Height="1" Fill="{DynamicResource CardBorder}"
-                                            Opacity="0.3" />
+                                            <Rectangle Height="1" Fill="{DynamicResource CardBorder}"
+                                                Opacity="0.3" />
 
-                                        <views:MathText Text="{Binding Back}" Foreground="{DynamicResource TextSecondary}" />
+                                            <views:MathText Text="{Binding Back}" Foreground="{DynamicResource TextSecondary}" />
 
-                                        <StackPanel Spacing="6" IsVisible="{Binding IsMultiChoiceCard}">
-                                            <TextBlock Classes="caption" Text="Options preview" />
-                                            <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto"
+                                            <StackPanel Spacing="6" IsVisible="{Binding IsMultiChoiceCard}">
+                                                <TextBlock Classes="caption" Text="Options preview" />
+                                                <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto"
+                                                    HorizontalScrollBarVisibility="Disabled">
+                                                    <ItemsControl ItemsSource="{Binding MultiChoiceOptionsPreview}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="models:MultiChoicePreviewOption">
+                                                                <Grid ColumnDefinitions="Auto, *" Margin="0,0,0,6">
+                                                                    <TextBlock Grid.Column="0"
+                                                                        Text="{Binding IsCorrect, Converter={StaticResource BoolToOptionMarkerConverter}}"
+                                                                        Classes="hint success"
+                                                                        VerticalAlignment="Top" Margin="0,0,8,0" />
+                                                                    <views:MathText Text="{Binding Text}" Grid.Column="1" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="8" IsVisible="{Binding IsMatchCard}">
+                                            <views:MathText Classes="front" Text="{Binding Front}" />
+
+                                            <TextBlock Classes="caption" Text="Match pairs preview" />
+
+                                            <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto"
                                                 HorizontalScrollBarVisibility="Disabled">
-                                                <ItemsControl ItemsSource="{Binding MultiChoiceOptionsPreview}">
+                                                <ItemsControl ItemsSource="{Binding MatchPairsPreview}">
                                                     <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="models:MultiChoicePreviewOption">
-                                                            <Grid ColumnDefinitions="Auto, *" Margin="0,0,0,6">
-                                                                <TextBlock Grid.Column="0"
-                                                                    Text="{Binding IsCorrect, Converter={StaticResource BoolToOptionMarkerConverter}}"
-                                                                    Classes="hint success"
-                                                                    VerticalAlignment="Top" Margin="0,0,8,0" />
-                                                                <views:MathText Text="{Binding Text}" Grid.Column="1" />
+                                                        <DataTemplate x:DataType="models:MatchPreviewPair">
+                                                            <Grid ColumnDefinitions="2*, Auto, *" Margin="0,0,0,8">
+                                                                <views:MathText Text="{Binding LeftText}" Grid.Column="0" />
+
+                                                                <TextBlock Grid.Column="1" Text="→" Margin="8,0"
+                                                                    Foreground="{DynamicResource TextSecondary}" />
+
+                                                                <views:MathText Text="{Binding RightText}" Grid.Column="2" />
                                                             </Grid>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                             </ScrollViewer>
                                         </StackPanel>
-                                    </StackPanel>
 
-                                    <StackPanel Grid.Column="0" Grid.RowSpan="2" Spacing="8" IsVisible="{Binding IsMatchCard}">
-                                        <views:MathText Text="{Binding Front}" />
+                                        <StackPanel Grid.Column="1" Grid.Row="1"
+                                            VerticalAlignment="Bottom" HorizontalAlignment="Right" Spacing="8" Margin="10,0,0,0">
+                                            <Button Classes="cardAction" Click="MoveCard_Click"
+                                                ToolTip.Tip="Move or Copy to a Set">
+                                                <Path Classes="icon editorAction" Data="{StaticResource IconMove}" />
+                                            </Button>
 
-                                        <TextBlock Classes="caption" Text="Match pairs preview" />
+                                            <Button Classes="cardAction" Click="NewCardFromThis_Click"
+                                                ToolTip.Tip="New Card From This">
+                                                <Path Classes="icon editorAction" Data="{StaticResource IconCopy}" />
+                                            </Button>
 
-                                        <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto"
-                                            HorizontalScrollBarVisibility="Disabled">
-                                            <ItemsControl ItemsSource="{Binding MatchPairsPreview}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate x:DataType="models:MatchPreviewPair">
-                                                        <Grid ColumnDefinitions="2*, Auto, *" Margin="0,0,0,8">
-                                                            <views:MathText Text="{Binding LeftText}" Grid.Column="0" />
+                                            <Button Classes="cardAction" Click="EditCard_Click"
+                                                ToolTip.Tip="Edit Card">
+                                                <Path Classes="icon editorAction" Data="{StaticResource IconEdit}" />
+                                            </Button>
 
-                                                            <TextBlock Grid.Column="1" Text="→" Margin="8,0"
-                                                                Foreground="{DynamicResource TextSecondary}" />
-
-                                                            <views:MathText Text="{Binding RightText}" Grid.Column="2" />
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Column="1" Grid.Row="1"
-                                        VerticalAlignment="Bottom" HorizontalAlignment="Right" Spacing="8" Margin="10,0,0,0">
-                                        <Button Click="MoveCard_Click"
-                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                            Padding="10,8"
-                                            ToolTip.Tip="Move or Copy to a Set">
-                                            <Path Classes="icon editorAction" Data="{StaticResource IconMove}" />
-                                        </Button>
-
-                                        <Button Click="NewCardFromThis_Click"
-                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                            Padding="10,8"
-                                            ToolTip.Tip="New Card From This">
-                                            <Path Classes="icon editorAction" Data="{StaticResource IconCopy}" />
-                                        </Button>
-
-                                        <Button Click="EditCard_Click"
-                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                            Padding="10,8"
-                                            ToolTip.Tip="Edit Card">
-                                            <Path Classes="icon editorAction" Data="{StaticResource IconEdit}" />
-                                        </Button>
-
-                                        <Button Click="DeleteCard_Click"
-                                            Background="{DynamicResource BadgeBackground}" CornerRadius="8"
-                                            Padding="10,8"
-                                            ToolTip.Tip="Delete Card">
-                                            <Path Classes="icon editorAction danger" Data="{StaticResource IconDelete}" />
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
+                                            <Button Classes="cardAction" Click="DeleteCard_Click"
+                                                ToolTip.Tip="Delete Card">
+                                                <Path Classes="icon editorAction danger" Data="{StaticResource IconDelete}" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                <!-- Outlines the card that's open in the editor -->
+                                <Border Classes="editingRing" IsHitTestVisible="False">
+                                    <Border.IsVisible>
+                                        <MultiBinding Converter="{x:Static converters:AllEqualConverter.Instance}">
+                                            <Binding Path="ID" />
+                                            <Binding Path="$parent[views:DeckEditorView].((vm:DeckEditorViewModel)DataContext).EditingCard.ID" FallbackValue="{x:Null}" />
+                                        </MultiBinding>
+                                    </Border.IsVisible>
+                                </Border>
+                            </Panel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                     </ItemsControl>

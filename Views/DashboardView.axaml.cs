@@ -136,7 +136,7 @@ public partial class DashboardView : UserControl
     private void MoveCardFocus(GridMove move)
     {
         var (section, index) = FocusedCard(_topLevel?.FocusManager?.GetFocusedElement());
-        var sizes = Sections.Select(list => (list.ItemCount, CardColumns(list))).ToArray();
+        var sizes = Sections.Select(list => (list.ItemCount, Shortcuts.ColumnsIn(list))).ToArray();
         var (targetSection, target) = GridNavigation.MoveAcross(sizes, section, index, move);
 
         if (targetSection < 0) FocusSearch();
@@ -166,16 +166,6 @@ public partial class DashboardView : UserControl
         }
 
         return (-1, -1);
-    }
-
-    /// <summary> Items on a section's first row: every row holds the same number. </summary>
-    private static int CardColumns(ItemsControl list)
-    {
-        if (list.ContainerFromIndex(0) is not { } first) return 1;
-
-        int columns = 1;
-        while (list.ContainerFromIndex(columns) is { } next && Math.Abs(next.Bounds.Top - first.Bounds.Top) < 1) columns++;
-        return columns;
     }
 
     /// <summary> E edits or renames, Delete deletes, M moves and S shows stats for the card's item; false when the key does nothing for it. </summary>

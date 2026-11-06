@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Avalonia;
 using Avalonia.Controls;
@@ -27,6 +28,7 @@ public partial class App : Application
         DatabaseManager.InitDatabase();
         if (freshInstall) WelcomeLibrary.Create(LogoImage.Store());
         ApplyAccessibilityPalette(IsLightTheme());
+        ApplyAccentColour();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -66,6 +68,29 @@ public partial class App : Application
         return false;
     }
 
+    /// <summary> Gives Avalonia's own controls (ticked checkboxes, focused boxes, selections) the theme's accent instead of the system's. </summary>
+    public static void ApplyAccentColour(ThemeVariant? variant = null)
+    {
+        if (Current is null) return;
+
+        variant ??= Current.ActualThemeVariant;
+        if (!Current.TryFindResource("GradientStart", variant, out var value) || value is not Color accent) return;
+
+        Current.Resources["SystemAccentColor"] = accent;
+        double[] steps = [0.12, 0.24, 0.36];
+        for (int i = 0; i < steps.Length; i++)
+        {
+            Current.Resources[$"SystemAccentColorLight{i + 1}"] = Shade(accent, steps[i]);
+            Current.Resources[$"SystemAccentColorDark{i + 1}"] = Shade(accent, -steps[i]);
+        }
+    }
+
+    private static Color Shade(Color colour, double lightness)
+    {
+        var hsl = new HslColor(colour);
+        return HslColor.ToRgb(hsl.H, hsl.S, Math.Clamp(hsl.L + lightness, 0, 1));
+    }
+
     public static void ApplyAccessibilityPalette(bool isLightTheme)
     {
         if (Current is null) return;
@@ -86,9 +111,9 @@ public partial class App : Application
         Current.Resources["DialogScrimBackground"] = new SolidColorBrush(Color.Parse("#66000000"));
         Current.Resources["AccentSoftBackground"] = new SolidColorBrush(Color.Parse("#7044AAFF"));
         Current.Resources["DangerSoftBackground"] = new SolidColorBrush(Color.Parse("#60FF4444"));
-        Current.Resources["ChartAttemptsBrush"] = new SolidColorBrush(Color.Parse("#EEEF6B5B"));
-        Current.Resources["ChartReviewBrush"] = new SolidColorBrush(Color.Parse("#FF4AA3FF"));
-        Current.Resources["ChartEditingBrush"] = new SolidColorBrush(Color.Parse("#FFFFB547"));
-        Current.Resources["ChartNotesBrush"] = new SolidColorBrush(Color.Parse("#FFB57BFF"));
+        Current.Resources["ChartAttemptsBrush"] = new SolidColorBrush(Color.Parse("#E8907C"));
+        Current.Resources["ChartReviewBrush"] = new SolidColorBrush(Color.Parse("#7FA7D9"));
+        Current.Resources["ChartEditingBrush"] = new SolidColorBrush(Color.Parse("#E9B261"));
+        Current.Resources["ChartNotesBrush"] = new SolidColorBrush(Color.Parse("#A99BD1"));
     }
 }

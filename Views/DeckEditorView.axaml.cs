@@ -113,15 +113,15 @@ public partial class DeckEditorView : UserControl
         if (_observedViewModel.IsSingleCard) ShowSingleCard();
     }
 
-    /// <summary> Just the card being edited: no set name, no card list, and its type can't change. </summary>
+    /// <summary> Just the card being edited: no set name or count, no card list, and its type can't change. </summary>
     private void ShowSingleCard()
     {
         NameBox.IsVisible = false;
+        CardCountText.IsVisible = false;
         CardListScroll.IsVisible = false;
         CardTypeBox.IsEnabled = false;
         Grid.SetColumnSpan(EditorScroll, 2);
         EditorScroll.Margin = default;
-        EditorScroll.MaxWidth = 760;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)

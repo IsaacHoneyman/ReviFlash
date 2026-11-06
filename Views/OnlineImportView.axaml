@@ -15,7 +15,7 @@
             <Grid ColumnDefinitions="*, Auto">
                 <StackPanel Grid.Column="0" Spacing="4">
                     <StackPanel Orientation="Horizontal" Spacing="16">
-                        <Button Classes="action secondary small" Content="Back" Click="Back_Click" VerticalAlignment="Center" ToolTip.Tip="Back (Esc)" />
+                        <Button Classes="secondary" Content="← Back" Click="Back_Click" Height="38" Padding="12,0" VerticalAlignment="Center" VerticalContentAlignment="Center" ToolTip.Tip="Back (Esc)" />
                         <TextBlock Classes="title" Text="Community" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Classes="caption" Text="Search and download public sets and notes shared by other users."
@@ -44,7 +44,7 @@
                 <ComboBox Grid.Column="1"
                           ItemsSource="{Binding SortOptions}"
                           SelectedItem="{Binding SelectedSortOption}"
-                          CornerRadius="8" Width="180" Height="40" VerticalContentAlignment="Center" Margin="0,0,12,0"
+                          CornerRadius="6" Width="180" Height="40" VerticalContentAlignment="Center" Margin="0,0,12,0"
                           Background="{DynamicResource CardBackground}" />
 
                 <Button Grid.Column="2" Classes="primary"
@@ -55,7 +55,7 @@
             </Grid>
         </StackPanel>
 
-        <Border Grid.Row="1" Classes="card" CornerRadius="16" Padding="16">
+        <Border Grid.Row="1" Classes="card" Padding="16">
           <Panel>
             <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsSearching}">
                 <controls:BusySpinner Classes="large" IsVisible="{Binding IsSearching}" HorizontalAlignment="Center" />
@@ -68,7 +68,7 @@
                             <Border Classes="listRow" Padding="16" Margin="0,0,0,12">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <StackPanel Grid.Column="0" Spacing="4">
-                                        <TextBlock Classes="sectionTitle" Text="{Binding Title}" />
+                                        <TextBlock Classes="sectionTitle" Text="{Binding Title}" FontFamily="{DynamicResource SerifFont}" />
                                         <TextBlock Classes="caption" Text="{Binding UploaderName, StringFormat='by {0}'}" IsVisible="{Binding HasUploaderName}" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Classes="caption" Text="{Binding Description, StringFormat='in {0}'}" IsVisible="{Binding HasDescription}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
                                         <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
