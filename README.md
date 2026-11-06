@@ -37,40 +37,30 @@ Get the latest release for your platform from the [GitHub Releases Page](https:/
 ## Updates
 Updates are handled automatically within ReviFlash! On startup the app checks whether a new version has been released and offers to update, showing the download progress before restarting into the new version. You can also check at any time from **Settings → Updates**, or turn the startup check off there.
 
-## New in 1.4
+## New in 1.5
 
-**1.4.3**: spotted a mistake mid-review? Once the answer shows, press **E** or the pencil button to fix the card, and the rest of the session uses the fixed version. Text on match cards lines up on the left, and the review progress bar is easier to see.
+A new look for the whole app, and everything now opens in one window.
 
-**1.4.2**: match cards have a new **Keep the left side in this order** option, so reviews show the left side the way you wrote it while the right side is still shuffled. Match cards show their back again once you've checked your answer, if you've written one. A bullet point's dot lines up with its text when the line has tall maths in it, like a formula split over two lines.
+**A new look**
+- A new default theme, **Ink**: warm charcoal, off-white text and one amber accent, set in Geist with Source Serif for titles and everything you study. Updating switches you to it once.
+- The main menu shows your folders as a row of their own, above your sets, groups and notes drawn as index cards.
+- Reviews set the card on the page, with every button in a bar along the bottom, so long cards scroll beneath it. Checked match cards show each pair with a tick or a cross, and the right answer under any you got wrong.
+- Notes read like a page, and the set editor picks the card type from a row of buttons and outlines the card you're editing.
+- Stats, the review summary, study groups, the ReviFlash Online pages, dialogs and Help all share the new look. The moving background swirl is gone.
 
-**1.4.1**: a clean-up release. Everything looks and works the same way in every window, and themes are now yours to make.
+**One window**
+- Everything opens inside the one ReviFlash window: dialogs appear over the page, and the set editor, Settings, Themes, study groups and ReviFlash Online open as pages with a **Back** button.
+- **Esc** goes back a step everywhere, and going back from a page returns to where you were, even mid-review.
+- Help opens as a panel beside the page, so you can keep it open while you write.
 
-**Themes**
-- A new **Themes** window, opened from Settings, shows every theme as a tile drawn in its own colours, listed round the colour wheel.
-- **Make your own:** pick a background and two accents and ReviFlash works out the rest, keeping text and badges readable. Change any single colour if you want, name it, and keep up to 12. They're saved in your backups.
-- Seventeen themes were retired, including the light themes. If you were using one, ReviFlash switches to Vaporwave.
-
-**A cleaner main menu**
-- Every card has the same kind of line under its name: when a set was last studied, a group's cards, a folder's contents, or a note's last edit.
-- Notes have their own colour, and their badge shows the word count.
-- Badges are readable on every theme and say "1 Card", "1 Set" and "1 Item".
-
-**New installs**
-- ReviFlash starts with a **Welcome!** folder: a Feature Tour with one of every card type, an example set and study group, and a Read Me on how to use the app.
-
-**Clearer messages**
-- When something goes wrong, like an upload, backup or update check, a message pops up with the whole explanation instead of a cut-off line in the corner.
-- Confirmations and errors have a short title, like "Delete Set?", with the details underneath.
-- Success messages show briefly and then fade.
+**Settings and themes**
+- Settings lists its sections down the left, and the arrow keys move through sections and settings.
+- Nine built-in themes, all dark and spread round the colour wheel, each checked for readable text. A live preview shows the app in each one, and the arrow keys move between them. Light themes can still be made in **Your Themes**.
 
 **Everywhere else**
-- Every button, checkbox and toggle shows a clear highlight when you reach it with Tab or the arrow keys.
-- One consistent set of text sizes, colours and capitalisation across every window, and the app says "set" everywhere.
-- Community and the Cloud Manager switch between sets and notes with a sliding switch.
-- Delete All Stats now clears notes time and your launch streak too.
-- Typed answers ignore extra spaces, and grades always match the percentage shown.
-- Images and display maths no longer get extra blank lines around them.
-- Over 20 more fixes, from stale Community results to deleted folders lingering in stats.
+- Checkboxes, focused boxes and selections use your theme's accent instead of the system colour.
+- Quitting with an unsaved card in the set editor asks before discarding it.
+- Keys work straight away on a page you opened with a click.
 
 ## Features
 
@@ -126,12 +116,12 @@ Everything is protected by Row-Level Security, and nothing is uploaded unless yo
 - **Backups**: create and restore a full backup of your library, notes, images, settings and themes, with or without your stats.
 
 ### Themes, or make your own
-Choose from 18 built-in themes, or make up to 12 of your own from a background and two accents. ReviFlash works out the rest and keeps text readable, and you can change any single colour if you want. An optional animated background swirl follows your theme.
+Choose from nine built-in dark themes spread round the colour wheel, each checked for readable text, or make up to 12 of your own (light ones too) from a background and two accents. ReviFlash works out the rest and keeps text readable, and you can change any single colour if you want. A live preview shows the app in the theme you pick.
 
-![The Themes window](docs/images/themes.png)
+![The Themes page with its live preview](docs/images/themes.png)
 
 ### Keyboard-driven
-Answer, mark, skip and retry cards without touching the mouse. On the main menu, the arrow keys move between cards and single keys edit, move, show stats for or delete them. Press **F1** anywhere for the full list of shortcuts.
+Answer, mark, skip and retry cards without touching the mouse. On the main menu, the arrow keys move between cards and single keys edit, move, show stats for or delete them; in Settings and Themes they move through sections and themes. Press **F1** anywhere for the full list of shortcuts.
 
 ## Tech Stack
 
@@ -139,6 +129,7 @@ Answer, mark, skip and retry cards without touching the mouse. On the main menu,
 - Avalonia UI (Cross-platform Desktop Framework)
 - SQLite (`Microsoft.Data.Sqlite`) for local storage
 - CSharpMath for formula rendering, with Latin Modern fonts
+- Geist and Source Serif 4 (bundled, under the SIL Open Font License)
 - SkiaSharp for images (stored as WebP)
 - ZstdSharp for reading newer Anki packages
 - Supabase (Database, Authentication & Storage, via its REST API)
@@ -153,4 +144,4 @@ Bug reports, feature requests, and pull requests are welcome. Please keep change
 ## Notes
 
 - This project is primarily a local-first application; your sets, notes and study progress are stored locally in an SQLite database. Online features are strictly opt-in and need an account; nothing is uploaded unless you upload it.
-- The app has over 480 unit tests, which run on Windows, macOS and Linux. Contributions are welcome.
+- The app has over 520 unit tests, which run on Windows, macOS and Linux. Contributions are welcome.

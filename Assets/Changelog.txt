@@ -1,3 +1,20 @@
+=== 1.5.0
+\H2{A new look}
+- ReviFlash has a new default theme, \B{Ink}: warm charcoal, off-white text and one amber accent, set in Geist with Source Serif for titles and everything you study. Updating switches you to it once, and your old theme is still in \B{Themes} if it's one of the nine kept.
+- The main menu shows your folders as a row of their own, above sets, groups and notes drawn as index cards.
+- Reviews set the card on the page, with every button in a bar along the bottom, so long cards scroll beneath it. Checked match cards show each pair with a tick or a cross.
+- Notes read like a page, and the set editor picks the card type from a row of buttons and outlines the card you're editing.
+- The moving background swirl is gone.
+
+\H2{One window}
+- Everything opens inside the one ReviFlash window: dialogs appear over the page, and the set editor, \B{Settings}, \B{Themes}, study groups and ReviFlash Online open as pages with a \B{Back} button.
+- \B{Esc} goes back a step everywhere, and back from a page returns to where you were, even mid-review.
+- Help opens as a panel beside the page, so you can keep it open while you write.
+
+\H2{Settings and themes}
+- \B{Settings} lists its sections down the left. Use the arrow keys to move through sections and settings.
+- Nine built-in themes, all dark and spread round the colour wheel, each checked for readable text, with a live preview of the app beside them. Light themes can still be made in \B{Your Themes}.
+
 === 1.4.3
 - Spotted a mistake mid-review? Once the answer shows, press \B{E} or the pencil button to fix the card. The rest of the session uses the fixed version.
 - The review progress bar is easier to see.
