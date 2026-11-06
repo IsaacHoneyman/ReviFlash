@@ -14,40 +14,6 @@
     KeyDown="Window_KeyDown"
     Background="{DynamicResource AppBackground}">
 
-    <Grid>
-        <Grid>
-            <Rectangle x:Name="OuterSwirl" Width="2800" Height="2800"
-                HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="50%,50%">
-                <Rectangle.RenderTransform>
-                    <RotateTransform Angle="0" />
-                </Rectangle.RenderTransform>
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Offset="0.0" Color="{DynamicResource SwirlStart}" />
-                        <GradientStop Offset="0.5" Color="{DynamicResource SwirlMiddle}" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource SwirlEnd}" />
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
-
-            <Rectangle x:Name="InnerSwirl" Width="2400" Height="2400"
-                HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.66" RenderTransformOrigin="50%,50%">
-                <Rectangle.RenderTransform>
-                    <RotateTransform Angle="360" />
-                </Rectangle.RenderTransform>
-                <Rectangle.Fill>
-                    <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,100%">
-                        <GradientStop Offset="0.0" Color="{DynamicResource SwirlEnd}" />
-                        <GradientStop Offset="0.5" Color="{DynamicResource SwirlMiddle}" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource SwirlStart}" />
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
-
-            <Rectangle Fill="{DynamicResource AppBackground}" Opacity="0.22" IsHitTestVisible="False" />
-        </Grid>
-
-        <views:MainView x:Name="Main" />
-    </Grid>
+    <views:MainView x:Name="Main" />
 
 </Window>

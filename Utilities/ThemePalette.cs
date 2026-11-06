@@ -28,14 +28,11 @@ public static class ThemePalette
         ("NoteBadgeForeground", "Note Badge Text"),
         ("GradientStart", "Buttons and Highlights"),
         ("PrimaryButtonForeground", "Button Text"),
-        ("SwirlStart", "Background Swirl Start"),
-        ("SwirlMiddle", "Background Swirl Middle"),
-        ("SwirlEnd", "Background Swirl End"),
         ("SurfaceActionForeground", "Text on Light Surfaces"),
     ];
 
-    /// <summary> Gradient and swirl colours are stored as Colors; every other key is a brush. </summary>
-    public static bool IsColorKey(string key) => key.StartsWith("Gradient", StringComparison.Ordinal) || key.StartsWith("Swirl", StringComparison.Ordinal);
+    /// <summary> The gradient colour is stored as a Color; every other key is a brush. </summary>
+    public static bool IsColorKey(string key) => key.StartsWith("Gradient", StringComparison.Ordinal);
 
     public static Dictionary<string, Color> Derive(CustomTheme theme)
     {
@@ -80,9 +77,6 @@ public static class ThemePalette
             ["GradientStart"] = buttons,
             ["PrimaryButtonForeground"] = Colors.White,
             // Like the built-in themes, the swirl is the accent at full strength drifting either side of its hue; blending it with the background turns muddy.
-            ["SwirlStart"] = SwirlColour(accent, -25, light),
-            ["SwirlMiddle"] = SwirlColour(accent, 0, light),
-            ["SwirlEnd"] = SwirlColour(accent, 25, light),
             ["SurfaceActionForeground"] = Color.Parse("#0D1620"),
         };
 
@@ -164,14 +158,6 @@ public static class ThemePalette
     {
         var hsl = new HslColor(colour);
         return HslColor.ToRgb(hsl.H, hsl.S, Math.Clamp(hsl.L + lightness, 0, 1));
-    }
-
-    private static Color SwirlColour(Color accent, double hueShift, bool light)
-    {
-        var hsl = new HslColor(accent);
-        double saturation = hsl.S < 0.12 ? hsl.S : Math.Max(hsl.S, 0.6);
-        double lightness = light ? Math.Clamp(hsl.L, 0.65, 0.8) : Math.Clamp(hsl.L, 0.45, 0.65);
-        return HslColor.ToRgb((hsl.H + hueShift + 360) % 360, saturation, lightness);
     }
 
     private static Color WithSaturation(Color colour, double saturation)

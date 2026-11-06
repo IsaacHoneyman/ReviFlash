@@ -42,10 +42,6 @@
                             MinWidth="140" ToolTip.Tip="Choose a theme or make your own" />
                     </HeaderedContentControl>
 
-                    <HeaderedContentControl Classes="settingRow" Header="Background Swirl" Margin="0,6,0,0">
-                        <CheckBox IsChecked="{Binding ShowBackgroundSwirl}" />
-                    </HeaderedContentControl>
-
                     <HeaderedContentControl Classes="settingRow" Header="LaTeX Font for Card Text">
                         <CheckBox IsChecked="{Binding UseLatexFontForCards}" />
                     </HeaderedContentControl>

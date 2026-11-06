@@ -17,6 +17,10 @@
 
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Source Serif for titles and what you study; Geist Mono for numbers that line up and code. -->
+            <FontFamily x:Key="SerifFont">fonts:SourceSerif#Source Serif 4</FontFamily>
+            <FontFamily x:Key="MonoFont">fonts:Geist#Geist Mono</FontFamily>
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://ReviFlash/App/AppThemes.axaml" />
                 <ResourceInclude Source="avares://ReviFlash/App/Icons.axaml" />

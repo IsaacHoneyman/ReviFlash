@@ -19,6 +19,7 @@ public partial class SettingsViewModel : ViewModelBase
     // Round the colour wheel from the pinks (Vaporwave, the default, first) through reds, oranges, greens and blues to purples, then the greys.
     private static readonly Dictionary<string, ThemeVariant> ThemeMap = new(StringComparer.OrdinalIgnoreCase)
     {
+        { "Ink", AppThemes.Ink },
         { "Vaporwave", AppThemes.Vaporwave },
         { "Synthwave", AppThemes.Synthwave },
         { "Sakura", AppThemes.Sakura },
@@ -39,7 +40,7 @@ public partial class SettingsViewModel : ViewModelBase
         { "Graphite", AppThemes.Graphite },
     };
 
-    public const string DefaultTheme = "Vaporwave";
+    public const string DefaultTheme = "Ink";
 
     public static IReadOnlyDictionary<string, ThemeVariant> Themes => ThemeMap;
 
@@ -55,7 +56,6 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private bool _showRetryLaterButton;
     [ObservableProperty] private bool _showAnswerStreakInReview;
     [ObservableProperty] private bool _showAdditionalFieldLatexPreviews;
-    [ObservableProperty] private bool _showBackgroundSwirl;
     [ObservableProperty] private bool _useLatexFontForCards;
     [ObservableProperty] private bool _checkForUpdatesOnStartup;
     [ObservableProperty] private bool _showChangelogAfterUpdate;
@@ -72,7 +72,6 @@ public partial class SettingsViewModel : ViewModelBase
         _showRetryLaterButton = MetaDataManager.Data.ShowRetryLaterButton;
         _showAnswerStreakInReview = MetaDataManager.Data.ShowAnswerStreakInReview;
         _showAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
-        _showBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
         _useLatexFontForCards = MetaDataManager.Data.UseLatexFontForCards;
         _checkForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
         _showChangelogAfterUpdate = MetaDataManager.Data.ShowChangelogAfterUpdate;
@@ -102,7 +101,6 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnShowRetryLaterButtonChanged(bool value) => Save(data => data.ShowRetryLaterButton = value);
     partial void OnShowAnswerStreakInReviewChanged(bool value) => Save(data => data.ShowAnswerStreakInReview = value);
     partial void OnShowAdditionalFieldLatexPreviewsChanged(bool value) => Save(data => data.ShowAdditionalFieldLatexPreviews = value);
-    partial void OnShowBackgroundSwirlChanged(bool value) => Save(data => data.ShowBackgroundSwirl = value);
     partial void OnUseLatexFontForCardsChanged(bool value) => Save(data => data.UseLatexFontForCards = value);
     partial void OnCheckForUpdatesOnStartupChanged(bool value) => Save(data => data.CheckForUpdatesOnStartup = value);
     partial void OnShowChangelogAfterUpdateChanged(bool value) => Save(data => data.ShowChangelogAfterUpdate = value);
@@ -141,7 +139,6 @@ public partial class SettingsViewModel : ViewModelBase
         ShowRetryLaterButton = MetaDataManager.Data.ShowRetryLaterButton;
         ShowAnswerStreakInReview = MetaDataManager.Data.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = MetaDataManager.Data.ShowAdditionalFieldLatexPreviews;
-        ShowBackgroundSwirl = MetaDataManager.Data.ShowBackgroundSwirl;
         UseLatexFontForCards = MetaDataManager.Data.UseLatexFontForCards;
         CheckForUpdatesOnStartup = MetaDataManager.Data.CheckForUpdatesOnStartup;
         ShowChangelogAfterUpdate = MetaDataManager.Data.ShowChangelogAfterUpdate;

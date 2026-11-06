@@ -2,6 +2,8 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Media;
+using Avalonia.Media.Fonts;
 using Velopack;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -20,7 +22,13 @@ sealed class Program
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
-            .WithInterFont()
+            .ConfigureFonts(fonts =>
+            {
+                // Collections rather than folder paths, so each weight finds its own file.
+                fonts.AddFontCollection(new EmbeddedFontCollection(new Uri("fonts:Geist"), new Uri("avares://ReviFlash/Assets/Fonts/Geist")));
+                fonts.AddFontCollection(new EmbeddedFontCollection(new Uri("fonts:SourceSerif"), new Uri("avares://ReviFlash/Assets/Fonts/SourceSerif4")));
+            })
+            .With(new FontManagerOptions { DefaultFamilyName = "fonts:Geist#Geist" })
             .LogToTrace();
 }
 

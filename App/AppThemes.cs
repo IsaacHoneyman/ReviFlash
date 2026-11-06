@@ -4,6 +4,7 @@ namespace ReviFlash;
 
 public static class AppThemes
 {
+    public static readonly ThemeVariant Ink = new("Ink", ThemeVariant.Dark);
     public static readonly ThemeVariant Forest = new("Forest", ThemeVariant.Dark);
     public static readonly ThemeVariant Focus = new("Focus", ThemeVariant.Dark);
     public static readonly ThemeVariant Amethyst = new("Amethyst", ThemeVariant.Dark);

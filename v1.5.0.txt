@@ -2,3 +2,5 @@ Everything now opens inside the one ReviFlash window: dialogs appear over the pa
 Help opens as a panel beside the page and stays usable while you edit.
 Esc goes back a step on every page, and back from a page returns to wherever you came from, including the same card mid-review.
 Quitting with an unsaved card in the set editor asks before discarding it.
+A new default theme, Ink: warm charcoal with off-white text and one amber accent, set in Geist with Source Serif titles. Updating switches you to it once; your old theme is still in Themes.
+The moving background swirl is gone.

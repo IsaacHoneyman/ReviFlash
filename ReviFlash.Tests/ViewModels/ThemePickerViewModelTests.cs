@@ -35,9 +35,9 @@ public class ThemePickerViewModelTests
     }
 
     [Fact]
-    public void Vaporwave_comes_first_and_the_dropped_themes_are_gone()
+    public void Ink_comes_first_and_the_dropped_themes_are_gone()
     {
-        Assert.Equal("Vaporwave", SettingsViewModel.Themes.Keys.First());
+        Assert.Equal("Ink", SettingsViewModel.Themes.Keys.First());
         Assert.DoesNotContain("Midnight", SettingsViewModel.Themes.Keys);
     }
 

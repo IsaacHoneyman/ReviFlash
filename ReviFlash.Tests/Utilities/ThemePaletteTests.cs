@@ -92,24 +92,6 @@ public class ThemePaletteTests
         Assert.Equal("#FFFFFF", theme.Overrides["TextPrimary"]);
     }
 
-    [Theory]
-    [InlineData("#0B3A30", "#E040E0")]
-    [InlineData("#1A1528", "#3B6FE0")]
-    [InlineData("#06201B", "#8A2B20")]
-    public void The_swirl_is_the_accent_at_full_strength_whatever_the_background(string background, string accent)
-    {
-        var colours = Derive(new CustomTheme { Background = background, Accent = accent });
-        var picked = new HslColor(Color.Parse(accent));
-
-        foreach (var key in new[] { "SwirlStart", "SwirlMiddle", "SwirlEnd" })
-        {
-            var swirl = new HslColor(colours[key]);
-            double gap = Math.Abs(swirl.H - picked.H) % 360;
-            Assert.True(Math.Min(gap, 360 - gap) <= 26, $"{key} hue");
-            Assert.True(swirl.S >= 0.55 && swirl.L >= 0.44, $"{key} is muddy");
-        }
-    }
-
     [Fact]
     public void Panels_are_calmer_than_a_saturated_background()
     {

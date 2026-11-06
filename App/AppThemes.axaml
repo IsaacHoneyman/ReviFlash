@@ -5,6 +5,30 @@
     <SolidColorBrush x:Key="SurfaceActionForeground" Color="#0D1620" />
     <ResourceDictionary.ThemeDictionaries>
 
+        <!-- The default: warm charcoal, off-white text and one amber accent. -->
+        <ResourceDictionary x:Key="{x:Static local:AppThemes.Ink}">
+            <SolidColorBrush x:Key="AppBackground" Color="#18181A" />
+
+            <SolidColorBrush x:Key="CardBackground" Color="#232326" />
+            <SolidColorBrush x:Key="CardBorder" Color="#2E2E33" />
+            <SolidColorBrush x:Key="GroupCardBorder" Color="#C98A6B" />
+            <SolidColorBrush x:Key="FolderCardBorder" Color="#A39F95" />
+            <SolidColorBrush x:Key="GroupBadgeForeground" Color="#18181A" />
+            <SolidColorBrush x:Key="FolderBadgeForeground" Color="#18181A" />
+            <SolidColorBrush x:Key="NoteCardBorder" Color="#8FA9C8" />
+            <SolidColorBrush x:Key="NoteBadgeForeground" Color="#18181A" />
+            <SolidColorBrush x:Key="BadgeBackground" Color="#2C2C31" />
+            <SolidColorBrush x:Key="StatTileBackground" Color="#26262A" />
+
+            <SolidColorBrush x:Key="TextPrimary" Color="#ECE8DF" />
+            <SolidColorBrush x:Key="TextSecondary" Color="#A39F95" />
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#1B1609" />
+            <SolidColorBrush x:Key="SurfaceActionForeground" Color="#18181A" />
+            <SolidColorBrush x:Key="IconForeground" Color="#C9C5BC" />
+
+            <Color x:Key="GradientStart">#E9B261</Color>
+        </ResourceDictionary>
+
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Forest}">
             <SolidColorBrush x:Key="AppBackground" Color="#0D1A14" />
 
@@ -26,9 +50,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#F0FFF5" />
 
             <Color x:Key="GradientStart">#2C6E49</Color>
-            <Color x:Key="SwirlStart">#2C6E49</Color>
-            <Color x:Key="SwirlMiddle">#4C956C</Color>
-            <Color x:Key="SwirlEnd">#90BE6D</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Slate}">
@@ -52,9 +73,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#9FBEC7" />
 
             <Color x:Key="GradientStart">#10323A</Color>
-            <Color x:Key="SwirlStart">#10323A</Color>
-            <Color x:Key="SwirlMiddle">#176A6F</Color>
-            <Color x:Key="SwirlEnd">#3FB7C1</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Ember}">
@@ -78,9 +96,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#FFD1B2" />
 
             <Color x:Key="GradientStart">#3E1F1B</Color>
-            <Color x:Key="SwirlStart">#3E1F1B</Color>
-            <Color x:Key="SwirlMiddle">#B33A1A</Color>
-            <Color x:Key="SwirlEnd">#FF6A3D</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Crimson}">
@@ -104,9 +119,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#FFD1D4" />
 
             <Color x:Key="GradientStart">#3B0D12</Color>
-            <Color x:Key="SwirlStart">#3B0D12</Color>
-            <Color x:Key="SwirlMiddle">#B92B34</Color>
-            <Color x:Key="SwirlEnd">#FF6A6F</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Focus}">
@@ -130,9 +142,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#F5F7FA" />
 
             <Color x:Key="GradientStart">#5B6675</Color>
-            <Color x:Key="SwirlStart">#5B6675</Color>
-            <Color x:Key="SwirlMiddle">#3F4855</Color>
-            <Color x:Key="SwirlEnd">#2A313B</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Amethyst}">
@@ -156,9 +165,6 @@
             <SolidColorBrush x:Key="IconForeground" Color="#F7F3FF" />
 
             <Color x:Key="GradientStart">#5A3E9B</Color>
-            <Color x:Key="SwirlStart">#5A3E9B</Color>
-            <Color x:Key="SwirlMiddle">#6F4BB8</Color>
-            <Color x:Key="SwirlEnd">#8F6ED5</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Synthwave}">
@@ -178,9 +184,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFEFFF" />
             <SolidColorBrush x:Key="IconForeground" Color="#FF2A85" />
             <Color x:Key="GradientStart">#7A00FF</Color>
-            <Color x:Key="SwirlStart">#7A00FF</Color>
-            <Color x:Key="SwirlMiddle">#FF007A</Color>
-            <Color x:Key="SwirlEnd">#00F0FF</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Coffee}">
@@ -200,9 +203,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FDF0D5" />
             <SolidColorBrush x:Key="IconForeground" Color="#E0A96D" />
             <Color x:Key="GradientStart">#8C5830</Color>
-            <Color x:Key="SwirlStart">#8C5830</Color>
-            <Color x:Key="SwirlMiddle">#B87333</Color>
-            <Color x:Key="SwirlEnd">#D4A373</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Nordic}">
@@ -222,9 +222,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#E3F2FD" />
             <SolidColorBrush x:Key="IconForeground" Color="#64B5F6" />
             <Color x:Key="GradientStart">#1A5276</Color>
-            <Color x:Key="SwirlStart">#1A5276</Color>
-            <Color x:Key="SwirlMiddle">#2980B9</Color>
-            <Color x:Key="SwirlEnd">#5CE1E6</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Sunset}">
@@ -244,9 +241,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF0F5" />
             <SolidColorBrush x:Key="IconForeground" Color="#FF7F50" />
             <Color x:Key="GradientStart">#8B008B</Color>
-            <Color x:Key="SwirlStart">#8B008B</Color>
-            <Color x:Key="SwirlMiddle">#FF4500</Color>
-            <Color x:Key="SwirlEnd">#FFD700</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Vaporwave}">
@@ -266,9 +260,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FFF8FA" />
             <SolidColorBrush x:Key="IconForeground" Color="#01CDFE" />
             <Color x:Key="GradientStart">#B967FF</Color>
-            <Color x:Key="SwirlStart">#B967FF</Color>
-            <Color x:Key="SwirlMiddle">#FF71CE</Color>
-            <Color x:Key="SwirlEnd">#01CDFE</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Honeycomb}">
@@ -288,9 +279,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#1C1811" />
             <SolidColorBrush x:Key="IconForeground" Color="#FFB703" />
             <Color x:Key="GradientStart">#B37400</Color>
-            <Color x:Key="SwirlStart">#B37400</Color>
-            <Color x:Key="SwirlMiddle">#E59400</Color>
-            <Color x:Key="SwirlEnd">#FFB703</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Sakura}">
@@ -310,9 +298,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#1E1418" />
             <SolidColorBrush x:Key="IconForeground" Color="#FFB7C5" />
             <Color x:Key="GradientStart">#8C3F5D</Color>
-            <Color x:Key="SwirlStart">#8C3F5D</Color>
-            <Color x:Key="SwirlMiddle">#C75D83</Color>
-            <Color x:Key="SwirlEnd">#FFB7C5</Color>
         </ResourceDictionary>
 
         <!--  Test Themes -->
@@ -335,9 +320,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0E1013" />
             <SolidColorBrush x:Key="IconForeground" Color="#FFEE00" />
             <Color x:Key="GradientStart">#FF007F</Color>
-            <Color x:Key="SwirlStart">#FF007F</Color>
-            <Color x:Key="SwirlMiddle">#7F00FF</Color>
-            <Color x:Key="SwirlEnd">#00FFFF</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Abyssal}">
@@ -357,9 +339,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#03080E" />
             <SolidColorBrush x:Key="IconForeground" Color="#00F5D4" />
             <Color x:Key="GradientStart">#005F73</Color>
-            <Color x:Key="SwirlStart">#005F73</Color>
-            <Color x:Key="SwirlMiddle">#0A9396</Color>
-            <Color x:Key="SwirlEnd">#94D2BD</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.DarkAmber}">
@@ -379,9 +358,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#140D08" />
             <SolidColorBrush x:Key="IconForeground" Color="#FFA500" />
             <Color x:Key="GradientStart">#7A3E04</Color>
-            <Color x:Key="SwirlStart">#7A3E04</Color>
-            <Color x:Key="SwirlMiddle">#C46A00</Color>
-            <Color x:Key="SwirlEnd">#FFA500</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Graphite}">
@@ -401,9 +377,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#0F1012" />
             <SolidColorBrush x:Key="IconForeground" Color="#CBD5E1" />
             <Color x:Key="GradientStart">#334155</Color>
-            <Color x:Key="SwirlStart">#334155</Color>
-            <Color x:Key="SwirlMiddle">#64748B</Color>
-            <Color x:Key="SwirlEnd">#CBD5E1</Color>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="{x:Static local:AppThemes.Nether}">
@@ -423,9 +396,6 @@
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#120A12" />
             <SolidColorBrush x:Key="IconForeground" Color="#D946EF" />
             <Color x:Key="GradientStart">#701A75</Color>
-            <Color x:Key="SwirlStart">#701A75</Color>
-            <Color x:Key="SwirlMiddle">#A21CAF</Color>
-            <Color x:Key="SwirlEnd">#E879F9</Color>
         </ResourceDictionary>
 
     </ResourceDictionary.ThemeDictionaries>

@@ -32,6 +32,7 @@ public static class MetaDataManager
         data.BestLaunchStreak = Math.Max(data.BestLaunchStreak, data.LaunchStreak);
         data.LastLaunchDate = DateOnly.FromDateTime(DateTime.Now);
 
+        data.Theme = ThemeUpgrade.ThemeAfterUpdate(data.Theme, data.Version, TextUtility.VersionText, SettingsViewModel.DefaultTheme);
         SettingsViewModel.ApplyTheme(data, data.Theme);
         VersionBeforeLaunch = data.Version;
         data.Version = TextUtility.VersionText;

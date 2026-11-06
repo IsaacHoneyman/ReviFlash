@@ -9,7 +9,7 @@ namespace ReviFlash.Models;
 /// <summary> Non flash card persistent data. </summary>
 public partial class AppMetaData : ObservableObject
 {
-    [ObservableProperty] private string _theme = "Vaporwave";
+    [ObservableProperty] private string _theme = "Ink";
     /// <summary> Themes the user made, at most <see cref="MaxSavedThemes"/>; saved here, so backups carry them too. </summary>
     [ObservableProperty] private List<CustomTheme> _savedThemes = [];
 
@@ -25,7 +25,6 @@ public partial class AppMetaData : ObservableObject
     [ObservableProperty] private bool _showRetryLaterButton = true;
     [ObservableProperty] private bool _showAnswerStreakInReview = true;
     [ObservableProperty] private bool _showAdditionalFieldLatexPreviews = true;
-    [ObservableProperty] private bool _showBackgroundSwirl;
     [ObservableProperty] private bool _useLatexFontForCards;
     [ObservableProperty] private bool _checkForUpdatesOnStartup = true;
     [ObservableProperty] private bool _showChangelogAfterUpdate = true;
@@ -51,7 +50,6 @@ public partial class AppMetaData : ObservableObject
         ShowRetryLaterButton = other.ShowRetryLaterButton;
         ShowAnswerStreakInReview = other.ShowAnswerStreakInReview;
         ShowAdditionalFieldLatexPreviews = other.ShowAdditionalFieldLatexPreviews;
-        ShowBackgroundSwirl = other.ShowBackgroundSwirl;
         UseLatexFontForCards = other.UseLatexFontForCards;
         CheckForUpdatesOnStartup = other.CheckForUpdatesOnStartup;
         ShowChangelogAfterUpdate = other.ShowChangelogAfterUpdate;
