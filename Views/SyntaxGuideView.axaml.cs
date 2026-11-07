@@ -90,7 +90,7 @@ public partial class SyntaxGuideView : UserControl
         new("Anywhere", null,
         [
             new(["F11"], "Switch between fullscreen and a window"),
-            new(["F1"], "Show this list of shortcuts"),
+            new(["F1"], "Show or hide this list of shortcuts"),
             new(["Esc"], "Go back a step: close a dialog or help, stop editing, or leave the page"),
             new(["Enter"], "Proceed in a dialog, or Finish on the Session Complete screen"),
         ]),
@@ -176,6 +176,15 @@ public partial class SyntaxGuideView : UserControl
 
         help.Tabs.SelectedIndex = (int)tab;
         help.IsVisible = true;
+    }
+
+    /// <summary> Closes help if it's open, otherwise opens it on <paramref name="tab"/>. </summary>
+    public static void ToggleFor(Visual owner, HelpTab tab)
+    {
+        if (TopLevel.GetTopLevel(owner)?.GetVisualDescendants().OfType<SyntaxGuideView>().FirstOrDefault() is { IsVisible: true } help)
+            help.IsVisible = false;
+        else
+            ShowFor(owner, tab);
     }
 
     /// <summary> Esc inside help closes it, leaving the page as it was. </summary>

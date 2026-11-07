@@ -1,3 +1,10 @@
+=== 1.5.1
+- A new app icon to match the new look: a serif R over an amber line. It also sits beside the name on the main menu, in your theme's colours.
+- \B{F1} now closes Help as well as opening it.
+- \B{Space} in a review no longer opens the "Quit Session?" prompt after you've clicked the quit button.
+- In a small window, Help floats over the page instead of squashing the main menu, and the buttons along the bottom of the main menu wrap instead of running off the edge.
+- The formatting guide's image examples show again instead of "Image not found".
+
 === 1.5.0
 \H2{A new look}
 - ReviFlash has a new default theme, \B{Ink}: warm charcoal, off-white text and one amber accent, set in Geist with Source Serif for titles and everything you study. Updating switches you to it once, and your old theme is still in \B{Themes} if it's one of the nine kept.

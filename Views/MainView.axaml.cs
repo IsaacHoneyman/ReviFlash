@@ -2,7 +2,9 @@ using System;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.VisualTree;
+using ReviFlash.Utilities;
 using ReviFlash.ViewModels;
 using ReviFlash.Views.Controls;
 
@@ -26,6 +28,14 @@ public partial class MainView : UserControl
     private void Dashboard_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DashboardViewModel.CurrentPage)) TopLevel.GetTopLevel(this)?.FocusManager?.ClearFocus();
+    }
+
+    protected override void OnSizeChanged(SizeChangedEventArgs e)
+    {
+        base.OnSizeChanged(e);
+        var (width, docked) = HelpLayout.Fit(e.NewSize.Width);
+        Help.Width = width;
+        Grid.SetColumn(Help, docked ? 1 : 0);
     }
 
     public DialogLayer DialogLayer => Dialogs;

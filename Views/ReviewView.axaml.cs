@@ -85,7 +85,8 @@ public partial class ReviewView : UserControl
             return;
         }
 
-        e.Handled = HandleKey(vm, e.Key);
+        // Space never presses a button here, even one left focused by a click.
+        e.Handled = HandleKey(vm, e.Key) || e.Key == Key.Space;
     }
 
     private static bool HandleKey(ReviewViewModel vm, Key key)

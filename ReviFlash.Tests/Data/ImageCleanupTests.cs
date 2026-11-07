@@ -51,6 +51,19 @@ public class ImageCleanupTests
     }
 
     [Fact]
+    public void Startup_cleanup_keeps_an_unused_image_it_was_told_to_keep()
+    {
+        using var database = new TestDatabase();
+        var logo = OldImage();
+        var unused = OldImage();
+
+        ImageStore.RemoveUnused(DateTime.Now, [logo]);
+
+        Assert.True(Stored(logo));
+        Assert.False(Stored(unused));
+    }
+
+    [Fact]
     public void An_image_added_while_the_cleanup_runs_is_kept_even_if_it_was_stored_before()
     {
         using var database = new TestDatabase();

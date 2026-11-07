@@ -157,7 +157,7 @@
             Height="3" MinHeight="3" CornerRadius="0" IsVisible="{Binding ShouldShowProgress}" />
 
         <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="16" Margin="16,12,24,0">
-            <Button Classes="iconButton" Background="Transparent" Click="QuitSession_Click" ToolTip.Tip="Quit and save progress (Esc)">
+            <Button Classes="iconButton" Background="Transparent" Focusable="False" Click="QuitSession_Click" ToolTip.Tip="Quit and save progress (Esc)">
                 <Path Classes="icon" Data="{StaticResource IconClose}" />
             </Button>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
@@ -179,7 +179,7 @@
                     ToolTip.Tip="{Binding BestAnswerStreakText}" Text="{Binding CurrentAnswerStreakText}" />
                 <TextBlock Classes="prompt" VerticalAlignment="Center" FontFamily="{DynamicResource MonoFont}"
                     Text="{Binding TimerText}" IsVisible="{Binding ShouldShowTimer}" />
-                <Button Classes="iconButton" Background="Transparent" IsVisible="{Binding CanEditCard}"
+                <Button Classes="iconButton" Background="Transparent" Focusable="False" IsVisible="{Binding CanEditCard}"
                     Click="EditCard_Click" ToolTip.Tip="Edit this card (E)">
                     <Path Classes="icon" Data="{StaticResource IconEdit}" />
                 </Button>
@@ -387,8 +387,8 @@
 
                             <!-- Neutral until answered, so the colours don't hint at the answer -->
                             <UniformGrid Rows="1" ColumnSpacing="12">
-                                <Button Classes="action secondary" Content="{Binding CurrentTrueFalseTrueOptionText}" Click="TrueAnswer_Click" />
-                                <Button Classes="action secondary" Content="{Binding CurrentTrueFalseFalseOptionText}" Click="FalseAnswer_Click" />
+                                <Button Classes="action secondary" Focusable="False" Content="{Binding CurrentTrueFalseTrueOptionText}" Click="TrueAnswer_Click" />
+                                <Button Classes="action secondary" Focusable="False" Content="{Binding CurrentTrueFalseFalseOptionText}" Click="FalseAnswer_Click" />
                             </UniformGrid>
                         </StackPanel>
 

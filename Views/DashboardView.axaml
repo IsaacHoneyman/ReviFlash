@@ -275,6 +275,18 @@
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="24, 16, 24, 0">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12"
                 VerticalAlignment="Center">
+                <Viewbox Width="38" Height="38" VerticalAlignment="Center">
+                    <Canvas Width="1024" Height="1024">
+                        <Rectangle Canvas.Left="40" Canvas.Top="40" Width="944" Height="944" RadiusX="216" RadiusY="216"
+                            Fill="{DynamicResource CardBackground}" Stroke="{DynamicResource CardBorder}" StrokeThickness="24" />
+                        <Path Data="{StaticResource LogoLetter}" Fill="{DynamicResource TextPrimary}" />
+                        <Rectangle Canvas.Left="326" Canvas.Top="748" Width="372" Height="34" RadiusX="17" RadiusY="17">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource GradientStart}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                    </Canvas>
+                </Viewbox>
                 <TextBlock Text="ReviFlash" FontFamily="{DynamicResource SerifFont}" FontSize="30" FontWeight="SemiBold"
                     Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
                 <Border Padding="4,6,0,0" VerticalAlignment="Center">
@@ -321,7 +333,7 @@
             <Grid Grid.Row="1" ColumnDefinitions="*, 290" Margin="24, 12, 24, 0">
 
             <!-- Code-behind sets "compact" when the column is too narrow for the full labels. -->
-            <Grid Grid.Column="0" x:Name="LibraryColumn" RowDefinitions="Auto, Auto, *" Margin="0, 0, 24, 0">
+            <Grid Grid.Column="0" x:Name="LibraryColumn" RowDefinitions="Auto, Auto, *, Auto" Margin="0, 0, 24, 0">
                 <Grid.Styles>
                     <Style Selector="Grid#LibraryColumn TextBlock.short">
                         <Setter Property="IsVisible" Value="False" />
@@ -413,82 +425,81 @@
                         VerticalAlignment="Center"
                         TextWrapping="Wrap"
                         TextAlignment="Center"
-                        MaxWidth="420"
-                        Margin="0,0,0,80" />
+                        MaxWidth="420" />
 
-                    <Border VerticalAlignment="Bottom"
-                        HorizontalAlignment="Left"
-                        Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource CardBorder}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="8"
-                        Margin="0,0,0,24">
-                        <StackPanel Orientation="Horizontal"
-                            Spacing="12"
-                            VerticalAlignment="Center">
-                            <ToggleButton
-                                IsChecked="{Binding ShowFolders, Mode=TwoWay}"
-                                Classes="dashboardToggle">
-                                <Panel>
-                                    <TextBlock Classes="long" Text="Show Folders" />
-                                    <TextBlock Classes="short" Text="Folders" />
-                                </Panel>
-                            </ToggleButton>
-
-                            <ToggleButton
-                                IsChecked="{Binding ShowGroups, Mode=TwoWay}"
-                                Classes="dashboardToggle">
-                                <Panel>
-                                    <TextBlock Classes="long" Text="Show Groups" />
-                                    <TextBlock Classes="short" Text="Groups" />
-                                </Panel>
-                            </ToggleButton>
-
-                            <ToggleButton
-                                IsChecked="{Binding ShowSets, Mode=TwoWay}"
-                                Classes="dashboardToggle">
-                                <Panel>
-                                    <TextBlock Classes="long" Text="Show Sets" />
-                                    <TextBlock Classes="short" Text="Sets" />
-                                </Panel>
-                            </ToggleButton>
-
-                            <ToggleButton
-                                IsChecked="{Binding ShowNotes, Mode=TwoWay}"
-                                Classes="dashboardToggle">
-                                <Panel>
-                                    <TextBlock Classes="long" Text="Show Notes" />
-                                    <TextBlock Classes="short" Text="Notes" />
-                                </Panel>
-                            </ToggleButton>
-
-                            <Button Classes="secondary" Click="MultiSelectDecks_Click"
-                                Content="{Binding ReviewSelectionButtonText}"
-                                Padding="12, 8" FontSize="14" />
-
-                            <Button Click="OpenOnlineImport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
-                                Classes="secondary" Padding="12, 8"
-                                VerticalContentAlignment="Center"
-                                ToolTip.Tip="Community: download shared sets and notes">
-                                <Panel>
-                                    <Path Classes="icon" Data="{StaticResource IconDownload}" IsVisible="{Binding !IsCheckingSignInForImport}" />
-                                    <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForImport}" HorizontalAlignment="Center" />
-                                </Panel>
-                            </Button>
-
-                            <Button Click="OpenOnlineExport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
-                                Classes="secondary" Padding="12, 8"
-                                VerticalContentAlignment="Center"
-                                ToolTip.Tip="Cloud Manager: upload and manage your sets and notes">
-                                <Panel>
-                                    <Path Classes="icon" Data="{StaticResource IconUpload}" IsVisible="{Binding !IsCheckingSignInForExport}" />
-                                    <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForExport}" HorizontalAlignment="Center" />
-                                </Panel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
                 </Grid>
+
+                <!-- Its own row so it never covers a card, wrapping onto a second line when the window is narrow. -->
+                <Border Grid.Row="3"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource CardBackground}"
+                    BorderBrush="{DynamicResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8"
+                    Margin="0,12,0,24">
+                    <WrapPanel ItemSpacing="12" LineSpacing="8">
+                        <ToggleButton
+                            IsChecked="{Binding ShowFolders, Mode=TwoWay}"
+                            Classes="dashboardToggle">
+                            <Panel>
+                                <TextBlock Classes="long" Text="Show Folders" />
+                                <TextBlock Classes="short" Text="Folders" />
+                            </Panel>
+                        </ToggleButton>
+
+                        <ToggleButton
+                            IsChecked="{Binding ShowGroups, Mode=TwoWay}"
+                            Classes="dashboardToggle">
+                            <Panel>
+                                <TextBlock Classes="long" Text="Show Groups" />
+                                <TextBlock Classes="short" Text="Groups" />
+                            </Panel>
+                        </ToggleButton>
+
+                        <ToggleButton
+                            IsChecked="{Binding ShowSets, Mode=TwoWay}"
+                            Classes="dashboardToggle">
+                            <Panel>
+                                <TextBlock Classes="long" Text="Show Sets" />
+                                <TextBlock Classes="short" Text="Sets" />
+                            </Panel>
+                        </ToggleButton>
+
+                        <ToggleButton
+                            IsChecked="{Binding ShowNotes, Mode=TwoWay}"
+                            Classes="dashboardToggle">
+                            <Panel>
+                                <TextBlock Classes="long" Text="Show Notes" />
+                                <TextBlock Classes="short" Text="Notes" />
+                            </Panel>
+                        </ToggleButton>
+
+                        <Button Classes="secondary" Click="MultiSelectDecks_Click"
+                            Content="{Binding ReviewSelectionButtonText}"
+                            Padding="12, 8" FontSize="14" />
+
+                        <Button Click="OpenOnlineImport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
+                            Classes="secondary" Padding="12, 8"
+                            VerticalContentAlignment="Center"
+                            ToolTip.Tip="Community: download shared sets and notes">
+                            <Panel>
+                                <Path Classes="icon" Data="{StaticResource IconDownload}" IsVisible="{Binding !IsCheckingSignInForImport}" />
+                                <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForImport}" HorizontalAlignment="Center" />
+                            </Panel>
+                        </Button>
+
+                        <Button Click="OpenOnlineExport_Click" IsEnabled="{Binding !IsCheckingSignIn}"
+                            Classes="secondary" Padding="12, 8"
+                            VerticalContentAlignment="Center"
+                            ToolTip.Tip="Cloud Manager: upload and manage your sets and notes">
+                            <Panel>
+                                <Path Classes="icon" Data="{StaticResource IconUpload}" IsVisible="{Binding !IsCheckingSignInForExport}" />
+                                <controls:BusySpinner IsVisible="{Binding IsCheckingSignInForExport}" HorizontalAlignment="Center" />
+                            </Panel>
+                        </Button>
+                    </WrapPanel>
+                </Border>
 
             </Grid>
 

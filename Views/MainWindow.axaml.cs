@@ -62,7 +62,8 @@ public partial class MainWindow : Window
         {
             try
             {
-                var removed = ImageStore.RemoveUnused(cleanupStart);
+                // The formatting guide shows the logo, though no card may.
+                var removed = ImageStore.RemoveUnused(cleanupStart, LogoImage.Store() is { } logo ? [logo] : null);
                 if (removed > 0) Logger.LogInfo($"Removed {removed} unused images.");
             }
             catch (Exception ex) { Logger.LogError("Removing unused images failed.", ex); }
@@ -107,7 +108,7 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.F1)
         {
-            SyntaxGuideView.ShowFor(this, HelpTab.KeyboardShortcuts);
+            SyntaxGuideView.ToggleFor(this, HelpTab.KeyboardShortcuts);
             e.Handled = true;
         }
         else if (e.Key == Key.F11)

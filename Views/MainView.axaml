@@ -6,11 +6,12 @@
     x:Class="ReviFlash.Views.MainView"
     x:DataType="vm:DashboardViewModel">
 
-    <!-- Help docks on the right and stays usable beside the page, even while a dialog is open over it. -->
+    <!-- Help sits on the right and stays usable beside the page, even while a dialog is open over it. -->
     <Grid ColumnDefinitions="*, Auto">
         <ContentControl Content="{Binding CurrentPage}" />
         <controls:DialogLayer x:Name="Dialogs" />
-        <views:SyntaxGuideView Grid.Column="1" x:Name="Help" Width="620" IsVisible="False" />
+        <!-- Code-behind sizes it, and floats it over the page when the window is too narrow for both. -->
+        <views:SyntaxGuideView Grid.Column="1" x:Name="Help" Width="620" HorizontalAlignment="Right" IsVisible="False" />
     </Grid>
 
 </UserControl>

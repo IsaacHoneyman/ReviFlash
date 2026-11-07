@@ -39,6 +39,8 @@ Updates are handled automatically within ReviFlash! On startup the app checks wh
 
 ## New in 1.5
 
+**1.5.1**: a new app icon to match the new look, a serif R over an amber line, which also sits beside the name on the main menu. **F1** now closes Help as well as opening it, and **Space** in a review no longer opens the quit prompt. In a small window, Help floats over the page instead of squashing the main menu. The formatting guide's image examples show again.
+
 A new look for the whole app, and everything now opens in one window.
 
 **A new look**

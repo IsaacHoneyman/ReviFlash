@@ -91,13 +91,14 @@ public static partial class ImageStore
         return names;
     }
 
-    /// <summary> Deletes images nothing refers to any more; ones written after <paramref name="startedAt"/> (just added) are kept. Returns how many went. </summary>
-    public static int RemoveUnused(DateTime startedAt)
+    /// <summary> Deletes images nothing refers to any more, except those in <paramref name="keep"/>; ones written after <paramref name="startedAt"/> (just added) are kept. Returns how many went. </summary>
+    public static int RemoveUnused(DateTime startedAt, IReadOnlyCollection<string>? keep = null)
     {
         var stored = StoredNames();
         if (stored.Count == 0) return 0;
 
         var referenced = ReferencedNames();
+        if (keep is not null) referenced.UnionWith(keep);
         var removed = 0;
         foreach (var name in stored.Where(name => !referenced.Contains(name)))
         {
